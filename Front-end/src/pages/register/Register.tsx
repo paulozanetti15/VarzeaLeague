@@ -14,6 +14,8 @@ export function Register({ onLoginClick }: RegisterProps) {
   const [passwordError, setPasswordError] = useState('');
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false);
+  const [registrationError, setRegistrationError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
@@ -114,7 +116,7 @@ export function Register({ onLoginClick }: RegisterProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const isEmailValid = validateEmail(email);
@@ -124,8 +126,42 @@ export function Register({ onLoginClick }: RegisterProps) {
       return;
     }
 
-    // Aqui você implementará a lógica de registro
-    console.log('Registro:', { nome, email, password, confirmPassword });
+    setIsLoading(true);
+    setRegistrationError('');
+
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: nome,
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao criar conta');
+      }
+
+      // Salvar token no localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Redirecionar para login
+      if (onLoginClick) {
+        onLoginClick();
+      }
+    } catch (error) {
+      console.error('Erro no registro:', error);
+      setRegistrationError(error instanceof Error ? error.message : 'Erro ao criar conta');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -136,6 +172,12 @@ export function Register({ onLoginClick }: RegisterProps) {
             <div className="card-body p-5">
               <h2 className="text-center mb-4">Criar Conta</h2>
               
+              {registrationError && (
+                <div className="alert alert-danger" role="alert">
+                  {registrationError}
+                </div>
+              )}
+
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
                   <label htmlFor="nome" className="form-label">Nome</label>
@@ -205,13 +247,18 @@ export function Register({ onLoginClick }: RegisterProps) {
                 </div>
 
                 <div className="d-grid gap-2">
-                  <button type="submit" className="btn btn-primary">
-                    Criar Conta
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Criando conta...' : 'Criar Conta'}
                   </button>
                   <button 
                     type="button" 
                     className="btn btn-outline-secondary"
                     onClick={onLoginClick}
+                    disabled={isLoading}
                   >
                     Voltar para Login
                   </button>
