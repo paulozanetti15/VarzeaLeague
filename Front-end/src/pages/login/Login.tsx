@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import './Login.css';
 
-export function Login() {
+interface LoginProps {
+  onRegisterClick?: () => void;
+  onForgotPasswordClick?: () => void;
+}
+
+export function Login({ onRegisterClick, onForgotPasswordClick }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -28,7 +33,7 @@ export function Login() {
                     id="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="email@email...."
+                    placeholder="Seu email"
                     required
                   />
                 </div>
@@ -41,7 +46,7 @@ export function Login() {
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Senha..."
+                    placeholder="Sua senha"
                     required
                   />
                 </div>
@@ -50,15 +55,23 @@ export function Login() {
                   <button type="submit" className="btn btn-primary">
                     Entrar
                   </button>
-                  <button type="button" className="btn btn-outline-secondary">
+                  <button 
+                    type="button" 
+                    className="btn btn-outline-secondary"
+                    onClick={onRegisterClick}
+                  >
                     Criar conta
                   </button>
                 </div>
 
                 <div className="text-center mt-3">
-                  <a href="#" className="text-decoration-none">
+                  <button 
+                    type="button" 
+                    className="btn btn-link text-decoration-none"
+                    onClick={onForgotPasswordClick}
+                  >
                     Esqueceu sua senha?
-                  </a>
+                  </button>
                 </div>
               </form>
             </div>
