@@ -9,9 +9,36 @@ interface LoginProps {
 export function Login({ onRegisterClick, onForgotPasswordClick }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordTouched, setPasswordTouched] = useState(false);
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('Email inválido. Use um formato válido (exemplo@dominio.com)');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+    if (newEmail) {
+      validateEmail(newEmail);
+    } else {
+      setEmailError('');
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateEmail(email)) {
+      return;
+    }
+
     // Aqui você implementará a lógica de login
     console.log('Login:', { email, password });
   };
@@ -29,13 +56,18 @@ export function Login({ onRegisterClick, onForgotPasswordClick }: LoginProps) {
                   <label htmlFor="email" className="form-label">Email</label>
                   <input
                     type="email"
-                    className="form-control"
+                    className={`form-control ${emailError ? 'is-invalid' : ''}`}
                     id="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={handleEmailChange}
                     placeholder="Seu email"
                     required
                   />
+                  {emailError && (
+                    <div className="invalid-feedback">
+                      {emailError}
+                    </div>
+                  )}
                 </div>
 
                 <div className="mb-3">
@@ -46,13 +78,18 @@ export function Login({ onRegisterClick, onForgotPasswordClick }: LoginProps) {
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onBlur={() => setPasswordTouched(true)}
                     placeholder="Sua senha"
                     required
                   />
                 </div>
 
                 <div className="d-grid gap-2">
-                  <button type="submit" className="btn btn-primary">
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={!!emailError}
+                  >
                     Entrar
                   </button>
                   <button 
