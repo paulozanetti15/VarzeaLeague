@@ -4,70 +4,77 @@ import './Login.css';
 interface LoginProps {
   onRegisterClick?: () => void;
   onForgotPasswordClick?: () => void;
+  onLoginSuccess?: () => void;
 }
 
-export function Login({ onRegisterClick, onForgotPasswordClick }: LoginProps) {
+export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    if (!emailRegex.test(email)) {
-      setEmailError('Email inválido. Use um formato válido (exemplo@dominio.com)');
-      return false;
-    }
-    setEmailError('');
-    return true;
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newEmail = e.target.value;
-    setEmail(newEmail);
-    if (newEmail) {
-      validateEmail(newEmail);
-    } else {
-      setEmailError('');
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateEmail(email)) {
-      return;
-    }
+    setIsLoading(true);
+    setLoginError('');
 
-    // Aqui você implementará a lógica de login
-    console.log('Login:', { email, password });
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao fazer login');
+      }
+
+      // Salvar token e dados do usuário
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Chamar callback de sucesso
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
+    } catch (error) {
+      console.error('Erro no login:', error);
+      setLoginError(error instanceof Error ? error.message : 'Erro ao fazer login');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="container-fluid login-container">
+    <div className="login-container">
       <div className="row justify-content-center align-items-center min-vh-100">
         <div className="col-md-4">
           <div className="card shadow">
             <div className="card-body p-5">
               <h2 className="text-center mb-4">Várzea League</h2>
               
+              {loginError && (
+                <div className="alert alert-danger" role="alert">
+                  {loginError}
+                </div>
+              )}
+
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
                   <label htmlFor="email" className="form-label">Email</label>
                   <input
                     type="email"
-                    className={`form-control ${emailError ? 'is-invalid' : ''}`}
+                    className="form-control"
                     id="email"
                     value={email}
-                    onChange={handleEmailChange}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="Seu email"
                     required
                   />
-                  {emailError && (
-                    <div className="invalid-feedback">
-                      {emailError}
-                    </div>
-                  )}
                 </div>
 
                 <div className="mb-3">
@@ -78,7 +85,6 @@ export function Login({ onRegisterClick, onForgotPasswordClick }: LoginProps) {
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    onBlur={() => setPasswordTouched(true)}
                     placeholder="Sua senha"
                     required
                   />
@@ -88,14 +94,15 @@ export function Login({ onRegisterClick, onForgotPasswordClick }: LoginProps) {
                   <button 
                     type="submit" 
                     className="btn btn-primary"
-                    disabled={!!emailError}
+                    disabled={isLoading}
                   >
-                    Entrar
+                    {isLoading ? 'Entrando...' : 'Entrar'}
                   </button>
                   <button 
                     type="button" 
                     className="btn btn-outline-secondary"
                     onClick={onRegisterClick}
+                    disabled={isLoading}
                   >
                     Criar conta
                   </button>
@@ -106,6 +113,7 @@ export function Login({ onRegisterClick, onForgotPasswordClick }: LoginProps) {
                     type="button" 
                     className="btn btn-link text-decoration-none"
                     onClick={onForgotPasswordClick}
+                    disabled={isLoading}
                   >
                     Esqueceu sua senha?
                   </button>
