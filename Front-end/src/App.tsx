@@ -1,35 +1,78 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState, useEffect } from 'react'
 import './App.css'
+import { Login } from './pages/login/Login'
+import { Register } from './pages/register/Register'
+import { ForgotPassword } from './pages/forgot-password/ForgotPassword'
+import { Landing } from './pages/landing/Landing'
+
+type Page = 'landing' | 'login' | 'register' | 'forgot-password'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [currentPage, setCurrentPage] = useState<Page>('landing')
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+  useEffect(() => {
+    // Verificar se o usuário está logado ao carregar a página
+    const token = localStorage.getItem('token')
+    if (token) {
+      setIsLoggedIn(true)
+    }
+  }, [])
+
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true)
+    setCurrentPage('landing')
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setIsLoggedIn(false)
+    setCurrentPage('landing')
+  }
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'landing':
+        return (
+          <Landing 
+            isLoggedIn={isLoggedIn}
+            onLoginClick={() => setCurrentPage('login')}
+            onRegisterClick={() => setCurrentPage('register')}
+            onLogout={handleLogout}
+          />
+        )
+      case 'login':
+        return (
+          <Login 
+            onRegisterClick={() => setCurrentPage('register')}
+            onForgotPasswordClick={() => setCurrentPage('forgot-password')}
+            onLoginSuccess={handleLoginSuccess}
+          />
+        )
+      case 'register':
+        return (
+          <Register 
+            onLoginClick={() => setCurrentPage('login')}
+          />
+        )
+      case 'forgot-password':
+        return (
+          <ForgotPassword 
+            onBackToLogin={() => setCurrentPage('login')}
+          />
+        )
+      default:
+        return <Landing 
+          isLoggedIn={isLoggedIn}
+          onLoginClick={() => setCurrentPage('login')}
+          onRegisterClick={() => setCurrentPage('register')}
+          onLogout={handleLogout}
+        />
+    }
+  }
+
+  return renderPage()
 }
 
 export default App
