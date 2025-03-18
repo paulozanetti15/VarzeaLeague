@@ -4,10 +4,11 @@ import { sendPasswordResetEmail } from '../services/emailService';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Op } from 'sequelize';
-export const requestPasswordReset = async (req: Request, res: Response) => {
+export const requestPasswordReset = async (req,res) => {
   try {
     const { email } = req.body;
     const user = await UserModel.findOne({ where: { email } });
+    user.toJSON();
 
     if (!user) {
       return res.status(404).json({ message: 'Usuário não encontrado' });
@@ -18,8 +19,8 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
     const hash = await bcrypt.hash(resetToken, 10);
 
     // Salva o token e a data de expiração
-    user.resetPasswordToken = hash;
-    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hora
+    user.toJSON().resetPasswordToken = hash;
+    user.toJSON().resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hora
     await user.save();
 
     // Envia o email
@@ -36,7 +37,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
   }
 };
 
-export const resetPassword = async (req: Request, res: Response) => {
+export const resetPassword = async (req,res) => {
   try {
     const { token, newPassword } = req.body;
 
@@ -48,22 +49,23 @@ export const resetPassword = async (req: Request, res: Response) => {
         }
       }
     });
+    
 
     if (!user) {
       return res.status(400).json({ message: 'Token inválido ou expirado' });
     }
 
     // Verifica se o token corresponde
-    const isValid = await bcrypt.compare(token, user.resetPasswordToken);
+    const isValid = await bcrypt.compare(token, user.toJSON().resetPasswordToken);
     if (!isValid) {
       return res.status(400).json({ message: 'Token inválido' });
     }
 
     // Atualiza a senha
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
-    user.resetPasswordToken = null;
-    user.resetPasswordExpires = null;
+    user.toJSON().password = hashedPassword;
+    user.toJSON().resetPasswordToken = null;
+    user.toJSON().resetPasswordExpires = null;
     await user.save();
 
     res.json({ message: 'Senha atualizada com sucesso' });
@@ -72,3 +74,4 @@ export const resetPassword = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Erro interno do servidor' });
   }
 }; 
+module.exports = { requestPasswordReset, resetPassword };
