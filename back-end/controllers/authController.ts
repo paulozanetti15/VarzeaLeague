@@ -2,10 +2,9 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import UserModel from '../models/User';
 
-
 const JWT_SECRET = 'varzealeague_secret'; // Em produção, isso deve vir de variáveis de ambiente
 
-const register = async (req, res) => {
+export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -41,8 +40,7 @@ const register = async (req, res) => {
     res.status(500).json({ message: 'Erro ao registrar usuário' });
   }
 };
-
-const login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -80,8 +78,4 @@ const login = async (req, res) => {
     res.status(500).json({ message: 'Erro ao fazer login' });
   }
 };
-
-module.exports = {
-  register,
-  login,
-}; 
+export default { register, login }; 
