@@ -23,7 +23,7 @@ const MatchModel = sequelize.define('Match', {
   maxPlayers: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: 10, // 5 jogadores por time
+    defaultValue: 10,
   },
   status: {
     type: DataTypes.ENUM('pending', 'confirmed', 'cancelled', 'completed'),
@@ -47,7 +47,6 @@ const MatchModel = sequelize.define('Match', {
   }
 }, {
   tableName: 'matches',
-  timestamps: true, // Adiciona createdAt e updatedAt
 });
 
 // Relacionamentos
