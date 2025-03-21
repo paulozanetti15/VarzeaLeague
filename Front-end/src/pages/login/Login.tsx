@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
 interface LoginProps {
@@ -12,6 +13,7 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +43,9 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
       if (onLoginSuccess) {
         onLoginSuccess();
       }
+
+      // Redirecionar para a página principal
+      navigate('/');
     } catch (error) {
       console.error('Erro no login:', error);
       setLoginError(error instanceof Error ? error.message : 'Erro ao fazer login');

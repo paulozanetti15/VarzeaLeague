@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { Header } from '../../components/landing/Header';
 import { Hero } from '../../components/landing/Hero';
 import { Benefits } from '../../components/landing/Benefits';
@@ -13,15 +14,25 @@ interface LandingProps {
 }
 
 export function Landing({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: LandingProps) {
+  const navigate = useNavigate();
+
+  const handleCreateMatch = () => {
+    if (isLoggedIn) {
+      navigate('/create-match');
+    } else {
+      navigate('/login');
+    }
+  };
+
   return (
     <div className="landing-page">
       <Header 
         isLoggedIn={isLoggedIn}
-        onLoginClick={onLoginClick}
-        onRegisterClick={onRegisterClick}
+        onLoginClick={() => navigate('/login')}
+        onRegisterClick={() => navigate('/register')}
         onLogout={onLogout}
       />
-      <Hero onGetStarted={isLoggedIn ? () => {} : onRegisterClick} />
+      <Hero onGetStarted={handleCreateMatch} />
       <Benefits />
       <Testimonials />
       <Footer />
