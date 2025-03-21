@@ -1,18 +1,22 @@
 import { useState, useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { ThemeProvider } from '@mui/material/styles'
+import { LocalizationProvider } from '@mui/x-date-pickers'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { ptBR } from 'date-fns/locale'
+import theme from './theme'
 import './App.css'
 import { Login } from './pages/login/Login'
 import { Register } from './pages/register/Register'
 import { ForgotPassword } from './pages/forgot-password/ForgotPassword'
 import { Landing } from './pages/landing/Landing'
+import CreateMatch from './pages/CreateMatch'
 
-type Page = 'landing' | 'login' | 'register' | 'forgot-password'
-
-function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('landing')
+function AppContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Verificar se o usuário está logado ao carregar a página
     const token = localStorage.getItem('token')
     if (token) {
       setIsLoggedIn(true)
@@ -21,58 +25,79 @@ function App() {
 
   const handleLoginSuccess = () => {
     setIsLoggedIn(true)
-    setCurrentPage('landing')
+    navigate('/')
   }
 
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setIsLoggedIn(false)
-    setCurrentPage('landing')
+    navigate('/')
   }
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'landing':
-        return (
-          <Landing 
-            isLoggedIn={isLoggedIn}
-            onLoginClick={() => setCurrentPage('login')}
-            onRegisterClick={() => setCurrentPage('register')}
-            onLogout={handleLogout}
-          />
-        )
-      case 'login':
-        return (
+  // Componente para proteger rotas
+  const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
+    return isLoggedIn ? <>{children}</> : <Navigate to="/login" />;
+  };
+
+  return (
+    <Routes>
+      <Route path="/" element={
+        <Landing 
+          isLoggedIn={isLoggedIn}
+          onLoginClick={() => navigate('/login')}
+          onRegisterClick={() => navigate('/register')}
+          onLogout={handleLogout}
+        />
+      } />
+      
+      <Route path="/login" element={
+        isLoggedIn ? (
+          <Navigate to="/" />
+        ) : (
           <Login 
-            onRegisterClick={() => setCurrentPage('register')}
-            onForgotPasswordClick={() => setCurrentPage('forgot-password')}
+            onRegisterClick={() => navigate('/register')}
+            onForgotPasswordClick={() => navigate('/forgot-password')}
             onLoginSuccess={handleLoginSuccess}
           />
         )
-      case 'register':
-        return (
+      } />
+      
+      <Route path="/register" element={
+        isLoggedIn ? (
+          <Navigate to="/" />
+        ) : (
           <Register 
-            onLoginClick={() => setCurrentPage('login')}
+            onLoginClick={() => navigate('/login')}
           />
         )
-      case 'forgot-password':
-        return (
-          <ForgotPassword 
-            onBackToLogin={() => setCurrentPage('login')}
-          />
-        )
-      default:
-        return <Landing 
-          isLoggedIn={isLoggedIn}
-          onLoginClick={() => setCurrentPage('login')}
-          onRegisterClick={() => setCurrentPage('register')}
-          onLogout={handleLogout}
+      } />
+      
+      <Route path="/forgot-password" element={
+        <ForgotPassword 
+          onBackToLogin={() => navigate('/login')}
         />
-    }
-  }
+      } />
 
-  return renderPage()
+      <Route path="/create-match" element={
+        <PrivateRoute>
+          <CreateMatch />
+        </PrivateRoute>
+      } />
+    </Routes>
+  )
+}
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
+        <Router>
+          <AppContent />
+        </Router>
+      </LocalizationProvider>
+    </ThemeProvider>
+  )
 }
 
 export default App
