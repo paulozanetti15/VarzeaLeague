@@ -12,25 +12,23 @@ declare global {
   }
 }
 
-export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
+export const authenticateToken = (req: Request, res: Response, next: NextFunction): void => {
   try {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-      return res.status(401).json({ message: 'Token não fornecido' });
+      res.status(401).json({ message: 'Token não fornecido' });
+      return;
     }
 
-    const secret = process.env.JWT_SECRET || 'your-secret-key';
+    const secret = process.env.JWT_SECRET || 'varzealeague_secret';
     const decoded = jwt.verify(token, secret) as { id: number; email: string };
     
-    req.user = {
-      id: decoded.id,
-      email: decoded.email
-    };
-
+    req.user = decoded;
     next();
   } catch (error) {
-    return res.status(403).json({ message: 'Token inválido' });
+    res.status(403).json({ message: 'Token inválido' });
+    return;
   }
 }; 
