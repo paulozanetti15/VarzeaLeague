@@ -4,11 +4,13 @@ import { Login } from './pages/login/Login'
 import { Register } from './pages/register/Register'
 import { ForgotPassword } from './pages/forgot-password/ForgotPassword'
 import { Landing } from './pages/landing/Landing'
+import { ResetPassword } from './pages/reset-password/ResetPassword'
+import { Routes, Route,BrowserRouter as Router } from 'react-router-dom';
 
-type Page = 'landing' | 'login' | 'register' | 'forgot-password'
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('landing')
+ 
+
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
@@ -21,58 +23,36 @@ function App() {
 
   const handleLoginSuccess = () => {
     setIsLoggedIn(true)
-    setCurrentPage('landing')
   }
 
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setIsLoggedIn(false)
-    setCurrentPage('landing')
   }
-
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'landing':
-        return (
-          <Landing 
+  
+  return (
+    <Router>
+      <Routes>
+        <Route 
+          path="/" 
+          element={<Landing 
             isLoggedIn={isLoggedIn}
-            onLoginClick={() => setCurrentPage('login')}
-            onRegisterClick={() => setCurrentPage('register')}
+            onLoginClick={() => window.location.href='/login'} // Redirecionamento via React Router
+            onRegisterClick={() =>  window.location.href='/register'} // Redirecionamento via React Router
             onLogout={handleLogout}
-          />
-        )
-      case 'login':
-        return (
-          <Login 
-            onRegisterClick={() => setCurrentPage('register')}
-            onForgotPasswordClick={() => setCurrentPage('forgot-password')}
-            onLoginSuccess={handleLoginSuccess}
-          />
-        )
-      case 'register':
-        return (
-          <Register 
-            onLoginClick={() => setCurrentPage('login')}
-          />
-        )
-      case 'forgot-password':
-        return (
-          <ForgotPassword 
-            onBackToLogin={() => setCurrentPage('login')}
-          />
-        )
-      default:
-        return <Landing 
-          isLoggedIn={isLoggedIn}
-          onLoginClick={() => setCurrentPage('login')}
-          onRegisterClick={() => setCurrentPage('register')}
-          onLogout={handleLogout}
-        />
-    }
-  }
-
-  return renderPage()
+          />}
+        />  
+        <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} onForgotPasswordClick={() => window.location.href='/forgot-password'} onRegisterClick={()=>window.location.href='/register'} />}  />
+        <Route path="/register" element={<Register onLoginClick={()=> window.location.href='/login'} />} />
+        <Route path="/forgot-password" element={<ForgotPassword onBackToLogin={() => window.location.href = '/login'} />} />
+        <Route path="/reset-password" element={<ResetPassword onBackToLogin={() => window.location.href = '/login'} />} />
+      </Routes>
+    </Router>
+  );   
 }
+ 
+ 
+
 
 export default App
