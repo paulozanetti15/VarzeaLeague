@@ -1,8 +1,12 @@
 {
-    "compilerOptions": {
-      "moduleResolution": "node",
-      "baseUrl": "./",
-      "esModuleInterop": true,
-      "allowSyntheticDefaultImports": true
-    }
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   }
+}

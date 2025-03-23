@@ -1,11 +1,14 @@
 import './Benefits.css';
+import { useNavigate } from 'react-router-dom';
 
 export function Benefits() {
+  const navigate = useNavigate();
   const benefits = [
     {
       icon: '⚽',
       title: 'Organize Partidas',
-      description: 'Crie e gerencie jogos facilmente, definindo local, data e participantes.'
+      description: 'Crie e gerencie jogos facilmente, definindo local, data e participantes.',
+      onClick: () => navigate('/create-match')
     },
     {
       icon: '👥',
@@ -37,7 +40,11 @@ export function Benefits() {
         <div className="row g-4">
           {benefits.map((benefit, index) => (
             <div key={index} className="col-md-6 col-lg-3">
-              <div className="benefit-card">
+              <div 
+                className="benefit-card" 
+                onClick={benefit.onClick}
+                style={{ cursor: benefit.onClick ? 'pointer' : 'default' }}
+              >
                 <div className="benefit-icon">{benefit.icon}</div>
                 <h3 className="benefit-title">{benefit.title}</h3>
                 <p className="benefit-description">{benefit.description}</p>

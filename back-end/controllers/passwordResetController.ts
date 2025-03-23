@@ -7,7 +7,9 @@ import { Op } from 'sequelize';
 export const requestPasswordReset = async (req,res) => {
   try {
     const { email } = req.body;
-    const user = await UserModel.findOne({ where: { email: email.trim() } }); 
+    const user = await UserModel.findOne({ where: { email } });
+    user.toJSON();
+
     if (!user) {
       console.log("Usuário não encontrado");
       return res.status(404).json({ message: 'Usuário não encontrado' });
