@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import router  from './routes/authRoutes';
+import routerReset from './routes/passwordReset';
 import dotenv from 'dotenv';
 import sequelize from './config/databaseconfig';
 const app = express();
@@ -11,6 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 app.use('/api/auth', router);
+app.use('/api/password', routerReset);
 
 // Rota de teste
 app.get('/', (req, res) => {
