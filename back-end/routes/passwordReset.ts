@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { requestPasswordReset, resetPassword } from '../controllers/passwordResetController';
 
-const router = Router();
+const routerReset = Router();
 
-router.post('/request-reset', requestPasswordReset);
-router.post('/reset', resetPassword);
+routerReset.post('/request-reset', requestPasswordReset);
+routerReset.post('/reset', resetPassword);
 
-export default router; 
+export default routerReset; 

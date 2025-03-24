@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
@@ -21,23 +22,19 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
     setLoginError('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      const response = await axios.post('http://localhost:3001/api/auth/login', {
+        email,
+        password
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Erro ao fazer login');
+      const data = response
+      if (response.status !== 200) {
+        throw new Error(data.data.message || 'Erro ao fazer login');
       }
 
       // Salvar token e dados do usuário
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('token', data.data.token);
+      localStorage.setItem('user', JSON.stringify(data.data.user));
 
       // Chamar callback de sucesso
       if (onLoginSuccess) {

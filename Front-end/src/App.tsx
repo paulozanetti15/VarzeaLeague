@@ -1,18 +1,17 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import { ThemeProvider } from '@mui/material/styles'
-import { LocalizationProvider } from '@mui/x-date-pickers'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-import { ptBR } from 'date-fns/locale'
-import theme from './theme'
 import './App.css'
 import { Login } from './pages/login/Login'
 import { Register } from './pages/register/Register'
 import { ForgotPassword } from './pages/forgot-password/ForgotPassword'
 import { Landing } from './pages/landing/Landing'
+import { ResetPassword } from './pages/reset-password/ResetPassword'
 import CreateMatch from './pages/CreateMatch'
 
-function AppContent() {
+
+function App() {
+ 
+
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const navigate = useNavigate();
 
@@ -88,16 +87,4 @@ function AppContent() {
   )
 }
 
-function App() {
-  return (
-    <ThemeProvider theme={theme}>
-      <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
-        <Router>
-          <AppContent />
-        </Router>
-      </LocalizationProvider>
-    </ThemeProvider>
-  )
-}
-
-export default App
+ export default App
