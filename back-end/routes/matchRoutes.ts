@@ -1,124 +1,117 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { authenticateToken } from '../middleware/auth';
 import MatchModel from '../models/Match';
-import MatchParticipantModel from '../models/MatchParticipant';
+import UserModel from '../models/User';
+import { Model } from 'sequelize';
+
+interface MatchInstance extends Model {
+  status: string;
+  maxPlayers: number;
+  addPlayer: (userId: number) => Promise<void>;
+  countPlayers: () => Promise<number>;
+}
 
 const router = express.Router();
 
 // Criar uma nova partida
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Recebendo requisição para criar partida:', req.body);
-    console.log('Usuário autenticado:', req.user);
+    const { title, description, date, location, maxPlayers, price } = req.body;
+    const userId = req.user?.id;
 
-    const { title, date, location, maxPlayers, description, price } = req.body;
-
-    if (!title || !date || !location || !maxPlayers) {
-      console.log('Campos obrigatórios faltando');
-      return res.status(400).json({ 
-        message: 'Campos obrigatórios faltando',
-        required: ['title', 'date', 'location', 'maxPlayers']
-      });
+    if (!userId) {
+      res.status(401).json({ message: 'Usuário não autenticado' });
+      return;
     }
-
-    console.log('Criando partida com os dados:', {
-      title,
-      date: new Date(date),
-      location,
-      maxPlayers,
-      description,
-      price,
-      organizerId: req.user?.id
-    });
 
     const match = await MatchModel.create({
       title,
-      date: new Date(date),
-      location,
-      maxPlayers: parseInt(maxPlayers),
       description,
-      price: price ? parseFloat(price) : null,
-      organizerId: req.user?.id,
-      status: 'pending'
+      date,
+      location,
+      maxPlayers,
+      price,
+      organizerId: userId,
+      status: 'open'
     });
 
-    console.log('Partida criada com sucesso:', match.toJSON());
-
-    res.status(201).json({
-      message: 'Partida criada com sucesso',
-      match
-    });
+    res.status(201).json(match);
   } catch (error) {
-    console.error('Erro detalhado ao criar partida:', error);
-    res.status(500).json({ 
-      message: 'Erro ao criar partida',
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
-    });
+    console.error('Erro ao criar partida:', error);
+    res.status(500).json({ message: 'Erro ao criar partida' });
   }
 });
 
 // Listar todas as partidas
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const matches = await MatchModel.findAll({
       include: [
-        { association: 'organizer', attributes: ['id', 'name'] },
-        { association: 'participants', include: [{ association: 'User', attributes: ['id', 'name'] }] }
+        { model: UserModel, as: 'organizer', attributes: ['id', 'name', 'email'] },
+        { model: UserModel, as: 'players', attributes: ['id', 'name', 'email'] }
       ]
     });
     res.json(matches);
   } catch (error) {
-    res.status(500).json({ error: 'Erro ao listar partidas' });
+    console.error('Erro ao listar partidas:', error);
+    res.status(500).json({ message: 'Erro ao listar partidas' });
   }
 });
 
-// Obter uma partida específica
-router.get('/:id', async (req, res) => {
+// Buscar uma partida específica
+router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const match = await MatchModel.findByPk(req.params.id, {
       include: [
-        { association: 'organizer', attributes: ['id', 'name'] },
-        { association: 'participants', include: [{ association: 'User', attributes: ['id', 'name'] }] }
+        { model: UserModel, as: 'organizer', attributes: ['id', 'name', 'email'] },
+        { model: UserModel, as: 'players', attributes: ['id', 'name', 'email'] }
       ]
     });
+
     if (!match) {
-      return res.status(404).json({ error: 'Partida não encontrada' });
+      res.status(404).json({ message: 'Partida não encontrada' });
+      return;
     }
+
     res.json(match);
   } catch (error) {
-    res.status(500).json({ error: 'Erro ao buscar partida' });
+    console.error('Erro ao buscar partida:', error);
+    res.status(500).json({ message: 'Erro ao buscar partida' });
   }
 });
 
-// Participar de uma partida
-router.post('/:id/join', authenticateToken, async (req, res) => {
+// Entrar em uma partida
+router.post('/:id/join', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
-    const match = await MatchModel.findByPk(req.params.id);
+    const match = await MatchModel.findByPk(req.params.id) as MatchInstance;
+    const userId = req.user?.id;
+
     if (!match) {
-      return res.status(404).json({ error: 'Partida não encontrada' });
+      res.status(404).json({ message: 'Partida não encontrada' });
+      return;
     }
 
-    const alreadyJoined = await MatchParticipantModel.findOne({
-      where: {
-        matchId: parseInt(req.params.id),
-        userId: req.user.id
-      }
-    });
-
-    if (alreadyJoined) {
-      return res.status(400).json({ error: 'Você já está participando desta partida' });
+    if (!userId) {
+      res.status(401).json({ message: 'Usuário não autenticado' });
+      return;
     }
 
-    const participant = await MatchParticipantModel.create({
-      matchId: parseInt(req.params.id),
-      userId: req.user.id,
-      team: req.body.team,
-      position: req.body.position
-    });
+    if (match.status !== 'open') {
+      res.status(400).json({ message: 'Esta partida não está aberta para inscrições' });
+      return;
+    }
 
-    res.status(201).json(participant);
+    const playerCount = await match.countPlayers();
+    if (playerCount >= match.maxPlayers) {
+      res.status(400).json({ message: 'Partida já está cheia' });
+      return;
+    }
+
+    await match.addPlayer(userId);
+    res.json({ message: 'Inscrição realizada com sucesso' });
   } catch (error) {
-    res.status(500).json({ error: 'Erro ao participar da partida' });
+    console.error('Erro ao entrar na partida:', error);
+    res.status(500).json({ message: 'Erro ao entrar na partida' });
   }
 });
 

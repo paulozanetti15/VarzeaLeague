@@ -23,7 +23,9 @@ const UserModel = sequelize.define('User', {
 }, {
   tableName: 'users',
   timestamps: true,
-  underscored: true
+  underscored: true,
+  modelName: 'User',
+  freezeTableName: true
 });
 
 export default UserModel;
