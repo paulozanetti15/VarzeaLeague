@@ -16,7 +16,7 @@ const router = express.Router();
 // Criar uma nova partida
 router.post('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { title, description, date, location, maxPlayers } = req.body;
+    const { title, description, date, location, maxPlayers, price } = req.body;
     const userId = req.user?.id;
 
     if (!userId) {
@@ -30,6 +30,7 @@ router.post('/', authenticateToken, async (req: Request, res: Response): Promise
       date,
       location,
       maxPlayers,
+      price,
       organizerId: userId,
       status: 'open'
     });
