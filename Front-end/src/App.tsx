@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import './App.css'
 import { Login } from './pages/login/Login'
 import { Register } from './pages/register/Register'
@@ -7,19 +7,40 @@ import { ForgotPassword } from './pages/forgot-password/ForgotPassword'
 import { Landing } from './pages/landing/Landing'
 import { ResetPassword } from './pages/reset-password/ResetPassword'
 import CreateMatch from './pages/CreateMatch'
+import { LocalizationProvider } from '@mui/x-date-pickers'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import ptBR from 'date-fns/locale/pt-BR'
 
-
-function App() {
- 
-
+function AppContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const checkAuthStatus = () => {
     const token = localStorage.getItem('token')
     if (token) {
-      setIsLoggedIn(true)
+      // Verifica se o token é válido fazendo uma requisição para o backend
+      fetch('http://localhost:3001/api/auth/verify', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          setIsLoggedIn(true)
+        } else {
+          handleLogout()
+        }
+      })
+      .catch(() => {
+        handleLogout()
+      })
+    } else {
+      setIsLoggedIn(false)
     }
+  }
+
+  useEffect(() => {
+    checkAuthStatus()
   }, [])
 
   const handleLoginSuccess = () => {
@@ -36,7 +57,11 @@ function App() {
 
   // Componente para proteger rotas
   const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-    return isLoggedIn ? <>{children}</> : <Navigate to="/login" />;
+    const token = localStorage.getItem('token')
+    if (!token) {
+      return <Navigate to="/login" />
+    }
+    return <>{children}</>
   };
 
   return (
@@ -78,6 +103,12 @@ function App() {
         />
       } />
 
+      <Route path="/reset-password/:token" element={
+        <ResetPassword 
+          onBackToLogin={() => navigate('/login')}
+        />
+      } />
+
       <Route path="/create-match" element={
         <PrivateRoute>
           <CreateMatch />
@@ -87,4 +118,14 @@ function App() {
   )
 }
 
- export default App
+function App() {
+  return (
+    <BrowserRouter>
+      <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
+        <AppContent />
+      </LocalizationProvider>
+    </BrowserRouter>
+  )
+}
+
+export default App

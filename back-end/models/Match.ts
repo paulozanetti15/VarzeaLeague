@@ -26,8 +26,8 @@ const MatchModel = sequelize.define('Match', {
     defaultValue: 10,
   },
   status: {
-    type: DataTypes.ENUM('pending', 'confirmed', 'cancelled', 'completed'),
-    defaultValue: 'pending',
+    type: DataTypes.ENUM('open', 'pending', 'confirmed', 'cancelled', 'completed'),
+    defaultValue: 'open',
   },
   description: {
     type: DataTypes.TEXT,
@@ -47,6 +47,10 @@ const MatchModel = sequelize.define('Match', {
   }
 }, {
   tableName: 'matches',
+  timestamps: true,
+  underscored: true,
+  modelName: 'Match',
+  freezeTableName: true
 });
 
 // Relacionamentos
