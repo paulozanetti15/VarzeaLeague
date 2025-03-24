@@ -4,8 +4,9 @@ import dotenv from 'dotenv';
 import sequelize from './config/databaseconfig';
 import authRoutes from './routes/authRoutes';
 import matchRoutes from './routes/matchRoutes';
-import './models/User';
-import './models/Match';
+import passwordRoutes from './routes/passwordRoutes';
+import UserModel from './models/User';
+import MatchModel from './models/Match';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use((req, res, next) => {
 // Rotas
 app.use('/api/auth', authRoutes);
 app.use('/api/matches', matchRoutes);
+app.use('/api/password', passwordRoutes);
 
 // Rota de teste
 app.get('/', (req, res) => {
@@ -51,7 +53,14 @@ app.use((req, res) => {
     console.log('Conexão com o banco estabelecida com sucesso!');
     
     console.log('Sincronizando modelos com o banco de dados...');
-    await sequelize.sync(); // Sincroniza com o banco sem recriar as tabelas
+    console.log('Sincronizando modelo User...');
+    await UserModel.sync({ alter: true });
+    console.log('Modelo User sincronizado.');
+    
+    console.log('Sincronizando modelo Match...');
+    await MatchModel.sync({ alter: true });
+    console.log('Modelo Match sincronizado.');
+    
     console.log('Banco de dados sincronizado com sucesso!');
     
     const port = process.env.PORT || 3001;

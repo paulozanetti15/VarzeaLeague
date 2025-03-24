@@ -15,6 +15,8 @@ const transporter = nodemailer.createTransport({
 
 
 export const sendPasswordResetEmail = async (email: string, resetToken: string) => {
+  console.log('Iniciando envio de email para:', email);
+  console.log('Usando remetente:', process.env.EMAIL_USER);
 
   const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
   const mailOptions = {
@@ -54,10 +56,17 @@ export const sendPasswordResetEmail = async (email: string, resetToken: string) 
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    console.log('Tentando enviar email...');
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Email enviado com sucesso:', result);
     return true;
   } catch (error) {
-    console.error('Erro ao enviar email:', error);
+    console.error('Erro detalhado ao enviar email:', {
+      error,
+      stack: error.stack,
+      code: error.code,
+      response: error.response
+    });
     return false;
   }
 }; 
