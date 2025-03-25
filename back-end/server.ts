@@ -3,10 +3,10 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import sequelize from './config/databaseconfig';
 import authRoutes from './routes/authRoutes';
-import matchRoutes from './routes/matchRoutes';
-import passwordRoutes from './routes/passwordRoutes';
 import UserModel from './models/User';
 import MatchModel from './models/Match';
+import passwordResetRoutes from './routes/passwordReset';
+import matchRoutes from './routes/matchRoutes';
 
 dotenv.config();
 
@@ -26,7 +26,8 @@ app.use((req, res, next) => {
 // Rotas
 app.use('/api/auth', authRoutes);
 app.use('/api/matches', matchRoutes);
-app.use('/api/password', passwordRoutes);
+app.use('/api/password', passwordResetRoutes);
+ 
 
 // Rota de teste
 app.get('/', (req, res) => {

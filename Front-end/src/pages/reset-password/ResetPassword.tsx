@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import './ResetPassword.css';
 import axios from 'axios';
 
@@ -8,8 +8,7 @@ interface ResetPasswordProps {
 }
 
 export function ResetPassword({ onBackToLogin }: ResetPasswordProps) {
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const { token } = useParams<{ token: string }>();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -32,10 +31,10 @@ export function ResetPassword({ onBackToLogin }: ResetPasswordProps) {
 
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:3001/api/password/reset', {
-        token,
+      const response = await axios.put('http://localhost:3001/api/password/reset-password', {
+        token: token,
         newPassword,
-      })
+      });
       if (response.status !== 201) {
         throw new Error(response.data.message || 'Erro ao redefinir senha');
       }
@@ -91,6 +90,7 @@ export function ResetPassword({ onBackToLogin }: ResetPasswordProps) {
             <button 
               type="submit" 
               className="btn btn-primary w-100"
+              onClick={handleSubmit}
               disabled={loading}
             >
               {loading ? (

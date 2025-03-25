@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import './App.css'
 import { Login } from './pages/login/Login'
 import { Register } from './pages/register/Register'
@@ -7,14 +7,16 @@ import { ForgotPassword } from './pages/forgot-password/ForgotPassword'
 import { Landing } from './pages/landing/Landing'
 import { ResetPassword } from './pages/reset-password/ResetPassword'
 import CreateMatch from './pages/CreateMatch'
-import { LocalizationProvider } from '@mui/x-date-pickers'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-import ptBR from 'date-fns/locale/pt-BR'
 
-function AppContent() {
+
+function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   
   useEffect(() => {
+    checkAuthStatus()
+  }, [])
+
+  const checkAuthStatus = () => {
     const token = localStorage.getItem('token')
     if (token) {
       // Verifica se o token é válido fazendo uma requisição para o backend
@@ -38,10 +40,6 @@ function AppContent() {
     }
   }
 
-  useEffect(() => {
-    checkAuthStatus()
-  }, [])
-
   const handleLoginSuccess = () => {
     setIsLoggedIn(true)
     window.location.href='/'
@@ -64,6 +62,7 @@ function AppContent() {
   };
 
   return (
+
    <Router> 
       <Routes>
         <Route path="/" element={
@@ -96,12 +95,28 @@ function AppContent() {
             />
           )
         } />
+         <Route path="/reset-" element={
+          isLoggedIn ? (
+            <Navigate to="/" />
+          ) : (
+            <Register 
+              onLoginClick={() => window.location.href='/login'}
+            />
+          )
+        } />
+
         
         <Route path="/forgot-password" element={
           <ForgotPassword 
             onBackToLogin={() => window.location.href='/login'}
           />
         } />
+         <Route path="reset-password/:token" element={
+          <ResetPassword 
+            onBackToLogin={() => window.location.href='/login'}
+          />
+        } />
+
 
         <Route path="/create-match" element={
           <PrivateRoute>
@@ -114,3 +129,4 @@ function AppContent() {
 }
 
 export default App
+
