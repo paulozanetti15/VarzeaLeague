@@ -45,9 +45,11 @@ export function Register({ onLoginClick }: RegisterProps) {
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
     const errors = [];
-    
     if (password.length < minLength) {
       errors.push(`Mínimo de ${minLength} caracteres`);
+    }
+    else if (password.length >= minLength) {
+      setPasswordError('');
     }
     if (!hasUpperCase) {
       errors.push('Uma letra maiúscula');
@@ -66,6 +68,7 @@ export function Register({ onLoginClick }: RegisterProps) {
       setPasswordError(`Sua senha precisa ter: ${errors.join(', ')}`);
       return false;
     }
+   
 
     return true;
   };

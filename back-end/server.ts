@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import sequelize from './config/databaseconfig';
 import authRoutes from './routes/authRoutes';
 import matchRoutes from './routes/matchRoutes';
-import passwordRoutes from './routes/passwordRoutes';
+import passwordRoutes from './routes/passwordReset';
 import UserModel from './models/User';
 import MatchModel from './models/Match';
 
