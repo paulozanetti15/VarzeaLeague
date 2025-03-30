@@ -18,7 +18,7 @@ export const sendPasswordResetEmail = async (email: string, resetToken: string) 
   console.log('Iniciando envio de email para:', email);
   console.log('Usando remetente:', process.env.EMAIL_USER);
 
-  const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
+  const resetLink = `http://localhost:3000/reset-password/${resetToken}`;
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,

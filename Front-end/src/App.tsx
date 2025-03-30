@@ -7,9 +7,7 @@ import { ForgotPassword } from './pages/forgot-password/ForgotPassword'
 import { Landing } from './pages/landing/Landing'
 import { ResetPassword } from './pages/reset-password/ResetPassword'
 import CreateMatch from './pages/CreateMatch'
-import { LocalizationProvider } from '@mui/x-date-pickers'
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
-import ptBR from 'date-fns/locale/pt-BR'
+ 
 
 function AppContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -36,12 +34,8 @@ function AppContent() {
     } else {
       setIsLoggedIn(false)
     }
-  }
-
-  useEffect(() => {
-    checkAuthStatus()
-  }, [])
-
+  } , [])
+  
   const handleLoginSuccess = () => {
     setIsLoggedIn(true)
     window.location.href='/'
@@ -64,7 +58,7 @@ function AppContent() {
   };
 
   return (
-   <Router> 
+   <BrowserRouter> 
       <Routes>
         <Route path="/" element={
           <Landing 
@@ -102,6 +96,11 @@ function AppContent() {
             onBackToLogin={() => window.location.href='/login'}
           />
         } />
+         <Route path="/reset-password/:token" element={
+          <ResetPassword 
+            onBackToLogin={() => window.location.href='/login'}
+          />
+        } />
 
         <Route path="/create-match" element={
           <PrivateRoute>
@@ -109,8 +108,8 @@ function AppContent() {
           </PrivateRoute>
         } />
       </Routes>
-    </Router>
+    </BrowserRouter>
   )
 }
 
-export default App
+export default AppContent
