@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import './App.css'
 import { Login } from './pages/login/Login'
 import { Register } from './pages/register/Register'
@@ -7,126 +8,166 @@ import { ForgotPassword } from './pages/forgot-password/ForgotPassword'
 import { Landing } from './pages/landing/Landing'
 import { ResetPassword } from './pages/reset-password/ResetPassword'
 import CreateMatch from './pages/CreateMatch'
+import TeamList from './pages/teams/TeamList'
+import CreateTeam from './pages/teams/CreateTeam'
+import EditTeam from './pages/teams/EditTeam'
+import PrivateRoute from './components/PrivateRoute'
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+interface LoginProps {
+  onRegisterClick?: () => void;
+  onForgotPasswordClick?: () => void;
+  onLoginSuccess?: (data: { user: User; token: string }) => void;
+}
+
+function AppContent() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const navigate = useNavigate();
   
   useEffect(() => {
-    checkAuthStatus()
-  }, [])
+    checkAuthStatus();
+  }, []);
 
-  const checkAuthStatus = () => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      // Verifica se o token é válido fazendo uma requisição para o backend
-      fetch('http://localhost:3001/api/auth/verify', {
+  const checkAuthStatus = async () => {
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    
+    if (!token || !storedUser) {
+      setIsLoggedIn(false);
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get('http://localhost:3001/api/auth/verify', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
-      })
-      .then(response => {
-        if (response.ok) {
-          setIsLoggedIn(true)
-        } else {
-          handleLogout()
-        }
-      })
-      .catch(() => {
-        handleLogout()
-      })
-    } else {
-      setIsLoggedIn(false)
+      });
+
+      setIsLoggedIn(true);
+      setUser(JSON.parse(storedUser));
+    } catch (error) {
+      console.error('Erro ao verificar token:', error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setIsLoggedIn(false);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
-  }
-
-  const handleLoginSuccess = () => {
-    setIsLoggedIn(true)
-    window.location.href='/'
-  }
-
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    setIsLoggedIn(false)
-    window.location.href='/'
-  }
-
-  // Componente para proteger rotas
-  const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      return <Navigate to="/login" />
-    }
-    return <>{children}</>
   };
 
+  const handleLoginSuccess = (userData: { user: User; token: string }) => {
+    localStorage.setItem('token', userData.token);
+    localStorage.setItem('user', JSON.stringify(userData.user));
+    setUser(userData.user);
+    setIsLoggedIn(true);
+    navigate('/');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsLoggedIn(false);
+    setUser(null);
+    navigate('/');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Carregando...</p>
+      </div>
+    );
+  }
+
   return (
-
-   <Router> 
-      <Routes>
-        <Route path="/" element={
-          <Landing 
-            isLoggedIn={isLoggedIn}
-            onLoginClick={() => window.location.href='/login'}
-            onRegisterClick={() => window.location.href='/register'}
-            onLogout={handleLogout}
+    <Routes>
+      <Route path="/" element={
+        <Landing 
+          isLoggedIn={isLoggedIn}
+          user={user}
+          onLoginClick={() => navigate('/login')}
+          onRegisterClick={() => navigate('/register')}
+          onLogout={handleLogout}
+        />
+      } />
+      
+      <Route path="/login" element={
+        isLoggedIn ? (
+          <Navigate to="/" replace />
+        ) : (
+          <Login 
+            onRegisterClick={() => navigate('/register')}
+            onForgotPasswordClick={() => navigate('/forgot-password')}
+            onLoginSuccess={handleLoginSuccess}
           />
-        } />
-        
-        <Route path="/login" element={
-          isLoggedIn ? (
-            <Navigate to="/" />
-          ) : (
-            <Login 
-              onRegisterClick={() => window.location.href='/register'}
-              onForgotPasswordClick={() => window.location.href='/forgot-password'}
-              onLoginSuccess={handleLoginSuccess}
-            />
-          )
-        } />
-        
-        <Route path="/register" element={
-          isLoggedIn ? (
-            <Navigate to="/" />
-          ) : (
-            <Register 
-              onLoginClick={() => window.location.href='/login'}
-            />
-          )
-        } />
-         <Route path="/reset-" element={
-          isLoggedIn ? (
-            <Navigate to="/" />
-          ) : (
-            <Register 
-              onLoginClick={() => window.location.href='/login'}
-            />
-          )
-        } />
-
-        
-        <Route path="/forgot-password" element={
-          <ForgotPassword 
-            onBackToLogin={() => window.location.href='/login'}
+        )
+      } />
+      
+      <Route path="/register" element={
+        isLoggedIn ? (
+          <Navigate to="/" replace />
+        ) : (
+          <Register 
+            onLoginClick={() => navigate('/login')}
           />
-        } />
-         <Route path="reset-password/:token" element={
-          <ResetPassword 
-            onBackToLogin={() => window.location.href='/login'}
-          />
-        } />
+        )
+      } />
 
+      <Route path="/forgot-password" element={
+        <ForgotPassword 
+          onBackToLogin={() => navigate('/login')}
+        />
+      } />
 
-        <Route path="/create-match" element={
-          <PrivateRoute>
-            <CreateMatch />
-          </PrivateRoute>
-        } />
-      </Routes>
-    </Router>
-  )
+      <Route path="reset-password/:token" element={
+        <ResetPassword 
+          onBackToLogin={() => navigate('/login')}
+        />
+      } />
+
+      <Route path="/create-match" element={
+        <PrivateRoute isLoggedIn={isLoggedIn}>
+          <CreateMatch />
+        </PrivateRoute>
+      } />
+
+      <Route path="/teams" element={
+        <PrivateRoute isLoggedIn={isLoggedIn}>
+          <TeamList />
+        </PrivateRoute>
+      } />
+
+      <Route path="/teams/create" element={
+        <PrivateRoute isLoggedIn={isLoggedIn}>
+          <CreateTeam />
+        </PrivateRoute>
+      } />
+
+      <Route path="/teams/edit/:id" element={
+        <PrivateRoute isLoggedIn={isLoggedIn}>
+          <EditTeam />
+        </PrivateRoute>
+      } />
+    </Routes>
+  );
 }
 
-export default App
-
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
+  );
+}

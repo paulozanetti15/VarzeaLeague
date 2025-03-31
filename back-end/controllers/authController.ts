@@ -1,28 +1,42 @@
+import { Request, Response, RequestHandler } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import UserModel from '../models/User';
 
-const JWT_SECRET = 'varzealeague_secret'; // Em produção, isso deve vir de variáveis de ambiente
+const JWT_SECRET = process.env.JWT_SECRET || 'varzealeague_secret';
 
-export const register = async (req, res) => {
+interface UserAttributes {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+}
+
+export const register: RequestHandler = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const existingUsers = await UserModel.findAll({ where: { email: email } });
+    const existingUser = await UserModel.findOne({ where: { email } });
 
-    if (existingUsers.length > 0) {
-      return res.status(400).json({ message: 'Email já cadastrado' });
+    if (existingUser) {
+      res.status(400).json({ message: 'Email já cadastrado' });
+      return;
     }
+
     // Criptografar a senha
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const result = await UserModel.create({ name:name, email:email, password: hashedPassword })  as unknown as { id: number, name: string, email: string };
-    const findUser = await UserModel.findOne({ where: { email: email } });
-    const user = findUser[0];
+    const user = await UserModel.create({
+      name,
+      email,
+      password: hashedPassword
+    });
+
+    const userJson = user.toJSON() as UserAttributes;
 
     // Gerar token
-    const token = jwt.sign({ userId: user }, JWT_SECRET, {
+    const token = jwt.sign({ userId: userJson.id }, JWT_SECRET, {
       expiresIn: '24h',
     });
 
@@ -30,9 +44,9 @@ export const register = async (req, res) => {
       message: 'Usuário registrado com sucesso',
       token,
       user: {
-        id: result.id,
-        name,
-        email,
+        id: userJson.id,
+        name: userJson.name,
+        email: userJson.email,
       },
     });
   } catch (error) {
@@ -40,27 +54,30 @@ export const register = async (req, res) => {
     res.status(500).json({ message: 'Erro ao registrar usuário' });
   }
 };
-export const login = async (req, res) => {
+
+export const login: RequestHandler = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // Buscar usuário
-    const users = await UserModel.findAll({ where: { email: email } });
+    const user = await UserModel.findOne({ where: { email } });
 
-    if (users.length === 0) {
-      return res.status(401).json({ message: 'Email ou senha inválidos' });
+    if (!user) {
+      res.status(401).json({ message: 'Email ou senha inválidos' });
+      return;
     }
 
-    const user = users[0].toJSON();
+    const userJson = user.toJSON() as UserAttributes;
 
     // Verificar senha
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await bcrypt.compare(password, userJson.password);
     if (!isValidPassword) {
-      return res.status(401).json({ message: 'Email ou senha inválidos' });
+      res.status(401).json({ message: 'Email ou senha inválidos' });
+      return;
     }
 
     // Gerar token
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+    const token = jwt.sign({ userId: userJson.id }, JWT_SECRET, {
       expiresIn: '24h',
     });
 
@@ -68,9 +85,9 @@ export const login = async (req, res) => {
       message: 'Login realizado com sucesso',
       token,
       user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
+        id: userJson.id,
+        name: userJson.name,
+        email: userJson.email,
       },
     });
   } catch (error) {
@@ -78,4 +95,36 @@ export const login = async (req, res) => {
     res.status(500).json({ message: 'Erro ao fazer login' });
   }
 };
-export default { register, login }; 
+
+export const verify: RequestHandler = async (req, res) => {
+  try {
+    const authReq = req as any;
+    const userId = authReq.user?.id;
+    
+    if (!userId) {
+      res.status(401).json({ error: 'Usuário não autenticado' });
+      return;
+    }
+
+    const user = await UserModel.findByPk(userId);
+    if (!user) {
+      res.status(404).json({ error: 'Usuário não encontrado' });
+      return;
+    }
+
+    const userJson = user.toJSON() as UserAttributes;
+    res.json({
+      user: {
+        id: userJson.id,
+        name: userJson.name,
+        email: userJson.email
+      },
+      authenticated: true
+    });
+  } catch (error) {
+    console.error('Erro na verificação:', error);
+    res.status(500).json({ error: 'Erro ao verificar autenticação' });
+  }
+};
+
+export default { register, login, verify }; 

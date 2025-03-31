@@ -1,19 +1,33 @@
 import './Benefits.css';
 import { useNavigate } from 'react-router-dom';
 
-export function Benefits() {
+interface BenefitsProps {
+  isLoggedIn: boolean;
+}
+
+export function Benefits({ isLoggedIn }: BenefitsProps) {
   const navigate = useNavigate();
+
+  const handleNavigation = (path: string) => {
+    if (isLoggedIn) {
+      navigate(path);
+    } else {
+      navigate('/login');
+    }
+  };
+
   const benefits = [
     {
       icon: '⚽',
       title: 'Organize Partidas',
       description: 'Crie e gerencie jogos facilmente, definindo local, data e participantes.',
-      onClick: () => navigate('/create-match')
+      onClick: () => handleNavigation('/create-match')
     },
     {
       icon: '👥',
       title: 'Gerencie Times',
-      description: 'Monte seus times, controle presença e mantenha todos informados.'
+      description: 'Monte seus times, controle presença e mantenha todos informados.',
+      onClick: () => handleNavigation('/teams')
     },
     {
       icon: '📊',

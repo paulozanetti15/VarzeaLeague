@@ -1,7 +1,23 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/databaseconfig';
 
-const UserModel = sequelize.define('User', {
+class User extends Model {
+  public id!: number;
+  public name!: string;
+  public email!: string;
+  public password!: string;
+  public resetPasswordExpires?: Date;
+  public resetPasswordToken?: string;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+
+  public static associate(models: any) {
+    User.hasMany(models.Team, { foreignKey: 'captainId', as: 'captainedTeams' });
+    User.hasMany(models.Match, { foreignKey: 'organizerId' });
+  }
+}
+
+User.init({
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -27,10 +43,9 @@ const UserModel = sequelize.define('User', {
   resetPasswordToken: {
     type: DataTypes.STRING,
     allowNull: true,
-  },  
-  
-
+  }
 }, {
+  sequelize,
   tableName: 'users',
   timestamps: true,
   underscored: true,
@@ -38,4 +53,4 @@ const UserModel = sequelize.define('User', {
   freezeTableName: true
 });
 
-export default UserModel;
+export default User;
