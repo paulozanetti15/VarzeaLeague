@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion'; 
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useNavigate } from 'react-router-dom';
 import './ManageTeams.css';
 
@@ -17,6 +18,7 @@ export function ManageTeams() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,6 +42,18 @@ export function ManageTeams() {
 
   const handleEditTeam = (teamId: number) => {
     navigate(`/edit-team/${teamId}`);
+  };
+
+  const handleDeleteTeam = async (teamId: number) => {
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/teams/${teamId}`, {
+        data: { confirm: true }
+      });
+      setTeams(teams.filter(team => team.id !== teamId));
+      setDeleteConfirm(null);
+    } catch (err) {
+      setError('Erro ao deletar o time');
+    }
   };
 
   if (loading) {
@@ -81,12 +95,39 @@ export function ManageTeams() {
             <div className="team-info">
               <h3>{team.name}</h3>
               <p>{team.description}</p>
-              <button 
-                className="edit-team-btn"
-                onClick={() => handleEditTeam(team.id)}
-              >
-                Editar Time
-              </button>
+              <div className="team-actions">
+                <button 
+                  className="edit-team-btn"
+                  onClick={() => handleEditTeam(team.id)}
+                >
+                  Editar Time
+                </button>
+                {deleteConfirm === team.id ? (
+                  <div className="delete-confirmation">
+                    <p>Tem certeza?</p>
+                    <button 
+                      className="confirm-delete-btn"
+                      onClick={() => handleDeleteTeam(team.id)}
+                    >
+                      Sim
+                    </button>
+                    <button 
+                      className="cancel-delete-btn"
+                      onClick={() => setDeleteConfirm(null)}
+                    >
+                      Não
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    className="delete-team-btn"
+                    onClick={() => setDeleteConfirm(team.id)}
+                    title="Deletar time"
+                  >
+                    <DeleteIcon style={{ fontSize: 24, color: '#dc3545' }} />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ))}

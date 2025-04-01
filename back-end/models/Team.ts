@@ -8,13 +8,16 @@ interface TeamAttributes {
   description: string;
   banner: string | null;
   captainId: number;
+  isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
   captain?: User;
   players?: User[];
 }
 
-interface TeamCreationAttributes extends Omit<TeamAttributes, 'id'> {}
+interface TeamCreationAttributes extends Omit<TeamAttributes, 'id'> {
+  isDeleted: boolean;
+}
 
 class Team extends Model<TeamAttributes, TeamCreationAttributes> {
   public id!: number;
@@ -22,6 +25,7 @@ class Team extends Model<TeamAttributes, TeamCreationAttributes> {
   public description!: string;
   public banner!: string | null;
   public captainId!: number;
+  public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -65,6 +69,11 @@ Team.init(
       },
       unique: false
     },
+    isDeleted: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    }
   },
   {
     sequelize,

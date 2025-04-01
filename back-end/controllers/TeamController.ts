@@ -52,7 +52,10 @@ export class TeamController {
       // Verificar apenas pelo nome do time
       if (name) {
         const existingTeam = await Team.findOne({
-          where: { name: name.trim() }
+          where: { 
+            name: name.trim(),
+            isDeleted: false 
+          }
         });
 
         if (existingTeam) {
@@ -67,7 +70,8 @@ export class TeamController {
       const team = await Team.create({
         name: name.trim(),
         description,
-        captainId
+        captainId,
+        isDeleted: false
       });
       
       console.log("Time criado com sucesso:", team.id);
@@ -115,6 +119,9 @@ export class TeamController {
   static async listTeams(req: Request, res: Response): Promise<void> {
     try {
       const teams = await Team.findAll({
+        where: {
+          isDeleted: false
+        },
         include: [
           {
             model: User,
@@ -147,7 +154,11 @@ export class TeamController {
   static async getTeam(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const team = await Team.findByPk(id, {
+      const team = await Team.findOne({
+        where: {
+          id,
+          isDeleted: false
+        },
         include: [
           {
             model: User,
@@ -186,7 +197,12 @@ export class TeamController {
       const { name, description, playerEmails } = req.body;
       const userId = req.user?.id;
 
-      const team = await Team.findByPk(id);
+      const team = await Team.findOne({
+        where: {
+          id,
+          isDeleted: false
+        }
+      });
       if (!team) {
         res.status(404).json({ error: 'Time não encontrado' });
         return;
@@ -200,7 +216,8 @@ export class TeamController {
       const existingTeam = await Team.findOne({
         where: {
           name,
-          id: { [Op.ne]: id }
+          id: { [Op.ne]: id },
+          isDeleted: false
         }
       });
 
@@ -221,7 +238,11 @@ export class TeamController {
         await team.setPlayers(players);
       }
 
-      const updatedTeam = await Team.findByPk(id, {
+      const updatedTeam = await Team.findOne({
+        where: {
+          id,
+          isDeleted: false
+        },
         include: [
           {
             model: User,
@@ -259,7 +280,12 @@ export class TeamController {
       const { id } = req.params;
       const userId = req.user?.id;
 
-      const team = await Team.findByPk(id);
+      const team = await Team.findOne({
+        where: {
+          id,
+          isDeleted: false
+        }
+      });
       if (!team) {
         res.status(404).json({ error: 'Time não encontrado' });
         return;
@@ -284,7 +310,11 @@ export class TeamController {
 
       await team.update({ banner: req.file.filename });
 
-      const updatedTeam = await Team.findByPk(id, {
+      const updatedTeam = await Team.findOne({
+        where: {
+          id,
+          isDeleted: false
+        },
         include: [
           {
             model: User,
@@ -314,6 +344,51 @@ export class TeamController {
     } catch (error) {
       console.error('Erro ao fazer upload do banner:', error);
       res.status(500).json({ error: 'Erro ao fazer upload do banner' });
+    }
+  }
+
+  static async deleteTeam(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { confirm } = req.body;
+      const userId = req.user?.id;
+
+      if (!confirm) {
+        res.status(400).json({ 
+          error: 'Confirmação necessária',
+          message: 'Para deletar o time, envie confirm: true no corpo da requisição'
+        });
+        return;
+      }
+
+      const team = await Team.findOne({
+        where: {
+          id,
+          isDeleted: false
+        }
+      });
+      
+      if (!team) {
+        res.status(404).json({ error: 'Time não encontrado' });
+        return;
+      }
+
+      if (team.captainId !== userId) {
+        res.status(403).json({ error: 'Apenas o capitão pode deletar o time' });
+        return;
+      }
+
+      await team.update({ isDeleted: true });
+      res.status(200).json({ 
+        message: 'Time deletado com sucesso',
+        team: {
+          id: team.id,
+          name: team.name
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao deletar time:', error);
+      res.status(500).json({ error: 'Erro ao deletar time' });
     }
   }
 } 
