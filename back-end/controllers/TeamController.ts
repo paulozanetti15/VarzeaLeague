@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import Team from '../models/Team';
 import User from '../models/User';
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -90,16 +90,62 @@ export class TeamController {
 
           // Atualizar jogadores do time se necessário
           if (playerEmails && Array.isArray(playerEmails)) {
-            console.log("Processando e-mails de jogadores:", playerEmails);
-            await existingDeletedTeam.setPlayers([]); // Remove todos os jogadores atuais
-            for (const email of playerEmails) {
-              const user = await User.findOne({ where: { email } });
-              if (user) {
-                await existingDeletedTeam.addPlayer(user);
-                console.log(`Jogador adicionado: ${email}`);
-              } else {
-                console.log(`Usuário não encontrado: ${email}`);
+            // Filtra emails vazios ou inválidos
+            const validEmails = playerEmails.filter(email => email && typeof email === 'string' && email.trim() !== '');
+            
+            console.log("Processando emails válidos de jogadores para time reutilizado:", validEmails.length);
+            
+            if (validEmails.length > 0) {
+              // Remove todos os jogadores atuais
+              await existingDeletedTeam.setPlayers([]);
+              
+              // Encontra os usuários que já existem no banco de dados
+              const existingPlayers = await User.findAll({
+                where: {
+                  email: { [Op.in]: validEmails }
+                }
+              });
+              
+              console.log(`Encontrados ${existingPlayers.length} jogadores para os ${validEmails.length} emails fornecidos`);
+              
+              // Identifica os emails que não foram encontrados
+              const existingEmails = existingPlayers.map(player => player.get('email'));
+              const missingEmails = validEmails.filter(email => !existingEmails.includes(email));
+              
+              if (missingEmails.length > 0) {
+                console.log('Emails não encontrados no banco de dados (precisam ser criados):', missingEmails);
+                
+                // Busca todos os usuários uma única vez para comparar
+                const allUsers = await User.findAll();
+                console.log(`Buscados ${allUsers.length} usuários para verificação case insensitive`);
+                
+                // Para cada email não encontrado, verifica na lista completa
+                for (const email of missingEmails) {
+                  console.log(`Verificando email: ${email} com busca case insensitive`);
+                  
+                  // Converte o email para minúsculas e remove espaços
+                  const normalizedEmail = email.trim().toLowerCase();
+                  
+                  // Procura o usuário na lista já buscada
+                  const userWithDifferentCase = allUsers.find(
+                    user => user.get('email').toLowerCase() === normalizedEmail
+                  );
+                  
+                  if (userWithDifferentCase) {
+                    console.log(`Encontrado usuário com email em case diferente: ${userWithDifferentCase.get('email')}`);
+                    existingPlayers.push(userWithDifferentCase);
+                  } else {
+                    console.log(`Usuário com email ${email} não existe. Não é possível adicioná-lo.`);
+                  }
+                }
               }
+              
+              // Atualiza a associação de jogadores com o time
+              console.log(`Definindo ${existingPlayers.length} jogadores para o time reutilizado ${existingDeletedTeam.id}`);
+              await existingDeletedTeam.setPlayers(existingPlayers);
+            } else {
+              // Remove todos os jogadores se não houver emails válidos
+              await existingDeletedTeam.setPlayers([]);
             }
           }
 
@@ -118,7 +164,19 @@ export class TeamController {
             ]
           });
 
-          res.status(201).json(teamWithAssociations);
+          const plainTeam = teamWithAssociations.get({ plain: true });
+          
+          // Log dos jogadores associados ao time reutilizado
+          if (plainTeam.players && Array.isArray(plainTeam.players)) {
+            console.log(`Time reutilizado tem ${plainTeam.players.length} jogadores associados:`);
+            plainTeam.players.forEach((player: any) => {
+              console.log(`- Jogador associado: ID=${player.id}, Email=${player.email}`);
+            });
+          } else {
+            console.log('Time reutilizado não tem jogadores associados');
+          }
+
+          res.status(201).json(plainTeam);
           return;
         }
       }
@@ -136,15 +194,56 @@ export class TeamController {
       console.log("Time criado com sucesso:", team.id);
 
       if (playerEmails && Array.isArray(playerEmails)) {
-        console.log("Processando e-mails de jogadores:", playerEmails);
-        for (const email of playerEmails) {
-          const user = await User.findOne({ where: { email } });
-          if (user) {
-            await team.addPlayer(user);
-            console.log(`Jogador adicionado: ${email}`);
-          } else {
-            console.log(`Usuário não encontrado: ${email}`);
+        // Filtra emails vazios ou inválidos
+        const validEmails = playerEmails.filter(email => email && typeof email === 'string' && email.trim() !== '');
+        
+        console.log("Processando emails válidos de jogadores:", validEmails.length);
+        
+        if (validEmails.length > 0) {
+          // Primeiro, encontra os usuários que já existem no banco de dados
+          const existingPlayers = await User.findAll({
+            where: {
+              email: { [Op.in]: validEmails }
+            }
+          });
+          
+          console.log(`Encontrados ${existingPlayers.length} jogadores para os ${validEmails.length} emails fornecidos`);
+          
+          // Identifica os emails que não foram encontrados
+          const existingEmails = existingPlayers.map(player => player.get('email'));
+          const missingEmails = validEmails.filter(email => !existingEmails.includes(email));
+          
+          if (missingEmails.length > 0) {
+            console.log('Emails não encontrados no banco de dados (precisam ser criados):', missingEmails);
+            
+            // Busca todos os usuários uma única vez para comparar
+            const allUsers = await User.findAll();
+            console.log(`Buscados ${allUsers.length} usuários para verificação case insensitive`);
+            
+            // Para cada email não encontrado, verifica na lista completa
+            for (const email of missingEmails) {
+              console.log(`Verificando email: ${email} com busca case insensitive`);
+              
+              // Converte o email para minúsculas e remove espaços
+              const normalizedEmail = email.trim().toLowerCase();
+              
+              // Procura o usuário na lista já buscada
+              const userWithDifferentCase = allUsers.find(
+                user => user.get('email').toLowerCase() === normalizedEmail
+              );
+              
+              if (userWithDifferentCase) {
+                console.log(`Encontrado usuário com email em case diferente: ${userWithDifferentCase.get('email')}`);
+                existingPlayers.push(userWithDifferentCase);
+              } else {
+                console.log(`Usuário com email ${email} não existe. Não é possível adicioná-lo.`);
+              }
+            }
           }
+          
+          // Atualiza a associação de jogadores com o time
+          console.log(`Definindo ${existingPlayers.length} jogadores para o novo time ${team.id}`);
+          await team.setPlayers(existingPlayers);
         }
       }
 
@@ -168,16 +267,38 @@ export class TeamController {
         return;
       }
 
-      res.status(201).json(teamWithAssociations);
+      const plainTeam = teamWithAssociations.get({ plain: true });
+      
+      // Log dos jogadores associados ao time após a criação
+      if (plainTeam.players && Array.isArray(plainTeam.players)) {
+        console.log(`Time criado tem ${plainTeam.players.length} jogadores associados:`);
+        plainTeam.players.forEach((player: any) => {
+          console.log(`- Jogador associado: ID=${player.id}, Email=${player.email}`);
+        });
+      } else {
+        console.log('Time criado não tem jogadores associados');
+      }
+
+      res.status(201).json(plainTeam);
     } catch (error) {
       console.error('Erro ao criar time:', error);
       res.status(500).json({ error: 'Erro ao criar time' });
     }
   }
 
-  static async listTeams(req: Request, res: Response): Promise<void> {
+  static async listTeams(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const teams = await Team.findAll({
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        res.status(401).json({ error: 'Usuário não autenticado' });
+        return;
+      }
+      
+      console.log(`Listando times visíveis para o usuário ${userId}`);
+
+      // Busca todos os times não excluídos
+      const allTeams = await Team.findAll({
         where: {
           isDeleted: false
         },
@@ -195,14 +316,32 @@ export class TeamController {
         ]
       });
 
-      const formattedTeams = teams.map(team => {
+      // Filtra os times onde o usuário é capitão ou jogador
+      const visibleTeams = allTeams.filter(team => {
+        // Time onde o usuário é capitão
+        if (team.captainId === userId) {
+          return true;
+        }
+        
+        // Time onde o usuário é jogador
+        const isPlayer = team.players.some(player => player.id === userId);
+        return isPlayer;
+      });
+
+      const formattedTeams = visibleTeams.map(team => {
         const plainTeam = team.get({ plain: true });
+        const isCaptain = team.captainId === userId;
+        const isPlayer = team.players.some(player => player.id === userId);
+        
         return {
           ...plainTeam,
-          banner: plainTeam.banner ? `http://localhost:3001/uploads/teams/${plainTeam.banner}` : null
+          banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
+          isCurrentUserCaptain: isCaptain,
+          isCurrentUserPlayer: isPlayer
         };
       });
 
+      console.log(`Encontrados ${visibleTeams.length} times visíveis para o usuário ${userId} de um total de ${allTeams.length} times`);
       res.json(formattedTeams);
     } catch (error) {
       console.error('Erro ao listar times:', error);
@@ -210,9 +349,18 @@ export class TeamController {
     }
   }
 
-  static async getTeam(req: Request, res: Response): Promise<void> {
+  static async getTeam(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        res.status(401).json({ error: 'Usuário não autenticado' });
+        return;
+      }
+      
+      console.log(`Buscando time com ID: ${id} para usuário ${userId}`);
+      
       const team = await Team.findOne({
         where: {
           id,
@@ -233,14 +381,39 @@ export class TeamController {
       });
 
       if (!team) {
+        console.log(`Time com ID ${id} não encontrado ou está marcado como excluído.`);
         res.status(404).json({ error: 'Time não encontrado' });
+        return;
+      }
+      
+      // Verifica se o usuário é o capitão ou um jogador do time
+      const isCaptain = team.captainId === userId;
+      const isPlayer = team.players.some(player => player.id === userId);
+      
+      if (!isCaptain && !isPlayer) {
+        console.log(`Acesso negado: Usuário ${userId} não é capitão nem jogador do time ${id}`);
+        res.status(403).json({ error: 'Você não tem permissão para ver este time' });
         return;
       }
 
       const plainTeam = team.get({ plain: true });
+      
+      // Verifica se há jogadores associados ao time
+      if (plainTeam.players && Array.isArray(plainTeam.players)) {
+        console.log(`Time encontrado com ${plainTeam.players.length} jogadores associados`);
+        plainTeam.players.forEach((player: any) => {
+          console.log(`- Jogador: ID=${player.id}, Email=${player.email}`);
+        });
+      } else {
+        console.log('Time encontrado sem jogadores associados');
+        plainTeam.players = [];
+      }
+      
       const formattedTeam = {
         ...plainTeam,
-        banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null
+        banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
+        isCurrentUserCaptain: isCaptain,
+        isCurrentUserPlayer: isPlayer
       };
 
       res.json(formattedTeam);
@@ -302,13 +475,69 @@ export class TeamController {
       console.log(`Time ${id} atualizado em: ${agora.toISOString()}`);
 
       if (playerEmails && Array.isArray(playerEmails)) {
-        const players = await User.findAll({
-          where: {
-            email: { [Op.in]: playerEmails }
+        console.log('Emails recebidos para atualização:', playerEmails);
+        
+        // Limpa emails vazios ou inválidos
+        const validEmails = playerEmails.filter(email => email && typeof email === 'string' && email.trim() !== '');
+        console.log('Emails válidos após filtragem:', validEmails);
+        
+        if (validEmails.length === 0) {
+          console.log('Nenhum email válido fornecido. Removendo todas as associações de jogadores.');
+          await team.setPlayers([]);
+        } else {
+          // Primeiro, encontra os usuários que já existem no banco de dados
+          const existingPlayers = await User.findAll({
+            where: {
+              email: { [Op.in]: validEmails }
+            }
+          });
+          
+          console.log(`Encontrados ${existingPlayers.length} jogadores existentes para os ${validEmails.length} emails válidos fornecidos`);
+          
+          // Log dos jogadores que foram encontrados
+          existingPlayers.forEach(player => {
+            console.log(`Jogador encontrado: ${player.get('email')}`);
+          });
+          
+          // Identifica os emails que não foram encontrados
+          const existingEmails = existingPlayers.map(player => player.get('email'));
+          const missingEmails = validEmails.filter(email => !existingEmails.includes(email));
+          
+          if (missingEmails.length > 0) {
+            console.log('Emails não encontrados no banco de dados (precisam ser criados):', missingEmails);
+            
+            // Busca todos os usuários uma única vez para comparar
+            const allUsers = await User.findAll();
+            console.log(`Buscados ${allUsers.length} usuários para verificação case insensitive`);
+            
+            // Para cada email não encontrado, verifica na lista completa
+            for (const email of missingEmails) {
+              console.log(`Verificando email: ${email} com busca case insensitive`);
+              
+              // Converte o email para minúsculas e remove espaços
+              const normalizedEmail = email.trim().toLowerCase();
+              
+              // Procura o usuário na lista já buscada
+              const userWithDifferentCase = allUsers.find(
+                user => user.get('email').toLowerCase() === normalizedEmail
+              );
+              
+              if (userWithDifferentCase) {
+                console.log(`Encontrado usuário com email em case diferente: ${userWithDifferentCase.get('email')}`);
+                existingPlayers.push(userWithDifferentCase);
+              } else {
+                console.log(`Usuário com email ${email} não existe. Não é possível adicioná-lo.`);
+              }
+            }
           }
-        });
-
-        await team.setPlayers(players);
+          
+          // Atualiza a associação de jogadores com o time
+          console.log(`Definindo ${existingPlayers.length} jogadores para o time ${id}`);
+          await team.setPlayers(existingPlayers);
+          console.log('Associação de jogadores atualizada com sucesso');
+        }
+      } else {
+        console.log('Nenhum email de jogador fornecido ou formato inválido. Mantendo jogadores existentes.');
       }
 
       const updatedTeam = await Team.findOne({
@@ -336,6 +565,17 @@ export class TeamController {
       }
 
       const plainTeam = updatedTeam.get({ plain: true });
+      
+      // Log dos jogadores associados ao time após a atualização
+      if (plainTeam.players && Array.isArray(plainTeam.players)) {
+        console.log(`Time atualizado tem ${plainTeam.players.length} jogadores associados:`);
+        plainTeam.players.forEach((player: any) => {
+          console.log(`- Jogador associado: ID=${player.id}, Email=${player.email}`);
+        });
+      } else {
+        console.log('Time atualizado não tem jogadores associados');
+      }
+      
       const formattedTeam = {
         ...plainTeam,
         banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
