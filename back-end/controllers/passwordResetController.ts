@@ -36,7 +36,6 @@ export const requestPasswordReset = async (req,res) => {
 export const resetPassword = async (req,res) => {
   try {
     const { token, newPassword } = req.body;
-
     const user = await UserModel.findOne({
       where: {
         resetPasswordExpires:
@@ -44,25 +43,20 @@ export const resetPassword = async (req,res) => {
           [Op.gt]: new Date() // Token ainda não expirou
         }
       }
-    });
-    
+    }); 
     if (!user) {
+      console.log("Token inválido ou expirado");
       return res.status(400).json({ message: 'Token inválido ou expirado' });
     }
-
-    // Verifica se o token corresponde
-    const isValid = await bcrypt.compare(token, user.toJSON().resetPasswordToken);
-    
-    if (!isValid) {
-      return res.status(400).json({ message: 'Token inválido' });
-    }
+    const hashToken = await bcrypt.hash(token, 10);
+    const isValid = user && await bcrypt.compare(hashToken, user.toJSON().resetPasswordToken);
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     const password=user.toJSON().password = hashedPassword;
     const resetPasswordToken=user.toJSON().resetPasswordToken = null;
     const resetPasswordTokenExpires=user.toJSON().resetPasswordExpires = null;
     await user.update({password:password,resetPasswordToken:resetPasswordToken,resetPasswordExpires:resetPasswordTokenExpires});
     console.log('Senha atualizada com sucesso');
-    res.json({ message: 'Senha atualizada com sucesso' });
+    res.status(200).json({ message: 'Senha atualizada com sucesso' });
   } catch (error) {
     console.error('Erro ao redefinir senha:', error);
     res.status(500).json({ message: 'Erro interno do servidor' });
