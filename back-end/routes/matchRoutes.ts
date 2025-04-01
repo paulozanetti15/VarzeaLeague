@@ -1,20 +1,12 @@
 import express, { Request, Response } from 'express';
-import { authenticateToken } from '../middleware/auth';
-import MatchModel from '../models/Match';
-import UserModel from '../models/User';
-import { Model } from 'sequelize';
-
-interface MatchInstance extends Model {
-  status: string;
-  maxPlayers: number;
-  addPlayer: (userId: number) => Promise<void>;
-  countPlayers: () => Promise<number>;
-}
+import { authenticateToken, AuthRequest } from '../middleware/auth';
+import Match from '../models/Match';
+import User from '../models/User';
 
 const router = express.Router();
 
 // Criar uma nova partida
-router.post('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { title, description, date, location, maxPlayers, price } = req.body;
     const userId = req.user?.id;
@@ -24,7 +16,7 @@ router.post('/', authenticateToken, async (req: Request, res: Response): Promise
       return;
     }
 
-    const match = await MatchModel.create({
+    const match = await Match.create({
       title,
       description,
       date,
@@ -45,10 +37,10 @@ router.post('/', authenticateToken, async (req: Request, res: Response): Promise
 // Listar todas as partidas
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const matches = await MatchModel.findAll({
+    const matches = await Match.findAll({
       include: [
-        { model: UserModel, as: 'organizer', attributes: ['id', 'name', 'email'] },
-        { model: UserModel, as: 'players', attributes: ['id', 'name', 'email'] }
+        { model: User, as: 'organizer', attributes: ['id', 'name', 'email'] },
+        { model: User, as: 'players', attributes: ['id', 'name', 'email'] }
       ]
     });
     res.json(matches);
@@ -61,10 +53,10 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 // Buscar uma partida específica
 router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
-    const match = await MatchModel.findByPk(req.params.id, {
+    const match = await Match.findByPk(req.params.id, {
       include: [
-        { model: UserModel, as: 'organizer', attributes: ['id', 'name', 'email'] },
-        { model: UserModel, as: 'players', attributes: ['id', 'name', 'email'] }
+        { model: User, as: 'organizer', attributes: ['id', 'name', 'email'] },
+        { model: User, as: 'players', attributes: ['id', 'name', 'email'] }
       ]
     });
 
@@ -81,9 +73,9 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
 });
 
 // Entrar em uma partida
-router.post('/:id/join', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.post('/:id/join', authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const match = await MatchModel.findByPk(req.params.id) as MatchInstance;
+    const match = await Match.findByPk(req.params.id);
     const userId = req.user?.id;
 
     if (!match) {
@@ -103,7 +95,7 @@ router.post('/:id/join', authenticateToken, async (req: Request, res: Response):
 
     const playerCount = await match.countPlayers();
     if (playerCount >= match.maxPlayers) {
-      res.status(400).json({ message: 'Partida já está cheia' });
+      res.status(400).json({ message: 'Esta partida já está cheia' });
       return;
     }
 

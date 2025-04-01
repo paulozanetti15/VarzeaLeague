@@ -1,8 +1,44 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/databaseconfig';
-import UserModel from './User';
+import User from './User';
 
-const MatchModel = sequelize.define('Match', {
+class Match extends Model {
+  public id!: number;
+  public title!: string;
+  public date!: Date;
+  public location!: string;
+  public maxPlayers!: number;
+  public status!: 'open' | 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  public description?: string;
+  public price?: number;
+  public organizerId!: number;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+
+  public static associate(models: any) {
+    Match.belongsTo(models.User, { as: 'organizer', foreignKey: 'organizerId' });
+    Match.belongsToMany(models.User, { 
+      as: 'players',
+      through: 'match_players',
+      foreignKey: 'matchId',
+      otherKey: 'userId'
+    });
+  }
+
+  public async addPlayer(userId: number): Promise<void> {
+    const user = await User.findByPk(userId);
+    if (user) {
+      await (this as any).addPlayer(user);
+    }
+  }
+
+  public async countPlayers(): Promise<number> {
+    const players = await (this as any).getPlayers();
+    return players.length;
+  }
+}
+
+Match.init({
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -41,11 +77,12 @@ const MatchModel = sequelize.define('Match', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: UserModel,
+      model: 'users',
       key: 'id',
     },
   }
 }, {
+  sequelize,
   tableName: 'matches',
   timestamps: true,
   underscored: true,
@@ -53,7 +90,4 @@ const MatchModel = sequelize.define('Match', {
   freezeTableName: true
 });
 
-// Relacionamentos
-MatchModel.belongsTo(UserModel, { as: 'organizer', foreignKey: 'organizerId' });
-
-export default MatchModel; 
+export default Match; 
