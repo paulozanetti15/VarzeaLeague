@@ -4,6 +4,6 @@ import { requestPasswordReset, resetPassword } from '../controllers/passwordRese
 const routerReset = Router();
 
 routerReset.post('/request-reset', requestPasswordReset);
-routerReset.put('/reset-password', resetPassword);
+routerReset.put('/reset', resetPassword);
 
 export default routerReset; 

@@ -18,34 +18,35 @@ export function ResetPassword({ onBackToLogin }: ResetPasswordProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
 
     if (newPassword !== confirmPassword) {
       setError('As senhas não coincidem');
+      console.log(error);
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres');
+    if (newPassword.length < 8) {
+      setError('A senha deve ter pelo menos 8 caracteres');
+      console.log(error);
       return;
     }
+    
 
     try {
       setLoading(true);
-      const response = await axios.put('http://localhost:3001/api/password/reset-password', {
-        token: token,
+      const response = await axios.put('http://localhost:3001/api/password/reset', {
+        token:token,
         newPassword,
-      });
-      if (response.status !== 201) {
+      })
+      if (response.status !== 200) {
         throw new Error(response.data.message || 'Erro ao redefinir senha');
       }
-      
-
-      //if (!response) {
-      //  throw new Error(data.message || 'Erro ao redefinir senha');
-      //}
-
-      setSuccess(true);
-      setTimeout(onBackToLogin, 3000);
+      else if (response.status === 200) {
+     
+        setSuccess(true);
+        setTimeout(onBackToLogin, 3000);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao redefinir senha');
     } finally {
@@ -90,7 +91,6 @@ export function ResetPassword({ onBackToLogin }: ResetPasswordProps) {
             <button 
               type="submit" 
               className="btn btn-primary w-100"
-              onClick={handleSubmit}
               disabled={loading}
             >
               {loading ? (
