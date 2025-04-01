@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import './App.css'
 import { Login } from './pages/login/Login'
@@ -131,7 +131,7 @@ function AppContent() {
         />
       } />
 
-      <Route path="reset-password/:token" element={
+      <Route path="/reset-password/:token" element={
         <ResetPassword 
           onBackToLogin={() => navigate('/login')}
         />
@@ -164,10 +164,12 @@ function AppContent() {
   );
 }
 
-export default function App() {
+function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <AppContent />
-    </Router>
+    </BrowserRouter>
   );
 }
+
+export default App;
