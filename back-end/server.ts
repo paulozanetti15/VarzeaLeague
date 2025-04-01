@@ -39,30 +39,30 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Rota não encontrada' });
 });
 
-(async()=>{
+(async () => {
   try {
     console.log('Tentando conectar ao banco de dados...');
     console.log('Configurações do banco:', {
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       database: process.env.DB_NAME,
-      port: process.env.DB_PORT
+      port: process.env.DB_PORT,
     });
-    
+
     await sequelize.authenticate();
+
     console.log('Conexão com o banco estabelecida com sucesso!');
-    
+
     console.log('Sincronizando modelos com o banco de dados...');
     console.log('Sincronizando modelo User...');
-    await UserModel.sync({ alter: true });
+    await UserModel.sync({ force: false }); // Avoid altering the table structure
     console.log('Modelo User sincronizado.');
-    
+
     console.log('Sincronizando modelo Match...');
-    await MatchModel.sync({ alter: true });
+    await MatchModel.sync({ force: false }); // Avoid altering the table structure
     console.log('Modelo Match sincronizado.');
-    
+
     console.log('Banco de dados sincronizado com sucesso!');
-    
     const port = process.env.PORT || 3001;
     app.listen(port, () => {
       console.log(`Servidor rodando na porta ${port}`);
