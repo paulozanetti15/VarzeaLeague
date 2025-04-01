@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import MatchModel from '../models/Match';
 import UserModel from '../models/User';
 
 // Criar uma nova partida
-export const createMatch = async (req: Request, res: Response): Promise<void> => {
+export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { title, date, location, maxPlayers, description, price } = req.body;
     const organizerId = req.user?.id;

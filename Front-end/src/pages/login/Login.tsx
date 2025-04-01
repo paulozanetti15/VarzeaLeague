@@ -6,7 +6,7 @@ import './Login.css';
 interface LoginProps {
   onRegisterClick?: () => void;
   onForgotPasswordClick?: () => void;
-  onLoginSuccess?: () => void;
+  onLoginSuccess?: (data: any) => void;
 }
 
 export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }: LoginProps) {
@@ -27,18 +27,18 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
         password
       });
 
-      const data = response
+      const data = response.data;
       if (response.status !== 200) {
-        throw new Error(data.data.message || 'Erro ao fazer login');
+        throw new Error(data.message || 'Erro ao fazer login');
       }
 
       // Salvar token e dados do usuário
-      localStorage.setItem('token', data.data.token);
-      localStorage.setItem('user', JSON.stringify(data.data.user));
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
 
       // Chamar callback de sucesso
       if (onLoginSuccess) {
-        onLoginSuccess();
+        onLoginSuccess(data);
       }
 
       // Redirecionar para a página principal

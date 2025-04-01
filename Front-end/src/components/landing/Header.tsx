@@ -1,13 +1,20 @@
 import './Header.css';
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
 interface HeaderProps {
   isLoggedIn: boolean;
+  user: User | null;
   onLoginClick: () => void;
   onRegisterClick: () => void;
   onLogout: () => void;
 }
 
-export function Header({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: HeaderProps) {
+export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) {
   return (
     <header className="header">
       <nav className="navbar navbar-expand-lg navbar-dark">
@@ -39,10 +46,10 @@ export function Header({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: 
               </li>
             </ul>
             <div className="d-flex align-items-center">
-              {isLoggedIn ? (
+              {isLoggedIn && user ? (
                 <>
                   <span className="text-light me-3">
-                    {JSON.parse(localStorage.getItem('user') || '{}').name}
+                    {user.name}
                   </span>
                   <button 
                     className="btn btn-outline-light" 

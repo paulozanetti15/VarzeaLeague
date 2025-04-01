@@ -9,5 +9,18 @@ const sequelize = new Sequelize({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  timezone: '-03:00', // Fuso horário do Brasil (Brasília)
+  dialectOptions: {
+    // Para MySQL
+    dateStrings: true,
+    typeCast: true
+  },
+  define: {
+    // Para garantir que as datas sejam processadas corretamente
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
+  }
 });
+
 export default sequelize;

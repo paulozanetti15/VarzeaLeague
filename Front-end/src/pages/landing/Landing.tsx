@@ -6,14 +6,21 @@ import { Testimonials } from '../../components/landing/Testimonials';
 import { Footer } from '../../components/landing/Footer';
 import './Landing.css';
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
 interface LandingProps {
   isLoggedIn: boolean;
+  user: User | null;
   onLoginClick: () => void;
   onRegisterClick: () => void;
   onLogout: () => void;
 }
 
-export function Landing({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: LandingProps) {
+export function Landing({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogout }: LandingProps) {
   const navigate = useNavigate();
 
   const handleCreateMatch = () => {
@@ -28,12 +35,13 @@ export function Landing({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }:
     <div className="landing-page">
       <Header 
         isLoggedIn={isLoggedIn}
-        onLoginClick={() => navigate('/login')}
-        onRegisterClick={() => navigate('/register')}
+        user={user}
+        onLoginClick={onLoginClick}
+        onRegisterClick={onRegisterClick}
         onLogout={onLogout}
       />
       <Hero onGetStarted={handleCreateMatch} />
-      <Benefits />
+      <Benefits isLoggedIn={isLoggedIn} />
       <Testimonials />
       <Footer />
     </div>
