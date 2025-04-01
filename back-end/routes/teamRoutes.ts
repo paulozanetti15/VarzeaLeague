@@ -36,11 +36,9 @@ const upload = multer({
   }
 });
 
-// Rotas públicas
-router.get('/', TeamController.listTeams);
-router.get('/:id', TeamController.getTeam);
-
-// Rotas protegidas
+// Todas as rotas precisam de autenticação
+router.get('/', authenticateToken, TeamController.listTeams);
+router.get('/:id', authenticateToken, TeamController.getTeam);
 router.post('/', authenticateToken, TeamController.create);
 router.put('/:id', authenticateToken, TeamController.updateTeam);
 router.post('/:id/banner', authenticateToken, upload.single('banner'), TeamController.uploadBanner);

@@ -38,6 +38,7 @@ const EditTeam: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isWarning, setIsWarning] = useState(false);
   const [team, setTeam] = useState<Team | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [loadingInitial, setLoadingInitial] = useState(true);
@@ -54,6 +55,8 @@ const EditTeam: React.FC = () => {
 
   const fetchTeam = async () => {
     setLoadingInitial(true);
+    setError('');
+    setIsWarning(false);
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -68,17 +71,50 @@ const EditTeam: React.FC = () => {
       });
 
       const teamData = response.data;
+      console.log('Dados do time recebidos da API:', teamData);
+      if (teamData.players) {
+        console.log(`Recebidos ${teamData.players.length} jogadores do back-end:`, 
+          teamData.players.map((p: any) => `${p.email} (${p.id})`).join(', '));
+      }
+      
       setTeam(teamData);
+      
+      // Garante que todos os emails dos jogadores sejam carregados
+      let playerEmails: string[] = [];
+      
+      // Verifica se players existe e é um array
+      if (teamData.players && Array.isArray(teamData.players) && teamData.players.length > 0) {
+        // Extrai os emails dos jogadores
+        playerEmails = teamData.players
+          .filter((player: any) => player && player.email) // Garante que o jogador e o email existem
+          .map((player: { email: string }) => player.email || '');
+        
+        console.log('Emails extraídos dos jogadores existentes:', playerEmails);
+      }
+      
+      // Se não houver emails válidos, inicializa com um campo vazio
+      if (playerEmails.length === 0) {
+        playerEmails = [''];
+        console.log('Nenhum jogador encontrado, inicializando com campo vazio');
+      }
+      
+      console.log('Lista final de emails dos jogadores a serem exibidos:', playerEmails);
+      
       setFormData({
-        name: teamData.name,
-        description: teamData.description,
-        playerEmails: teamData.players.map((player: { email: string }) => player.email).length > 0 
-          ? teamData.players.map((player: { email: string }) => player.email) 
-          : [''],
+        name: teamData.name || '',
+        description: teamData.description || '',
+        playerEmails: playerEmails,
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro ao buscar time:', err);
-      setError('Erro ao carregar o time. Tente novamente.');
+      
+      // Mensagem específica para erro de permissão
+      if (err.response?.status === 403) {
+        setError('Você não tem permissão para visualizar este time. Apenas o capitão e jogadores do time podem acessá-lo.');
+        setTimeout(() => navigate('/teams'), 4000);
+      } else {
+        setError('Erro ao carregar o time. Tente novamente.');
+      }
     } finally {
       setLoadingInitial(false);
     }
@@ -88,6 +124,7 @@ const EditTeam: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setIsWarning(false);
 
     try {
       const token = localStorage.getItem('token');
@@ -97,7 +134,26 @@ const EditTeam: React.FC = () => {
       }
 
       // Filtra os emails vazios antes de enviar
-      const filteredEmails = formData.playerEmails.filter(email => email.trim() !== '');
+      const filteredEmails = formData.playerEmails
+        .filter(email => email && email.trim() !== '')
+        .map(email => email.trim()); // Remove espaços em branco
+      
+      console.log('Emails dos jogadores antes de filtrar:', formData.playerEmails);
+      console.log('Emails dos jogadores após filtrar:', filteredEmails);
+      
+      // Verifica se há alteração nos emails dos jogadores em relação ao time original
+      if (team && team.players) {
+        const emailsOriginais = team.players
+          .filter(player => player && player.email)
+          .map(player => player.email.trim());
+        
+        const emailsAdicionados = filteredEmails.filter(email => !emailsOriginais.includes(email));
+        const emailsRemovidos = emailsOriginais.filter(email => !filteredEmails.includes(email));
+        
+        console.log('Emails originais dos jogadores:', emailsOriginais);
+        console.log('Emails adicionados:', emailsAdicionados);
+        console.log('Emails removidos:', emailsRemovidos);
+      }
       
       // Verifica se os dados obrigatórios estão preenchidos
       if (!formData.name || !formData.description) {
@@ -126,6 +182,31 @@ const EditTeam: React.FC = () => {
       });
       
       console.log('Resposta da API:', response.data);
+      
+      // Verifica se todos os emails foram associados
+      if (response.data.players && Array.isArray(response.data.players)) {
+        const emailsEnviados = filteredEmails.map(email => email.toLowerCase());
+        const emailsRecebidos = response.data.players.map((p: any) => p.email.toLowerCase());
+        
+        // Emails que foram enviados mas não retornados na resposta
+        const emailsNaoEncontrados = emailsEnviados.filter(email => !emailsRecebidos.includes(email));
+        
+        if (emailsNaoEncontrados.length > 0) {
+          console.log('Alguns emails não puderam ser adicionados:', emailsNaoEncontrados);
+          
+          // Indicamos que o time foi atualizado, mas com aviso sobre emails
+          const mensagemSucesso = `Time "${formData.name}" atualizado com sucesso!`;
+          const mensagemAviso = `No entanto, os seguintes emails não foram encontrados no sistema: ${emailsNaoEncontrados.join(', ')}. Apenas usuários já cadastrados podem ser adicionados ao time.`;
+          
+          setError(`${mensagemSucesso} ${mensagemAviso}`);
+          setIsWarning(true);
+          
+          // Mantemos o usuário na página para que ele possa ver a mensagem
+          setLoading(false);
+          return;
+        }
+      }
+      
       navigate('/teams');
     } catch (err: any) {
       console.error('Erro ao atualizar time:', err);
@@ -290,9 +371,22 @@ const EditTeam: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="error-message"
+            className={isWarning ? "warning-message" : "error-message"}
           >
-            {error}
+            <div className="error-content">
+              {error}
+            </div>
+            {error.includes('não foram encontrados no sistema') && (
+              <div className="error-actions">
+                <p>Suas alterações foram salvas, mas nem todos os jogadores foram adicionados.</p>
+                <button 
+                  onClick={() => navigate('/teams')}
+                  className="return-btn"
+                >
+                  Voltar para Lista de Times
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -345,8 +439,11 @@ const EditTeam: React.FC = () => {
           >
             <label className="form-label">
               <GroupIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-              Emails dos Jogadores (Opcional)
+              Integrantes do Time ({formData.playerEmails.length})
             </label>
+            <p className="player-email-help">
+              Os emails abaixo correspondem aos jogadores do time. Você pode adicionar ou remover jogadores conforme necessário.
+            </p>
             <div className="player-emails">
               {formData.playerEmails.map((email, index) => (
                 <motion.div
@@ -361,17 +458,17 @@ const EditTeam: React.FC = () => {
                     className="form-control"
                     value={email}
                     onChange={(e) => updatePlayerEmail(index, e.target.value)}
-                    placeholder="Digite o email do jogador (opcional)"
+                    placeholder={`Email do jogador #${index + 1}`}
                   />
-                  {formData.playerEmails.length > 1 && (
-                    <button
-                      type="button"
-                      className="remove-player-btn"
-                      onClick={() => removePlayerEmail(index)}
-                    >
-                      <RemoveIcon />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="remove-player-btn"
+                    onClick={() => removePlayerEmail(index)}
+                    aria-label="Remover jogador"
+                    title="Remover jogador"
+                  >
+                    <RemoveIcon />
+                  </button>
                 </motion.div>
               ))}
             </div>
@@ -381,9 +478,10 @@ const EditTeam: React.FC = () => {
               type="button"
               className="add-player-btn"
               onClick={addPlayerEmail}
+              title="Adicionar novo jogador"
             >
               <AddIcon sx={{ mr: 1 }} />
-              Adicionar Jogadores
+              Adicionar Jogador
             </motion.button>
           </motion.div>
 

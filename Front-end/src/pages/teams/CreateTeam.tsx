@@ -199,8 +199,11 @@ const CreateTeam: React.FC = () => {
           >
             <label className="form-label">
               <GroupIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-              Emails dos Jogadores (Opcional)
+              Integrantes do Time ({formData.playerEmails.length})
             </label>
+            <p className="player-email-help">
+              Adicione os emails dos jogadores que farão parte do time. Você poderá adicionar mais jogadores depois.
+            </p>
             <div className="player-emails">
               {formData.playerEmails.map((email, index) => (
                 <motion.div
@@ -215,17 +218,17 @@ const CreateTeam: React.FC = () => {
                     className="form-control"
                     value={email}
                     onChange={(e) => updatePlayerEmail(index, e.target.value)}
-                    placeholder="Digite o email do jogador (opcional)"
+                    placeholder={`Email do jogador #${index + 1}`}
                   />
-                  {formData.playerEmails.length > 1 && (
-                    <button
-                      type="button"
-                      className="remove-player-btn"
-                      onClick={() => removePlayerEmail(index)}
-                    >
-                      <RemoveIcon />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className="remove-player-btn"
+                    onClick={() => removePlayerEmail(index)}
+                    aria-label="Remover jogador"
+                    title="Remover jogador"
+                  >
+                    <RemoveIcon />
+                  </button>
                 </motion.div>
               ))}
             </div>
@@ -235,9 +238,10 @@ const CreateTeam: React.FC = () => {
               type="button"
               className="add-player-btn"
               onClick={addPlayerEmail}
+              title="Adicionar novo jogador"
             >
               <AddIcon sx={{ mr: 1 }} />
-              Adicionar Jogadores
+              Adicionar Jogador
             </motion.button>
           </motion.div>
 

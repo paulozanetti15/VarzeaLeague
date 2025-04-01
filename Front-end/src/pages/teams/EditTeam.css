@@ -146,6 +146,8 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  margin-bottom: 1rem;
+  width: 100%;
 }
 
 .player-email {
@@ -156,6 +158,14 @@
   padding: 1rem;
   border-radius: 10px;
   transition: all 0.3s ease;
+  margin-bottom: 0.5rem;
+  width: 100%;
+}
+
+.player-email input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
 }
 
 .player-email:hover {
@@ -174,21 +184,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 40px;
 }
 
 .add-player-btn {
   background: rgba(33,150,243,0.3);
   margin-top: 1rem;
   font-weight: 600;
+  padding: 0.7rem 1.5rem;
+  border-radius: 20px;
+  align-self: flex-start;
 }
 
 .add-player-btn:hover {
   background: rgba(33,150,243,0.5);
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .remove-player-btn {
   color: #f44336;
+  background: rgba(244,67,54,0.1);
+  flex-shrink: 0;
 }
 
 .remove-player-btn:hover {
@@ -299,6 +315,40 @@
   font-weight: 600;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
   animation: shake 0.5s ease-in-out;
+}
+
+.error-content {
+  margin-bottom: 1rem;
+}
+
+.error-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.error-actions p {
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.return-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 30px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.return-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .back-btn {
@@ -725,4 +775,29 @@ input[type="email"].form-control {
   font-size: 48px;
   margin-bottom: 16px;
   display: block;
+}
+
+.player-email-help {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  padding-left: 0.5rem;
+  border-left: 2px solid rgba(33, 150, 243, 0.5);
+  line-height: 1.4;
+}
+
+.warning-message {
+  background: rgba(255, 193, 7, 0.2);
+  color: #fff;
+  padding: 1rem;
+  border-radius: 10px;
+  margin: 1rem 0;
+  text-align: center;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  border-left: 4px solid #ffc107;
+}
+
+.warning-message .error-content {
+  margin-bottom: 1rem;
 } 
