@@ -49,22 +49,81 @@ export class TeamController {
 
       console.log("Dados recebidos para criação de time:", { name, description, captainId });
 
-      // Verificar apenas pelo nome do time
+      // Verificar apenas pelo nome do time e que não esteja marcado como excluído
       if (name) {
-        const existingTeam = await Team.findOne({
+        const existingActiveTeam = await Team.findOne({
           where: { 
             name: name.trim(),
             isDeleted: false 
           }
         });
 
-        if (existingTeam) {
+        if (existingActiveTeam) {
           res.status(400).json({ error: 'Este nome de time já está em uso. Escolha outro nome.' });
+          return;
+        }
+
+        // Verificar se existe um time excluído com o mesmo nome
+        const existingDeletedTeam = await Team.findOne({
+          where: {
+            name: name.trim(),
+            isDeleted: true
+          }
+        });
+
+        if (existingDeletedTeam) {
+          // Criar data atual no formato brasileiro
+          const agora = new Date();
+          // Convertendo para o fuso horário de Brasília (GMT-3)
+          agora.setHours(agora.getHours() - 3);
+          
+          // Atualizar o time excluído, marcando-o como não excluído e atualizando seus dados
+          await existingDeletedTeam.update({
+            description,
+            captainId,
+            isDeleted: false,
+            updatedAt: agora
+          });
+
+          // Log para depuração
+          console.log(`Time excluído ${existingDeletedTeam.id} reutilizado em: ${agora.toISOString()}`);
+
+          // Atualizar jogadores do time se necessário
+          if (playerEmails && Array.isArray(playerEmails)) {
+            console.log("Processando e-mails de jogadores:", playerEmails);
+            await existingDeletedTeam.setPlayers([]); // Remove todos os jogadores atuais
+            for (const email of playerEmails) {
+              const user = await User.findOne({ where: { email } });
+              if (user) {
+                await existingDeletedTeam.addPlayer(user);
+                console.log(`Jogador adicionado: ${email}`);
+              } else {
+                console.log(`Usuário não encontrado: ${email}`);
+              }
+            }
+          }
+
+          const teamWithAssociations = await Team.findByPk(existingDeletedTeam.id, {
+            include: [
+              {
+                model: User,
+                as: 'captain',
+                attributes: ['id', 'name', 'email']
+              },
+              {
+                model: User,
+                as: 'players',
+                attributes: ['id', 'name', 'email']
+              }
+            ]
+          });
+
+          res.status(201).json(teamWithAssociations);
           return;
         }
       }
 
-      // Criar o time
+      // Criar um novo time se não existir um com o mesmo nome (nem mesmo excluído)
       console.log("Criando novo time com:", { name: name ? name.trim() : '', description, captainId });
       
       const team = await Team.create({
@@ -213,6 +272,7 @@ export class TeamController {
         return;
       }
 
+      // Verificar se outro time ativo (não excluído) está usando o mesmo nome
       const existingTeam = await Team.findOne({
         where: {
           name,
@@ -226,7 +286,20 @@ export class TeamController {
         return;
       }
 
-      await team.update({ name, description });
+      // Criar data atual no formato brasileiro
+      const agora = new Date();
+      // Convertendo para o fuso horário de Brasília (GMT-3)
+      agora.setHours(agora.getHours() - 3);
+
+      // Forçar a atualização do campo updated_at definindo uma nova data
+      await team.update({
+        name,
+        description,
+        updatedAt: agora
+      });
+
+      // Log para depuração
+      console.log(`Time ${id} atualizado em: ${agora.toISOString()}`);
 
       if (playerEmails && Array.isArray(playerEmails)) {
         const players = await User.findAll({
@@ -265,7 +338,10 @@ export class TeamController {
       const plainTeam = updatedTeam.get({ plain: true });
       const formattedTeam = {
         ...plainTeam,
-        banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null
+        banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
+        // Formatando a data para o cliente
+        updatedAt: plainTeam.updatedAt ? new Date(plainTeam.updatedAt).toLocaleString('pt-BR') : null,
+        createdAt: plainTeam.createdAt ? new Date(plainTeam.createdAt).toLocaleString('pt-BR') : null
       };
 
       res.json(formattedTeam);
@@ -308,7 +384,18 @@ export class TeamController {
         }
       }
 
-      await team.update({ banner: req.file.filename });
+      // Criar data atual no formato brasileiro
+      const agora = new Date();
+      // Convertendo para o fuso horário de Brasília (GMT-3)
+      agora.setHours(agora.getHours() - 3);
+
+      await team.update({ 
+        banner: req.file.filename,
+        updatedAt: agora
+      });
+
+      // Log para depuração
+      console.log(`Banner do time ${id} atualizado em: ${agora.toISOString()}`);
 
       const updatedTeam = await Team.findOne({
         where: {
@@ -378,7 +465,19 @@ export class TeamController {
         return;
       }
 
-      await team.update({ isDeleted: true });
+      // Criar data atual no formato brasileiro
+      const agora = new Date();
+      // Convertendo para o fuso horário de Brasília (GMT-3)
+      agora.setHours(agora.getHours() - 3);
+
+      await team.update({ 
+        isDeleted: true,
+        updatedAt: agora
+      });
+      
+      // Log para depuração
+      console.log(`Time ${id} marcado como excluído em: ${agora.toISOString()}`);
+      
       res.status(200).json({ 
         message: 'Time deletado com sucesso',
         team: {

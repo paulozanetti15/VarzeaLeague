@@ -383,7 +383,7 @@ const EditTeam: React.FC = () => {
               onClick={addPlayerEmail}
             >
               <AddIcon sx={{ mr: 1 }} />
-              Adicionar Jogador
+              Adicionar Jogadores
             </motion.button>
           </motion.div>
 
