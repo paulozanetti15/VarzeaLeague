@@ -7,6 +7,8 @@ import authRoutes from './routes/authRoutes';
 import matchRoutes from './routes/matchRoutes';
 import passwordResetRoutes from './routes/passwordReset';
 import teamRoutes from './routes/teamRoutes';
+import UserModel from './models/User';
+import MatchModel from './models/Match';
 import './models/associations';
 
 dotenv.config();
