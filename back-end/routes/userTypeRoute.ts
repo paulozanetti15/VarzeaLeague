@@ -1,0 +1,11 @@
+import router from "./passwordRoutes";
+import express from "express";
+import { TeamController } from '../controllers/TeamController';
+import { authenticateToken } from '../middleware/auth';
+import { getAllUserTypes, createUserType, updateUserType, deleteUserType } from "../controllers/userTypeController";
+const userTypeRouter = express.Router();
+userTypeRouter.get("/", authenticateToken ,getAllUserTypes);
+userTypeRouter.post("/", authenticateToken,createUserType);
+userTypeRouter.put("/:id", authenticateToken,updateUserType);
+userTypeRouter.delete("/:id", authenticateToken,deleteUserType);
+export default userTypeRouter;
