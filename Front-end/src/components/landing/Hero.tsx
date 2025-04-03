@@ -3,9 +3,10 @@ import gerenciamentoImg from '../../assets/gerenciamento.png';
 
 interface HeroProps {
   onGetStarted: () => void;
+  onViewMatches: () => void;
 }
 
-export function Hero({ onGetStarted }: HeroProps) {
+export function Hero({ onGetStarted, onViewMatches }: HeroProps) {
   return (
     <section className="hero-section">
       <div className="container">
@@ -18,12 +19,20 @@ export function Hero({ onGetStarted }: HeroProps) {
               Crie times, agende partidas e acompanhe estatísticas. 
               Tudo em um só lugar para você se concentrar apenas em jogar.
             </p>
-            <button 
-              className="btn btn-primary btn-lg hero-cta"
-              onClick={onGetStarted}
-            >
-              Comece Agora
-            </button>
+            <div className="hero-buttons">
+              <button 
+                className="btn btn-primary btn-lg hero-cta me-3"
+                onClick={onGetStarted}
+              >
+                Criar Partida
+              </button>
+              <button 
+                className="btn btn-outline-primary btn-lg hero-cta-secondary"
+                onClick={onViewMatches}
+              >
+                Ver Partidas
+              </button>
+            </div>
           </div>
           <div className="col-lg-6">
             <div className="hero-image">

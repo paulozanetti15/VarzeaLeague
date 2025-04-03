@@ -21,12 +21,31 @@
   line-height: 1.6;
 }
 
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .hero-cta {
   padding: 1rem 2rem;
   font-size: 1.1rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.hero-cta-secondary {
+  background-color: transparent;
+  color: #007bff;
+  border: 2px solid #007bff;
+  transition: all 0.3s ease;
+}
+
+.hero-cta-secondary:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
 }
 
 .hero-image {
@@ -52,6 +71,10 @@
 
   .hero-title {
     font-size: 2.5rem;
+  }
+
+  .hero-buttons {
+    justify-content: center;
   }
 
   .hero-image {

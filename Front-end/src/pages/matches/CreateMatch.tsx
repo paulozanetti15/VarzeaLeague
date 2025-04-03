@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { IconButton, Container, Paper, Typography, TextField, Button, Box, Divider, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { IconButton, Typography, TextField, Button, Box, Divider, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GroupIcon from '@mui/icons-material/Group';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { api } from '../../services/api';
 import './CreateMatch.css';
 
 interface MatchFormData {
@@ -18,11 +18,15 @@ interface MatchFormData {
   date: string;
   time: string;
   maxPlayers: number;
-  teamId: string;
+  price: string;
+  complement: string;
 }
 
 const CreateMatch: React.FC = () => {
   const navigate = useNavigate();
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const btnContainerRef = useRef<HTMLDivElement>(null);
+
   const [formData, setFormData] = useState<MatchFormData>({
     title: '',
     description: '',
@@ -30,35 +34,19 @@ const CreateMatch: React.FC = () => {
     date: '',
     time: '',
     maxPlayers: 10,
-    teamId: ''
+    price: '',
+    complement: ''
   });
-  const [teams, setTeams] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  React.useEffect(() => {
-    const fetchTeams = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          navigate('/login');
-          return;
-        }
-
-        const response = await axios.get('http://localhost:3001/api/teams', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        setTeams(response.data);
-      } catch (err) {
-        console.error('Erro ao buscar times:', err);
-      }
-    };
-
-    fetchTeams();
-  }, [navigate]);
+  // Ajustar largura do botão para combinar com o campo de título
+  useEffect(() => {
+    if (titleInputRef.current && btnContainerRef.current) {
+      const titleWidth = titleInputRef.current.offsetWidth;
+      btnContainerRef.current.style.width = `${titleWidth}px`;
+    }
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -82,26 +70,24 @@ const CreateMatch: React.FC = () => {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
+      // Concatena o endereço com o complemento se existir
+      const fullLocation = formData.complement 
+        ? `${formData.location} - ${formData.complement}`
+        : formData.location;
 
-      const response = await axios.post('http://localhost:3001/api/matches', formData, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      const response = await api.matches.create({
+        title: formData.title,
+        date: `${formData.date}T${formData.time}:00`,
+        location: fullLocation,
+        maxPlayers: formData.maxPlayers,
+        description: formData.description,
+        price: formData.price ? parseFloat(formData.price) : undefined
       });
 
       navigate('/matches');
     } catch (err) {
+      setError('Erro ao criar partida. Tente novamente.');
       console.error('Erro ao criar partida:', err);
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.error || 'Erro ao criar partida');
-      } else {
-        setError('Erro ao criar partida. Tente novamente.');
-      }
     } finally {
       setLoading(false);
     }
@@ -109,171 +95,149 @@ const CreateMatch: React.FC = () => {
 
   return (
     <div className="create-match-container">
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3 }}
-        style={{
-          position: 'absolute',
-          left: 32,
-          top: 32,
-        }}
+      <button 
+        className="back-button"
+        onClick={() => navigate(-1)}
       >
-        <IconButton
-          onClick={() => navigate(-1)}
-          className="back-button"
-        >
-          <ArrowBackIcon />
-        </IconButton>
-      </motion.div>
+        <ArrowBackIcon />
+      </button>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Paper className="form-container">
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            >
-              <SportsSoccerIcon sx={{ fontSize: 60, color: '#2196F3', mb: 2 }} />
-            </motion.div>
-            <Typography variant="h4" component="h1" className="form-title">
-              Criar Nova Partida
-            </Typography>
-            <Typography variant="subtitle1" color="text.secondary">
-              Organize uma partida e convide seus amigos!
-            </Typography>
-          </Box>
+      <div className="form-container">
+        <h1 className="form-title">
+          Criar Nova Partida
+        </h1>
+        
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
 
-          <form onSubmit={handleSubmit}>
-            <Box sx={{ mb: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <EmojiEventsIcon sx={{ mr: 1, color: '#2196F3' }} />
-                <Typography variant="h6">Informações da Partida</Typography>
-              </Box>
-              <TextField
-                fullWidth
-                label="Título da Partida"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                required
-                sx={{ mb: 3 }}
-                InputProps={{
-                  startAdornment: <SportsSoccerIcon sx={{ mr: 1, color: '#2196F3' }} />
-                }}
-              />
+        <form onSubmit={handleSubmit} style={{width: '100%'}}>
+          <div className="form-group">
+            <label className="form-label">Título da Partida</label>
+            <input
+              ref={titleInputRef}
+              type="text"
+              className="form-control"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              required
+              placeholder="Ex: Pelada de Domingo"
+            />
+          </div>
 
-              <TextField
-                fullWidth
-                label="Descrição"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                multiline
-                rows={4}
-                sx={{ mb: 3 }}
-                placeholder="Descreva os detalhes da partida, regras especiais..."
-              />
+          <div className="form-group">
+            <label className="form-label">Descrição</label>
+            <textarea
+              className="form-control"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              rows={4}
+              placeholder="Descreva os detalhes da partida..."
+            />
+          </div>
 
-              <FormControl fullWidth sx={{ mb: 3 }}>
-                <InputLabel>Time</InputLabel>
-                <Select
-                  name="teamId"
-                  value={formData.teamId}
-                  onChange={handleSelectChange}
-                  required
-                  label="Time"
-                  startAdornment={<GroupIcon sx={{ mr: 1, color: '#2196F3' }} />}
-                >
-                  {teams.map((team) => (
-                    <MenuItem key={team.id} value={team.id}>
-                      {team.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
+          <div className="form-group">
+            <label className="form-label">Local</label>
+            <input
+              type="text"
+              className="form-control"
+              name="location"
+              value={formData.location}
+              onChange={handleInputChange}
+              required
+              placeholder="Ex: Quadra do Parque Municipal"
+            />
+          </div>
 
-            <Divider sx={{ my: 3 }} />
+          <div className="form-group">
+            <label htmlFor="complement">Complemento</label>
+            <input
+              type="text"
+              id="complement"
+              name="complement"
+              value={formData.complement}
+              onChange={handleInputChange}
+              placeholder="Ex: Quadra 2, Campo de futebol, etc."
+            />
+          </div>
 
-            <Box sx={{ mb: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <LocationOnIcon sx={{ mr: 1, color: '#2196F3' }} />
-                <Typography variant="h6">Local e Data</Typography>
-              </Box>
-              <TextField
-                fullWidth
-                label="Local"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                required
-                sx={{ mb: 3 }}
-                InputProps={{
-                  startAdornment: <LocationOnIcon sx={{ mr: 1, color: '#2196F3' }} />
-                }}
-              />
-
-              <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-                <TextField
-                  fullWidth
-                  label="Data"
-                  name="date"
+          <div className="form-row">
+            <div className="form-col">
+              <div className="form-group">
+                <label className="form-label">Data</label>
+                <input
                   type="date"
+                  className="form-control"
+                  name="date"
                   value={formData.date}
                   onChange={handleInputChange}
                   required
-                  InputLabelProps={{ shrink: true }}
                 />
-                <TextField
-                  fullWidth
-                  label="Horário"
-                  name="time"
+              </div>
+            </div>
+            <div className="form-col">
+              <div className="form-group">
+                <label className="form-label">Horário</label>
+                <input
                   type="time"
+                  className="form-control"
+                  name="time"
                   value={formData.time}
                   onChange={handleInputChange}
                   required
-                  InputLabelProps={{ shrink: true }}
                 />
-              </Box>
+              </div>
+            </div>
+          </div>
 
-              <TextField
-                fullWidth
-                label="Número Máximo de Jogadores"
-                name="maxPlayers"
-                type="number"
-                value={formData.maxPlayers}
-                onChange={handleInputChange}
-                required
-                InputProps={{
-                  startAdornment: <GroupIcon sx={{ mr: 1, color: '#2196F3' }} />
-                }}
-              />
-            </Box>
+          <div className="form-row">
+            <div className="form-col">
+              <div className="form-group">
+                <label className="form-label">Máximo de Jogadores</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  name="maxPlayers"
+                  value={formData.maxPlayers}
+                  onChange={handleInputChange}
+                  required
+                  min="2"
+                  max="50"
+                />
+              </div>
+            </div>
+            <div className="form-col">
+              <div className="form-group">
+                <label className="form-label">Preço (opcional)</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  placeholder="R$"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
+          </div>
 
-            {error && (
-              <Typography color="error" sx={{ mb: 2 }}>
-                {error}
-              </Typography>
-            )}
-
-            <Button
+          <div className="btn-container" ref={btnContainerRef}>
+            <button
               type="submit"
-              variant="contained"
-              fullWidth
-              disabled={loading}
               className="submit-btn"
-              startIcon={<SportsSoccerIcon />}
+              disabled={loading}
             >
               {loading ? 'Criando...' : 'Criar Partida'}
-            </Button>
-          </form>
-        </Paper>
-      </motion.div>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

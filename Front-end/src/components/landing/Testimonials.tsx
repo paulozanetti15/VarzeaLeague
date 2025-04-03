@@ -5,19 +5,19 @@ export function Testimonials() {
     {
       name: 'João Silva',
       role: 'Organizador de Campeonato',
-      photo: '/testimonial1.jpg',
+      photo: 'https://via.placeholder.com/100x100',
       text: 'A Várzea League revolucionou a forma como organizo os jogos. Agora é tudo mais fácil e profissional.'
     },
     {
       name: 'Pedro Santos',
       role: 'Capitão de Time',
-      photo: '/testimonial2.jpg',
+      photo: 'https://via.placeholder.com/100x100',
       text: 'Excelente plataforma! Consigo gerenciar meu time e acompanhar as estatísticas de forma simples.'
     },
     {
       name: 'Carlos Oliveira',
       role: 'Jogador',
-      photo: '/testimonial3.jpg',
+      photo: 'https://via.placeholder.com/100x100',
       text: 'Muito prático para confirmar presença nos jogos e ver as estatísticas do time.'
     }
   ];
@@ -44,6 +44,11 @@ export function Testimonials() {
                     src={testimonial.photo} 
                     alt={testimonial.name} 
                     className="testimonial-photo"
+                    onError={(e) => {
+                      // Fallback para imagem não encontrada
+                      const target = e.target as HTMLImageElement;
+                      target.src = 'https://via.placeholder.com/100x100';
+                    }}
                   />
                   <div className="testimonial-info">
                     <h4 className="testimonial-name">{testimonial.name}</h4>

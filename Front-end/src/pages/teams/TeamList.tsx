@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import { Button, Container, Paper, Typography, Divider, IconButton, Box, CircularProgress } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import GroupIcon from '@mui/icons-material/Group';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
@@ -14,13 +15,14 @@ interface Team {
   description: string;
   playerCount: number;
   matchCount: number;
+  ownerId?: number;
 }
 
-const TeamList: React.FC = () => {
-  const navigate = useNavigate();
+const TeamList = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchTeams();
@@ -109,34 +111,46 @@ const TeamList: React.FC = () => {
           transition={{ delay: 0.2 }}
           className="teams-grid"
         >
-          {teams.map((team, index) => (
-            <motion.div
-              key={team.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * index }}
-              className="team-card"
-              onClick={() => handleTeamClick(team.id)}
-            >
-              <div className="team-banner">
-                <GroupIcon sx={{ fontSize: 40, color: '#fff' }} />
-              </div>
-              <div className="team-info">
-                <h2 className="team-name">{team.name}</h2>
-                <p className="team-description">{team.description}</p>
-                <div className="team-stats">
-                  <div className="stat">
-                    <GroupIcon sx={{ fontSize: 20, color: '#2196F3' }} />
-                    <span>{team.playerCount} Jogadores</span>
-                  </div>
-                  <div className="stat">
-                    <EmojiEventsIcon sx={{ fontSize: 20, color: '#FFD700' }} />
-                    <span>{team.matchCount} Partidas</span>
+          {teams.length > 0 ? (
+            teams.map((team, index) => (
+              <motion.div
+                key={team.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * index }}
+                className="team-card"
+                onClick={() => handleTeamClick(team.id)}
+              >
+                <div className="team-banner">
+                  <GroupIcon sx={{ fontSize: 40, color: '#fff' }} />
+                </div>
+                <div className="team-info">
+                  <h2 className="team-name">{team.name}</h2>
+                  <p className="team-description">{team.description}</p>
+                  <div className="team-stats">
+                    <div className="stat">
+                      <GroupIcon sx={{ fontSize: 20, color: '#2196F3' }} />
+                      <span>{team.playerCount} Jogadores</span>
+                    </div>
+                    <div className="stat">
+                      <EmojiEventsIcon sx={{ fontSize: 20, color: '#FFD700' }} />
+                      <span>{team.matchCount} Partidas</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          ) : (
+            <div className="no-teams-message">
+              <p>Você ainda não tem times cadastrados.</p>
+              <button 
+                className="create-first-team-btn"
+                onClick={() => navigate('/teams/create')}
+              >
+                Criar meu primeiro time
+              </button>
+            </div>
+          )}
         </motion.div>
       )}
     </div>

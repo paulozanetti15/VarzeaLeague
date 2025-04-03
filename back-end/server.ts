@@ -7,6 +7,8 @@ import authRoutes from './routes/authRoutes';
 import matchRoutes from './routes/matchRoutes';
 import passwordResetRoutes from './routes/passwordReset';
 import teamRoutes from './routes/teamRoutes';
+import dbRoutes from './routes/dbRoutes';
+import MatchPlayer from './models/match_players';
 import './models/associations';
 
 dotenv.config();
@@ -29,6 +31,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/teams', teamRoutes);
+app.use('/api/db', dbRoutes);
 
 // Rota de teste
 app.get('/api/test', (req, res) => {
@@ -43,7 +46,11 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log('Conexão com o banco de dados estabelecida com sucesso.');
 
-    // Sincronizar modelos
+    // Sincronizar especificamente o modelo MatchPlayer primeiro
+    await MatchPlayer.sync();
+    console.log('Modelo MatchPlayer sincronizado.');
+    
+    // Sincronizar modelos sem forçar recriação
     await sequelize.sync();
     console.log('Modelos sincronizados com o banco de dados.');
 

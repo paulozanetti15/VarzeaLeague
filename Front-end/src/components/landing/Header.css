@@ -1,11 +1,11 @@
 .header {
-  background-color: #2c3e50;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
 }
 
 .header .navbar {
@@ -13,20 +13,36 @@
 }
 
 .header .navbar-brand {
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 700;
+  font-size: 1.8rem;
+  letter-spacing: 1px;
   color: white;
 }
 
 .header .nav-link {
-  color: rgba(255, 255, 255, 0.8) !important;
   font-weight: 500;
-  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  padding: 0.5rem 1rem !important;
+  position: relative;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8) !important;
   transition: color 0.3s ease;
 }
 
-.header .nav-link:hover {
-  color: white !important;
+.header .nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background-color: #fff;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.header .nav-link:hover::after {
+  width: 70%;
 }
 
 .header .btn {
@@ -49,11 +65,20 @@
   transform: translateY(-1px);
 }
 
+.header .dropdown-item {
+  cursor: pointer;
+}
+
+.header .dropdown-item:active {
+  background-color: #007bff;
+}
+
 @media (max-width: 991.98px) {
   .header .navbar-collapse {
-    background-color: #2c3e50;
+    background-color: rgba(0, 0, 0, 0.9);
+    margin: 0 -12px;
     padding: 1rem;
-    margin: 0 -1rem;
+    border-radius: 0 0 10px 10px;
   }
   
   .header .nav-link {
