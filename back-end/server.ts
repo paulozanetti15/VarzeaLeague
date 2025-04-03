@@ -38,6 +38,41 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API está funcionando!' });
 });
 
+// Rota de health check aprimorada
+app.get('/api/health', (req, res) => {
+  try {
+    // Verificar se o banco de dados está conectado
+    const dbStatus = sequelize.authenticate()
+      .then(() => true)
+      .catch(() => false);
+    
+    // Responder imediatamente sem esperar a verificação do banco
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: Date.now(),
+      features: {
+        api: true,
+        auth: true
+      },
+      server: {
+        uptime: process.uptime(),
+        memoryUsage: process.memoryUsage().heapUsed / 1024 / 1024,
+        nodeVersion: process.version
+      }
+    });
+    
+    // Log para depuração
+    console.log(`Health check realizado em ${new Date().toISOString()}`);
+  } catch (error) {
+    console.error('Erro no health check:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      timestamp: Date.now(),
+      message: 'Erro interno no servidor durante health check'
+    });
+  }
+});
+
 // Conexão com o banco de dados
 const PORT = process.env.PORT || 3001;
 

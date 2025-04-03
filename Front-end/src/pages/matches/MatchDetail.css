@@ -125,13 +125,18 @@
 }
 
 .full-tag {
-  display: inline-block;
-  margin-left: 10px;
-  background-color: #e53935;
-  color: white;
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  border-radius: 4px;
+  background-color: #f8d7da;
+  color: #842029;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border-radius: 12px;
+  margin-left: 8px;
+  border: 1px solid #f5c2c7;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .match-description {
@@ -577,8 +582,10 @@
 }
 
 .join-button:disabled {
-  background-color: #ccc;
+  background-color: #e9ecef;
+  color: #6c757d;
   cursor: not-allowed;
+  border: 1px solid #ced4da;
 }
 
 .no-teams {

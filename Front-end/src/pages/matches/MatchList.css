@@ -1,528 +1,724 @@
+/* Variáveis e configurações base */
+:root {
+  --primary-color: #1565C0;
+  --primary-dark: #0D47A1;
+  --primary-light: #1976D2;
+  --secondary-color: #0097A7;
+  --accent-color: #FF9800;
+  --warning-color: #FFA000;
+  --error-color: #F44336;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --text-light: #FAFAFA;
+  --background-light: #F5F5F5;
+  --background-paper: #FFFFFF;
+  --border-radius: 8px;
+  --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.3s;
+}
+
+/* Reset e configurações globais */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Container principal */
 .match-list-container {
+  width: 100%;
   min-height: 100vh;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  background: linear-gradient(to bottom, #0A2351, #0D47A1);
   position: relative;
-  overflow: hidden;
-  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
-.match-list-container * {
-  box-sizing: border-box;
-}
-
-.match-list-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('https://images.unsplash.com/photo-1614632537423-1e6c2e7e0aab?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') center/cover;
-  opacity: 0.25;
-  z-index: 0;
-}
-
-.match-list-container::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.2) 100%);
-  z-index: 0;
-}
-
+/* Conteúdo principal */
 .content-container {
-  max-width: 1200px;
+  width: 100%;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 0.5rem;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
   position: relative;
   z-index: 1;
-  border: 2px solid #333;
+  background-color: #fff;
+  padding: 1.5rem;
+  min-height: calc(100vh - 2rem);
+  border-radius: var(--border-radius);
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+  margin-top: 1rem;
 }
 
-.back-btn {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  z-index: 2;
-  padding: 0.45rem;
-  background-color: white;
-  color: #333;
-  border: 2px solid #333;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-
-.back-btn:hover {
-  background-color: #f0f0f0;
-}
-
-.header-container {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1.5rem;
-  border-bottom: 2px solid #333;
-  padding-bottom: 1rem;
-}
-
-.filter-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: 1.2rem;
-  width: 100%;
-  gap: 1rem;
-}
-
-.page-title {
-  font-size: 1.7rem;
-  margin: 0;
-  color: #1e3c72;
-  font-weight: 700;
+/* Título centralizado das partidas disponíveis */
+.matches-title {
   text-align: center;
+  color: var(--primary-dark);
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 1rem 0 2rem;
+  padding-bottom: 1rem;
   position: relative;
-  padding-bottom: 0.5rem;
+  letter-spacing: 0.5px;
 }
 
-.page-title::after {
+.matches-title::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 60px;
-  height: 2px;
-  background: #1e3c72;
-  border-radius: 2px;
+  width: 100px;
+  height: 3px;
+  background: linear-gradient(to right, var(--primary-dark), var(--primary-light));
+  border-radius: 3px;
 }
 
-.filter-container {
-  margin-left: auto;
-}
-
-.filter-container .MuiToggleButtonGroup-root {
-  border: 2px solid #333;
-  border-radius: 0.4rem;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  display: flex;
-}
-
-.filter-container .MuiToggleButtonGroup-root:hover {
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-}
-
-.filter-container .MuiToggleButton-root {
+/* Botão voltar - Melhorado e mais visível */
+.back-btn {
+  position: fixed;
+  top: 1.2rem;
+  left: 1.2rem;
+  z-index: 10;
+  background: #fff;
   border: none;
-  color: #333;
-  background-color: white;
-  padding: 0.5rem 0.8rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  border-right: 1px solid #e0e0e0;
+  border-radius: 8px;
+  width: auto;
+  height: 45px;
   display: flex;
   align-items: center;
-  min-width: 90px;
-  height: 40px;
   justify-content: center;
-  transition: all 0.2s ease;
+  padding: 0 1.2rem 0 1rem;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--primary-color);
+  font-weight: 500;
 }
 
-.filter-container .MuiToggleButton-root:last-child {
-  border-right: none;
+.back-btn svg {
+  margin-right: 6px;
 }
 
-.filter-container .MuiToggleButton-root.Mui-selected {
-  background: linear-gradient(135deg, #1976D2 0%, #2196F3 100%);
+.back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background-color: var(--primary-color);
   color: white;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.filter-container .MuiToggleButton-root:hover:not(.Mui-selected) {
-  background-color: #f5f5f5;
+.back-btn:after {
+  content: "Voltar";
+  font-size: 0.9rem;
 }
 
-.filter-container .MuiToggleButton-root .MuiSvgIcon-root {
-  margin-left: 6px;
-  font-size: 1rem;
-}
-
+/* Barra de pesquisa */
 .search-container {
   position: relative;
   width: 100%;
-  max-width: 45%;
-  margin-right: auto;
+  max-width: 600px;
 }
 
 .search-input {
   width: 100%;
-  padding: 0.6rem 1rem 0.6rem 2.8rem;
-  border: 2px solid #333;
-  border-radius: 0.4rem;
-  font-size: 0.95rem;
-  background: white;
+  padding: 0.8rem 2.5rem;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  height: 40px;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #2196F3;
-  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 6px rgba(33, 150, 243, 0.2);
 }
 
 .search-icon {
   position: absolute;
-  left: 0.8rem;
+  left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #555;
-  font-size: 1.2rem;
-  pointer-events: none;
+  color: var(--primary-color);
 }
 
 .clear-search {
   position: absolute;
-  right: 0.8rem;
+  right: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #999;
   background: none;
   border: none;
+  color: var(--text-secondary);
   cursor: pointer;
-  padding: 0;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .clear-search:hover {
-  color: #333;
+  color: var(--primary-dark);
 }
 
-.info-row.distance-row {
-  color: #2196F3;
+/* Filtros e ordenação */
+.filter-container, .sort-container {
+  margin-top: 0.5rem;
+}
+
+.sort-container::before {
+  content: 'Ordenar por:';
+  position: absolute;
+  left: -7rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
   font-weight: 500;
+  color: var(--text-secondary);
 }
 
-.info-row.distance-row strong {
-  color: #1e3c72;
+.filter-container .MuiToggleButtonGroup-root,
+.sort-container .MuiToggleButtonGroup-root {
+  background: #fff;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  padding: 0.125rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.create-match-btn {
-  padding: 0.7rem 1rem;
-  background: #2196F3;
-  color: white;
-  border: 2px solid #333;
-  border-radius: 0.4rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-bottom: 1.5rem;
+.filter-container .MuiToggleButton-root,
+.sort-container .MuiToggleButton-root {
+  color: var(--text-secondary);
+  border: none;
+  padding: 0.5rem 1.25rem;
+  text-transform: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-width: 90px;
   transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  border-radius: calc(var(--border-radius) - 2px);
+  margin: 0 0.125rem;
+}
+
+.filter-container .MuiToggleButton-root.Mui-selected,
+.sort-container .MuiToggleButton-root.Mui-selected {
+  background: var(--primary-color);
+  color: white;
+}
+
+.sort-container .MuiToggleButton-root[value="spots"].Mui-selected {
+  background: var(--secondary-color);
+}
+
+.sort-container .MuiToggleButton-root[value="proximity"].Mui-selected {
+  background: var(--accent-color);
+}
+
+.filter-container .MuiToggleButton-root:hover:not(.Mui-selected),
+.sort-container .MuiToggleButton-root:hover:not(.Mui-selected) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Botão criar partida */
+.create-match-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--card-shadow);
 }
 
 .create-match-btn:hover {
-  background-color: #1976D2;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  background: var(--primary-dark);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
 
-.error-message {
-  color: #dc3545;
-  margin-bottom: 0.9rem;
-  padding: 0.6rem;
-  background-color: rgba(220, 53, 69, 0.1);
-  border-radius: 0.4rem;
-  border: 1px solid #dc3545;
+/* Indicadores de atualização */
+.last-update-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding: 0.5rem 0.75rem;
+  background-color: #fff;
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.refresh-button {
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--primary-color);
+  transition: all 0.3s ease;
+}
+
+.refresh-button:hover {
+  background-color: rgba(33, 150, 243, 0.1);
+}
+
+.refresh-button.refreshing {
+  animation: rotating 1s linear infinite;
+}
+
+.refresh-button.network-error {
+  color: var(--error-color);
+}
+
+.error-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  background-color: rgba(211, 47, 47, 0.1);
+  border-radius: 99px;
+  color: var(--error-color);
+  font-size: 0.75rem;
   font-weight: 500;
-  font-size: 0.9rem;
-  text-align: center;
+  cursor: pointer;
+  border: 1px solid rgba(211, 47, 47, 0.2);
 }
 
+.network-error-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.2rem 0.4rem;
+  background-color: var(--error-color);
+  color: white;
+  border-radius: 99px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+/* Cabeçalho e filtros */
+.header-container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+  position: sticky;
+  top: 0;
+  background-color: #fff;
+  padding: 1rem;
+  margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+  z-index: 5;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.page-title {
+  color: var(--text-primary);
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.filter-section {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+/* Grade de partidas */
 .matches-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.2rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
+/* Cards de partida - Aparência melhorada */
 .match-card {
-  background-color: white;
-  border-radius: 0.4rem;
-  padding: 1.2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  border: 2px solid #333;
   position: relative;
+  background: #fff;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: none;
+  min-height: 380px;
+}
+
+.match-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(to right, var(--primary-dark), var(--primary-light));
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
 .match-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
-.match-card.past-match {
-  opacity: 0.7;
-  border-color: #999;
+.match-card-inner {
+  position: relative;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  z-index: 1;
 }
 
+/* Cabeçalho do card */
 .match-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.8rem;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 0.8rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .match-title {
-  margin: 0;
-  font-size: 1.1rem;
-  color: #1e3c72;
+  color: var(--text-primary);
+  font-size: 1.25rem;
   font-weight: 700;
+  margin: 0;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Status da partida mais destacado */
 .match-status {
-  padding: 0.25rem 0.5rem;
-  border-radius: 20px;
-  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.75rem;
+  border-radius: 99px;
+  font-size: 0.75rem;
   font-weight: 600;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  margin-left: 0.5rem;
+  background-color: #e0e0e0;
+  color: var(--text-secondary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.status-open {
-  background-color: #e8f5e9;
-  color: #388e3c;
-  border: 1px solid #388e3c;
+.match-status.status-open {
+  background: linear-gradient(to right, var(--primary-dark), var(--primary-light));
+  color: white;
 }
 
-.status-full {
-  background-color: #fff8e1;
-  color: #ffa000;
-  border: 1px solid #ffa000;
+.match-status.status-full {
+  background: linear-gradient(to right, var(--warning-color), #FB8C00);
+  color: white;
 }
 
-.status-in_progress {
-  background-color: #e3f2fd;
-  color: #1976d2;
-  border: 1px solid #1976d2;
-}
-
-.status-completed {
-  background-color: #f3e5f5;
-  color: #7b1fa2;
-  border: 1px solid #7b1fa2;
-}
-
-.status-cancelled {
-  background-color: #ffebee;
-  color: #d32f2f;
-  border: 1px solid #d32f2f;
-}
-
+/* Informações da partida */
 .match-info {
-  margin-bottom: 0.8rem;
-  color: #555;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .info-row {
-  margin-bottom: 0.4rem;
   display: flex;
   align-items: center;
+  gap: 0.65rem;
   font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 .info-row strong {
-  margin-right: 0.3rem;
-  color: #333;
-}
-
-.match-price {
-  color: #388e3c;
+  color: var(--text-primary);
   font-weight: 600;
-  font-size: 0.95rem;
-  margin-top: 0.8rem;
-  border-top: 1px solid #ccc;
-  padding-top: 0.8rem;
+  margin-right: 0.25rem;
 }
 
-.join-button {
-  width: 100%;
-  padding: 0.6rem;
-  background-color: #2196F3;
-  color: white;
-  border: 2px solid #333;
-  border-radius: 0.4rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 0.8rem;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.info-row .MuiSvgIcon-root {
+  color: var(--primary-color);
+  font-size: 1.2rem;
 }
 
-.join-button:hover {
-  background-color: #1976D2;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-
-.already-joined, .organizer-badge {
-  padding: 0.5rem;
-  border-radius: 0.4rem;
-  font-weight: 600;
-  text-align: center;
-  margin-top: 0.8rem;
-  font-size: 0.9rem;
-  border: 2px solid;
-}
-
-.already-joined {
-  background-color: #e3f2fd;
-  color: #1976d2;
-  border-color: #1976d2;
-}
-
-.organizer-badge {
-  background-color: #f3e5f5;
-  color: #7b1fa2;
-  border-color: #7b1fa2;
-}
-
-.loading-container {
+/* Estilos para a linha de distância e badge */
+.info-row.distance-row {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  margin-top: 3px;
+  color: var(--text-secondary);
+  margin-left: -3px;
+}
+
+.distance-badge {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin: 0 4px;
+  min-width: 40px;
+  text-align: center;
+  white-space: nowrap;
 }
 
-.loader {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #2196F3;
-  border-radius: 50%;
-  width: 40px;
+/* Restaurar cores de distância */
+.distance-close {
+  background-color: #e6f4ea;
+  color: #1e8e3e;
+}
+
+.distance-medium {
+  background-color: #e8f0fe;
+  color: #1a73e8;
+}
+
+.distance-far {
+  background-color: #fef7e0;
+  color: #f9ab00;
+}
+
+.distance-very-far {
+  background-color: #fce8e6;
+  color: #d93025;
+}
+
+.distance-calculated-onthefly {
+  background-color: #ebf1fb;
+  color: #4285f4;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.distance-text {
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* Player count com gradiente sutil */
+.player-count {
+  background: linear-gradient(to bottom, #f9f9f9, #f5f5f5);
+  border-radius: var(--border-radius);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Paginação */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 0;
+  margin-top: 1.5rem;
+}
+
+.pagination-container .MuiPagination-ul {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  padding: 0.5rem;
+  border-radius: 99px;
+  box-shadow: var(--card-shadow);
+}
+
+.pagination-container .MuiPaginationItem-root {
+  margin: 0 0.2rem;
+  min-width: 40px;
   height: 40px;
-  animation: spin 1s linear infinite;
+  font-weight: 500;
+  font-size: 0.9rem;
+  border-radius: 99px;
+  color: var(--text-secondary);
+  background-color: transparent;
+  transition: all 0.3s ease;
+}
+
+.pagination-container .MuiPaginationItem-root:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.pagination-container .MuiPaginationItem-root.Mui-selected {
+  background: var(--primary-color);
+  color: white;
+  font-weight: 600;
+}
+
+/* Placeholders de carregamento */
+.loading-placeholder {
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.04);
+  border-radius: var(--border-radius);
   margin-bottom: 1rem;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.loading-placeholder.title {
+  height: 1.75rem;
+  width: 80%;
+  margin-bottom: 1.25rem;
 }
 
+.loading-placeholder.date {
+  height: 1.25rem;
+  width: 60%;
+  margin-bottom: 0.75rem;
+}
+
+.loading-placeholder.location {
+  height: 1.25rem;
+  width: 70%;
+  margin-bottom: 0.75rem;
+}
+
+.loading-placeholder.players {
+  height: 6rem;
+  width: 100%;
+  margin-bottom: 1.25rem;
+}
+
+.loading-placeholder.join {
+  height: 2.5rem;
+  width: 100%;
+}
+
+/* Mensagem quando não há partidas */
 .no-matches {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #fff;
+  border-radius: var(--border-radius);
+  padding: 3rem 2rem;
+  box-shadow: var(--card-shadow);
   text-align: center;
-  padding: 1.5rem;
-  background-color: white;
-  border-radius: 0.4rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 2px solid #333;
+  border: 1px dashed rgba(0, 0, 0, 0.2);
+  min-height: 300px;
 }
 
 .no-matches h3 {
-  color: #1e3c72;
-  margin-top: 0;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.no-matches p {
+  color: var(--text-secondary);
+  max-width: 400px;
+}
+
+/* Media queries para responsividade */
+@media (max-width: 992px) {
+  .matches-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
-  .header-container {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .match-list-container {
-    padding: 1rem;
-  }
-  
   .content-container {
     padding: 1rem;
+    margin-top: 3rem;
   }
   
+  .back-btn {
+    top: 1rem;
+    left: 1rem;
+    padding: 0;
+    width: 42px;
+    border-radius: 50%;
+  }
+  
+  .back-btn:after {
+    content: "";
+  }
+  
+  .back-btn svg {
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 576px) {
   .matches-grid {
     grid-template-columns: 1fr;
   }
   
-  .filter-section {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .filter-container {
-    margin: 0.8rem 0;
-    width: 100%;
-  }
-  
-  .filter-container .MuiToggleButtonGroup-root {
-    width: 100%;
-  }
-  
-  .search-container {
-    width: 100%;
-    margin: 0;
-    max-width: none;
+  .match-card {
+    min-height: 250px;
   }
 }
 
-/* Estilos para a paginação */
-.pagination-container {
+@keyframes rotating {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Adicionar banner de erro de rede */
+.network-error-banner {
   display: flex;
-  justify-content: center;
-  margin: 2rem 0;
+  align-items: center;
+  justify-content: space-between;
+  background-color: rgba(244, 67, 54, 0.1);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  border-radius: var(--border-radius);
   padding: 1rem;
-  background-color: rgba(255, 255, 255, 0.9);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
 }
 
-.pagination-container .MuiPaginationItem-root {
-  color: #1e3c72;
-  font-weight: 500;
+.error-icon {
+  color: var(--error-color);
+  margin-right: 1rem;
 }
 
-.pagination-container .MuiPaginationItem-root.Mui-selected {
-  background-color: #1e3c72;
+.error-message {
+  flex: 1;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.retry-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--error-color);
   color: white;
-  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.pagination-container .MuiPaginationItem-root:hover {
-  background-color: rgba(30, 60, 114, 0.1);
+.retry-button:hover {
+  background-color: #d32f2f;
 }
 
-.pagination-container .MuiPaginationItem-root.Mui-selected:hover {
-  background-color: #1e3c72;
-}
-
-@media (max-width: 600px) {
-  .pagination-container {
-    margin: 1rem 0;
-    padding: 0.5rem;
-  }
-  
-  .pagination-container .MuiPaginationItem-root {
-    margin: 0 2px;
-    min-width: 30px;
-    height: 30px;
-  }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
 } 

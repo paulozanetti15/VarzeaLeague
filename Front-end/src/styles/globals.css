@@ -2,59 +2,66 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  background: linear-gradient(135deg, #0A2351, #0D47A1);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #333;
 }
 
-/* Efeito de gradiente animado no fundo */
-@keyframes gradientBG {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
+/* Versão mais leve do gradiente */
 .gradient-bg {
-  background: linear-gradient(-45deg, #1e3c72, #2a5298, #2196F3, #21CBF3);
-  background-size: 400% 400%;
-  animation: gradientBG 15s ease infinite;
+  background: linear-gradient(-45deg, #0A2351, #0D47A1);
+  background-size: 200% 200%;
 }
 
-/* Efeito de vidro fosco */
+/* Efeito de vidro mais leve e bonito */
 .glass-effect {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
 }
 
-/* Efeitos de hover suaves */
+/* Efeitos de hover suaves e elegantes */
 .hover-effect {
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .hover-effect:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Animações de entrada */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* Animações simplificadas */
 .fade-in-up {
-  animation: fadeInUp 0.5s ease-out;
-} 
+  opacity: 1;
+}
+
+/* Adicionar algumas utilidades úteis */
+.text-center {
+  text-align: center;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+/* Melhorias nos scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #0A2351;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0D47A1;
+}

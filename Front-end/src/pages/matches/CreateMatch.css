@@ -124,12 +124,11 @@
 
 .create-match-container .form-control {
   width: 100%;
-  padding: 0.6rem 0.8rem;
-  border: 2px solid #333;
-  border-radius: 0.4rem;
-  transition: all 0.3s ease;
-  font-size: 0.95rem;
-  background: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
 }
 
 .create-match-container .form-control:focus {
@@ -286,4 +285,34 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(45deg, #1976D2, #1CB5E0);
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 60px;
+  max-height: 100px;
+}
+
+.create-match-container .city-autocomplete {
+  /* Estilos removidos para evitar conflitos */
+}
+
+.create-match-container .city-autocomplete:hover {
+  /* Estilos removidos para evitar conflitos */
+}
+
+.create-match-container .city-autocomplete .MuiOutlinedInput-root {
+  /* Estilos removidos para evitar conflitos */
+}
+
+.create-match-container .city-autocomplete .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  /* Estilos removidos para evitar conflitos */
+}
+
+.create-match-container .city-autocomplete .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  /* Estilos removidos para evitar conflitos */
+}
+
+.create-match-container .city-autocomplete .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  /* Estilos removidos para evitar conflitos */
 } 

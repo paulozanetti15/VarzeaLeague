@@ -513,54 +513,57 @@ const MatchDetail: React.FC = () => {
     return total;
   };
 
-  // Função para entrar na partida com um time
+  // Função para entrar com time
   const handleJoinWithTeam = async (teamId: number) => {
-    setError(null); // Limpa qualquer erro anterior
-    
-    // Verificar se o usuário já está na partida (como jogador ou com outro time)
-    if (userIsInMatch) {
-      console.warn('Usuário já está na partida como jogador ou com outro time');
-      setError('Você já está participando desta partida. Não é possível entrar novamente com outro time.');
-      toast.error('Você já está participando desta partida');
-      return;
-    }
-    
-    // Busca o time selecionado para verificação prévia
-    const selectedTeam = userTeams.find(team => team && team.id === teamId);
-    if (!selectedTeam) {
-      console.error(`Time com ID ${teamId} não encontrado`);
-      setError("Time não encontrado.");
-      return;
-    }
-
-    // Contar jogadores do time incluindo o capitão
-    // Inicialmente, vamos contar os jogadores que estão explicitamente na lista de jogadores
-    let teamPlayersCount = selectedTeam.players && Array.isArray(selectedTeam.players) 
-      ? selectedTeam.players.length 
-      : 0;
-    
-    // Verificar se o capitão já está contabilizado na lista de jogadores
-    const captainIsInPlayersList = selectedTeam.players && Array.isArray(selectedTeam.players) && 
-      selectedTeam.players.some((p: any) => p && p.id === selectedTeam.captainId);
-    
-    // Se o capitão não estiver na lista de jogadores, adicione-o à contagem
-    if (!captainIsInPlayersList && selectedTeam.captainId) {
-      teamPlayersCount += 1;
-      console.log(`Capitão do time não estava na lista de jogadores, adicionando +1 à contagem`);
-    }
-
-    console.log(`Time ${selectedTeam.name} tem ${teamPlayersCount} jogadores (incluindo capitão)`);
-
-    // Verifica se há vagas suficientes
-    const totalCurrentPlayers = calculateTotalPlayers();
-    if (totalCurrentPlayers + teamPlayersCount > match.maxPlayers) {
-      console.warn("Não há vagas suficientes para este time");
-      setError(`Não há vagas suficientes para este time. Restam ${match.maxPlayers - totalCurrentPlayers} vagas.`);
-      return;
-    }
+    console.log(`Tentando entrar na partida com o time ID ${teamId}`);
+    setJoining(true);
+    setError(null);
     
     try {
-      setJoining(true);
+      if (!match) {
+        throw new Error('Detalhes da partida não estão disponíveis');
+      }
+      
+      // Buscar o time selecionado
+      const selectedTeam = userTeams.find(team => team.id === teamId);
+      if (!selectedTeam) {
+        console.error(`Time com ID ${teamId} não encontrado`);
+        setError('Time não encontrado. Por favor, tente novamente.');
+        toast.error('Time não encontrado. Por favor, tente novamente.');
+        setJoining(false);
+        return;
+      }
+      
+      console.log(`Time selecionado: ${selectedTeam.name}, ID: ${selectedTeam.id}`);
+      
+      // Verificar se o time já está na partida
+      const teamAlreadyInMatch = match.players && Array.isArray(match.players) && match.players.some(
+        player => player.isTeam && player.teamId === teamId
+      );
+      
+      if (teamAlreadyInMatch) {
+        console.log('Este time já está participando desta partida');
+        setError('Este time já está participando desta partida.');
+        toast.error('Este time já está participando desta partida.');
+        setJoining(false);
+        return;
+      }
+      
+      // Verificar se a partida está cheia
+      const totalCurrentPlayers = calculateTotalPlayers();
+      const teamSize = selectedTeam.players?.length + 1 || 1; // +1 para o capitão
+      
+      console.log(`Total atual de jogadores: ${totalCurrentPlayers}`);
+      console.log(`Tamanho do time: ${teamSize}`);
+      console.log(`Máximo de jogadores: ${match.maxPlayers}`);
+      
+      if (totalCurrentPlayers + teamSize > match.maxPlayers) {
+        console.warn('Não há vagas suficientes para este time');
+        setError(`Não há vagas suficientes para o time ${selectedTeam.name} (${teamSize} jogadores). Apenas ${match.maxPlayers - totalCurrentPlayers} vagas disponíveis.`);
+        toast.error(`Não há vagas suficientes para o time ${selectedTeam.name}`);
+        setJoining(false);
+        return;
+      }
       
       // Atualizamos o estado local imediatamente para feedback visual
       // Cria uma representação do time para a lista de jogadores
@@ -568,20 +571,20 @@ const MatchDetail: React.FC = () => {
         id: `team-${teamId}`,
         name: `${selectedTeam.name} (Time)`,
         isTeam: true,
-        playerCount: teamPlayersCount,
+        playerCount: teamSize,
         teamId: teamId
       };
-      
+
       // Guardando em variáveis locais para não depender do estado atual
       let updatedMatch = {...match};
       updatedMatch.players = updatedMatch.players ? [...updatedMatch.players] : [];
       updatedMatch.teams = updatedMatch.teams ? [...updatedMatch.teams] : [];
-      
+
       // Verifica se o time já existe
       const teamExists = updatedMatch.players.some(
         (p: any) => p?.isTeam && p?.teamId === teamId
       );
-      
+
       if (!teamExists) {
         // Adiciona o time à lista de jogadores
         updatedMatch.players.push(teamEntry);
@@ -589,7 +592,7 @@ const MatchDetail: React.FC = () => {
         updatedMatch.teams.push(selectedTeam);
         console.log("Time adicionado localmente:", teamEntry);
       }
-      
+
       // Salvamos imediatamente no estado para feedback visual
       setMatch(updatedMatch);
 
@@ -614,15 +617,13 @@ const MatchDetail: React.FC = () => {
       } catch (err) {
         console.error("Erro ao salvar time no localStorage:", err);
       }
-      
+
       // Fecha as opções de time
       setShowTeamOptions(false);
-      
-      // Forçamos a atualização da interface imediatamente
-      forceRefresh();
-      
+      setUserIsInMatch(true);
+
       try {
-        // Tenta usar a API real (em paralelo, não bloqueia a experiência do usuário)
+        // Tenta usar a API real
         console.log(`Tentando entrar na partida ${id} com o time ${teamId} via API`);
         await api.matches.joinWithTeam(Number(id), teamId);
         console.log("API de joinWithTeam retornou com sucesso");
@@ -631,7 +632,7 @@ const MatchDetail: React.FC = () => {
         console.warn('API para entrar com time indisponível, usando simulação local:', apiError);
         setSimulationMode(true);
       }
-      
+
       // Tenta recarregar os detalhes após um intervalo
       setTimeout(async () => {
         try {
@@ -653,11 +654,12 @@ const MatchDetail: React.FC = () => {
         }
         forceRefresh();
       }, 800);
-      
+
       toast.success(`Seu time ${selectedTeam.name} entrou na partida com sucesso!`);
     } catch (error) {
       console.error('Erro ao entrar na partida com o time:', error);
-      setError('Não foi possível entrar na partida com o time. Tente novamente mais tarde.');
+      setError('Erro ao entrar na partida com o time. Tente novamente.');
+      toast.error('Erro ao entrar na partida com o time. Tente novamente.');
     } finally {
       setJoining(false);
     }
@@ -822,49 +824,91 @@ const MatchDetail: React.FC = () => {
 
   // Calcular total de vagas ocupadas, considerando que times ocupam múltiplas vagas
   const calculateTotalPlayers = () => {
-    if (!match || !match.players || !Array.isArray(match.players)) return 0;
+    if (!match || !match.players || !Array.isArray(match.players)) {
+      console.error("Não foi possível calcular o total de jogadores: partida inválida ou sem lista de jogadores");
+      return 0;
+    }
     
     let total = 0;
-    match.players.forEach((player: any) => {
-      if (!player) return; // Ignora jogadores undefined ou null
+    
+    console.log(`Calculando jogadores para partida ${match.id} - ${match.title}`);
+    console.log(`Total de entradas na lista players: ${match.players.length}`);
+    
+    for (let i = 0; i < match.players.length; i++) {
+      const player = match.players[i];
       
-      if (player.isTeam && player.teamId) {
-        // Busca o time na lista de times para obter o número real de jogadores
-        const teamInMatch = match.teams && Array.isArray(match.teams) 
-          ? match.teams.find((t: any) => t && t.id === player.teamId) 
-          : null;
-        
-        if (teamInMatch && teamInMatch.players && Array.isArray(teamInMatch.players)) {
-          let teamSize = teamInMatch.players.length;
+      if (!player) {
+        console.log(`Entrada ${i} é inválida, pulando...`);
+        continue;
+      }
+      
+      if (player.isTeam) {
+        // Caso 1: É um time
+        if (player.teamId) {
+          console.log(`Entrada ${i}: Time com ID ${player.teamId}`);
           
-          // Verificar se o capitão do time já está na lista de jogadores
-          const captainIsInPlayersList = teamInMatch.captainId && 
-            teamInMatch.players.some((p: any) => p && p.id === teamInMatch.captainId);
-          
-          // Se o capitão não estiver na lista mas existir, adicionar +1 à contagem
-          if (!captainIsInPlayersList && teamInMatch.captainId) {
-            teamSize += 1;
-            console.log(`Capitão do time ${player.name} não está na lista de jogadores, adicionando +1 à contagem`);
+          if (match.teams && Array.isArray(match.teams)) {
+            const team = match.teams.find(t => t && t.id === player.teamId);
+            
+            if (team) {
+              if (team.players && Array.isArray(team.players)) {
+                // Contar jogadores do time
+                let teamSize = team.players.length;
+                
+                // Verificar se capitão está na lista
+                const captainInList = team.captainId && team.players.some(p => p && p.id === team.captainId);
+                if (!captainInList && team.captainId) {
+                  teamSize += 1;
+                  console.log(`  Time ${team.name}: Adicionando capitão à contagem`);
+                }
+                
+                console.log(`  Time ${team.name}: ${teamSize} jogadores no total`);
+                total += teamSize;
+              } else if (player.playerCount && typeof player.playerCount === 'number') {
+                console.log(`  Time ${team.name}: Usando playerCount = ${player.playerCount}`);
+                total += player.playerCount;
+              } else {
+                console.log(`  Time ${team.name}: Sem informações completas, assumindo 1 jogador`);
+                total += 1;
+              }
+            } else {
+              // Time não encontrado
+              if (player.playerCount && typeof player.playerCount === 'number') {
+                console.log(`  Time ID ${player.teamId} não encontrado, usando playerCount = ${player.playerCount}`);
+                total += player.playerCount;
+              } else {
+                console.log(`  Time ID ${player.teamId} não encontrado, assumindo 1 jogador`);
+                total += 1;
+              }
+            }
+          } else {
+            // Não há lista de times válida
+            if (player.playerCount && typeof player.playerCount === 'number') {
+              console.log(`  Lista de times ausente, usando playerCount = ${player.playerCount}`);
+              total += player.playerCount;
+            } else {
+              console.log(`  Lista de times ausente, assumindo 1 jogador`);
+              total += 1;
+            }
           }
-          
-          total += teamSize;
-          console.log(`Time ${player.name} conta com ${teamSize} jogadores (incluindo capitão)`);
-        } else if (typeof player.playerCount === 'number') {
-          // Fallback para playerCount se não conseguirmos encontrar o time ou seus jogadores
-          total += player.playerCount;
-          console.log(`Time ${player.name} conta como ${player.playerCount} jogadores (fallback)`);
         } else {
-          // Fallback final - assume pelo menos 1 jogador
-          total += 1;
-          console.log(`Time ${player.name} - não foi possível determinar número de jogadores, assumindo 1`);
+          // Time sem ID
+          if (player.playerCount && typeof player.playerCount === 'number') {
+            console.log(`  Time sem ID, usando playerCount = ${player.playerCount}`);
+            total += player.playerCount;
+          } else {
+            console.log(`  Time sem ID, assumindo 1 jogador`);
+            total += 1;
+          }
         }
       } else {
-        total += 1; // Jogador individual
-        console.log(`Jogador ${player.name || player.id || 'desconhecido'} conta como 1`);
+        // Caso 2: Jogador individual
+        console.log(`Entrada ${i}: Jogador individual ${player.name || player.id || 'sem nome'}`);
+        total += 1;
       }
-    });
+    }
     
-    console.log(`Total de jogadores calculado: ${total}`);
+    console.log(`Total final de jogadores: ${total}`);
     return total;
   };
 
@@ -1240,14 +1284,18 @@ const MatchDetail: React.FC = () => {
                   <button 
                     className="join-button individual" 
                     onClick={handleJoinMatch} 
-                    disabled={joining || isFull || loading}
+                    disabled={joining || loading || isFull}
                   >
                     {joining ? (
                       <>
                         <span className="button-spinner"></span>
                         Entrando...
                       </>
-                    ) : 'Entrar como Jogador'}
+                    ) : isFull ? (
+                      'Partida Cheia'
+                    ) : (
+                      'Entrar como Jogador'
+                    )}
                   </button>
                   
                   <button 
@@ -1260,7 +1308,11 @@ const MatchDetail: React.FC = () => {
                         <span className="button-spinner"></span>
                         Carregando Times...
                       </>
-                    ) : 'Entrar com Time'}
+                    ) : isFull ? (
+                      'Partida Cheia'
+                    ) : (
+                      'Entrar com Time'
+                    )}
                   </button>
                 </div>
               )}

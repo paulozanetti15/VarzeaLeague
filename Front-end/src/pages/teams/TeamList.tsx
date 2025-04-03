@@ -16,6 +16,10 @@ interface Team {
   playerCount: number;
   matchCount: number;
   ownerId?: number;
+  isCurrentUserCaptain?: boolean;
+  banner?: string;
+  createdAt?: string;
+  players?: any[];
 }
 
 const TeamList = () => {
@@ -122,21 +126,36 @@ const TeamList = () => {
                 onClick={() => handleTeamClick(team.id)}
               >
                 <div className="team-banner">
-                  <GroupIcon sx={{ fontSize: 40, color: '#fff' }} />
+                  {team.banner ? (
+                    <img 
+                      src={team.banner} 
+                      alt={team.name} 
+                      className="team-banner-img" 
+                    />
+                  ) : (
+                    <GroupIcon sx={{ fontSize: 40, color: '#fff' }} />
+                  )}
                 </div>
                 <div className="team-info">
                   <h2 className="team-name">{team.name}</h2>
-                  <p className="team-description">{team.description}</p>
+                  <p className="team-description">
+                    {team.description || "Sem descrição disponível"}
+                  </p>
                   <div className="team-stats">
                     <div className="stat">
                       <GroupIcon sx={{ fontSize: 20, color: '#2196F3' }} />
-                      <span>{team.playerCount} Jogadores</span>
+                      <span>{team.players?.length || team.playerCount || 0} Jogadores</span>
                     </div>
                     <div className="stat">
                       <EmojiEventsIcon sx={{ fontSize: 20, color: '#FFD700' }} />
-                      <span>{team.matchCount} Partidas</span>
+                      <span>{team.matchCount || 0} Partidas</span>
                     </div>
                   </div>
+                  {team.isCurrentUserCaptain && (
+                    <div className="captain-badge-container">
+                      <span className="captain-badge">Capitão</span>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))
