@@ -33,6 +33,49 @@ const MatchDetail: React.FC = () => {
   
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
+  // Função fallback para obter localização aproximada por IP (definida globalmente para o componente)
+  const fetchLocationByIP = async () => {
+    toast.loading('Obtendo localização aproximada pelo seu IP...');
+    try {
+      const ipResponse = await fetch('https://ipapi.co/json/');
+      const data = await ipResponse.json();
+      
+      if (data.latitude && data.longitude) {
+        const userLoc = {
+          lat: data.latitude,
+          lng: data.longitude
+        };
+        console.log('Localização por IP obtida:', userLoc);
+        setUserLocation(userLoc);
+        toast.dismiss();
+        toast.success('Localização aproximada obtida pelo seu IP');
+        
+        // Calcular distância se a partida tiver localização
+        const locationData = getLocationData();
+        if (locationData && locationData.lat && locationData.lng) {
+          const dist = calculateDistance(
+            userLoc.lat, 
+            userLoc.lng, 
+            locationData.lat, 
+            locationData.lng
+          );
+          setDistance(dist);
+          console.log(`Distância calculada: ${dist} km`);
+        } else if (locationData && locationData.address && !locationData.lat && !locationData.lng) {
+          // Temos apenas o endereço, não podemos geocodificar aqui
+          console.log("Temos apenas o endereço, mas não as coordenadas. Geocodificação será feita posteriormente.");
+        }
+      } else {
+        toast.dismiss();
+        toast.error('Não foi possível determinar sua localização pelo IP');
+      }
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Erro ao obter localização por IP');
+      console.error('Erro ao obter localização por IP:', error);
+    }
+  };
+
   // Limpar dados de times simulados e buscar times reais uma vez ao carregar
   useEffect(() => {
     // Migrar formato antigo de joinedMatches para novo formato (array)
@@ -281,24 +324,53 @@ const MatchDetail: React.FC = () => {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
               };
+              console.log('Localização do usuário obtida:', userLoc);
               setUserLocation(userLoc);
+              toast.success('Sua localização foi obtida com sucesso!');
               
-              // Calcular distância se a partida tem coordenadas
-              const matchLat = response.location?.latitude || response.latitude;
-              const matchLng = response.location?.longitude || response.longitude;
-              
-              if (matchLat && matchLng) {
+              // Calcular distância se a partida tiver localização
+              const locationData = getLocationData();
+              if (locationData && locationData.lat && locationData.lng) {
                 const dist = calculateDistance(
-                  userLoc.lat,
-                  userLoc.lng,
-                  matchLat,
-                  matchLng
+                  userLoc.lat, 
+                  userLoc.lng, 
+                  locationData.lat, 
+                  locationData.lng
                 );
                 setDistance(dist);
+                console.log(`Distância calculada: ${dist} km`);
+              } else if (locationData && locationData.address && !locationData.lat && !locationData.lng) {
+                // Temos apenas o endereço, precisamos geocodificar
+                geocodeAddressAndCalculateDistance(locationData.address, userLoc);
               }
             },
             (error) => {
-              console.error("Erro ao obter localização do usuário:", error);
+              console.error('Erro ao obter localização do usuário:', error);
+              
+              // Mensagens de erro específicas
+              let errorMsg = 'Não foi possível obter sua localização.';
+              switch (error.code) {
+                case error.PERMISSION_DENIED:
+                  errorMsg = 'Permissão para obter localização foi negada. Por favor, habilite o acesso à localização no seu navegador.';
+                  break;
+                case error.POSITION_UNAVAILABLE:
+                  errorMsg = 'Informações de localização não estão disponíveis no momento.';
+                  break;
+                case error.TIMEOUT:
+                  errorMsg = 'Tempo esgotado ao tentar obter sua localização.';
+                  break;
+              }
+              
+              toast.error(errorMsg);
+              
+              // Tentar usar uma API de geolocalização por IP como fallback
+              fetchLocationByIP();
+            },
+            // Opções para a API de geolocalização
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0
             }
           );
         }
@@ -538,7 +610,7 @@ const MatchDetail: React.FC = () => {
       
       // Verificar se o time já está na partida
       const teamAlreadyInMatch = match.players && Array.isArray(match.players) && match.players.some(
-        player => player.isTeam && player.teamId === teamId
+        (player: { isTeam: boolean; teamId: number }) => player.isTeam && player.teamId === teamId
       );
       
       if (teamAlreadyInMatch) {
@@ -802,15 +874,28 @@ const MatchDetail: React.FC = () => {
     return 'Gratuito';
   };
 
-  const getMapUrl = (): string => {
-    if (userLocation) {
-      const matchLat = match.location?.latitude || match.latitude;
-      const matchLng = match.location?.longitude || match.longitude;
+  const getMapUrl = () => {
+    const locationData = getLocationData();
+    
+    if (userLocation && locationData && typeof locationData.lat === 'number' && typeof locationData.lng === 'number') {
+      // Use OpenStreetMap como padrão
+      let baseUrl = `https://www.openstreetmap.org/directions?`;
+      let params = new URLSearchParams();
       
-      if (matchLat && matchLng) {
-        return `https://www.openstreetmap.org/directions?from=${userLocation.lat},${userLocation.lng}&to=${matchLat},${matchLng}`;
+      // Adicionar origem (localização do usuário)
+      params.append('from', `${userLocation.lat},${userLocation.lng}`);
+      
+      // Adicionar destino (localização da partida)
+      params.append('to', `${locationData.lat},${locationData.lng}`);
+      
+      // Adicionar o nome do local como comentário adicional na URL
+      if (locationData.formattedAddress) {
+        params.append('comment', locationData.formattedAddress);
       }
+      
+      return `${baseUrl}${params.toString()}`;
     }
+    
     return '#';
   };
 
@@ -848,7 +933,7 @@ const MatchDetail: React.FC = () => {
           console.log(`Entrada ${i}: Time com ID ${player.teamId}`);
           
           if (match.teams && Array.isArray(match.teams)) {
-            const team = match.teams.find(t => t && t.id === player.teamId);
+            const team = match.teams.find((t: { id: number }) => t && t.id === player.teamId);
             
             if (team) {
               if (team.players && Array.isArray(team.players)) {
@@ -856,7 +941,7 @@ const MatchDetail: React.FC = () => {
                 let teamSize = team.players.length;
                 
                 // Verificar se capitão está na lista
-                const captainInList = team.captainId && team.players.some(p => p && p.id === team.captainId);
+                const captainInList = team.captainId && team.players.some((p: { id: number }) => p && p.id === team.captainId);
                 if (!captainInList && team.captainId) {
                   teamSize += 1;
                   console.log(`  Time ${team.name}: Adicionando capitão à contagem`);
@@ -966,6 +1051,257 @@ const MatchDetail: React.FC = () => {
     }
   };
 
+  // No início do componente, adicionar o useEffect para obter a localização do usuário
+  useEffect(() => {
+    // Função para obter a localização do usuário com alta precisão
+    const getUserLocation = () => {
+      console.log('Tentando obter localização do usuário...');
+      
+      // Verificar se o navegador suporta geolocalização
+      if (navigator.geolocation) {
+        toast.loading('Obtendo sua localização...');
+        
+        try {
+          // Tentar obter localização com alta precisão
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const userLoc = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              };
+              console.log('Localização do usuário obtida:', userLoc);
+              console.log('Precisão da localização:', position.coords.accuracy, 'metros');
+              
+              setUserLocation(userLoc);
+              toast.dismiss();
+              toast.success('Sua localização foi obtida com sucesso!');
+              
+              // Calcular distância se a partida tiver localização
+              const locationData = getLocationData();
+              if (locationData && locationData.lat && locationData.lng) {
+                const dist = calculateDistance(
+                  userLoc.lat, 
+                  userLoc.lng, 
+                  locationData.lat, 
+                  locationData.lng
+                );
+                setDistance(dist);
+                console.log(`Distância calculada: ${dist} km`);
+                
+                // Obter o endereço reverso do usuário para exibição
+                try {
+                  fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLoc.lat}&lon=${userLoc.lng}&zoom=18&addressdetails=1`)
+                    .then(response => response.json())
+                    .then(data => {
+                      if (data && data.display_name) {
+                        console.log('Endereço do usuário:', data.display_name);
+                        // Opcional: salvar o endereço do usuário em um estado
+                        // setUserAddress(data.display_name);
+                      }
+                    })
+                    .catch(err => console.error('Erro ao obter endereço reverso:', err));
+                } catch (e) {
+                  console.error('Erro ao buscar endereço do usuário:', e);
+                }
+              } else if (locationData && locationData.address && !locationData.lat && !locationData.lng) {
+                // Temos apenas o endereço, precisamos geocodificar
+                geocodeAddressAndCalculateDistance(locationData.address, userLoc);
+              }
+            },
+            (error) => {
+              console.error('Erro ao obter localização do usuário:', error);
+              toast.dismiss();
+              
+              // Mensagens de erro específicas
+              let errorMsg = 'Não foi possível obter sua localização.';
+              switch (error.code) {
+                case error.PERMISSION_DENIED:
+                  errorMsg = 'Permissão para obter localização foi negada. Por favor, habilite o acesso à localização no seu navegador.';
+                  break;
+                case error.POSITION_UNAVAILABLE:
+                  errorMsg = 'Informações de localização não estão disponíveis no momento.';
+                  break;
+                case error.TIMEOUT:
+                  errorMsg = 'Tempo esgotado ao tentar obter sua localização.';
+                  break;
+              }
+              
+              toast.error(errorMsg);
+              
+              // Tentar usar uma API de geolocalização por IP como fallback
+              fetchLocationByIP();
+            },
+            // Opções para a API de geolocalização
+            {
+              enableHighAccuracy: true, // Solicitar alta precisão
+              timeout: 15000, // Aumentar o timeout para dar mais tempo
+              maximumAge: 0 // Sempre obter a posição mais recente
+            }
+          );
+        } catch (e) {
+          console.error('Erro ao chamar API de geolocalização:', e);
+          toast.dismiss();
+          toast.error('Erro ao acessar serviço de localização');
+          fetchLocationByIP();
+        }
+      } else {
+        console.warn('Geolocalização não suportada neste navegador');
+        toast.error('Seu navegador não suporta geolocalização');
+        // Tentar usar uma API de geolocalização por IP como fallback
+        fetchLocationByIP();
+      }
+    };
+
+    // Chamar função para obter localização
+    getUserLocation();
+    
+    // Adicionar getUserLocation ao escopo global para poder ser chamado pelo botão
+    (window as any).getUserLocation = getUserLocation;
+  }, [match?.id]); // Dependência alterada para match.id para evitar loops infinitos
+
+  // Função para normalizar e obter os dados de localização, independente de como estão armazenados
+  const getLocationData = () => {
+    if (!match) return null;
+    
+    // Caso 1: Dados completos no objeto location
+    if (match.location && match.location.latitude && match.location.longitude) {
+      return {
+        lat: match.location.latitude,
+        lng: match.location.longitude,
+        address: match.location.address || '',
+        formattedAddress: match.location.formattedAddress || match.location.address || ''
+      };
+    }
+    
+    // Caso 2: Latitude e longitude diretamente no objeto match
+    if (match.latitude && match.longitude) {
+      return {
+        lat: match.latitude,
+        lng: match.longitude,
+        address: typeof match.location === 'string' ? match.location : '',
+        formattedAddress: typeof match.location === 'string' ? match.location : ''
+      };
+    }
+    
+    // Caso 3: Apenas endereço (string) no campo location
+    if (typeof match.location === 'string' && match.location.trim()) {
+      return {
+        lat: null,
+        lng: null,
+        address: match.location,
+        formattedAddress: match.location
+      };
+    }
+    
+    // Caso 4: Apenas endereço no objeto location
+    if (match.location && match.location.address && typeof match.location.address === 'string') {
+      return {
+        lat: null,
+        lng: null,
+        address: match.location.address,
+        formattedAddress: match.location.formattedAddress || match.location.address || ''
+      };
+    }
+    
+    // Nenhuma informação de localização disponível
+    return null;
+  };
+
+  // Função para geocodificar endereço e calcular distância com melhor tratamento de erros
+  const geocodeAddressAndCalculateDistance = async (address: string, userLoc: {lat: number, lng: number}) => {
+    try {
+      console.log('Geocodificando endereço da partida:', address);
+      toast.loading('Buscando coordenadas do local da partida...');
+      
+      const coordinates = await geocodeAddress(address);
+      
+      if (coordinates && coordinates.latitude && coordinates.longitude) {
+        toast.dismiss();
+        console.log('Coordenadas obtidas:', coordinates);
+        
+        // Atualizar o match com as coordenadas obtidas
+        setMatch((prev: any) => {
+          // Verificar se location é um objeto ou string
+          if (!prev) return prev;
+          
+          // Determinar o endereço formatado para exibição
+          const formattedAddress = coordinates.displayName || address;
+          
+          if (typeof prev.location === 'string') {
+            return {
+              ...prev,
+              location: {
+                address: prev.location,
+                latitude: coordinates.latitude,
+                longitude: coordinates.longitude,
+                formattedAddress: formattedAddress
+              }
+            };
+          } else {
+            return {
+              ...prev,
+              location: {
+                ...prev.location,
+                latitude: coordinates.latitude,
+                longitude: coordinates.longitude,
+                address: prev.location?.address || address,
+                formattedAddress: formattedAddress
+              }
+            };
+          }
+        });
+        
+        // Calcular distância
+        const dist = calculateDistance(
+          userLoc.lat,
+          userLoc.lng,
+          coordinates.latitude,
+          coordinates.longitude
+        );
+        setDistance(dist);
+        console.log(`Distância calculada: ${dist} km`);
+        
+        // Exibir mensagem de sucesso com nome formatado do local
+        if (coordinates.displayName) {
+          // Formatar o nome para exibição mais amigável
+          const formattedName = coordinates.displayName.split(',').slice(0, 2).join(', ');
+          toast.success(`Local encontrado: ${formattedName}`);
+        } else {
+          toast.success('Local encontrado com sucesso!');
+        }
+      } else {
+        toast.dismiss();
+        toast.error('Não foi possível encontrar coordenadas para o endereço');
+        console.warn('Não foi possível obter coordenadas para o endereço:', address);
+      }
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Erro ao buscar coordenadas do endereço');
+      console.error('Erro ao geocodificar endereço:', error);
+    }
+  };
+
+  // Adicionar o estilo personalizado para a informação de endereço
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .address-info {
+        margin: 10px 0;
+        padding: 8px 12px;
+        background-color: #f5f5f5;
+        border-radius: 4px;
+        font-size: 0.9em;
+        line-height: 1.4;
+        border-left: 3px solid #3f51b5;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // Coloque essas variáveis após as verificações de carregamento e erro
   if (loading) {
     return <div className="match-detail-container loading">Carregando detalhes da partida...</div>;
@@ -1017,6 +1353,8 @@ const MatchDetail: React.FC = () => {
     
   console.log(`O usuário atual ${currentUser?.name || currentUser?.id || 'desconhecido'} está na partida? ${userHasJoined}`);
 
+  const locationData = getLocationData();
+
   return (
     <div className="match-detail-container">
       <button className="back-button" onClick={() => navigate(-1)}>
@@ -1062,12 +1400,26 @@ const MatchDetail: React.FC = () => {
             </div>
           </div>
           
-          {distance !== null && (
-            <div className="info-row">
-              <div className="info-label">Distância:</div>
-              <div className="info-value">{distance} km de você</div>
+          <div className="info-row">
+            <div className="info-label">Distância:</div>
+            <div className="info-value">
+              {distance !== null ? (
+                <>{distance} km de você</>
+              ) : userLocation ? (
+                <>Calculando distância...</>
+              ) : (
+                <>
+                  Localização não disponível 
+                  <button 
+                    className="location-button" 
+                    onClick={() => (window as any).getUserLocation()}
+                  >
+                    Obter minha localização
+                  </button>
+                </>
+              )}
             </div>
-          )}
+          </div>
           
           <div className="info-row">
             <div className="info-label">Preço:</div>
@@ -1100,55 +1452,140 @@ const MatchDetail: React.FC = () => {
           
           {showMap && (
             <div className="map-container">
-              {(match.location?.latitude && match.location?.longitude) || match.latitude || match.longitude ? (
-                <>
-                  {useIframeMap ? (
-                    <IframeMap 
-                      matchLocation={{
-                        lat: match.location?.latitude || match.latitude,
-                        lng: match.location?.longitude || match.longitude,
-                        address: match.location?.address || (typeof match.location === 'string' ? match.location : undefined)
-                      }}
-                    />
-                  ) : (
-                    <Map 
-                      matchLocation={{
-                        lat: match.location?.latitude || match.latitude,
-                        lng: match.location?.longitude || match.longitude,
-                        address: match.location?.address || (typeof match.location === 'string' ? match.location : undefined)
-                      }}
-                      userLocation={userLocation || undefined}
-                    />
-                  )}
-                  
-                  <div className="map-controls">
-                    <button 
-                      className="map-toggle-button" 
-                      onClick={toggleMapType}
-                    >
-                      {useIframeMap ? 'Usar mapa interativo' : 'Usar mapa simples'}
-                    </button>
-                    
-                    {userLocation && (
-                      <a 
-                        href={getMapUrl()} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="directions-link"
+              {(() => {
+                const locationData = getLocationData();
+                
+                if (locationData && typeof locationData.lat === 'number' && typeof locationData.lng === 'number') {
+                  // Temos coordenadas válidas, mostrar o mapa
+                  return (
+                    <>
+                      {useIframeMap ? (
+                        <IframeMap 
+                          matchLocation={{
+                            lat: locationData.lat,
+                            lng: locationData.lng,
+                            address: locationData.address
+                          }}
+                        />
+                      ) : (
+                        <Map 
+                          matchLocation={{
+                            lat: locationData.lat,
+                            lng: locationData.lng,
+                            address: locationData.address
+                          }}
+                          userLocation={userLocation ? {
+                            lat: userLocation.lat,
+                            lng: userLocation.lng
+                          } : undefined}
+                        />
+                      )}
+                      
+                      <div className="map-controls">
+                        <button 
+                          className="map-toggle-button" 
+                          onClick={toggleMapType}
+                        >
+                          {useIframeMap ? 'Usar mapa interativo' : 'Usar mapa simples'}
+                        </button>
+                        
+                        {userLocation && (
+                          <a 
+                            href={getMapUrl()} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="directions-link"
+                          >
+                            <DirectionsIcon /> Como chegar
+                          </a>
+                        )}
+                      </div>
+                    </>
+                  );
+                } else if (locationData && locationData.address) {
+                  // Temos apenas o endereço, mostrar opção para geocodificar
+                  return (
+                    <div className="loading-map">
+                      <p>Carregando mapa para o endereço:</p>
+                      <p><strong>{match.location?.formattedAddress || locationData.address}</strong></p>
+                      <button
+                        className="geocode-address-btn"
+                        onClick={() => userLocation && geocodeAddressAndCalculateDistance(locationData.address, userLocation)}
                       >
-                        <DirectionsIcon /> Como chegar
-                      </a>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="map-placeholder">
-                  <span>Localização não disponível</span>
-                </div>
-              )}
+                        Localizar no mapa
+                      </button>
+                    </div>
+                  );
+                } else {
+                  // Nenhuma informação de localização disponível
+                  return (
+                    <div className="loading-map">
+                      <p>Localização não fornecida pelo organizador</p>
+                      <p><small>Envie um endereço manualmente para visualizar no mapa</small></p>
+                      <div className="manual-location-form">
+                        <input 
+                          type="text" 
+                          id="address-input" 
+                          placeholder="Digite um endereço para a partida" 
+                          className="address-input"
+                        />
+                        <button
+                          className="geocode-address-btn"
+                          onClick={async () => {
+                            const addressInput = document.getElementById('address-input') as HTMLInputElement;
+                            const address = addressInput?.value;
+                            
+                            if (address && address.trim().length > 5) {
+                              if (userLocation) {
+                                geocodeAddressAndCalculateDistance(address, userLocation);
+                              } else {
+                                toast.error('Obtenha sua localização primeiro para calcular a distância');
+                              }
+                            } else {
+                              toast.error('Por favor, digite um endereço válido');
+                            }
+                          }}
+                        >
+                          Buscar no mapa
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+              })()}
             </div>
           )}
         </div>
+        
+        {/* Informações de distância abaixo dos controles do mapa */}
+        {distance !== null && userLocation && (
+          <div className="distance-info">
+            <p><strong>Distância:</strong> {distance} km da sua localização</p>
+            {locationData && locationData.formattedAddress && (
+              <p className="address-info">
+                <strong>Endereço completo:</strong> {locationData.formattedAddress}
+              </p>
+            )}
+            <div className="route-options">
+              <a 
+                href={getMapUrl()} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="route-button osm"
+              >
+                <DirectionsIcon /> Ver rota no OpenStreetMap
+              </a>
+              <a 
+                href={`https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${getLocationData()?.lat},${getLocationData()?.lng}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="route-button gmaps"
+              >
+                <DirectionsIcon /> Ver rota no Google Maps
+              </a>
+            </div>
+          </div>
+        )}
         
         <div className="players-section">
           <h3>Jogadores ({totalPlayersCount}/{match?.maxPlayers || 0})</h3>

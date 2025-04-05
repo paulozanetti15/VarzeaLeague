@@ -1,9 +1,7 @@
-import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import React, { useEffect, useState } from 'react';
 import './Map.css';
 
+// Interface para as propriedades do mapa
 interface MapProps {
   matchLocation: {
     lat: number;
@@ -16,31 +14,40 @@ interface MapProps {
   };
 }
 
-// Componente para centralizar o mapa nas coordenadas fornecidas
-const CenterMap: React.FC<{ center: [number, number] }> = ({ center }) => {
-  const map = useMap();
-  
+// Componente principal do mapa (agora apenas um wrapper para o IframeMap)
+export const Map: React.FC<MapProps> = (props) => {
+  // Simplesmente usamos o IframeMap para todos os casos
+  return <IframeMap matchLocation={props.matchLocation} />;
+};
+
+// Componente de mapa alternativo usando iframe
+export const IframeMap: React.FC<{
+  matchLocation: { lat: number; lng: number; address?: string; formattedAddress?: string };
+}> = ({ matchLocation }) => {
+  const [isMounted, setIsMounted] = useState(false);
+  const [showInfo, setShowInfo] = useState(true);
+
   useEffect(() => {
-    map.setView(center, map.getZoom());
-  }, [center, map]);
-  
-  return null;
-};
+    setIsMounted(true);
+    
+    // Esconder a mensagem informativa após 5 segundos
+    const timer = setTimeout(() => {
+      setShowInfo(false);
+    }, 5000);
+    
+    return () => {
+      setIsMounted(false);
+      clearTimeout(timer);
+    };
+  }, []);
 
-// Função para criar um ícone de marcador personalizado
-const createCustomIcon = (isUserLocation: boolean = false) => {
-  return L.divIcon({
-    className: `custom-marker ${isUserLocation ? 'user-location' : ''}`,
-    html: `<div class="marker-pin"></div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 30],
-    popupAnchor: [0, -30]
-  });
-};
+  // Exibir mensagem enquanto o componente não está montado
+  if (!isMounted) {
+    return <div className="map-loading"><span>Carregando mapa...</span></div>;
+  }
 
-const Map: React.FC<MapProps> = ({ matchLocation, userLocation }) => {
   // Verificar se temos coordenadas válidas
-  if (!matchLocation || !matchLocation.lat || !matchLocation.lng) {
+  if (!matchLocation || typeof matchLocation.lat !== 'number' || typeof matchLocation.lng !== 'number') {
     return (
       <div className="map-placeholder">
         <span>Localização não disponível</span>
@@ -48,64 +55,42 @@ const Map: React.FC<MapProps> = ({ matchLocation, userLocation }) => {
     );
   }
 
-  const matchIcon = createCustomIcon(false);
-  const userIcon = createCustomIcon(true);
-  
+  // Gerar uma chave única baseada nas coordenadas para forçar a recriação quando a localização mudar
+  const mapKey = `iframe-${matchLocation.lat.toFixed(6)}-${matchLocation.lng.toFixed(6)}-${Date.now()}`;
+
+  // Construir URL do OpenStreetMap para exibir o local da partida
+  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${matchLocation.lng - 0.01},${matchLocation.lat - 0.01},${matchLocation.lng + 0.01},${matchLocation.lat + 0.01}&layer=mapnik&marker=${matchLocation.lat},${matchLocation.lng}`;
+
+  // Obter nome do local para exibição
+  const locationName = matchLocation.formattedAddress 
+    ? matchLocation.formattedAddress.split(',')[0] 
+    : (matchLocation.address || 'Local da partida');
+
   return (
-    <MapContainer
-      center={[matchLocation.lat, matchLocation.lng]}
-      zoom={14}
-      scrollWheelZoom={true}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+    <div className="iframe-map-container">
+      <iframe
+        key={mapKey}
+        title="Mapa do local"
+        width="100%"
+        height="300"
+        frameBorder="0"
+        scrolling="no"
+        marginHeight={0}
+        marginWidth={0}
+        src={mapUrl}
+      ></iframe>
       
-      <Marker position={[matchLocation.lat, matchLocation.lng]} icon={matchIcon}>
-        <Popup>
-          {matchLocation.address || 'Local da partida'}
-        </Popup>
-      </Marker>
-      
-      {userLocation && userLocation.lat && userLocation.lng && (
-        <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
-          <Popup>Sua localização</Popup>
-        </Marker>
+      {showInfo && (
+        <div className="map-info-message">
+          Usando mapa simplificado para melhor compatibilidade
+        </div>
       )}
       
-      <CenterMap center={[matchLocation.lat, matchLocation.lng]} />
-    </MapContainer>
+      {(matchLocation.formattedAddress || matchLocation.address) && (
+        <div className="map-location-name">
+          {locationName}
+        </div>
+      )}
+    </div>
   );
-};
-
-// Versão alternativa usando iframe
-const IframeMap: React.FC<MapProps> = ({ matchLocation }) => {
-  // Verificar se temos coordenadas válidas
-  if (!matchLocation || !matchLocation.lat || !matchLocation.lng) {
-    return (
-      <div className="map-placeholder">
-        <span>Localização não disponível</span>
-      </div>
-    );
-  }
-  
-  const zoom = 14;
-  const iframeUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${matchLocation.lng - 0.01}%2C${matchLocation.lat - 0.01}%2C${matchLocation.lng + 0.01}%2C${matchLocation.lat + 0.01}&amp;layer=mapnik&amp;marker=${matchLocation.lat}%2C${matchLocation.lng}`;
-  
-  return (
-    <iframe 
-      width="100%" 
-      height="300" 
-      frameBorder="0" 
-      scrolling="no" 
-      marginHeight={0} 
-      marginWidth={0} 
-      src={iframeUrl}
-      style={{ borderRadius: '0.4rem', border: '2px solid #333' }}
-      title="Mapa da localização"
-    />
-  );
-};
-
-export { Map, IframeMap }; 
+}; 
