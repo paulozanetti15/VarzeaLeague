@@ -1007,4 +1007,10 @@
 
 .route-button.gmaps:hover {
   background-color: #3367d6;
+}
+
+/* Estilo para o nome do time na lista de times para seleção */
+.teams-list .team-name {
+  font-weight: 600;
+  color: #000000;  /* Cor preta para os nomes dos times na lista de seleção */
 } 
