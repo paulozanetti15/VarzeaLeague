@@ -1,4 +1,5 @@
 import './Header.css';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: number;
@@ -15,6 +16,8 @@ interface HeaderProps {
 }
 
 export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) {
+  const navigate = useNavigate();
+  
   return (
     <header className="header">
       <nav className="navbar navbar-expand-lg navbar-dark">
@@ -35,6 +38,16 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
           </button>
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto">
+              {isLoggedIn && (
+                <>
+                  <li className="nav-item">
+                    <span className="nav-link" onClick={() => navigate('/matches')}>Partidas</span>
+                  </li>
+                  <li className="nav-item">
+                    <span className="nav-link" onClick={() => navigate('/teams')}>Times</span>
+                  </li>
+                </>
+              )}
               <li className="nav-item">
                 <a className="nav-link" href="#beneficios">Benefícios</a>
               </li>
@@ -48,15 +61,17 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
             <div className="d-flex align-items-center">
               {isLoggedIn && user ? (
                 <>
-                  <span className="text-light me-3">
-                    {user.name}
-                  </span>
-                  <button 
-                    className="btn btn-outline-light" 
-                    onClick={onLogout}
-                  >
-                    Sair
-                  </button>
+                  <div className="dropdown me-3">
+                    <button className="btn btn-link dropdown-toggle text-white text-decoration-none" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                      {user.name}
+                    </button>
+                    <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                      <li><span className="dropdown-item" onClick={() => navigate('/matches')}>Minhas Partidas</span></li>
+                      <li><span className="dropdown-item" onClick={() => navigate('/teams')}>Meus Times</span></li>
+                      <li><hr className="dropdown-divider" /></li>
+                      <li><span className="dropdown-item" onClick={onLogout}>Sair</span></li>
+                    </ul>
+                  </div>
                 </>
               ) : (
                 <>

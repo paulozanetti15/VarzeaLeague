@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 
 interface BenefitsProps {
   isLoggedIn: boolean;
+  onViewMatches: () => void;
 }
 
-export function Benefits({ isLoggedIn }: BenefitsProps) {
+export function Benefits({ isLoggedIn, onViewMatches }: BenefitsProps) {
   const navigate = useNavigate();
 
   const handleNavigation = (path: string) => {
@@ -21,7 +22,13 @@ export function Benefits({ isLoggedIn }: BenefitsProps) {
       icon: '⚽',
       title: 'Organize Partidas',
       description: 'Crie e gerencie jogos facilmente, definindo local, data e participantes.',
-      onClick: () => handleNavigation('/create-match')
+      onClick: () => handleNavigation('/matches/create')
+    },
+    {
+      icon: '🔍',
+      title: 'Encontre Jogos',
+      description: 'Descubra partidas próximas e junte-se a outros jogadores na sua região.',
+      onClick: onViewMatches
     },
     {
       icon: '👥',

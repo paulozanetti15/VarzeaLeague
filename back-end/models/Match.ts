@@ -7,6 +7,7 @@ class Match extends Model {
   public title!: string;
   public date!: Date;
   public location!: string;
+  public complement!: string;
   public maxPlayers!: number;
   public status!: 'open' | 'pending' | 'confirmed' | 'cancelled' | 'completed';
   public description?: string;
@@ -28,7 +29,7 @@ class Match extends Model {
   public async addPlayer(userId: number): Promise<void> {
     const user = await User.findByPk(userId);
     if (user) {
-      await (this as any).addPlayer(user);
+      await (this as any).addPlayers(user);
     }
   }
 
@@ -55,6 +56,10 @@ Match.init({
   location: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  complement: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   maxPlayers: {
     type: DataTypes.INTEGER,

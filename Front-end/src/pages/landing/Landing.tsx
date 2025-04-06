@@ -25,7 +25,15 @@ export function Landing({ isLoggedIn, user, onLoginClick, onRegisterClick, onLog
 
   const handleCreateMatch = () => {
     if (isLoggedIn) {
-      navigate('/create-match');
+      navigate('/matches/create');
+    } else {
+      navigate('/login');
+    }
+  };
+
+  const handleViewMatches = () => {
+    if (isLoggedIn) {
+      navigate('/matches');
     } else {
       navigate('/login');
     }
@@ -40,8 +48,14 @@ export function Landing({ isLoggedIn, user, onLoginClick, onRegisterClick, onLog
         onRegisterClick={onRegisterClick}
         onLogout={onLogout}
       />
-      <Hero onGetStarted={handleCreateMatch} />
-      <Benefits isLoggedIn={isLoggedIn} />
+      <Hero 
+        onGetStarted={handleCreateMatch} 
+        onViewMatches={handleViewMatches}
+      />
+      <Benefits 
+        isLoggedIn={isLoggedIn} 
+        onViewMatches={handleViewMatches}
+      />
       <Testimonials />
       <Footer />
     </div>

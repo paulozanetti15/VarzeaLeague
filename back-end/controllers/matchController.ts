@@ -6,7 +6,7 @@ import UserModel from '../models/User';
 // Criar uma nova partida
 export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { title, date, location, maxPlayers, description, price } = req.body;
+    const { title, date, location, complement, maxPlayers, description, price } = req.body;
     const organizerId = req.user?.id;
 
     if (!organizerId) {
@@ -18,6 +18,7 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
       title,
       date,
       location,
+      complement,
       maxPlayers,
       description,
       price,
@@ -35,11 +36,33 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
 export const listMatches = async (req: Request, res: Response): Promise<void> => {
   try {
     const matches = await MatchModel.findAll({
-      include: [{
-        model: UserModel,
-        as: 'organizer',
-        attributes: ['id', 'name', 'email']
-      }],
+      include: [
+        {
+          model: UserModel,
+          as: 'organizer',
+          attributes: ['id', 'name', 'email']
+        },
+        {
+          model: UserModel,
+          as: 'players',
+          attributes: ['id', 'name', 'email'],
+          through: { attributes: [] }
+        }
+      ],
+      attributes: [
+        'id',
+        'title',
+        'date',
+        'location',
+        'complement',
+        'maxPlayers',
+        'status',
+        'description',
+        'price',
+        'organizerId',
+        'createdAt',
+        'updatedAt'
+      ],
       order: [['date', 'ASC']]
     });
 

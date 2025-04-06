@@ -7,7 +7,9 @@ import { Register } from './pages/register/Register'
 import { ForgotPassword } from './pages/forgot-password/ForgotPassword'
 import { Landing } from './pages/landing/Landing'
 import { ResetPassword } from './pages/reset-password/ResetPassword'
-import CreateMatch from './pages/CreateMatch'
+import CreateMatch from './pages/matches/CreateMatch'
+import MatchList from './pages/matches/MatchList'
+import MatchDetail from './pages/matches/MatchDetail'
 import TeamList from './pages/teams/TeamList'
 import CreateTeam from './pages/teams/CreateTeam'
 import EditTeam from './pages/teams/EditTeam'
@@ -137,9 +139,21 @@ function AppContent() {
         />
       } />
 
-      <Route path="/create-match" element={
+      <Route path="/matches" element={
+        <PrivateRoute isLoggedIn={isLoggedIn}>
+          <MatchList />
+        </PrivateRoute>
+      } />
+
+      <Route path="/matches/create" element={
         <PrivateRoute isLoggedIn={isLoggedIn}>
           <CreateMatch />
+        </PrivateRoute>
+      } />
+
+      <Route path="/matches/:id" element={
+        <PrivateRoute isLoggedIn={isLoggedIn}>
+          <MatchDetail />
         </PrivateRoute>
       } />
 
