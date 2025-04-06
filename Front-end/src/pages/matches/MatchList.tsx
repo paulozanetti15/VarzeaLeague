@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ToggleButtonGroup, ToggleButton, Pagination } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -23,6 +23,10 @@ import DirectionsIcon from '@mui/icons-material/Directions';
 import { api } from '../../services/api';
 import './MatchList.css';
 import { toast } from 'react-hot-toast';
+
+// Adicione estes imports para os ícones dos filtros
+import { FaFilter, FaCalendarAlt, FaMoneyBillWave, FaTags } from 'react-icons/fa';
+import { IoMdClose } from 'react-icons/io';
 
 interface Match {
   id: number;
@@ -154,7 +158,7 @@ const MatchList: React.FC = () => {
   
   // Estado simplificado de paginação
   const [page, setPage] = useState(1);
-  const matchesPerPage = 6;
+  const matchesPerPage = 8;
 
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   
@@ -184,6 +188,17 @@ const MatchList: React.FC = () => {
   type SortOption = 'date' | 'proximity' | 'spots';
   const [sortBy, setSortBy] = useState<SortOption>('spots');
 
+  // Adicionar estados para filtros avançados
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [priceFilter, setPriceFilter] = useState<string[]>([]);
+  const [dateFilter, setDateFilter] = useState<string[]>([]);
+  
+  // Estados temporários para filtros no modal
+  const [tempStatusFilter, setTempStatusFilter] = useState<string[]>([]);
+  const [tempPriceFilter, setTempPriceFilter] = useState<string[]>([]);
+  const [tempDateFilter, setTempDateFilter] = useState<string[]>([]);
+
   useEffect(() => {
     // Tentar obter a localização do usuário ao carregar a página
     if (!userLocation && !locationError) {
@@ -206,26 +221,134 @@ const MatchList: React.FC = () => {
     }
   }, [filter, userLocation, lastUpdate]);
 
-  // Efeito para filtrar as partidas baseado na busca
+  // Efeito para filtrar as partidas baseado na busca e filtros avançados
   useEffect(() => {
     // Verificação de segurança para evitar o erro "Cannot read properties of undefined (reading 'length')"
     if (!matches || !Array.isArray(matches) || matches.length === 0) return;
     
-    if (!searchQuery.trim()) {
-      setFilteredMatches(matches);
-      return;
+    let filtered = [...matches];
+    
+    // Aplicar filtro básico
+    if (filter === 'my') {
+      filtered = filtered.filter((match) => match.organizerId === currentUser.id);
     }
     
-    const query = searchQuery.toLowerCase().trim();
-    const filtered = matches.filter(match => 
-      match.title.toLowerCase().includes(query) ||
-      match.location.toLowerCase().includes(query) ||
-      match.description?.toLowerCase().includes(query) ||
-      match.organizer?.name.toLowerCase().includes(query)
-    );
+    // Aplicar busca
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(match => 
+        match.title.toLowerCase().includes(query) ||
+        match.location.toLowerCase().includes(query) ||
+        match.description?.toLowerCase().includes(query) ||
+        match.organizer?.name.toLowerCase().includes(query)
+      );
+    }
+    
+    // Aplicar filtros avançados
+    if (statusFilter.length > 0) {
+      filtered = filtered.filter(match => statusFilter.includes(match.status));
+    }
+    
+    if (priceFilter.length > 0) {
+      if (priceFilter.includes('free')) {
+        filtered = filtered.filter(match => !match.price || match.price === 0);
+      } else if (priceFilter.includes('paid')) {
+        filtered = filtered.filter(match => match.price && match.price > 0);
+      }
+    }
+    
+    if (dateFilter.length > 0) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const nextWeekStart = new Date(today);
+      nextWeekStart.setDate(today.getDate() + 7);
+      
+      const nextWeekEnd = new Date(nextWeekStart);
+      nextWeekEnd.setDate(nextWeekStart.getDate() + 7);
+      
+      filtered = filtered.filter(match => {
+        const matchDate = new Date(match.date);
+        matchDate.setHours(0, 0, 0, 0);
+        
+        switch(dateFilter) {
+          case 'today':
+            return matchDate.getTime() === today.getTime();
+          case 'tomorrow':
+            return matchDate.getTime() === tomorrow.getTime();
+          case 'week':
+            return matchDate >= today && matchDate < nextWeekStart;
+          case 'weekend':
+            return matchDate >= nextWeekStart && matchDate < nextWeekEnd;
+          default:
+            return true;
+        }
+      });
+    }
     
     setFilteredMatches(filtered);
-  }, [searchQuery, matches]);
+  }, [matches, filter, searchQuery, currentUser.id, statusFilter, priceFilter, dateFilter]);
+
+  // Efeito para aplicar ordenação às partidas filtradas
+  useEffect(() => {
+    if (!filteredMatches || filteredMatches.length === 0) return;
+    
+    let sorted = [...filteredMatches];
+    
+    // Caso alguma partida tenha perdido a propriedade de distância, recalcular
+    if (userLocation) {
+      // Verificar se alguma partida perdeu sua distância
+      for (const match of sorted) {
+        if (match.latitude && match.longitude && match.distance === undefined) {
+          try {
+            match.distance = calculateDistance(
+              userLocation.latitude,
+              userLocation.longitude,
+              match.latitude,
+              match.longitude
+            );
+          } catch (e) {
+            // Silenciosamente ignorar erros
+          }
+        }
+      }
+    }
+    
+    // Aplicando ordenação
+    if (sortBy === 'date') {
+      sorted.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    } else if (sortBy === 'proximity' && userLocation) {
+      sorted.sort((a, b) => (a.distance || 999) - (b.distance || 999));
+    } else if (sortBy === 'spots') {
+      sorted.sort((a, b) => {
+        const spotsA = calculateRemainingSpots(a);
+        const spotsB = calculateRemainingSpots(b);
+        
+        // Priorizar partidas com vagas disponíveis
+        if (spotsA === 0 && spotsB > 0) return 1;
+        if (spotsA > 0 && spotsB === 0) return -1;
+        
+        // Entre partidas com vagas, mostrar as com menos vagas primeiro
+        if (spotsA > 0 && spotsB > 0) return spotsA - spotsB;
+        
+        // Entre partidas sem vagas, ordenar por data
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      });
+    }
+    
+    // Importante: Verificar se a ordenação realmente mudou os resultados
+    // para evitar atualizações de estado desnecessárias que causariam loops
+    const currentOrder = JSON.stringify(filteredMatches.map(m => m.id));
+    const newOrder = JSON.stringify(sorted.map(m => m.id));
+    
+    if (currentOrder !== newOrder) {
+      setFilteredMatches(sorted);
+    }
+    
+  }, [matches, userLocation, sortBy]); // Removido filteredMatches da dependência e adicionado matches
 
   const getUserLocation = () => {
     setLocationLoading(true);
@@ -266,8 +389,10 @@ const MatchList: React.FC = () => {
         });
         
         // Agora que temos a localização, recalcular as distâncias para todas as partidas
+        // mas usar o valor retornado em vez de definir diretamente
         if (matches.length > 0) {
-          calculateDistanceForAllMatches(matches, { latitude: lat, longitude: lng });
+          const updatedMatches = calculateDistanceForAllMatches(matches, { latitude: lat, longitude: lng });
+          setMatches(updatedMatches);
         } else {
           // Se ainda não temos partidas, vamos buscar
           fetchMatches();
@@ -355,9 +480,6 @@ const MatchList: React.FC = () => {
       return matchCopy;
     });
     
-    // Atualizar o estado com as novas partidas que têm distâncias calculadas
-    setMatches(updatedMatches);
-    
     // Log de resumo
     const withDistance = updatedMatches.filter(m => m.distance !== undefined).length;
     console.log(`Distâncias calculadas: ${withDistance}/${matchesList.length} partidas (${((withDistance/matchesList.length)*100).toFixed(1)}%)`);
@@ -374,6 +496,9 @@ const MatchList: React.FC = () => {
         duration: 3000
       });
     }
+    
+    // Retornar as partidas atualizadas em vez de definir o estado
+    return updatedMatches;
   };
 
   // Função para calcular a distância entre dois pontos usando a fórmula de Haversine
@@ -499,56 +624,25 @@ const MatchList: React.FC = () => {
     
     setLoading(true);
     try {
+      console.log('Buscando lista de partidas...');
       const data = await api.matches.list();
       
       if (networkError) {
         setNetworkError(false);
       }
       
+      // Processa as partidas recebidas
       let processedMatches = data;
       
-      // Verificar partidas sem jogadores
-      const missingPlayersMatches = processedMatches.filter((match: Match) => 
-        !match.players || 
-        !Array.isArray(match.players) || 
-        match.players.length === 0 ||
-        match._hasPlayerLoadError === true
-      );
-      
-      if (missingPlayersMatches.length > 0) {
-        // Buscar detalhes de cada partida sem jogadores
-        for (const match of missingPlayersMatches) {
-          try {
-            const detailedMatch = await api.matches.getById(match.id);
-            
-            // Atualizar a partida na lista com os novos dados
-            const index = processedMatches.findIndex((m: Match) => m.id === match.id);
-            if (index !== -1) {
-              processedMatches[index] = {
-                ...processedMatches[index],
-                players: detailedMatch.players || [],
-                _hasPlayerLoadError: detailedMatch._hasPlayerLoadError || false
-              };
-              
-              if (detailedMatch._hasPlayerLoadError) {
-                setMatchesWithError(prev => 
-                  prev.includes(match.id) ? prev : [...prev, match.id]
-                );
-              }
-            }
-          } catch (error) {
-            setMatchesWithError(prev => 
-              prev.includes(match.id) ? prev : [...prev, match.id]
-            );
-          }
-        }
-      }
-      
-      // Após buscar as partidas e resolver os jogadores perdidos, calcular distâncias se tivermos localização
+      // Só calcular distâncias se tivermos localização
       if (userLocation && processedMatches && Array.isArray(processedMatches)) {
         // Usar a função centralizada para calcular distâncias
+        // e obter o resultado sem atualizar o estado diretamente
         processedMatches = calculateDistanceForAllMatches(processedMatches, userLocation);
       }
+      
+      // Não precisamos buscar detalhes de cada partida aqui
+      // Isso será feito apenas quando necessário (ao clicar em uma partida)
       
       // Aplicar filtros
       if (filter === 'my') {
@@ -728,12 +822,39 @@ const MatchList: React.FC = () => {
     // Atualizar imediatamente ao montar o componente
     updateMatches();
     
-    // Configurar atualização a cada 15 segundos
-    const interval = setInterval(updateMatches, 15000);
+    // Não configuramos atualizações automáticas para evitar loops
+    // O usuário pode atualizar manualmente usando o botão de atualização
     
-    // Limpar o intervalo quando desmontar o componente
-    return () => clearInterval(interval);
   }, []); // Este efeito deve rodar apenas uma vez ao montar o componente
+
+  // Função para atualização manual pelo usuário
+  const handleRefresh = () => {
+    console.log('Atualizando manualmente a lista de partidas...');
+    setIsRefreshing(true);
+    
+    // Atualizar a timestamp de última atualização
+    setLastUpdate(Date.now());
+    
+    // Fetch será disparado pelo useEffect que observa lastUpdate
+    
+    // Restaurar estado do botão após um tempo
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 1000);
+  };
+
+  // Remover o efeito que faz polling a cada 30 segundos
+  // useEffect(() => {
+  //   // Atualizar a cada 30 segundos para verificar mudanças no número de jogadores
+  //   const interval = setInterval(() => {
+  //     if (!loading) {
+  //       console.log('Atualizando lista de partidas automaticamente...');
+  //       setLastUpdate(Date.now());
+  //     }
+  //   }, 30000); // 30 segundos
+  //   
+  //   return () => clearInterval(interval);
+  // }, [loading]);
 
   // Adicione um efeito para atualizar as contagens anteriores quando as partidas mudarem
   useEffect(() => {
@@ -863,17 +984,17 @@ const MatchList: React.FC = () => {
   };
 
   // Adicione uma função para atualizar a lista de partidas periodicamente
-  useEffect(() => {
-    // Atualizar a cada 30 segundos para verificar mudanças no número de jogadores
-    const interval = setInterval(() => {
-      if (!loading) {
-        console.log('Atualizando lista de partidas automaticamente...');
-        setLastUpdate(Date.now());
-      }
-    }, 30000); // 30 segundos
-    
-    return () => clearInterval(interval);
-  }, [loading]);
+  // useEffect(() => {
+  //   // Atualizar a cada 30 segundos para verificar mudanças no número de jogadores
+  //   const interval = setInterval(() => {
+  //     if (!loading) {
+  //       console.log('Atualizando lista de partidas automaticamente...');
+  //       setLastUpdate(Date.now());
+  //     }
+  //   }, 30000); // 30 segundos
+  //   
+  //   return () => clearInterval(interval);
+  // }, [loading]);
 
   // Adicione uma função para formatar o tempo de última atualização
   const formatLastUpdate = (timestamp: number) => {
@@ -1090,10 +1211,43 @@ const MatchList: React.FC = () => {
     return 'high-availability';
   };
 
-  // Calcular os matches atuais para a página atual
-  const indexOfLastMatch = page * matchesPerPage;
-  const indexOfFirstMatch = indexOfLastMatch - matchesPerPage;
-  const currentMatches = filteredMatches.slice(indexOfFirstMatch, indexOfLastMatch);
+  // Função para abrir o modal de filtros avançados
+  const openFiltersModal = () => {
+    // Inicializar os filtros temporários com os valores atuais
+    setTempStatusFilter([...statusFilter]);
+    setTempPriceFilter([...priceFilter]);
+    setTempDateFilter([...dateFilter]);
+    setShowAdvancedFilters(true);
+  };
+  
+  // Função para aplicar os filtros temporários
+  const applyFilters = () => {
+    setStatusFilter([...tempStatusFilter]);
+    setPriceFilter([...tempPriceFilter]);
+    setDateFilter([...tempDateFilter]);
+    setShowAdvancedFilters(false);
+  };
+  
+  // Função para cancelar e fechar o modal
+  const cancelFilters = () => {
+    setShowAdvancedFilters(false);
+  };
+  
+  // Função para limpar todos os filtros temporários
+  const clearTempFilters = () => {
+    setTempStatusFilter([]);
+    setTempPriceFilter([]);
+    setTempDateFilter([]);
+  };
+
+  // Função para calcular o número de filtros ativos
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (statusFilter.length > 0) count++;
+    if (priceFilter.length > 0) count++;
+    if (dateFilter.length > 0) count++;
+    return count;
+  };
 
   // Componente para exibir a contagem de jogadores e vagas restantes
   const PlayerCountDisplay = ({ match }: { match: Match }) => {
@@ -1139,464 +1293,514 @@ const MatchList: React.FC = () => {
     );
   };
 
-  // Modificar o useEffect de ordenação para evitar loops
-  useEffect(() => {
-    // Verificação de segurança para evitar o erro "Cannot read properties of undefined (reading 'length')"
-    if (!matches || !Array.isArray(matches) || matches.length === 0) return;
-    
-    let sorted = [...matches];
-    
-    // Aplicando filtro
-    if (filter === 'my') {
-      sorted = sorted.filter((match) => match.organizerId === currentUser.id);
-    }
-    
-    // Caso alguma partida tenha perdido a propriedade de distância, recalcular
-    if (userLocation) {
-      // Verificar se alguma partida perdeu sua distância
-      for (const match of sorted) {
-        if (match.latitude && match.longitude && match.distance === undefined) {
-          try {
-            match.distance = calculateDistance(
-              userLocation.latitude,
-              userLocation.longitude,
-              match.latitude,
-              match.longitude
-            );
-          } catch (e) {
-            // Silenciosamente ignorar erros
-          }
-        }
-      }
-    }
-    
-    // Aplicando ordenação
-    if (sortBy === 'date') {
-      sorted.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    } else if (sortBy === 'proximity' && userLocation) {
-      sorted.sort((a, b) => (a.distance || 999) - (b.distance || 999));
-    } else if (sortBy === 'spots') {
-      sorted.sort((a, b) => {
-        const spotsA = calculateRemainingSpots(a);
-        const spotsB = calculateRemainingSpots(b);
-        
-        // Priorizar partidas com vagas disponíveis
-        if (spotsA === 0 && spotsB > 0) return 1;
-        if (spotsA > 0 && spotsB === 0) return -1;
-        
-        // Entre partidas com vagas, mostrar as com menos vagas primeiro
-        if (spotsA > 0 && spotsB > 0) return spotsA - spotsB;
-        
-        // Entre partidas sem vagas, ordenar por data
-        return new Date(a.date).getTime() - new Date(b.date).getTime();
-      });
-    }
-    
-    setFilteredMatches(sorted);
-    setPage(1); // Reset para a primeira página quando os filtros mudam
-  }, [matches, filter, userLocation, sortBy, currentUser.id]);
-
-  return (
-    <div className="match-list-container">
-      <button 
-        className="back-btn"
-        onClick={() => navigate(-1)}
-      >
-        <ArrowBackIcon />
-      </button>
-
-      <div className="content-container">
-        {/* Exibir banner de erro de conexão quando necessário */}
-        {networkError && (
-          <NetworkErrorBanner 
-            onRetry={handleRetryConnection} 
-            isRetrying={isRetryingConnection} 
-          />
-        )}
-        
-        {/* Título centralizado */}
-        <h1 className="matches-title">Partidas Disponíveis</h1>
-        
-        <div className="header-container">
-          <div className="filter-section">
-            <div className="search-container">
-              <SearchIcon className="search-icon" />
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Buscar partidas por título, local ou organizador..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-              {searchQuery && (
-                <button
-                  className="clear-search"
-                  onClick={clearSearch}
-                  aria-label="Limpar busca"
-                >
-                  <ClearIcon />
-                </button>
-              )}
-            </div>
-
-            <div className="last-update-indicator">
-              Atualizado {formatLastUpdate(lastUpdate)}
-              <button 
-                className={`refresh-button ${isRefreshing ? 'refreshing' : ''} ${networkError ? 'network-error' : ''}`}
-                onClick={(e) => handleManualRefresh(e)}
-                disabled={isRefreshing || loading}
-                title={networkError ? "Problemas de conexão detectados" : "Atualizar agora"}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-                </svg>
-              </button>
-              {renderErrorIndicator()}
-            </div>
-
-            <div className="filter-container">
-              <ToggleButtonGroup
-                value={filter}
-                exclusive
-                onChange={(e, newFilter) => {
-                  if (newFilter !== null) {
-                    setFilter(newFilter);
-                  }
-                }}
-                aria-label="filtro de partidas"
-              >
-                <ToggleButton value="all" aria-label="todas as partidas">
-                  <AllInclusiveIcon style={{ fontSize: '0.9rem' }} />
-                  Todas
-                </ToggleButton>
-                <ToggleButton value="my" aria-label="minhas partidas">
-                  <PersonIcon style={{ fontSize: '0.9rem' }} />
-                  Minhas
-                </ToggleButton>
-                <ToggleButton value="nearby" aria-label="partidas próximas" disabled={!userLocation}>
-                  <LocationOnIcon style={{ fontSize: '0.9rem' }} />
-                  {locationLoading ? 'Obtendo localização...' : 'Por proximidade'}
-                  {filter === 'nearby' && !locationLoading && (
-                    <span style={{ 
-                      fontSize: '0.7rem', 
-                      marginLeft: '4px', 
-                      background: 'rgba(33, 150, 243, 0.2)', 
-                      padding: '2px 6px', 
-                      borderRadius: '10px' 
-                    }}>
-                      todas
-                    </span>
-                  )}
-                </ToggleButton>
-              </ToggleButtonGroup>
+  // Componente para filtros avançados (como modal)
+  const AdvancedFiltersModal = () => {
+    if (!showAdvancedFilters) return null;
+  
+    return (
+      <div className="filters-modal-overlay">
+        <div className="filters-modal-content">
+          <div className="filters-modal-header">
+            <h3>Filtros Avançados</h3>
+            <button className="close-modal" onClick={cancelFilters}>
+              <IoMdClose />
+            </button>
+          </div>
+          
+          <div className="filters-modal-body">
+            {/* Filtro de Status */}
+            <div className="filter-group">
+              <h4><FaTags /> Status da Partida</h4>
+              <div className="status-filter-options">
+                <div className="status-option">
+                  <input 
+                    type="checkbox" 
+                    id="status-open" 
+                    checked={tempStatusFilter.includes('open')}
+                    onChange={() => {
+                      const newFilters = tempStatusFilter.includes('open')
+                        ? tempStatusFilter.filter(s => s !== 'open')
+                        : [...tempStatusFilter, 'open'];
+                      setTempStatusFilter(newFilters);
+                    }}
+                  />
+                  <label htmlFor="status-open">Abertas</label>
+                </div>
+                <div className="status-option">
+                  <input 
+                    type="checkbox" 
+                    id="status-full" 
+                    checked={tempStatusFilter.includes('full')}
+                    onChange={() => {
+                      const newFilters = tempStatusFilter.includes('full')
+                        ? tempStatusFilter.filter(s => s !== 'full')
+                        : [...tempStatusFilter, 'full'];
+                      setTempStatusFilter(newFilters);
+                    }}
+                  />
+                  <label htmlFor="status-full">Completas</label>
+                </div>
+                <div className="status-option">
+                  <input 
+                    type="checkbox" 
+                    id="status-waiting" 
+                    checked={tempStatusFilter.includes('waiting')}
+                    onChange={() => {
+                      const newFilters = tempStatusFilter.includes('waiting')
+                        ? tempStatusFilter.filter(s => s !== 'waiting')
+                        : [...tempStatusFilter, 'waiting'];
+                      setTempStatusFilter(newFilters);
+                    }}
+                  />
+                  <label htmlFor="status-waiting">Aguardando</label>
+                </div>
+                <div className="status-option">
+                  <input 
+                    type="checkbox" 
+                    id="status-confirmed" 
+                    checked={tempStatusFilter.includes('confirmed')}
+                    onChange={() => {
+                      const newFilters = tempStatusFilter.includes('confirmed')
+                        ? tempStatusFilter.filter(s => s !== 'confirmed')
+                        : [...tempStatusFilter, 'confirmed'];
+                      setTempStatusFilter(newFilters);
+                    }}
+                  />
+                  <label htmlFor="status-confirmed">Confirmadas</label>
+                </div>
+              </div>
             </div>
             
-            <div className="sort-container">
-              <ToggleButtonGroup
-                value={sortBy}
-                exclusive
-                onChange={(e, newSort) => {
-                  if (newSort !== null) {
-                    setSortBy(newSort);
-                  }
-                }}
-                aria-label="ordenação de partidas"
-                size="small"
-              >
-                <ToggleButton value="date" aria-label="ordenar por data">
-                  <EventIcon style={{ fontSize: '0.9rem' }} />
-                  Data
-                </ToggleButton>
-                <ToggleButton value="spots" aria-label="ordenar por vagas restantes">
-                  <PersonAddIcon style={{ fontSize: '0.9rem' }} />
-                  Vagas
-                </ToggleButton>
-                <ToggleButton value="proximity" aria-label="ordenar por proximidade" disabled={!userLocation}>
-                  <LocationOnIcon style={{ fontSize: '0.9rem' }} />
-                  Distância
-                  {sortBy === 'proximity' && !locationLoading && (
-                    <span style={{ 
-                      fontSize: '0.7rem', 
-                      marginLeft: '4px', 
-                      background: 'rgba(255, 152, 0, 0.2)', 
-                      padding: '2px 6px', 
-                      borderRadius: '10px',
-                      color: '#F57C00' 
-                    }}>
-                      {filteredMatches.length > 0 ? `${Math.min(...filteredMatches.map(m => m.distance || 999)).toFixed(1)}km` : ''}
-                    </span>
-                  )}
-                </ToggleButton>
-              </ToggleButtonGroup>
+            {/* Filtro de Preço */}
+            <div className="filter-group">
+              <h4><FaMoneyBillWave /> Preço</h4>
+              <div className="price-filter-options">
+                <div className="price-option">
+                  <input 
+                    type="checkbox" 
+                    id="price-free" 
+                    checked={tempPriceFilter.includes('free')}
+                    onChange={() => {
+                      const newFilters = tempPriceFilter.includes('free')
+                        ? tempPriceFilter.filter(p => p !== 'free')
+                        : [...tempPriceFilter, 'free'];
+                      setTempPriceFilter(newFilters);
+                    }}
+                  />
+                  <label htmlFor="price-free">Gratuito</label>
+                </div>
+                <div className="price-option">
+                  <input 
+                    type="checkbox" 
+                    id="price-paid" 
+                    checked={tempPriceFilter.includes('paid')}
+                    onChange={() => {
+                      const newFilters = tempPriceFilter.includes('paid')
+                        ? tempPriceFilter.filter(p => p !== 'paid')
+                        : [...tempPriceFilter, 'paid'];
+                      setTempPriceFilter(newFilters);
+                    }}
+                  />
+                  <label htmlFor="price-paid">Pago</label>
+                </div>
+              </div>
+            </div>
+            
+            {/* Filtro de Data */}
+            <div className="filter-group">
+              <h4><FaCalendarAlt /> Data</h4>
+              <div className="date-filter-options">
+                <div className="date-option">
+                  <input 
+                    type="checkbox" 
+                    id="date-today" 
+                    checked={tempDateFilter.includes('today')}
+                    onChange={() => {
+                      const newFilters = tempDateFilter.includes('today')
+                        ? tempDateFilter.filter(d => d !== 'today')
+                        : [...tempDateFilter, 'today'];
+                      setTempDateFilter(newFilters);
+                    }}
+                  />
+                  <label htmlFor="date-today">Hoje</label>
+                </div>
+                <div className="date-option">
+                  <input 
+                    type="checkbox" 
+                    id="date-tomorrow" 
+                    checked={tempDateFilter.includes('tomorrow')}
+                    onChange={() => {
+                      const newFilters = tempDateFilter.includes('tomorrow')
+                        ? tempDateFilter.filter(d => d !== 'tomorrow')
+                        : [...tempDateFilter, 'tomorrow'];
+                      setTempDateFilter(newFilters);
+                    }}
+                  />
+                  <label htmlFor="date-tomorrow">Amanhã</label>
+                </div>
+                <div className="date-option">
+                  <input 
+                    type="checkbox" 
+                    id="date-week" 
+                    checked={tempDateFilter.includes('week')}
+                    onChange={() => {
+                      const newFilters = tempDateFilter.includes('week')
+                        ? tempDateFilter.filter(d => d !== 'week')
+                        : [...tempDateFilter, 'week'];
+                      setTempDateFilter(newFilters);
+                    }}
+                  />
+                  <label htmlFor="date-week">Esta semana</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="filters-modal-footer">
+            <button className="clear-filters-btn" onClick={clearTempFilters}>
+              Limpar filtros
+            </button>
+            <div className="action-buttons">
+              <button className="cancel-button" onClick={cancelFilters}>
+                Cancelar
+              </button>
+              <button className="apply-button" onClick={applyFilters}>
+                Aplicar
+              </button>
             </div>
           </div>
         </div>
+      </div>
+    );
+  };
 
-        <button
-          className="create-match-btn"
-          onClick={() => navigate('/matches/create')}
-        >
-          Criar Nova Partida
-        </button>
+  // Modificar a renderização da lista para usar paginação eficiente
+  const renderMatchList = () => {
+    if (loading && matches.length === 0) {
+      // Mostrar skeleton loaders apenas no carregamento inicial
+      return (
+        <div className="match-list-grid">
+          {Array.from({ length: matchesPerPage }).map((_, index) => (
+            <div className="match-card skeleton" key={`skeleton-${index}`}>
+              <div className="skeleton-title"></div>
+              <div className="skeleton-info"></div>
+              <div className="skeleton-info"></div>
+              <div className="skeleton-info"></div>
+              <div className="skeleton-footer"></div>
+            </div>
+          ))}
+        </div>
+      );
+    }
 
-        {(loading || locationLoading) ? (
-          <div className="loading-container">
-            <div className="loader"></div>
-            <p>{locationLoading ? 'Obtendo sua localização...' : 'Carregando partidas...'}</p>
-          </div>
-        ) : filter === 'nearby' && !userLocation ? (
-          <div className="no-matches">
-            <h3>Localização necessária</h3>
-            <p>Precisamos da sua localização para mostrar partidas próximas.</p>
-            <button 
-              onClick={getUserLocation}
-              className="create-match-btn"
-              style={{ maxWidth: '300px', marginTop: '20px' }}
+    if (error) {
+      return <div className="error-message">{error}</div>;
+    }
+
+    if (filteredMatches.length === 0) {
+      return (
+        <div className="no-matches-message">
+          <SportsSoccerIcon fontSize="large" />
+          <h3>Nenhuma partida encontrada</h3>
+          <p>Tente remover os filtros ou alterar sua busca.</p>
+        </div>
+      );
+    }
+
+    // Calcular as partidas para a página atual
+    const indexOfLastMatch = page * matchesPerPage;
+    const indexOfFirstMatch = indexOfLastMatch - matchesPerPage;
+    const currentMatches = filteredMatches.slice(indexOfFirstMatch, indexOfLastMatch);
+    const totalPages = Math.ceil(filteredMatches.length / matchesPerPage);
+
+    console.log(`Exibindo partidas ${indexOfFirstMatch + 1} a ${Math.min(indexOfLastMatch, filteredMatches.length)} de ${filteredMatches.length}`);
+    console.log(`Página ${page} de ${totalPages}`);
+
+    return (
+      <>
+        <div className="matches-grid">
+          {currentMatches.map((match) => (
+            <div
+              key={match.id}
+              className={`match-card ${
+                isUserInMatch(match) ? "user-in-match" : ""
+              } ${
+                isPastMatch(match.date) ? "past-match" : ""
+              } ${
+                matchesWithError.includes(match.id) ? "player-count-has-error" : ""
+              }`}
+              onClick={() => navigate(`/matches/${match.id}`)}
+              data-match-id={match.id}
             >
-              Permitir acesso à localização
-            </button>
-            {locationError && (
-              <div className="error-message" style={{ marginTop: '15px', color: 'var(--error-color)' }}>
-                {locationError}
+              <div className="match-card-corner"></div>
+              <div className="match-card-inner">
+                <div className="match-card-gradient"></div>
+                <div className="match-header">
+                  <h2 className="match-title">{match.title}</h2>
+                  <span className={`match-status status-${isMatchFull(match) && match.status === 'open' ? 'full' : match.status}`}>
+                    {getStatusLabel(match)}
+                  </span>
+                </div>
+                
+                <div className="match-info">
+                  <div className="info-row">
+                    <EventIcon fontSize="small" />
+                    <strong>Data:</strong> {formatDate(match.date)}
+                  </div>
+                  <div className="info-row">
+                    <AccessTimeIcon fontSize="small" />
+                    <strong>Hora:</strong> {formatTime(match.date)}
+                  </div>
+                  <div className="info-row">
+                    <LocationOnIcon fontSize="small" />
+                    <strong>Local:</strong> {match.location}
+                  </div>
+                </div>
+                
+                <PlayerCountDisplay match={match} />
+                
+                {match.price && (
+                  <div className="match-price">
+                    <span>💰</span> R$ {(() => {
+                      try {
+                        return typeof match.price === 'number' 
+                          ? match.price.toFixed(2) 
+                          : parseFloat(String(match.price)).toFixed(2);
+                      } catch (e) {
+                        return '0.00';
+                      }
+                    })()
+                    } por jogador
+                  </div>
+                )}
+                
+                <div className="match-action-container">
+                  {!isPastMatch(match.date) && match.status === 'open' && !isUserInMatch(match) && match.organizerId !== currentUser.id && !isMatchFull(match) && (
+                    <button
+                      className="join-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleJoinMatch(match.id);
+                      }}
+                    >
+                      Entrar nesta partida
+                    </button>
+                  )}
+                  
+                  {!isPastMatch(match.date) && (match.status === 'open' || match.status === 'full') && !isUserInMatch(match) && match.organizerId !== currentUser.id && isMatchFull(match) && (
+                    <div className="match-full-message">
+                      Partida cheia
+                    </div>
+                  )}
+                  
+                  {isUserInMatch(match) && match.organizerId !== currentUser.id && (
+                    <div className="already-joined">
+                      Você está participando desta partida
+                    </div>
+                  )}
+                  
+                  {match.organizerId === currentUser.id && (
+                    <div className="organizer-badge">
+                      Você é o organizador
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
+            </div>
+          ))}
+        </div>
+        
+        {/* Adicionar paginação abaixo da lista */}
+        {totalPages > 1 && (
+          <div className="pagination-container">
+            <Pagination 
+              count={totalPages} 
+              page={page} 
+              onChange={handlePageChange} 
+              color="primary" 
+              size="large"
+              showFirstButton 
+              showLastButton
+            />
           </div>
-        ) : filter === 'nearby' && !locationError && filteredMatches.length === 0 ? (
-          <div className="no-matches">
-            <h3>Nenhuma partida encontrada</h3>
-            <p>Não encontramos nenhuma partida com coordenadas válidas para calcular a distância.</p>
-            <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <p style={{ marginBottom: '10px', fontWeight: 'bold' }}>Sua localização atual:</p>
-              <p>{userLocation?.latitude.toFixed(6)}, {userLocation?.longitude.toFixed(6)}</p>
+        )}
+      </>
+    );
+  };
+
+  return (
+    <div className="match-list-container">
+      <button className="back-button" onClick={() => navigate(-1)}>
+        <ArrowBackIcon />
+      </button>
+
+      {networkError && (
+        <NetworkErrorBanner 
+          onRetry={handleRetryConnection}
+          isRetrying={isRetryingConnection}
+        />
+      )}
+
+      <div className="content-container">
+        <div className="header-container">
+          <h1 className="page-title">Partidas Disponíveis</h1>
+          
+          <div className="search-controls">
+            <div className="search-and-filter">
+              <div className="search-container">
+                <SearchIcon className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="Buscar partidas por título, local ou organizador..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="search-input"
+                />
+                {searchQuery && (
+                  <button className="clear-search" onClick={clearSearch}>
+                    <ClearIcon />
+                  </button>
+                )}
+              </div>
+              
               <button 
-                onClick={() => navigate('/matches/create')}
-                className="create-match-btn"
-                style={{ maxWidth: '300px', marginTop: '20px' }}
+                className="advanced-filters-toggle"
+                onClick={openFiltersModal}
               >
-                Criar uma partida na sua região
+                <FaFilter /> Filtros
+                {getActiveFiltersCount() > 0 && (
+                  <span className="filter-count-badge">{getActiveFiltersCount()}</span>
+                )}
               </button>
             </div>
-          </div>
-        ) : filteredMatches.length === 0 ? (
-          <div className="no-matches">
-            <h3>{
-              searchQuery 
-                ? 'Nenhuma partida encontrada para sua busca'
-                : filter === 'my' 
-                  ? 'Você ainda não criou nenhuma partida' 
-                  : filter === 'nearby'
-                    ? 'Nenhuma partida encontrada próxima à sua localização'
-                    : 'Nenhuma partida disponível no momento'
-            }</h3>
-            <p>{
-              searchQuery
-                ? 'Tente usar termos diferentes ou remover alguns filtros'
-                : filter === 'my' 
-                  ? 'Clique no botão acima para criar sua primeira partida!' 
-                  : filter === 'nearby'
-                    ? 'Tente expandir a área de busca ou criar uma partida na sua região.'
-                    : 'Volte mais tarde ou crie uma nova partida para seus amigos.'
-            }</p>
-          </div>
-        ) : (
-          <>
-            {filter === 'nearby' && (
-              <div className="proximity-info" style={{
-                background: 'rgba(255, 255, 255, 0.8)',
-                padding: '10px 15px',
-                borderRadius: 'var(--border-radius)',
-                marginBottom: '15px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <MyLocationIcon style={{ color: 'var(--primary-color)' }} />
-                <span>
-                  Mostrando todas as partidas ordenadas por distância
-                  {userLocation && (
-                    <>
-                     {' '}<span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                        (sua localização: {userLocation.latitude.toFixed(4)}, {userLocation.longitude.toFixed(4)})
-                      </span>
-                    </>
-                  )}
-                </span>
-              </div>
-            )}
-            <div className="matches-grid">
-              {loading ? (
-                // Placeholders de carregamento - Sempre 6
-                Array.from({ length: matchesPerPage }).map((_, index) => (
-                  <div key={`loading-${index}`} className="match-card match-card-loading">
-                    <div className="match-card-inner">
-                      <div className="loading-placeholder title"></div>
-                      <div className="loading-placeholder date"></div>
-                      <div className="loading-placeholder location"></div>
-                      <div className="loading-placeholder players"></div>
-                      <div className="loading-placeholder join"></div>
-                    </div>
-                  </div>
-                ))
-              ) : currentMatches.length > 0 ? (
-                currentMatches.map((match) => (
-                  <div
-                    key={match.id}
-                    className={`match-card ${
-                      isUserInMatch(match) ? "user-in-match" : ""
-                    } ${
-                      isPastMatch(match.date) ? "past-match" : ""
-                    } ${
-                      matchesWithError.includes(match.id) ? "player-count-has-error" : ""
-                    }`}
-                    onClick={() => navigate(`/matches/${match.id}`)}
-                    data-match-id={match.id}
+            
+            {/* Filtro com Toggle Button */}
+            <div className="filter-container">
+              <div className="filter-group-wrapper">
+                <ToggleButtonGroup
+                  value={filter}
+                  exclusive
+                  onChange={handleFilterChange}
+                  aria-label="filtro de partidas"
+                >
+                  <ToggleButton value="all" aria-label="todas as partidas">
+                    <AllInclusiveIcon fontSize="small" style={{ marginRight: '5px' }} />
+                    Todas
+                  </ToggleButton>
+                  <ToggleButton value="my" aria-label="minhas partidas">
+                    <PersonIcon fontSize="small" style={{ marginRight: '5px' }} />
+                    Minhas
+                  </ToggleButton>
+                </ToggleButtonGroup>
+                
+                <div className="update-info">
+                  <span>Atualizado há {formatLastUpdate(lastUpdate)}</span>
+                  <button 
+                    className={`refresh-button ${isRefreshing ? 'refreshing' : ''} ${networkError ? 'network-error' : ''}`} 
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    title="Atualizar lista de partidas"
                   >
-                    <div className="match-card-corner"></div>
-                    <div className="match-card-inner">
-                      <div className="match-card-gradient"></div>
-                      <div className="match-header">
-                        <h2 className="match-title">{match.title}</h2>
-                        <span className={`match-status status-${isMatchFull(match) && match.status === 'open' ? 'full' : match.status}`}>
-                          {getStatusLabel(match)}
-                        </span>
-                      </div>
-                      
-                      <div className="match-info">
-                        <div className="info-row">
-                          <EventIcon fontSize="small" />
-                          <strong>Data:</strong> {formatDate(match.date)}
-                        </div>
-                        <div className="info-row">
-                          <AccessTimeIcon fontSize="small" />
-                          <strong>Hora:</strong> {formatTime(match.date)}
-                        </div>
-                        <div className="info-row">
-                          <LocationOnIcon fontSize="small" />
-                          <strong>Local:</strong> {match.location}
-                        </div>
-                        {match.distance !== undefined ? (
-                          <div className="info-row distance-row">
-                            <DirectionsIcon fontSize="small" />
-                            <span className={`distance-badge ${
-                              match.distance <= 2 
-                                ? 'distance-close' 
-                                : match.distance <= 5 
-                                  ? 'distance-medium' 
-                                  : match.distance <= 10 
-                                    ? 'distance-far' 
-                                    : 'distance-very-far'
-                            }`}>
-                              {formatDistance(match.distance)}
-                            </span>
-                            <span className="distance-text">de distância</span>
-                          </div>
-                        ) : userLocation && match.location ? (
-                          // Se temos localização do usuário mas não calculamos distância,
-                          // tentar calcular na hora como fallback
-                          (() => {
-                            // Tentar extrair coordenadas e calcular distância no momento da renderização
-                            const coords = extractCoordinates(match.location, match.location.split(', ')[0]);
-                            if (coords && userLocation) {
-                              try {
-                                const distance = calculateDistance(
-                                  userLocation.latitude,
-                                  userLocation.longitude,
-                                  coords.latitude,
-                                  coords.longitude
-                                );
-                                match.distance = distance; // Salvar para futuras renderizações
-                                return (
-                                  <div className="info-row distance-row">
-                                    <DirectionsIcon fontSize="small" />
-                                    <span className={`distance-badge distance-calculated-onthefly`}>
-                                      {formatDistance(distance)}
-                                    </span>
-                                    <span className="distance-text">de distância</span>
-                                  </div>
-                                );
-                              } catch (e) {
-                                console.error(`Erro ao calcular distância para partida ${match.id} durante renderização:`, e);
-                              }
-                            }
-                            return null;
-                          })()
-                        ) : null}
-                      </div>
-                      
-                      <PlayerCountDisplay match={match} />
-                      
-                      {match.price && (
-                        <div className="match-price">
-                          <span>💰</span> R$ {(() => {
-                            try {
-                              return typeof match.price === 'number' 
-                                ? match.price.toFixed(2) 
-                                : parseFloat(String(match.price)).toFixed(2);
-                            } catch (e) {
-                              return '0.00';
-                            }
-                          })()
-                          } por jogador
-                        </div>
-                      )}
-                      
-                      <div className="match-action-container">
-                        {!isPastMatch(match.date) && match.status === 'open' && !isUserInMatch(match) && match.organizerId !== currentUser.id && !isMatchFull(match) && (
-                          <button
-                            className="join-button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleJoinMatch(match.id);
-                            }}
-                          >
-                            Entrar nesta partida
-                          </button>
-                        )}
-                        
-                        {!isPastMatch(match.date) && (match.status === 'open' || match.status === 'full') && !isUserInMatch(match) && match.organizerId !== currentUser.id && isMatchFull(match) && (
-                          <div className="match-full-message">
-                            Partida cheia
-                          </div>
-                        )}
-                        
-                        {isUserInMatch(match) && match.organizerId !== currentUser.id && (
-                          <div className="already-joined">
-                            Você está participando desta partida
-                          </div>
-                        )}
-                        
-                        {match.organizerId === currentUser.id && (
-                          <div className="organizer-badge">
-                            Você é o organizador
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="no-matches">
-                  <h3>Nenhuma partida encontrada</h3>
-                  <p>Tente ajustar os filtros ou criar uma nova partida.</p>
+                    <RefreshIcon />
+                  </button>
                 </div>
-              )}
-            </div>
-
-            {filteredMatches.length > matchesPerPage && (
-              <div className="pagination-container">
-                <Pagination 
-                  count={Math.ceil(filteredMatches.length / matchesPerPage)} 
-                  page={page} 
-                  onChange={handlePageChange} 
-                  variant="outlined" 
-                  shape="rounded" 
-                  size="large"
-                  color="primary"
-                />
               </div>
-            )}
-          </>
-        )}
+            </div>
+          </div>
+
+          <button
+            className="create-match-btn"
+            onClick={() => navigate('/matches/create')}
+          >
+            Criar Nova Partida
+          </button>
+
+          <div className="filters-status">
+            {renderErrorIndicator()}
+          </div>
+
+          {getActiveFiltersCount() > 0 && (
+            <div className="active-filters-summary">
+              <p>Filtros ativos:</p>
+              <div className="active-filters-chips">
+                {statusFilter.length > 0 && (
+                  <div className="filter-chip">
+                    Status: {statusFilter.map(s => {
+                      switch(s) {
+                        case 'open': return 'Aberta';
+                        case 'full': return 'Cheia';
+                        case 'in_progress': return 'Em andamento';
+                        case 'completed': return 'Finalizada';
+                        case 'cancelled': return 'Cancelada';
+                        default: return s;
+                      }
+                    }).join(', ')}
+                    <button 
+                      className="clear-filter"
+                      onClick={() => setStatusFilter([])}
+                      title="Limpar filtro de status"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                
+                {priceFilter.length > 0 && (
+                  <div className="filter-chip">
+                    Preço: {priceFilter.map(p => {
+                      switch(p) {
+                        case 'free': return 'Gratuito';
+                        case 'paid': return 'Pago';
+                        default: return p;
+                      }
+                    }).join(', ')}
+                    <button 
+                      className="clear-filter"
+                      onClick={() => setPriceFilter([])}
+                      title="Limpar filtro de preço"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                
+                {dateFilter.length > 0 && (
+                  <div className="filter-chip">
+                    Data: {dateFilter.map(d => {
+                      switch(d) {
+                        case 'today': return 'Hoje';
+                        case 'tomorrow': return 'Amanhã';
+                        case 'week': return 'Esta semana';
+                        case 'weekend': return 'Fim de semana';
+                        default: return d;
+                      }
+                    }).join(', ')}
+                    <button 
+                      className="clear-filter"
+                      onClick={() => setDateFilter([])}
+                      title="Limpar filtro de data"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                
+                <button className="clear-all-filters" onClick={() => {
+                  setStatusFilter([]);
+                  setPriceFilter([]);
+                  setDateFilter([]);
+                }}>
+                  Limpar todos
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {renderMatchList()}
+        
+        {/* Componente de filtros avançados */}
+        <AdvancedFiltersModal />
       </div>
     </div>
   );

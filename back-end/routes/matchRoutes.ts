@@ -98,8 +98,8 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
             };
           }
         
-          // CORREÇÃO: Consulta SQL para obter jogadores regulares (não times)
-          let [regPlayers] = await (Match.sequelize?.query(`
+          // Obter jogadores regulares
+          let [regularPlayers] = await (Match.sequelize?.query(`
             SELECT 
               u.id, u.name, u.email, false as isTeam,
               null as teamId, null as teamName, null as playerCount
@@ -108,71 +108,23 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
             JOIN 
               match_players mp ON u.id = mp.user_id
             WHERE 
-              mp.match_id = ? AND
-              (mp.is_team IS NULL OR mp.is_team = 0 OR mp.is_team = false)
+              mp.match_id = ?
           `, {
             replacements: [match.id]
           }) || [[], null]) as [any[], any];
           
-          // Garantir que regularPlayers seja um array
-          if (!Array.isArray(regPlayers)) {
-            console.warn(`Partida ${match.id}: regularPlayers não é um array`, regPlayers);
-            regPlayers = [];
-          }
+          console.log(`Partida ${match.id}: Encontrados ${regularPlayers.length} jogadores individuais`);
           
-          // CORREÇÃO: Obter participantes que são times
-          let [teamData] = await (Match.sequelize?.query(`
-            SELECT 
-              mp.user_id as id, 
-              u.name, 
-              u.email,
-              true as isTeam,
-              COALESCE(mp.team_id, 0) as teamId,
-              COALESCE(t.name, 'Time sem nome') as teamName,
-              COALESCE((
-                SELECT COUNT(*) 
-                FROM team_players tp 
-                WHERE tp.team_id = mp.team_id
-              ), 1) as playerCount
-            FROM 
-              match_players mp
-            JOIN 
-              users u ON mp.user_id = u.id
-            LEFT JOIN
-              teams t ON mp.team_id = t.id
-            WHERE 
-              mp.match_id = ? AND
-              (mp.is_team = 1 OR mp.is_team = true)
-          `, {
-            replacements: [match.id]
-          }) || [[], null]) as [any[], any];
+          // Obter times (Removido pois a coluna is_team não existe)
+          let teamPlayers: any[] = [];
           
-          // Garantir que teamPlayers seja um array
-          if (!Array.isArray(teamData)) {
-            console.warn(`Partida ${match.id}: teamPlayers não é um array`, teamData);
-            teamData = [];
-          }
+          // Combinar jogadores
+          const allPlayers = [...regularPlayers];
           
-          // Combinar jogadores regulares e times
-          const allPlayers = [
-            ...regPlayers,
-            ...teamData.map((team: any) => ({
-              ...team,
-              playerCount: parseInt(team?.playerCount, 10) || 1
-            }))
-          ];
-          
-          // Verificar discrepância entre contagem direta e consultas
-          const totalPlayersFromQueries = regPlayers.length + teamData.length;
-          if (totalPlayersFromQueries !== actualPlayerCount) {
-            console.warn(`Partida ${match.id}: Discrepância entre contagem direta (${actualPlayerCount}) e consultas (${totalPlayersFromQueries})`);
-          }
-          
-          // Calcular estatísticas de jogadores
-          const totalRegularPlayers = regPlayers.length || 0;
-          const totalTeamPlayers = teamData.reduce((acc: number, team: any) => 
-            acc + (parseInt(team?.playerCount, 10) || 1), 0);
-          const totalPlayers = totalRegularPlayers + totalTeamPlayers;
+          // Calcular estatísticas
+          const totalRegularPlayers = regularPlayers.length || 0;
+          const totalTeamPlayers = 0;
+          const totalPlayers = totalRegularPlayers;
           
           return {
             ...match,
@@ -180,7 +132,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
             players: allPlayers,
             playerStats: {
               totalIndividualPlayers: totalRegularPlayers,
-              totalTeams: teamData.length || 0,
+              totalTeams: 0,
               totalTeamPlayers: totalTeamPlayers,
               totalPlayers: totalPlayers,
               isEmpty: allPlayers.length === 0
@@ -289,7 +241,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
     
     try {
       // Obter jogadores regulares
-      let [regPlayers] = await (Match.sequelize?.query(`
+      let [regularPlayers] = await (Match.sequelize?.query(`
         SELECT 
           u.id, u.name, u.email, false as isTeam,
           null as teamId, null as teamName, null as playerCount
@@ -298,57 +250,23 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
         JOIN 
           match_players mp ON u.id = mp.user_id
         WHERE 
-          mp.match_id = ? AND
-          (mp.is_team IS NULL OR mp.is_team = 0 OR mp.is_team = false)
+          mp.match_id = ?
       `, {
         replacements: [matchId]
       }) || [[], null]) as [any[], any];
       
-      console.log(`Partida ${matchId}: Encontrados ${regPlayers.length} jogadores individuais`);
+      console.log(`Partida ${matchId}: Encontrados ${regularPlayers.length} jogadores individuais`);
       
-      // Obter times
-      let [teamData] = await (Match.sequelize?.query(`
-        SELECT 
-          mp.user_id as id, 
-          u.name, 
-          u.email,
-          true as isTeam,
-          COALESCE(mp.team_id, 0) as teamId,
-          COALESCE(t.name, 'Time sem nome') as teamName,
-          COALESCE((
-            SELECT COUNT(*) 
-            FROM team_players tp 
-            WHERE tp.team_id = mp.team_id
-          ), 1) as playerCount
-        FROM 
-          match_players mp
-        JOIN 
-          users u ON mp.user_id = u.id
-        LEFT JOIN
-          teams t ON mp.team_id = t.id
-        WHERE 
-          mp.match_id = ? AND
-          (mp.is_team = 1 OR mp.is_team = true)
-      `, {
-        replacements: [matchId]
-      }) || [[], null]) as [any[], any];
+      // Obter times (Removido pois a coluna is_team não existe)
+      let teamPlayers: any[] = [];
       
-      console.log(`Partida ${matchId}: Encontrados ${teamData.length} times`);
-      
-      // Combinar jogadores regulares e times
-      const allPlayers = [
-        ...regPlayers,
-        ...teamData.map((team: any) => ({
-          ...team,
-          playerCount: parseInt(team?.playerCount, 10) || 1
-        }))
-      ];
+      // Combinar jogadores
+      const allPlayers = [...regularPlayers];
       
       // Calcular estatísticas de jogadores
-      const totalRegularPlayers = regPlayers.length || 0;
-      const totalTeamPlayers = teamData.reduce((acc: number, team: any) => 
-        acc + (parseInt(team?.playerCount, 10) || 1), 0);
-      const totalPlayers = totalRegularPlayers + totalTeamPlayers;
+      const totalRegularPlayers = regularPlayers.length || 0;
+      const totalTeamPlayers = 0;
+      const totalPlayers = totalRegularPlayers;
       
       // Montar resposta completa
       const matchWithPlayers = {
@@ -357,7 +275,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
         players: allPlayers,
         playerStats: {
           totalIndividualPlayers: totalRegularPlayers,
-          totalTeams: teamData.length || 0,
+          totalTeams: 0,
           totalTeamPlayers: totalTeamPlayers,
           totalPlayers: totalPlayers,
           isEmpty: allPlayers.length === 0,
@@ -461,7 +379,7 @@ router.get('/:id/players', async (req: Request, res: Response): Promise<void> =>
       // Só buscar detalhes se realmente houver jogadores
       if (actualPlayerCount > 0) {
         // CORREÇÃO: Obter jogadores regulares para a partida - alterando o filtro para considerar NULL
-        let [regPlayers] = await (Match.sequelize?.query(`
+        let [regularPlayers] = await (Match.sequelize?.query(`
           SELECT 
             u.id, u.name, u.email, false as isTeam,
             null as teamId, null as teamName, null as playerCount
@@ -470,18 +388,17 @@ router.get('/:id/players', async (req: Request, res: Response): Promise<void> =>
           JOIN 
             match_players mp ON u.id = mp.user_id
           WHERE 
-            mp.match_id = ? AND
-            (mp.is_team IS NULL OR mp.is_team = 0 OR mp.is_team = false)
+            mp.match_id = ?
         `, {
           replacements: [matchId]
         }) || [[], null]) as [any[], any];
         
         // Garantir que regularPlayers seja um array
-        if (Array.isArray(regPlayers)) {
-          regularPlayers = regPlayers;
+        if (Array.isArray(regularPlayers)) {
+          regularPlayers = regularPlayers;
           console.log(`Partida ${matchId}: Encontrados ${regularPlayers.length} jogadores individuais`);
         } else {
-          console.warn(`Partida ${matchId}: regularPlayers não é um array`, regPlayers);
+          console.warn(`Partida ${matchId}: regularPlayers não é um array`, regularPlayers);
         }
         
         // CORREÇÃO: Obter participantes que são times - usando = 1 ou = true
@@ -749,11 +666,12 @@ router.post('/:id/join-team', authenticateToken, async (req: AuthRequest, res: R
     
     // Adicionar o time à partida
     await (Match.sequelize?.query(`
-      INSERT INTO match_players (match_id, user_id, is_team, team_id)
-      VALUES (?, ?, true, ?)
+      INSERT INTO match_players (match_id, user_id, created_at, updated_at)
+      VALUES (?, ?, NOW(), NOW())
+      ON DUPLICATE KEY UPDATE updated_at = NOW()
     `, {
-      replacements: [matchId, userId, teamId]
-    }));
+      replacements: [matchId, userId]
+    }) || []);
     
     console.log(`Time ${team.name} (ID: ${teamId}) inscrito na partida ${matchId} pelo usuário ${userId}`);
     
@@ -775,33 +693,16 @@ router.post('/:id/join-team', authenticateToken, async (req: AuthRequest, res: R
 // Função auxiliar para obter contagem de jogadores em uma partida
 async function getMatchPlayerCount(matchId: number): Promise<number> {
   try {
-    // Contar jogadores individuais
-    const [regularPlayers] = await (Match.sequelize?.query(`
+    // Contar total de jogadores na tabela match_players
+    const [allPlayers] = await (Match.sequelize?.query(`
       SELECT COUNT(*) as count
       FROM match_players
-      WHERE match_id = ? AND (is_team IS NULL OR is_team = false)
+      WHERE match_id = ?
     `, {
       replacements: [matchId]
     }) || []) as [any[], any];
     
-    const individualCount = regularPlayers[0]?.count || 0;
-    
-    // Contar jogadores em times
-    const [teamPlayers] = await (Match.sequelize?.query(`
-      SELECT mp.team_id, COALESCE(
-        (SELECT COUNT(*) FROM team_players WHERE team_id = mp.team_id), 
-        1
-      ) as playerCount
-      FROM match_players mp
-      WHERE mp.match_id = ? AND mp.is_team = true
-    `, {
-      replacements: [matchId]
-    }) || []) as [any[], any];
-    
-    const teamCount = teamPlayers.reduce((acc: number, team: any) => 
-      acc + (parseInt(team.playerCount, 10) || 1), 0);
-    
-    return individualCount + teamCount;
+    return parseInt(allPlayers[0]?.count || '0', 10);
   } catch (error) {
     console.error('Erro ao calcular contagem de jogadores:', error);
     return 0;

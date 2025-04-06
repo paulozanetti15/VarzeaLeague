@@ -1361,12 +1361,6 @@ const MatchDetail: React.FC = () => {
         ← Voltar
       </button>
       
-      {simulationMode && (
-        <div className="simulation-mode-notice">
-          Modo de simulação ativo - As alterações só serão visíveis localmente
-        </div>
-      )}
-      
       {error && (
         <div className="error-message">
           {error}
