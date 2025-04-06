@@ -36,6 +36,10 @@ User.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
+  userTypeId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
   resetPasswordToken: {
     type: DataTypes.STRING,
     allowNull: true,
