@@ -1301,7 +1301,7 @@ const MatchList: React.FC = () => {
       <div className="filters-modal-overlay">
         <div className="filters-modal-content">
           <div className="filters-modal-header">
-            <h3>Filtros Avançados</h3>
+            <h3><FaFilter /> Filtros Avançados</h3>
             <button className="close-modal" onClick={cancelFilters}>
               <IoMdClose />
             </button>
@@ -1312,7 +1312,7 @@ const MatchList: React.FC = () => {
             <div className="filter-group">
               <h4><FaTags /> Status da Partida</h4>
               <div className="status-filter-options">
-                <div className="status-option">
+                <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="status-open" 
@@ -1324,9 +1324,12 @@ const MatchList: React.FC = () => {
                       setTempStatusFilter(newFilters);
                     }}
                   />
-                  <label htmlFor="status-open">Abertas</label>
+                  <label htmlFor="status-open" className={tempStatusFilter.includes('open') ? 'selected' : ''}>
+                    <span className="status-indicator open"></span>
+                    Abertas
+                  </label>
                 </div>
-                <div className="status-option">
+                <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="status-full" 
@@ -1338,9 +1341,12 @@ const MatchList: React.FC = () => {
                       setTempStatusFilter(newFilters);
                     }}
                   />
-                  <label htmlFor="status-full">Completas</label>
+                  <label htmlFor="status-full" className={tempStatusFilter.includes('full') ? 'selected' : ''}>
+                    <span className="status-indicator full"></span>
+                    Completas
+                  </label>
                 </div>
-                <div className="status-option">
+                <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="status-waiting" 
@@ -1352,9 +1358,12 @@ const MatchList: React.FC = () => {
                       setTempStatusFilter(newFilters);
                     }}
                   />
-                  <label htmlFor="status-waiting">Aguardando</label>
+                  <label htmlFor="status-waiting" className={tempStatusFilter.includes('waiting') ? 'selected' : ''}>
+                    <span className="status-indicator waiting"></span>
+                    Aguardando
+                  </label>
                 </div>
-                <div className="status-option">
+                <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="status-confirmed" 
@@ -1366,7 +1375,10 @@ const MatchList: React.FC = () => {
                       setTempStatusFilter(newFilters);
                     }}
                   />
-                  <label htmlFor="status-confirmed">Confirmadas</label>
+                  <label htmlFor="status-confirmed" className={tempStatusFilter.includes('confirmed') ? 'selected' : ''}>
+                    <span className="status-indicator confirmed"></span>
+                    Confirmadas
+                  </label>
                 </div>
               </div>
             </div>
@@ -1375,7 +1387,7 @@ const MatchList: React.FC = () => {
             <div className="filter-group">
               <h4><FaMoneyBillWave /> Preço</h4>
               <div className="price-filter-options">
-                <div className="price-option">
+                <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="price-free" 
@@ -1387,9 +1399,12 @@ const MatchList: React.FC = () => {
                       setTempPriceFilter(newFilters);
                     }}
                   />
-                  <label htmlFor="price-free">Gratuito</label>
+                  <label htmlFor="price-free" className={tempPriceFilter.includes('free') ? 'selected' : ''}>
+                    <span className="price-indicator free">R$0</span>
+                    Gratuito
+                  </label>
                 </div>
-                <div className="price-option">
+                <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="price-paid" 
@@ -1401,7 +1416,10 @@ const MatchList: React.FC = () => {
                       setTempPriceFilter(newFilters);
                     }}
                   />
-                  <label htmlFor="price-paid">Pago</label>
+                  <label htmlFor="price-paid" className={tempPriceFilter.includes('paid') ? 'selected' : ''}>
+                    <span className="price-indicator paid">R$</span>
+                    Pago
+                  </label>
                 </div>
               </div>
             </div>
@@ -1410,7 +1428,7 @@ const MatchList: React.FC = () => {
             <div className="filter-group">
               <h4><FaCalendarAlt /> Data</h4>
               <div className="date-filter-options">
-                <div className="date-option">
+                <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="date-today" 
@@ -1422,9 +1440,11 @@ const MatchList: React.FC = () => {
                       setTempDateFilter(newFilters);
                     }}
                   />
-                  <label htmlFor="date-today">Hoje</label>
+                  <label htmlFor="date-today" className={tempDateFilter.includes('today') ? 'selected' : ''}>
+                    Hoje
+                  </label>
                 </div>
-                <div className="date-option">
+                <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="date-tomorrow" 
@@ -1436,9 +1456,11 @@ const MatchList: React.FC = () => {
                       setTempDateFilter(newFilters);
                     }}
                   />
-                  <label htmlFor="date-tomorrow">Amanhã</label>
+                  <label htmlFor="date-tomorrow" className={tempDateFilter.includes('tomorrow') ? 'selected' : ''}>
+                    Amanhã
+                  </label>
                 </div>
-                <div className="date-option">
+                <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="date-week" 
@@ -1450,7 +1472,9 @@ const MatchList: React.FC = () => {
                       setTempDateFilter(newFilters);
                     }}
                   />
-                  <label htmlFor="date-week">Esta semana</label>
+                  <label htmlFor="date-week" className={tempDateFilter.includes('week') ? 'selected' : ''}>
+                    Esta semana
+                  </label>
                 </div>
               </div>
             </div>
@@ -1458,6 +1482,7 @@ const MatchList: React.FC = () => {
           
           <div className="filters-modal-footer">
             <button className="clear-filters-btn" onClick={clearTempFilters}>
+              <ClearIcon fontSize="small" style={{ marginRight: '5px' }} />
               Limpar filtros
             </button>
             <div className="action-buttons">
@@ -1465,7 +1490,7 @@ const MatchList: React.FC = () => {
                 Cancelar
               </button>
               <button className="apply-button" onClick={applyFilters}>
-                Aplicar
+                Aplicar Filtros
               </button>
             </div>
           </div>
