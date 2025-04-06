@@ -98,6 +98,8 @@ const startServer = async () => {
     await TeamModel.sync({ force: false }); // Avoid altering the table structure
     console.log('Modelo Team sincronizado.');
     console.log('Banco de dados sincronizado com sucesso!');
+    await MatchPlayer.sync({ force: false }); // Avoid altering the table structure
+    console.log('Modelo MatchPlayer sincronizado.');
     const port = process.env.PORT || 3001;
     app.listen(port, () => {
       console.log(`Servidor rodando na porta ${port}`);
