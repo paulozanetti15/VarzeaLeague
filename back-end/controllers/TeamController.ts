@@ -52,7 +52,7 @@ export class TeamController {
       // Verificar apenas pelo nome do time e que não esteja marcado como excluído
       if (name) {
         const existingActiveTeam = await Team.findOne({
-          where: { 
+        where: {
             name: name.trim(),
             isDeleted: false 
           }
@@ -177,13 +177,13 @@ export class TeamController {
           }
 
           res.status(201).json(plainTeam);
-          return;
+        return;
         }
       }
 
       // Criar um novo time se não existir um com o mesmo nome (nem mesmo excluído)
       console.log("Criando novo time com:", { name: name ? name.trim() : '', description, captainId });
-      
+
       const team = await Team.create({
         name: name.trim(),
         description,
@@ -487,7 +487,7 @@ export class TeamController {
         } else {
           // Primeiro, encontra os usuários que já existem no banco de dados
           const existingPlayers = await User.findAll({
-            where: {
+          where: {
               email: { [Op.in]: validEmails }
             }
           });

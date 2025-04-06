@@ -1,6 +1,7 @@
 import User from './User';
 import Match from './Match';
 import Team from './Team';
+import MatchPlayer from './match_players';
 
 // Associações do modelo User
 User.hasMany(Match, {
@@ -9,7 +10,7 @@ User.hasMany(Match, {
 });
 
 User.belongsToMany(Match, {
-  through: 'match_players',
+  through: MatchPlayer,
   as: 'matches',
   foreignKey: 'userId',
   otherKey: 'matchId',
@@ -38,7 +39,7 @@ Match.belongsTo(User, {
 });
 
 Match.belongsToMany(User, {
-  through: 'match_players',
+  through: MatchPlayer,
   as: 'players',
   foreignKey: 'matchId',
   otherKey: 'userId',

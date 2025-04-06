@@ -45,7 +45,12 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
       navigate('/');
     } catch (error) {
       console.error('Erro no login:', error);
-      setLoginError(error instanceof Error ? error.message : 'Erro ao fazer login');
+      // Verifica se é um erro 404 (servidor não encontrado) para dar uma mensagem mais útil
+      if (error && (error as any).response && (error as any).response.status === 404) {
+        setLoginError('Servidor não encontrado. Verifique se o backend está funcionando corretamente.');
+      } else {
+        setLoginError(error instanceof Error ? error.message : 'Erro ao fazer login');
+      }
     } finally {
       setIsLoading(false);
     }

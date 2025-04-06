@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { IconButton, Container, Paper, Typography, TextField, Button, Box, Divider, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { IconButton, Typography, TextField, Button, Box, Divider, FormControl, InputLabel, Select, MenuItem, Autocomplete } from '@mui/material';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GroupIcon from '@mui/icons-material/Group';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { api } from '../../services/api';
 import './CreateMatch.css';
+import { toast } from 'react-hot-toast';
 
 interface MatchFormData {
   title: string;
@@ -18,11 +19,142 @@ interface MatchFormData {
   date: string;
   time: string;
   maxPlayers: number;
-  teamId: string;
+  price: string;
+  complement: string;
+  city: string;
 }
+
+const cities = [
+  // Capitais
+  'São Paulo - SP',
+  'Rio de Janeiro - RJ',
+  'Brasília - DF',
+  'Salvador - BA',
+  'Fortaleza - CE',
+  'Belo Horizonte - MG',
+  'Manaus - AM',
+  'Curitiba - PR',
+  'Recife - PE',
+  'Porto Alegre - RS',
+  'Belém - PA',
+  'Goiânia - GO',
+  'Guarulhos - SP',
+  'Campinas - SP',
+  'São Luís - MA',
+  'São Gonçalo - RJ',
+  'Maceió - AL',
+  'Duque de Caxias - RJ',
+  'Natal - RN',
+  'Campo Grande - MS',
+  'Teresina - PI',
+  'São Bernardo do Campo - SP',
+  'Nova Iguaçu - RJ',
+  'João Pessoa - PB',
+  'Santo André - SP',
+  'Osasco - SP',
+  'Jaboatão dos Guararapes - PE',
+  'Ribeirão Preto - SP',
+  'Uberlândia - MG',
+  'Sorocaba - SP',
+  'Contagem - MG',
+  'Aracaju - SE',
+  'Feira de Santana - BA',
+  'Cuiabá - MT',
+  'Joinville - SC',
+  'Juiz de Fora - MG',
+  'Londrina - PR',
+  'Aparecida de Goiânia - GO',
+  'Ananindeua - PA',
+  'Niterói - RJ',
+  'Porto Velho - RO',
+  'Campos dos Goytacazes - RJ',
+  'Belford Roxo - RJ',
+  'Serra - ES',
+  'Caxias do Sul - RS',
+  'Vila Velha - ES',
+  'Florianópolis - SC',
+  'São José do Rio Preto - SP',
+  'Macapá - AP',
+  'Mauá - SP',
+  'São João de Meriti - RJ',
+  'Santos - SP',
+  'Mogi das Cruzes - SP',
+  'Betim - MG',
+  'Diadema - SP',
+  'Campina Grande - PB',
+  'Jundiaí - SP',
+  'Olinda - PE',
+  'Carapicuíba - SP',
+  'Piracicaba - SP',
+  'Montes Claros - MG',
+  'Maringá - PR',
+  'Cariacica - ES',
+  'Barueri - SP',
+  'Rio Branco - AC',
+  'Anápolis - GO',
+  'São Vicente - SP',
+  'Vitória - ES',
+  'Caucaia - CE',
+  'Itaquaquecetuba - SP',
+  'Pelotas - RS',
+  'Canoas - RS',
+  'Caruaru - PE',
+  'Vitória da Conquista - BA',
+  'Blumenau - SC',
+  'Franca - SP',
+  'Ponta Grossa - PR',
+  'Petrolina - PE',
+  'Boa Vista - RR',
+  'Paulista - PE',
+  'Uberaba - MG',
+  'Cascavel - PR',
+  'Guarujá - SP',
+  'Praia Grande - SP',
+  'Taubaté - SP',
+  'Petrópolis - RJ',
+  'Limeira - SP',
+  'Santarém - PA',
+  'Palmas - TO',
+  // Outras cidades importantes
+  'Londrina - PR',
+  'Juiz de Fora - MG',
+  'Foz do Iguaçu - PR',
+  'Bauru - SP',
+  'São José dos Campos - SP',
+  'Maringá - PR',
+  'Presidente Prudente - SP',
+  'Araçatuba - SP',
+  'Divinópolis - MG',
+  'Governador Valadares - MG',
+  'Volta Redonda - RJ',
+  'Ipatinga - MG',
+  'Santa Maria - RS',
+  'Rio Grande - RS',
+  'Criciúma - SC',
+  'Chapecó - SC',
+  'Itajaí - SC',
+  'Dourados - MS',
+  'Imperatriz - MA',
+  'Macaé - RJ',
+  'Ilhéus - BA',
+  'Juazeiro do Norte - CE',
+  'Mossoró - RN',
+  'Parnaíba - PI',
+  'Passo Fundo - RS',
+  'Marabá - PA',
+  'Araraquara - SP',
+  'São Carlos - SP',
+  'Rondonópolis - MT',
+  'Várzea Grande - MT',
+  'Palhoça - SC',
+  'São José - SC',
+];
 
 const CreateMatch: React.FC = () => {
   const navigate = useNavigate();
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const btnContainerRef = useRef<HTMLDivElement>(null);
+
   const [formData, setFormData] = useState<MatchFormData>({
     title: '',
     description: '',
@@ -30,35 +162,20 @@ const CreateMatch: React.FC = () => {
     date: '',
     time: '',
     maxPlayers: 10,
-    teamId: ''
+    price: '',
+    complement: '',
+    city: ''
   });
-  const [teams, setTeams] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  React.useEffect(() => {
-    const fetchTeams = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          navigate('/login');
-          return;
-        }
-
-        const response = await axios.get('http://localhost:3001/api/teams', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        setTeams(response.data);
-      } catch (err) {
-        console.error('Erro ao buscar times:', err);
-      }
-    };
-
-    fetchTeams();
-  }, [navigate]);
+  // Ajustar largura do botão para combinar com o campo de título
+  useEffect(() => {
+    if (titleInputRef.current && btnContainerRef.current) {
+      const titleWidth = titleInputRef.current.offsetWidth;
+      btnContainerRef.current.style.width = `${titleWidth}px`;
+    }
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -82,26 +199,34 @@ const CreateMatch: React.FC = () => {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
+      // Cria o endereço completo incluindo cidade, local e complemento
+      let fullLocation = formData.city;
+      
+      // Adiciona o endereço específico
+      if (formData.location) {
+        fullLocation += `, ${formData.location}`;
+      }
+      
+      // Adiciona o complemento se existir
+      if (formData.complement) {
+        fullLocation += ` - ${formData.complement}`;
       }
 
-      const response = await axios.post('http://localhost:3001/api/matches', formData, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      const response = await api.matches.create({
+        title: formData.title,
+        date: `${formData.date}T${formData.time}:00`,
+        location: fullLocation,
+        maxPlayers: formData.maxPlayers,
+        description: formData.description,
+        price: formData.price ? parseFloat(formData.price) : undefined,
+        city: formData.city
       });
 
+      toast.success('Partida criada com sucesso!');
       navigate('/matches');
     } catch (err) {
+      setError('Erro ao criar partida. Tente novamente.');
       console.error('Erro ao criar partida:', err);
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.error || 'Erro ao criar partida');
-      } else {
-        setError('Erro ao criar partida. Tente novamente.');
-      }
     } finally {
       setLoading(false);
     }
@@ -109,171 +234,238 @@ const CreateMatch: React.FC = () => {
 
   return (
     <div className="create-match-container">
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3 }}
-        style={{
-          position: 'absolute',
-          left: 32,
-          top: 32,
-        }}
+      <button 
+        className="back-button"
+        onClick={() => navigate(-1)}
       >
-        <IconButton
-          onClick={() => navigate(-1)}
-          className="back-button"
-        >
-          <ArrowBackIcon />
-        </IconButton>
-      </motion.div>
+        <ArrowBackIcon />
+      </button>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <Paper className="form-container">
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            >
-              <SportsSoccerIcon sx={{ fontSize: 60, color: '#2196F3', mb: 2 }} />
-            </motion.div>
-            <Typography variant="h4" component="h1" className="form-title">
-              Criar Nova Partida
-            </Typography>
-            <Typography variant="subtitle1" color="text.secondary">
-              Organize uma partida e convide seus amigos!
-            </Typography>
-          </Box>
+      <div className="form-container">
+        <h1 className="form-title">
+          Criar Nova Partida
+        </h1>
+        
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
 
-          <form onSubmit={handleSubmit}>
-            <Box sx={{ mb: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <EmojiEventsIcon sx={{ mr: 1, color: '#2196F3' }} />
-                <Typography variant="h6">Informações da Partida</Typography>
-              </Box>
-              <TextField
-                fullWidth
-                label="Título da Partida"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                required
-                sx={{ mb: 3 }}
-                InputProps={{
-                  startAdornment: <SportsSoccerIcon sx={{ mr: 1, color: '#2196F3' }} />
-                }}
-              />
+        <form onSubmit={handleSubmit} style={{width: '100%'}}>
+          <div className="form-group">
+            <label className="form-label">Título da Partida</label>
+            <input
+              ref={titleInputRef}
+              type="text"
+              className="form-control"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              required
+              placeholder="Ex: Pelada de Domingo"
+            />
+          </div>
 
-              <TextField
-                fullWidth
-                label="Descrição"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                multiline
-                rows={4}
-                sx={{ mb: 3 }}
-                placeholder="Descreva os detalhes da partida, regras especiais..."
-              />
+          <div className="form-group">
+            <label className="form-label">Descrição</label>
+            <textarea
+              className="form-control"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              rows={2}
+              placeholder="Descreva os detalhes da partida..."
+            />
+          </div>
 
-              <FormControl fullWidth sx={{ mb: 3 }}>
-                <InputLabel>Time</InputLabel>
-                <Select
-                  name="teamId"
-                  value={formData.teamId}
-                  onChange={handleSelectChange}
-                  required
-                  label="Time"
-                  startAdornment={<GroupIcon sx={{ mr: 1, color: '#2196F3' }} />}
-                >
-                  {teams.map((team) => (
-                    <MenuItem key={team.id} value={team.id}>
-                      {team.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-
-            <Divider sx={{ my: 3 }} />
-
-            <Box sx={{ mb: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <LocationOnIcon sx={{ mr: 1, color: '#2196F3' }} />
-                <Typography variant="h6">Local e Data</Typography>
-              </Box>
-              <TextField
-                fullWidth
-                label="Local"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                required
-                sx={{ mb: 3 }}
-                InputProps={{
-                  startAdornment: <LocationOnIcon sx={{ mr: 1, color: '#2196F3' }} />
-                }}
-              />
-
-              <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-                <TextField
-                  fullWidth
-                  label="Data"
-                  name="date"
+          <div className="form-row">
+            <div className="form-col">
+              <div className="form-group">
+                <label htmlFor="date">Data *</label>
+                <input
                   type="date"
+                  id="date"
+                  name="date"
                   value={formData.date}
                   onChange={handleInputChange}
                   required
-                  InputLabelProps={{ shrink: true }}
+                  className="form-control"
                 />
-                <TextField
-                  fullWidth
-                  label="Horário"
-                  name="time"
+              </div>
+            </div>
+            <div className="form-col">
+              <div className="form-group">
+                <label htmlFor="time">Horário *</label>
+                <input
                   type="time"
+                  id="time"
+                  name="time"
                   value={formData.time}
                   onChange={handleInputChange}
                   required
-                  InputLabelProps={{ shrink: true }}
+                  className="form-control"
                 />
-              </Box>
+              </div>
+            </div>
+          </div>
 
-              <TextField
-                fullWidth
-                label="Número Máximo de Jogadores"
-                name="maxPlayers"
-                type="number"
-                value={formData.maxPlayers}
-                onChange={handleInputChange}
-                required
-                InputProps={{
-                  startAdornment: <GroupIcon sx={{ mr: 1, color: '#2196F3' }} />
-                }}
-              />
-            </Box>
+          <div className="form-group">
+            <label htmlFor="city">Cidade *</label>
+            <Autocomplete
+              id="city"
+              options={cities}
+              value={formData.city}
+              onChange={(event, newValue) => {
+                setFormData(prev => ({
+                  ...prev,
+                  city: newValue || ''
+                }));
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  required
+                  placeholder="Ex: Curitiba - PR, São Paulo - SP"
+                  error={!formData.city}
+                  helperText={!formData.city ? "Cidade é obrigatória" : ""}
+                  InputProps={{
+                    ...params.InputProps,
+                    startAdornment: (
+                      <LocationOnIcon sx={{ color: '#1e3c72', mr: 1 }} />
+                    ),
+                  }}
+                  fullWidth
+                />
+              )}
+              freeSolo
+              disableClearable
+              sx={{
+                width: '100%',
+                '& .MuiOutlinedInput-root': {
+                  background: 'white',
+                  borderRadius: '8px',
+                  padding: '4px 8px',
+                  border: '1px solid #ccc',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  '&:hover': {
+                    border: '1px solid #2196F3',
+                    boxShadow: '0 1px 4px rgba(33,150,243,0.2)',
+                  },
+                  '&.Mui-focused': {
+                    border: '1px solid #2196F3',
+                    boxShadow: '0 0 0 2px rgba(33,150,243,0.2)',
+                  }
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  border: 'none'
+                },
+                '& .MuiAutocomplete-endAdornment': {
+                  right: '8px'
+                }
+              }}
+              className="form-control"
+              ListboxProps={{
+                style: { 
+                  maxHeight: '200px',
+                  padding: '4px 0'
+                }
+              }}
+              slotProps={{
+                popper: {
+                  sx: {
+                    '& .MuiAutocomplete-listbox': {
+                      '& .MuiAutocomplete-option': {
+                        padding: '8px 16px',
+                        borderBottom: '1px solid #f0f0f0',
+                        '&:last-child': {
+                          borderBottom: 'none'
+                        },
+                        '&:hover': {
+                          backgroundColor: 'rgba(33,150,243,0.1)'
+                        },
+                        '&.Mui-focused': {
+                          backgroundColor: 'rgba(33,150,243,0.2)'
+                        }
+                      }
+                    }
+                  }
+                }
+              }}
+            />
+          </div>
 
-            {error && (
-              <Typography color="error" sx={{ mb: 2 }}>
-                {error}
-              </Typography>
-            )}
+          <div className="form-group">
+            <label htmlFor="location">Endereço *</label>
+            <input
+              type="text"
+              id="location"
+              name="location"
+              value={formData.location}
+              onChange={handleInputChange}
+              required
+              placeholder="Ex: Rua das Flores, 123"
+              className="form-control"
+            />
+          </div>
 
-            <Button
+          <div className="form-group">
+            <label htmlFor="complement">Complemento (opcional)</label>
+            <input
+              type="text"
+              id="complement"
+              name="complement"
+              value={formData.complement}
+              onChange={handleInputChange}
+              placeholder="Ex: Quadra 2, Campo de futebol, Portão lateral"
+              className="form-control"
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-col">
+              <div className="form-group">
+                <label className="form-label">Máximo de Jogadores</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  name="maxPlayers"
+                  value={formData.maxPlayers}
+                  onChange={handleInputChange}
+                  required
+                  min="2"
+                  max="50"
+                />
+              </div>
+            </div>
+            <div className="form-col">
+              <div className="form-group">
+                <label className="form-label">Preço (opcional)</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  placeholder="R$"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="btn-container" ref={btnContainerRef}>
+            <button
               type="submit"
-              variant="contained"
-              fullWidth
-              disabled={loading}
               className="submit-btn"
-              startIcon={<SportsSoccerIcon />}
+              disabled={loading}
             >
               {loading ? 'Criando...' : 'Criar Partida'}
-            </Button>
-          </form>
-        </Paper>
-      </motion.div>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
