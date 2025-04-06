@@ -40,7 +40,7 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
 
     // Aqui você implementará a lógica de envio do email de recuperação
     console.log('Recuperação solicitada para:', email);
-    axios.post('http://localhost:3001/api/password/request-reset', { email })
+    axios.post('http://localhost:3001/api/password-reset/request-reset', { email })
       .then(response => {
         console.log('Response:', response.data);
         setIsSubmitted(true);
