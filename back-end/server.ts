@@ -12,7 +12,7 @@ import MatchModel from './models/Match';
 import TeamModel from './models/Team';
 import UserTypeModel from './models/UserType';
 import './models/associations';
-import userType from './routes/userTypeRoute';
+import authController from 'controllers/authController';
 dotenv.config();
 
 const app = express();
@@ -32,8 +32,8 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
-app.use('/api/teams', teamRoutes);
-app.use('/api/user-types', userType); 
+app.use('/api/teams',teamRoutes);
+
 // Rota de teste
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API está funcionando!' });
@@ -47,22 +47,18 @@ const startServer = async () => {
     await sequelize.authenticate();
 
     console.log('Conexão com o banco estabelecida com sucesso!');
-
+    await UserTypeModel.sync({ force: false }); // Avoid altering the table structure
+    console.log('Modelo UserType sincronizado.');
     console.log('Sincronizando modelos com o banco de dados...');
     console.log('Sincronizando modelo User...');
     await UserModel.sync({ force: false }); // Avoid altering the table structure
     console.log('Modelo User sincronizado.');
-
     console.log('Sincronizando modelo Match...');
     await MatchModel.sync({ force: false }); // Avoid altering the table structure
     console.log('Modelo Match sincronizado.');
     console.log('Sincronizando modelo Team...');  
     await TeamModel.sync({ force: false }); // Avoid altering the table structure
     console.log('Modelo Team sincronizado.');
-    console.log('Sincronizando modelo UserType...');
-    await UserTypeModel.sync({ force: false }); // Avoid altering the table structure
-    console.log('Modelo UserType sincronizado.');
-
     console.log('Banco de dados sincronizado com sucesso!');
     const port = process.env.PORT || 3001;
     app.listen(port, () => {
