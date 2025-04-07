@@ -62,7 +62,7 @@
 .hero-subtitle {
   font-size: 1.25rem;
   color: var(--gray-600);
-  margin-bottom: 2rem;
+  margin-bottom: 3.5rem;
   line-height: 1.6;
   position: relative;
   z-index: 2;
@@ -70,7 +70,7 @@
 
 .hero-buttons {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 1rem;
   flex-wrap: wrap;
   position: relative;
