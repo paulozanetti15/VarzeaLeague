@@ -35,7 +35,7 @@
 .hero-title {
   font-size: 3rem;
   font-weight: 700;
-  color: var(--blue-900);
+  color: var(--gray-800);
   margin-bottom: 1.5rem;
   line-height: 1.2;
   position: relative;
@@ -43,7 +43,20 @@
 }
 
 .hero-title span {
-  color: var(--blue-600);
+  color: var(--blue-700);
+  font-weight: 800;
+  position: relative;
+}
+
+.hero-title span::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background-color: rgba(25, 118, 210, 0.1);
+  z-index: -1;
 }
 
 .hero-subtitle {
@@ -57,10 +70,12 @@
 
 .hero-buttons {
   display: flex;
+  justify-content: center;
   gap: 1rem;
   flex-wrap: wrap;
   position: relative;
   z-index: 2;
+  margin-bottom: 2rem;
 }
 
 .hero-cta {

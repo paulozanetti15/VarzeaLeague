@@ -13,7 +13,7 @@ export function Hero({ onGetStarted, onViewMatches }: HeroProps) {
         <div className="row align-items-center">
           <div className="col-lg-6">
             <h1 className="hero-title">
-              Organize seus jogos de <span>futebol</span> com facilidade
+              Organize seus jogos e <span>campeonatos</span> de futebol com facilidade
             </h1>
             <p className="hero-subtitle">
               Crie times, agende partidas e acompanhe estatísticas. 

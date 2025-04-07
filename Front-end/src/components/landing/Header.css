@@ -5,6 +5,7 @@
   top: 0;
   z-index: 1000;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-bottom: none;
 }
 
 .navbar {
@@ -16,6 +17,20 @@
   font-size: 1.75rem;
   font-weight: 700;
   letter-spacing: -0.5px;
+  position: relative;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.navbar-brand::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background-color: white;
+  border-radius: 3px;
 }
 
 .navbar-brand img {
@@ -33,10 +48,13 @@
   font-weight: 500;
   transition: all 0.3s ease;
   position: relative;
+  border-radius: 6px;
+  margin: 0 2px;
 }
 
 .navbar-dark .navbar-nav .nav-link:hover {
   color: white;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .navbar-dark .navbar-nav .nav-link::after {

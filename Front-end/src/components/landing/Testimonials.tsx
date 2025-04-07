@@ -35,7 +35,7 @@ export function Testimonials() {
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, index) => (
-      <span key={index}>
+      <span key={index} className={`star ${index < rating ? 'filled' : 'empty'}`}>
         {index < rating ? '★' : '☆'}
       </span>
     ));

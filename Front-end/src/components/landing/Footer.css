@@ -46,9 +46,18 @@
   font-weight: 800;
   margin-bottom: 1.5rem;
   letter-spacing: -0.5px;
-  background: linear-gradient(to right, #fff, var(--blue-300));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  position: relative;
+}
+
+.footer h3::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background-color: var(--blue-400);
+  border-radius: 3px;
 }
 
 .footer h4 {
