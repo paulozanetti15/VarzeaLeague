@@ -275,18 +275,18 @@ const MatchList: React.FC = () => {
         const matchDate = new Date(match.date);
         matchDate.setHours(0, 0, 0, 0);
         
-        switch(dateFilter) {
-          case 'today':
-            return matchDate.getTime() === today.getTime();
-          case 'tomorrow':
-            return matchDate.getTime() === tomorrow.getTime();
-          case 'week':
-            return matchDate >= today && matchDate < nextWeekStart;
-          case 'weekend':
-            return matchDate >= nextWeekStart && matchDate < nextWeekEnd;
-          default:
-            return true;
+        // Verificar cada filtro de data
+        if (dateFilter.includes('today')) {
+          return matchDate.getTime() === today.getTime();
+        } else if (dateFilter.includes('tomorrow')) {
+          return matchDate.getTime() === tomorrow.getTime();
+        } else if (dateFilter.includes('week')) {
+          return matchDate >= today && matchDate < nextWeekStart;
+        } else if (dateFilter.includes('weekend')) {
+          return matchDate >= nextWeekStart && matchDate < nextWeekEnd;
         }
+        
+        return true;
       });
     }
     
