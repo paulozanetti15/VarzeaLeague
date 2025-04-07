@@ -58,76 +58,76 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
 
   return (
     <div className="login-container">
-      <div className="row justify-content-center align-items-center min-vh-100">
-        <div className="col-md-4">
-          <div className="card shadow">
-            <div className="card-body p-5">
-              <h2 className="text-center mb-4">Várzea League</h2>
-              
-              {loginError && (
-                <div className="alert alert-danger" role="alert">
-                  {loginError}
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                  <label htmlFor="email" className="form-label">Email</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Seu email"
-                    required
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="password" className="form-label">Senha</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Sua senha"
-                    required
-                  />
-                </div>
-
-                <div className="d-grid gap-2">
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Entrando...' : 'Entrar'}
-                  </button>
-                  <button 
-                    type="button" 
-                    className="btn btn-outline-secondary"
-                    onClick={onRegisterClick}
-                    disabled={isLoading}
-                  >
-                    Criar conta
-                  </button>
-                </div>
-
-                <div className="text-center mt-3">
-                  <button 
-                    type="button" 
-                    className="btn btn-link text-decoration-none"
-                    onClick={onForgotPasswordClick}
-                    disabled={isLoading}
-                  >
-                    Esqueceu sua senha?
-                  </button>
-                </div>
-              </form>
+      <div className="login-card">
+        <div className="login-header">
+          <h1 className="login-title">Várzea League</h1>
+          <p className="login-subtitle">Entre na sua conta para continuar</p>
+        </div>
+        
+        <div className="login-body">
+          {loginError && (
+            <div className="login-error" role="alert">
+              {loginError}
             </div>
-          </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <div className="login-form-group">
+              <label htmlFor="email" className="login-label">Email</label>
+              <input
+                type="email"
+                className="login-input"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Seu email"
+                required
+              />
+            </div>
+
+            <div className="login-form-group">
+              <label htmlFor="password" className="login-label">Senha</label>
+              <input
+                type="password"
+                className="login-input"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Sua senha"
+                required
+              />
+              <a 
+                href="#" 
+                className="login-forgot-password"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (onForgotPasswordClick) onForgotPasswordClick();
+                }}
+              >
+                Esqueceu sua senha?
+              </a>
+            </div>
+
+            <button 
+              type="submit" 
+              className="login-btn"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Entrando...' : 'Entrar'}
+            </button>
+            
+            <div className="login-signup">
+              Não tem uma conta?
+              <button 
+                type="button" 
+                className="login-signup-link"
+                onClick={onRegisterClick}
+                disabled={isLoading}
+              >
+                Criar conta
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

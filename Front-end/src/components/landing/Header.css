@@ -1,98 +1,167 @@
 .header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  background-color: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-}
-
-.header .navbar {
+  background: linear-gradient(to right, var(--blue-600), var(--blue-800));
   padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-.header .navbar-brand {
+.navbar {
+  padding: 0;
+}
+
+.navbar-brand {
+  color: white !important;
+  font-size: 1.75rem;
   font-weight: 700;
-  font-size: 1.8rem;
-  letter-spacing: 1px;
+  letter-spacing: -0.5px;
+}
+
+.navbar-brand img {
+  height: 40px;
+  margin-right: 0.5rem;
+}
+
+.navbar-brand span {
+  color: var(--blue-600);
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.85);
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
   color: white;
 }
 
-.header .nav-link {
-  font-weight: 500;
-  font-size: 1rem;
-  padding: 0.5rem 1rem !important;
-  position: relative;
-  cursor: pointer;
-  color: rgba(255, 255, 255, 0.8) !important;
-  transition: color 0.3s ease;
-}
-
-.header .nav-link::after {
+.navbar-dark .navbar-nav .nav-link::after {
   content: '';
   position: absolute;
   bottom: 0;
-  left: 50%;
-  width: 0;
+  left: 1rem;
+  right: 1rem;
   height: 2px;
-  background-color: #fff;
-  transition: all 0.3s ease;
-  transform: translateX(-50%);
+  background-color: white;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
 }
 
-.header .nav-link:hover::after {
-  width: 70%;
+.navbar-dark .navbar-nav .nav-link:hover::after {
+  transform: scaleX(1);
 }
 
-.header .btn {
-  padding: 0.5rem 1.5rem;
+.navbar-dark .navbar-toggler {
+  border: none;
+  padding: 0.25rem 0.75rem;
+}
+
+.navbar-dark .navbar-toggler:focus {
+  box-shadow: none;
+}
+
+.btn-outline-light {
+  border-width: 2px;
+  padding: 0.5rem 1.25rem;
   font-weight: 500;
   transition: all 0.3s ease;
 }
 
-.header .btn-outline-light:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.header .btn-light {
+.btn-outline-light:hover {
   background-color: white;
-  color: #2c3e50;
+  color: var(--blue-700);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.header .btn-light:hover {
-  background-color: #f8f9fa;
-  transform: translateY(-1px);
+.btn-light {
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  background-color: white;
+  color: var(--blue-700);
+  border: 2px solid white;
+  transition: all 0.3s ease;
 }
 
-.header .dropdown-item {
+.btn-light:hover {
+  background-color: var(--blue-50);
+  color: var(--blue-800);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-menu {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  padding: 0.75rem 0;
+  margin-top: 0.5rem;
+}
+
+.dropdown-item {
+  padding: 0.6rem 1.5rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  transition: all 0.2s ease;
   cursor: pointer;
 }
 
-.header .dropdown-item:active {
-  background-color: #007bff;
+.dropdown-item:hover {
+  color: var(--blue-700);
+  background-color: var(--blue-50);
+}
+
+.dropdown-divider {
+  margin: 0.5rem 0;
+  border-color: var(--gray-200);
+}
+
+.btn-link {
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
 @media (max-width: 991.98px) {
-  .header .navbar-collapse {
-    background-color: rgba(0, 0, 0, 0.9);
-    margin: 0 -12px;
-    padding: 1rem;
-    border-radius: 0 0 10px 10px;
-  }
-  
-  .header .nav-link {
-    padding: 0.5rem 0;
-  }
-  
-  .header .d-flex {
+  .navbar-collapse {
     margin-top: 1rem;
-    flex-direction: column;
-    width: 100%;
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
   }
   
-  .header .btn {
+  .navbar-dark .navbar-nav .nav-link {
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+  }
+  
+  .navbar-dark .navbar-nav .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .navbar-dark .navbar-nav .nav-link::after {
+    display: none;
+  }
+  
+  .btn-outline-light, .btn-light {
+    display: block;
     width: 100%;
     margin: 0.5rem 0;
+    text-align: center;
+  }
+  
+  .dropdown-menu {
+    background-color: rgba(255, 255, 255, 0.95);
+    margin-top: 0;
+  }
+  
+  .d-flex {
+    flex-direction: column;
+    width: 100%;
   }
 } 

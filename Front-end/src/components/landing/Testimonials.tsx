@@ -7,27 +7,38 @@ export function Testimonials() {
       name: 'João Silva',
       role: 'Jogador Amador',
       comment: 'A plataforma me ajudou a encontrar partidas próximas de casa e fazer novos amigos que compartilham da mesma paixão pelo futebol!',
-      photo: 'https://placehold.co/100x100/4299e1/ffffff?text=JS',
+      photo: 'https://placehold.co/100x100/6A55C5/ffffff?text=JS',
+      rating: 5
     },
     {
       id: 2,
       name: 'Carlos Oliveira',
       role: 'Organizador de Partidas',
       comment: 'Economizo muito tempo organizando partidas com a VarzeaLeague. A interface é intuitiva e os jogadores adoram a experiência!',
-      photo: 'https://placehold.co/100x100/4299e1/ffffff?text=CO',
+      photo: 'https://placehold.co/100x100/6A55C5/ffffff?text=CO',
+      rating: 4
     },
     {
       id: 3,
       name: 'Ana Pereira',
       role: 'Capitã de Time',
       comment: 'Gerenciar meu time se tornou muito mais fácil. Consigo organizar as escalações e comunicar-me com todos os jogadores por aqui.',
-      photo: 'https://placehold.co/100x100/4299e1/ffffff?text=AP',
+      photo: 'https://placehold.co/100x100/6A55C5/ffffff?text=AP',
+      rating: 5
     },
   ];
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const target = e.target as HTMLImageElement;
-    target.src = 'https://placehold.co/100x100/4299e1/ffffff?text=User';
+    target.src = 'https://placehold.co/100x100/6A55C5/ffffff?text=User';
+  };
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, index) => (
+      <span key={index}>
+        {index < rating ? '★' : '☆'}
+      </span>
+    ));
   };
 
   return (
@@ -57,6 +68,9 @@ export function Testimonials() {
                   <div className="testimonial-info">
                     <h4 className="testimonial-name">{testimonial.name}</h4>
                     <p className="testimonial-role">{testimonial.role}</p>
+                    <div className="testimonial-rating">
+                      {renderStars(testimonial.rating)}
+                    </div>
                   </div>
                 </div>
               </div>
