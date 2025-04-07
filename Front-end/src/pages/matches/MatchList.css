@@ -58,6 +58,7 @@
   padding-bottom: 1rem;
   position: relative;
   letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .matches-title::after {
@@ -70,44 +71,70 @@
   height: 3px;
   background: linear-gradient(to right, var(--primary-dark), var(--primary-light));
   border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 /* Botão voltar - Melhorado e mais visível */
-.back-btn {
+.back-button {
   position: fixed;
-  top: 1.2rem;
-  left: 1.2rem;
-  z-index: 10;
-  background: #fff;
-  border: none;
-  border-radius: 8px;
-  width: auto;
-  height: 45px;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  background-color: #fff;
+  border: 2px solid #3f51b5;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 1.2rem 0 1rem;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   transition: all 0.3s ease;
-  color: var(--primary-color);
-  font-weight: 500;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.back-btn svg {
-  margin-right: 6px;
+.back-button:hover {
+  background-color: #fff;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.back-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  background-color: var(--primary-color);
-  color: white;
+.back-button svg {
+  font-size: 24px;
+  color: #3f51b5;
+  transition: all 0.3s ease;
 }
 
-.back-btn:after {
-  content: "Voltar";
-  font-size: 0.9rem;
+.back-button:hover svg {
+  color: #3f51b5;
+}
+
+/* Responsividade para dispositivos móveis */
+@media (max-width: 768px) {
+  .back-button {
+    top: 10px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .back-button svg {
+    font-size: 20px;
+  }
+}
+
+/* Ajuste para telas muito pequenas */
+@media (max-width: 480px) {
+  .back-button {
+    top: 5px;
+    left: 5px;
+    width: 35px;
+    height: 35px;
+  }
+
+  .back-button svg {
+    font-size: 18px;
+  }
 }
 
 /* Pesquisa e filtros - layout melhorado */
@@ -571,14 +598,96 @@
   color: var(--text-secondary);
 }
 
-/* Player count com gradiente sutil */
+/* Estilos para a contagem de jogadores no card */
 .player-count {
-  background: linear-gradient(to bottom, #f9f9f9, #f5f5f5);
-  border-radius: var(--border-radius);
-  padding: 1.25rem;
-  margin-bottom: 1.25rem;
-  position: relative;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 1rem;
+  border-left: 3px solid var(--primary-color);
+}
+
+.player-count-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.player-count-info {
+  margin-bottom: 8px;
+}
+
+.player-count-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.player-count-badge {
+  color: var(--primary-color);
+  background-color: rgba(var(--primary-rgb), 0.1);
+  border-radius: 6px;
+  padding: 4px 10px;
+  min-width: 30px;
+  text-align: center;
+}
+
+.player-count-separator {
+  color: #999;
+}
+
+.max-players-badge {
+  color: #555;
+  background-color: #e0e0e0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  min-width: 30px;
+  text-align: center;
+}
+
+.remaining-spots {
+  padding: 8px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.spots-available {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #1b5e20;
+}
+
+.no-spots-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #d32f2f;
+}
+
+.remaining-spots.capacity-low {
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.remaining-spots.capacity-medium {
+  background-color: rgba(33, 150, 243, 0.1);
+}
+
+.remaining-spots.capacity-high {
+  background-color: rgba(255, 152, 0, 0.1);
+}
+
+.remaining-spots.capacity-full {
+  background-color: rgba(244, 67, 54, 0.1);
 }
 
 /* Paginação */

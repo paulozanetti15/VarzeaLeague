@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import DirectionsIcon from '@mui/icons-material/Directions';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Map, IframeMap } from '../../components/Map';
 import { api } from '../../services/api';
 import { geocodeAddress } from '../../services/geocodeService';
@@ -1358,7 +1359,7 @@ const MatchDetail: React.FC = () => {
   return (
     <div className="match-detail-container">
       <button className="back-button" onClick={() => navigate(-1)}>
-        ← Voltar
+        <ArrowBackIcon />
       </button>
       
       {error && (

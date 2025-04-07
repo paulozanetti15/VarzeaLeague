@@ -61,26 +61,67 @@
   border: 2px solid #333;
 }
 
+/* Botão voltar - Melhorado e mais visível */
 .back-button {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  z-index: 2;
-  padding: 0.45rem;
-  background-color: white;
-  color: #333;
-  border: 2px solid #333;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  background-color: #fff;
+  border: 2px solid #3f51b5;
   border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .back-button:hover {
-  background-color: #f0f0f0;
+  background-color: #fff;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.back-button svg {
+  font-size: 24px;
+  color: #3f51b5;
+  transition: all 0.3s ease;
+}
+
+.back-button:hover svg {
+  color: #3f51b5;
+}
+
+/* Responsividade para dispositivos móveis */
+@media (max-width: 768px) {
+  .back-button {
+    top: 10px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .back-button svg {
+    font-size: 20px;
+  }
+}
+
+/* Ajuste para telas muito pequenas */
+@media (max-width: 480px) {
+  .back-button {
+    top: 5px;
+    left: 5px;
+    width: 35px;
+    height: 35px;
+  }
+
+  .back-button svg {
+    font-size: 18px;
+  }
 }
 
 .match-header {

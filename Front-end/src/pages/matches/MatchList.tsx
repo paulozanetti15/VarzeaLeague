@@ -27,6 +27,7 @@ import { toast } from 'react-hot-toast';
 // Adicione estes imports para os ícones dos filtros
 import { FaFilter, FaCalendarAlt, FaMoneyBillWave, FaTags } from 'react-icons/fa';
 import { IoMdClose } from 'react-icons/io';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface Match {
   id: number;
@@ -1251,44 +1252,26 @@ const MatchList: React.FC = () => {
 
   // Componente para exibir a contagem de jogadores e vagas restantes
   const PlayerCountDisplay = ({ match }: { match: Match }) => {
-    const remainingSpots = calculateRemainingSpots(match);
-    const availabilityClass = getAvailabilityClass(match);
+    const totalPlayers = calculateTotalPlayers(match);
     
-    const totalPlayers = match.players ? match.players.reduce((total, player) => {
-      return total + (player.isTeam && player.playerCount ? player.playerCount : 1);
-    }, 0) : 0;
-
     return (
       <div className="player-count">
         <div className="player-count-header">
           <GroupIcon fontSize="small" />
-          <span>Jogadores</span>
+          <span>Jogadores ({totalPlayers}/{match.maxPlayers})</span>
         </div>
-        <div className="player-count-value">
-          <div className="player-count-badge">
-            {totalPlayers}
+        
+        {totalPlayers < match.maxPlayers ? (
+          <div className="spots-available">
+            <PersonAddIcon fontSize="small" />
+            <span>{match.maxPlayers - totalPlayers} vagas disponíveis</span>
           </div>
-          <div className="player-count-separator">/</div>
-          <div className="max-players-badge">
-            {match.maxPlayers}
+        ) : (
+          <div className="no-spots-left">
+            <CloseIcon fontSize="small" />
+            <span>Partida completa</span>
           </div>
-        </div>
-        <div className={`remaining-spots ${availabilityClass}`}>
-          {remainingSpots > 0 ? (
-            <div className="spots-available">
-              <PersonAddIcon fontSize="small" />
-              {remainingSpots === 1 ? (
-                <span>Última vaga!</span>
-              ) : (
-                <span>{remainingSpots} vagas restantes</span>
-              )}
-            </div>
-          ) : (
-            <div className="no-spots-left">
-              Partida completa
-            </div>
-          )}
-        </div>
+        )}
       </div>
     );
   };
@@ -1668,7 +1651,7 @@ const MatchList: React.FC = () => {
 
       <div className="content-container">
         <div className="header-container">
-          <h1 className="page-title">Partidas Disponíveis</h1>
+          <h1 className="page-title" style={{ textAlign: 'center', width: '100%', display: 'flex', justifyContent: 'center' }}>Partidas Disponíveis</h1>
           
           <div className="search-controls">
             <div className="search-and-filter">
