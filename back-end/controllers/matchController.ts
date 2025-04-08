@@ -5,6 +5,31 @@ import UserModel from '../models/UserModel';
 
 // Criar uma nova partida
 export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { title, date, location, complement, maxPlayers, description, price } = req.body;
+    const organizerId = req.user?.id;
+    
+    if (!organizerId) {
+      res.status(401).json({ message: 'Usuário não autenticado' });
+      return;
+    }
+
+    const match = await MatchModel.create({
+      title,
+      date,
+      location,
+      complement,
+      maxPlayers,
+      description,
+      price,
+      organizerId
+    });
+
+    res.status(201).json(match);
+  } catch (error) {
+    console.error('Erro ao criar partida:', error);
+    res.status(500).json({ message: 'Erro ao criar partida' });
+  }
    try {
       const { title, description, date, location, complement, maxPlayers, price } = req.body;
       const userId = req.user?.id;

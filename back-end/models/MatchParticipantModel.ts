@@ -1,8 +1,8 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/database';
 
-import User from './User';
-import Match from './Match';
+import User from './UserModel';
+import Match from './MatchModel';
 
 interface MatchParticipantAttributes {
   id: number;

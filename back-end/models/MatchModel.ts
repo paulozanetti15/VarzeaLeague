@@ -18,16 +18,6 @@ class Match extends Model {
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
-  public static associate(models: any) {
-    Match.belongsTo(models.User, { as: 'organizer', foreignKey: 'organizerId' });
-    Match.belongsToMany(models.User, { 
-      as: 'players',
-      through: 'match_players',
-      foreignKey: 'matchId',
-      otherKey: 'userId'
-    });
-  }
-
   public async addPlayer(userId: number): Promise<void> {
     const user = await User.findByPk(userId);
     if (user) {

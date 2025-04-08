@@ -32,40 +32,37 @@ body {
 }
 
 .header {
-  background: linear-gradient(to right, var(--blue-600), var(--blue-800));
-  padding: 1rem 0;
-  position: relative;
+  background-color: #2c3e50;
+  position: fixed;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  border-bottom: none;
-  margin-top: 0 !important;
-  padding-top: 1rem !important;
-  border-top: none !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Este seria um hack para casos extremos, onde podemos forçar o 
-   header a ficar sobreposto a qualquer espaço branco */
-body::before {
-  content: none !important;
-  display: none !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
+.header .navbar {
+  padding: 1rem 0;
 }
 
-.navbar {
-  padding: 0;
+.header .navbar-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
 }
 
-.navbar-brand {
+.header .nav-link {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  transition: color 0.3s ease;
+}
+
+.header .nav-link:hover {
   color: white !important;
-  font-size: 1.75rem;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  position: relative;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+}
+
+.header .btn {
+  padding: 0.5rem 1.5rem;
+  font-weight: 500;
   transition: all 0.3s ease;
 }
 
@@ -285,13 +282,19 @@ body::before {
   transition: all 0.3s ease;
 }
 
+.header .dropdown-item {
+  cursor: pointer;
+}
+
+.header .dropdown-item:active {
+  background-color: #007bff;
+}
+
 @media (max-width: 991.98px) {
-  .navbar-collapse {
-    margin-top: 1rem;
+  .header .navbar-collapse {
+    background-color: #2c3e50;
     padding: 1rem;
-    border-radius: 8px;
-    background-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
+    margin: 0 -1rem;
   }
   
   .navbar-dark .navbar-nav .nav-link {
