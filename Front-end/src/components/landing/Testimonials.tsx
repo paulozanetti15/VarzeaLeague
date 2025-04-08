@@ -5,14 +5,26 @@ export function Testimonials() {
     {
       id: 1,
       name: 'João Silva',
+<<<<<<< HEAD
       role: 'Jogador Amador',
       comment: 'A plataforma me ajudou a encontrar partidas próximas de casa e fazer novos amigos que compartilham da mesma paixão pelo futebol!',
       photo: 'https://placehold.co/100x100/6A55C5/ffffff?text=JS',
       rating: 5
+=======
+      role: 'Organizador de Campeonato',
+      photo: '/testimonial1.jpg',
+      text: 'A Várzea League revolucionou a forma como organizo os jogos. Agora é tudo mais fácil e profissional.'
     },
     {
-      id: 2,
+      name: 'Pedro Santos',
+      role: 'Capitão de Time',
+      photo: '/testimonial2.jpg',
+      text: 'Excelente plataforma! Consigo gerenciar meu time e acompanhar as estatísticas de forma simples.'
+>>>>>>> 2f0bc4ace5c9ac12a59023f28dceff672b4d27bf
+    },
+    {
       name: 'Carlos Oliveira',
+<<<<<<< HEAD
       role: 'Organizador de Partidas',
       comment: 'Economizo muito tempo organizando partidas com a VarzeaLeague. A interface é intuitiva e os jogadores adoram a experiência!',
       photo: 'https://placehold.co/100x100/6A55C5/ffffff?text=CO',
@@ -41,6 +53,14 @@ export function Testimonials() {
     ));
   };
 
+=======
+      role: 'Jogador',
+      photo: '/testimonial3.jpg',
+      text: 'Muito prático para confirmar presença nos jogos e ver as estatísticas do time.'
+    }
+  ];
+
+>>>>>>> 2f0bc4ace5c9ac12a59023f28dceff672b4d27bf
   return (
     <section className="testimonials-section" id="depoimentos">
       <div className="container">

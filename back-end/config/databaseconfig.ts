@@ -1,4 +1,5 @@
 import * as dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 dotenv.config();
 
 module.exports = {
@@ -15,9 +16,7 @@ module.exports = {
       typeCast: true
     },
     define: {
-      timestamps: true,
-      createdAt: 'created_at',
-      updatedAt: 'updated_at'
+      timestamps: false,
     }
   }
 };

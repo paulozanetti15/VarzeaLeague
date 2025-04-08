@@ -1,7 +1,7 @@
 import { Request, Response, RequestHandler } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import UserModel from '../models/User';
+import UserModel from '../models/UserModel';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'varzealeague_secret';
 
@@ -10,6 +10,7 @@ interface UserAttributes {
   name: string;
   email: string;
   password: string;
+  userTypeId: number;
 }
 
 export const register: RequestHandler = async (req, res) => {
@@ -30,7 +31,8 @@ export const register: RequestHandler = async (req, res) => {
     const user = await UserModel.create({
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      userTypeId: 4, // Definindo o tipo de usuário como "comum"
     });
 
     const userJson = user.toJSON() as UserAttributes;
@@ -80,7 +82,10 @@ export const login: RequestHandler = async (req, res) => {
     const token = jwt.sign({ userId: userJson.id }, JWT_SECRET, {
       expiresIn: '24h',
     });
-
+    const findIduserType = await UserModel.findOne({ where: { id: userJson.id } });
+    const userWithType = findIduserType?.toJSON() as UserAttributes;
+    console.log('userWithType', userWithType.userTypeId);
+    
     res.status(200).json({
       message: 'Login realizado com sucesso',
       token,
@@ -88,7 +93,8 @@ export const login: RequestHandler = async (req, res) => {
         id: userJson.id,
         name: userJson.name,
         email: userJson.email,
-      },
+        userTypeId: userWithType.userTypeId
+      }
     });
   } catch (error) {
     console.error('Erro ao fazer login:', error);
@@ -113,11 +119,13 @@ export const verify: RequestHandler = async (req, res) => {
     }
 
     const userJson = user.toJSON() as UserAttributes;
+    console.log('userJson', userJson.userTypeId);
     res.json({
       user: {
         id: userJson.id,
         name: userJson.name,
-        email: userJson.email
+        email: userJson.email,
+        userTypeId: userJson.userTypeId
       },
       authenticated: true
     });

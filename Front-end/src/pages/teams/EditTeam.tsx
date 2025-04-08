@@ -11,6 +11,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import DeleteIcon from '@mui/icons-material/Delete';
 import WarningIcon from '@mui/icons-material/Warning';
 import './EditTeam.css';
+import { toast } from 'react-hot-toast';
 
 interface TeamFormData {
   name: string;
@@ -230,11 +231,92 @@ const EditTeam: React.FC = () => {
     }));
   };
 
-  const removePlayerEmail = (index: number) => {
+  const removePlayerEmail = async (index: number) => {
+    // Armazenar o email que está sendo removido antes de atualizar o estado
+    const emailToRemove = formData.playerEmails[index];
+    
+    // Atualizar o estado local para feedback imediato
     setFormData(prev => ({
       ...prev,
       playerEmails: prev.playerEmails.filter((_, i) => i !== index),
     }));
+    
+    // Se o email estiver vazio, não precisamos enviar para o servidor
+    if (!emailToRemove || emailToRemove.trim() === '') {
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      
+      // Criar uma cópia dos emails atuais sem o removido
+      const updatedEmails = formData.playerEmails.filter((_, i) => i !== index);
+      
+      // Filtrar emails vazios
+      const filteredEmails = updatedEmails
+        .filter(email => email && email.trim() !== '')
+        .map(email => email.trim());
+      
+      // Dados no formato que o backend espera
+      const dataToSend = {
+        name: formData.name,
+        description: formData.description,
+        playerEmails: filteredEmails
+      };
+      
+      console.log('Enviando dados após remoção de jogador:', dataToSend);
+      
+      const response = await axios({
+        method: 'put',
+        url: `http://localhost:3001/api/teams/${id}`,
+        data: dataToSend,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Resposta da API após remoção:', response.data);
+      
+      // Atualizar o estado do time com a resposta do servidor
+      if (response.data) {
+        setTeam(response.data);
+        toast.success(`Jogador ${emailToRemove} removido com sucesso!`, {
+          position: "top-right",
+          duration: 3000
+        });
+      }
+    } catch (err: any) {
+      console.error('Erro ao remover jogador:', err);
+      
+      // Reverter a alteração local em caso de erro
+      setFormData(prev => ({
+        ...prev,
+        playerEmails: [
+          ...prev.playerEmails.slice(0, index),
+          emailToRemove,
+          ...prev.playerEmails.slice(index)
+        ],
+      }));
+      
+      // Mostra mensagem de erro
+      toast.error('Erro ao remover jogador. Por favor, tente novamente.');
+      
+      if (err.response?.data?.message) {
+        setError(`Erro: ${err.response.data.message}`);
+      } else if (err.response?.data?.error) {
+        setError(`Erro: ${err.response.data.error}`);
+      } else {
+        setError('Erro ao remover jogador. Tente novamente.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updatePlayerEmail = (index: number, value: string) => {

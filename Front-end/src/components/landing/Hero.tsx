@@ -9,6 +9,7 @@ interface HeroProps {
 export function Hero({ onGetStarted, onViewMatches }: HeroProps) {
   return (
     <section className="hero-section">
+<<<<<<< HEAD
       <div className="container h-100">
         <div className="row align-items-center h-100">
           <div className="col-lg-6 d-flex flex-column h-100">
@@ -35,6 +36,24 @@ export function Hero({ onGetStarted, onViewMatches }: HeroProps) {
                 Ver Partidas
               </button>
             </div>
+=======
+      <div className="container">
+        <div className="row align-items-center">
+          <div className="col-lg-6">
+            <h1 className="hero-title">
+              Organize seus jogos de futebol com facilidade
+            </h1>
+            <p className="hero-subtitle">
+              Crie times, agende partidas e acompanhe estatísticas. 
+              Tudo em um só lugar para você se concentrar apenas em jogar.
+            </p>
+            <button 
+              className="btn btn-primary btn-lg hero-cta"
+              onClick={onGetStarted}
+            >
+              Comece Agora
+            </button>
+>>>>>>> 2f0bc4ace5c9ac12a59023f28dceff672b4d27bf
           </div>
           <div className="col-lg-6">
             <div className="hero-image">

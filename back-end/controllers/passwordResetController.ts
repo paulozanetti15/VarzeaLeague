@@ -1,15 +1,13 @@
 import { Request, Response } from 'express';
-import UserModel from '../models/User';
+import UserModel from '../models/UserModel';
 import { sendPasswordResetEmail } from '../services/emailService';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { Op } from 'sequelize';
 export const requestPasswordReset = async (req,res) => {
   try {
-    const { email } = req.body;
+    const { email } = req.body;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
     const user = await UserModel.findOne({ where: { email } });
-    user.toJSON();
-
     if (!user) {
       console.log("Usuário não encontrado");
       return res.status(404).json({ message: 'Usuário não encontrado' });
@@ -25,7 +23,6 @@ export const requestPasswordReset = async (req,res) => {
     if (!emailSent) {
       return res.status(500).json({ message: 'Erro ao enviar email de recuperação' });
     }
-
     res.json({ message: 'Email de recuperação enviado com sucesso' });
   } catch (error) {
     console.error('Erro ao solicitar recuperação de senha:', error);

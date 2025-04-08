@@ -1,0 +1,35 @@
+.container {
+  padding-left: 0.5rem;
+  padding-right: 1rem;
+  margin-top: 2rem;
+}
+
+.grid {
+  margin-top: 2rem;
+  margin-left: -1rem;
+  margin-right: -0.5rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 2rem;
+  }
+  
+  .grid {
+    margin-left: -1.5rem;
+    margin-right: -1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 3rem;
+  }
+  
+  .grid {
+    margin-left: -2rem;
+    margin-right: -1.5rem;
+  }
+} 

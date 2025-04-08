@@ -1,7 +1,7 @@
-import User from './User';
-import Match from './Match';
-import Team from './Team';
-import MatchPlayer from './match_players';
+import User from './UserModel';
+import Match from './MatchModel';
+import Team from './TeamModel';
+import MatchPlayer from './MatchPlayersModel';
 
 // Associações do modelo User
 User.hasMany(Match, {
@@ -13,9 +13,7 @@ User.belongsToMany(Match, {
   through: MatchPlayer,
   as: 'matches',
   foreignKey: 'userId',
-  otherKey: 'matchId',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE'
+  otherKey: 'matchId'
 });
 
 User.hasMany(Team, {
@@ -24,12 +22,10 @@ User.hasMany(Team, {
 });
 
 User.belongsToMany(Team, {
-  through: 'team_players',
+  through: TeamPlayer,
   as: 'teams',
   foreignKey: 'userId',
-  otherKey: 'teamId',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE'
+  otherKey: 'teamId'
 });
 
 // Associações do modelo Match
@@ -42,24 +38,18 @@ Match.belongsToMany(User, {
   through: MatchPlayer,
   as: 'players',
   foreignKey: 'matchId',
-  otherKey: 'userId',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE'
+  otherKey: 'userId'
 });
 
 // Associações do modelo Team
 Team.belongsTo(User, {
   foreignKey: 'captainId',
-  as: 'captain',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE'
+  as: 'captain'
 });
 
 Team.belongsToMany(User, {
-  through: 'team_players',
+  through: TeamPlayer,
   as: 'players',
   foreignKey: 'teamId',
-  otherKey: 'userId',
-  onDelete: 'CASCADE',
-  onUpdate: 'CASCADE'
+  otherKey: 'userId'
 }); 
