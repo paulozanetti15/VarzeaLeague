@@ -65,13 +65,9 @@ const TeamList = () => {
 
   return (
     <div className="teams-container">
-      <div className="header-top-bar">
-        <button 
-          className="back-button"
-          onClick={handleBack}
-        >
-          <ArrowBackIcon sx={{ fontSize: 24 }} />
-          Início
+      <div style={{ position: 'fixed', top: 0, left: 0, zIndex: 9999 }}>
+        <button className="back-btn" onClick={handleBack}>
+          <ArrowBackIcon />
         </button>
       </div>
 

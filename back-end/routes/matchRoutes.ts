@@ -181,45 +181,14 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 // Obter detalhes de uma partida específica
 router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log(`Buscando partida com ID: ${req.params.id}`);
-    
-    // Validar ID da partida
-    const matchId = parseInt(req.params.id, 10);
-    
-    if (isNaN(matchId)) {
-      console.log(`ID de partida inválido: ${req.params.id}`);
-      res.status(400).json({ 
-        message: 'ID da partida deve ser um número válido' 
-      });
-      return;
-    }
-    
-    // Buscar partida pelo ID com SQL nativo para melhor controle
-    const matches= await Match.findByPk(matchId, {
+    const match = await Match.findByPk(req.params.id, {
       include: [
-        {
-          model: User,
-          as: 'organizer',
-          attributes: ['id', 'name', 'email']
-        }
-      ],
-      attributes: [
-        'id', 
-        'title', 
-        'date', 
-        'location', 
-        ['max_players', 'maxPlayers'], 
-        'status', 
-        'description', 
-        'price',
-        ['organizer_id', 'organizerId'],
-        ['created_at', 'createdAt'],
-        ['updated_at', 'updatedAt']
+        { model: User, as: 'organizer', attributes: ['id', 'name', 'email'] },
+        { model: User, as: 'players', attributes: ['id', 'name', 'email'] }
       ]
     });
-    
-    if (!matches || matches.dataValues.length === 0) {
-      console.log(`Partida ${matchId} não encontrada`);
+
+    if (!match) {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }

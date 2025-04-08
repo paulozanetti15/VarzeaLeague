@@ -11,11 +11,6 @@ class User extends Model {
   public resetPasswordToken?: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
-
-  public static associate(models: any) {
-    User.hasMany(models.Team, { foreignKey: 'captainId', as: 'captainedTeams' });
-    User.hasMany(models.Match, { foreignKey: 'organizerId' });
-  }
 }
 
 User.init({

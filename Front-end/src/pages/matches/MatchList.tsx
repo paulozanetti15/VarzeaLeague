@@ -27,6 +27,7 @@ import { toast } from 'react-hot-toast';
 // Adicione estes imports para os ícones dos filtros
 import { FaFilter, FaCalendarAlt, FaMoneyBillWave, FaTags } from 'react-icons/fa';
 import { IoMdClose } from 'react-icons/io';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface Match {
   id: number;
@@ -274,18 +275,17 @@ const MatchList: React.FC = () => {
         const matchDate = new Date(match.date);
         matchDate.setHours(0, 0, 0, 0);
         
-        switch(dateFilter) {
-          case 'today':
-            return matchDate.getTime() === today.getTime();
-          case 'tomorrow':
-            return matchDate.getTime() === tomorrow.getTime();
-          case 'week':
-            return matchDate >= today && matchDate < nextWeekStart;
-          case 'weekend':
-            return matchDate >= nextWeekStart && matchDate < nextWeekEnd;
-          default:
-            return true;
+        if (dateFilter.includes('today')) {
+          return matchDate.getTime() === today.getTime();
+        } else if (dateFilter.includes('tomorrow')) {
+          return matchDate.getTime() === tomorrow.getTime();
+        } else if (dateFilter.includes('week')) {
+          return matchDate >= today && matchDate < nextWeekStart;
+        } else if (dateFilter.includes('weekend')) {
+          return matchDate >= nextWeekStart && matchDate < nextWeekEnd;
         }
+        
+        return true;
       });
     }
     
@@ -1251,44 +1251,28 @@ const MatchList: React.FC = () => {
 
   // Componente para exibir a contagem de jogadores e vagas restantes
   const PlayerCountDisplay = ({ match }: { match: Match }) => {
+    const totalPlayers = calculateTotalPlayers(match);
     const remainingSpots = calculateRemainingSpots(match);
     const availabilityClass = getAvailabilityClass(match);
-    
-    const totalPlayers = match.players ? match.players.reduce((total, player) => {
-      return total + (player.isTeam && player.playerCount ? player.playerCount : 1);
-    }, 0) : 0;
 
     return (
       <div className="player-count">
         <div className="player-count-header">
           <GroupIcon fontSize="small" />
-          <span>Jogadores</span>
+          <span>Jogadores ({totalPlayers}/{match.maxPlayers})</span>
         </div>
-        <div className="player-count-value">
-          <div className="player-count-badge">
-            {totalPlayers}
+        
+        {totalPlayers < match.maxPlayers ? (
+          <div className="spots-available">
+            <PersonAddIcon fontSize="small" />
+            <span>{match.maxPlayers - totalPlayers} vagas disponíveis</span>
           </div>
-          <div className="player-count-separator">/</div>
-          <div className="max-players-badge">
-            {match.maxPlayers}
+        ) : (
+          <div className="no-spots-left">
+            <CloseIcon fontSize="small" />
+            <span>Partida completa</span>
           </div>
-        </div>
-        <div className={`remaining-spots ${availabilityClass}`}>
-          {remainingSpots > 0 ? (
-            <div className="spots-available">
-              <PersonAddIcon fontSize="small" />
-              {remainingSpots === 1 ? (
-                <span>Última vaga!</span>
-              ) : (
-                <span>{remainingSpots} vagas restantes</span>
-              )}
-            </div>
-          ) : (
-            <div className="no-spots-left">
-              Partida completa
-            </div>
-          )}
-        </div>
+        )}
       </div>
     );
   };
@@ -1342,7 +1326,6 @@ const MatchList: React.FC = () => {
                     }}
                   />
                   <label htmlFor="status-full" className={tempStatusFilter.includes('full') ? 'selected' : ''}>
-                    <span className="status-indicator full"></span>
                     Completas
                   </label>
                 </div>
@@ -1359,7 +1342,6 @@ const MatchList: React.FC = () => {
                     }}
                   />
                   <label htmlFor="status-waiting" className={tempStatusFilter.includes('waiting') ? 'selected' : ''}>
-                    <span className="status-indicator waiting"></span>
                     Aguardando
                   </label>
                 </div>
@@ -1376,7 +1358,6 @@ const MatchList: React.FC = () => {
                     }}
                   />
                   <label htmlFor="status-confirmed" className={tempStatusFilter.includes('confirmed') ? 'selected' : ''}>
-                    <span className="status-indicator confirmed"></span>
                     Confirmadas
                   </label>
                 </div>

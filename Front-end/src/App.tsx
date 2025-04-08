@@ -78,33 +78,17 @@ function AppContent() {
           />
         } />
 
-        <Route path="/reset-password/:token" element={
-          <ResetPassword 
-            onBackToLogin={() => navigate('/login')}
-          />
-        } />
-        <Route path="/matches" element={
-          <PrivateRoute isLoggedIn={isLoggedIn}>
-            <RoleBasedRoute 
-              isLoggedIn={isLoggedIn} 
-              userRole={user?.userTypeId} 
-              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
-            >
-              <MatchList />
-            </RoleBasedRoute>
-          </PrivateRoute>
-        } />
-        <Route path="/matches/create" element={
-          <PrivateRoute isLoggedIn={isLoggedIn}>
-            <RoleBasedRoute 
-              isLoggedIn={isLoggedIn} 
-              userRole={user?.userTypeId} 
-              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS]}
-            >
-              <CreateMatch />
-            </RoleBasedRoute>
-          </PrivateRoute>
-        } />
+      <Route path="/reset-password/:token" element={
+        <ResetPassword 
+          onBackToLogin={() => navigate('/login')}
+        />
+      } />
+
+      <Route path="/create-match" element={
+        <PrivateRoute isLoggedIn={isLoggedIn}>
+          <CreateMatch />
+        </PrivateRoute>
+      } />
 
         <Route path="/matches/:id" element={
           <PrivateRoute isLoggedIn={isLoggedIn}>

@@ -80,6 +80,12 @@
   padding-bottom: 3rem;
 }
 
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .hero-cta {
   padding: 0.875rem 1.75rem;
   font-size: 1rem;
@@ -108,6 +114,19 @@
   background-color: rgba(25, 118, 210, 0.05);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
+}
+
+.hero-cta-secondary {
+  background-color: transparent;
+  color: #007bff;
+  border: 2px solid #007bff;
+  transition: all 0.3s ease;
+}
+
+.hero-cta-secondary:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
 }
 
 .hero-image {
@@ -192,6 +211,10 @@
     justify-content: center;
     padding-top: 0;
     padding-bottom: 2rem;
+  }
+
+  .hero-buttons {
+    justify-content: center;
   }
 
   .hero-image {

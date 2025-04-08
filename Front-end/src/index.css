@@ -2,8 +2,11 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #2D3748;
-  background-color: #F5F7FA;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -51,14 +54,13 @@
 
 a {
   font-weight: 500;
-  color: var(--blue-500);
+  color: #646cff;
   text-decoration: inherit;
   transition: color 0.2s ease, transform 0.2s ease;
 }
 
 a:hover {
-  color: var(--blue-700);
-  text-decoration: none;
+  color: #535bf2;
 }
 
 body {
@@ -94,24 +96,35 @@ html {
 }
 
 h1 {
-  font-size: 2.5em;
-  line-height: 1.2;
-  color: var(--gray-800);
-  font-weight: 700;
-}
-
-h2, h3, h4, h5, h6 {
-  color: var(--gray-700);
-  font-weight: 600;
-  margin-bottom: 0.5em;
-  line-height: 1.3;
+  font-size: 3.2em;
+  line-height: 1.1;
 }
 
 /* Removendo estilos padrão de botões para evitar conflitos */
 button {
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
 }
 
 #root {
