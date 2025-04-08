@@ -1,6 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
-
+import UserType from './UserType';
 
 class User extends Model {
   public id!: number;
@@ -37,6 +37,15 @@ User.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
+  userTypeId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'usertype', // Alterado de 'usertypes' para 'usertype'
+      key: 'id',
+    },
+    onUpdate: 'CASCADE',
+  },
   resetPasswordToken: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -53,5 +62,15 @@ User.init({
   modelName: 'User',
   freezeTableName: true
 });
+User.belongsTo(UserType, { 
+  foreignKey: 'userTypeId', 
+  as: 'usertype' 
+});
+
+UserType.hasMany(User, {
+  foreignKey: 'userTypeId',
+  as: 'users'
+});
+
 
 export default User;

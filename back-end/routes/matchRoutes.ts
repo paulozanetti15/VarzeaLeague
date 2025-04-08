@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import Match from '../models/Match';
 import User from '../models/User';
+import { Model, Op } from 'sequelize';
 
 const router = express.Router();
 
@@ -29,7 +30,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response): Pro
       organizerId: userId,
       status: 'open'
     });
-
+    await User.update({ userTypeId:2 }, { where: { id: userId } });
     res.status(201).json(match);
   } catch (error) {
     console.error('Erro ao criar partida:', error);
@@ -184,6 +185,7 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
     
     // Validar ID da partida
     const matchId = parseInt(req.params.id, 10);
+    
     if (isNaN(matchId)) {
       console.log(`ID de partida inválido: ${req.params.id}`);
       res.status(400).json({ 
@@ -193,23 +195,30 @@ router.get('/:id', async (req: Request, res: Response): Promise<void> => {
     }
     
     // Buscar partida pelo ID com SQL nativo para melhor controle
-    const [matches] = await (Match.sequelize?.query(`
-      SELECT 
-        m.id, m.title, m.date, m.location, m.max_players as maxPlayers,
-        m.status, m.description, m.price, m.organizer_id as organizerId,
-        m.created_at as createdAt, m.updated_at as updatedAt,
-        u.id as organizerId, u.name as organizerName, u.email as organizerEmail
-      FROM 
-        matches m
-      LEFT JOIN 
-        users u ON m.organizer_id = u.id
-      WHERE 
-        m.id = ?
-    `, {
-      replacements: [matchId]
-    }) || []) as [any[], any];
+    const matches= await Match.findByPk(matchId, {
+      include: [
+        {
+          model: User,
+          as: 'organizer',
+          attributes: ['id', 'name', 'email']
+        }
+      ],
+      attributes: [
+        'id', 
+        'title', 
+        'date', 
+        'location', 
+        ['max_players', 'maxPlayers'], 
+        'status', 
+        'description', 
+        'price',
+        ['organizer_id', 'organizerId'],
+        ['created_at', 'createdAt'],
+        ['updated_at', 'updatedAt']
+      ]
+    });
     
-    if (!matches || matches.length === 0) {
+    if (!matches || matches.dataValues.length === 0) {
       console.log(`Partida ${matchId} não encontrada`);
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
