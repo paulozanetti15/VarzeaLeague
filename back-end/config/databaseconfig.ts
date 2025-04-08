@@ -15,9 +15,7 @@ module.exports = {
       typeCast: true
     },
     define: {
-      timestamps: true,
-      createdAt: 'created_at',
-      updatedAt: 'updated_at'
+      timestamps: false,
     }
   }
 };
