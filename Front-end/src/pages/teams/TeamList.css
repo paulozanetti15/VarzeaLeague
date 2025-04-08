@@ -8,27 +8,37 @@
 
 .back-btn {
   position: fixed;
-  top: 2rem;
-  left: 2rem;
-  background: rgba(255,255,255,0.2);
-  border: none;
+  top: 20px;
+  left: 20px;
+  z-index: 9999;
+  background-color: #fff;
+  border: 2px solid #3f51b5;
+  border-radius: 50%;
   width: 50px;
   height: 50px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  z-index: 100;
-  color: #fff;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  pointer-events: all;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
 }
 
 .back-btn:hover {
-  background: rgba(255,255,255,0.3);
+  background-color: #fff;
   transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.back-btn svg {
+  font-size: 24px;
+  color: #3f51b5;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover svg {
+  color: #3f51b5;
 }
 
 .teams-container::before {
@@ -41,6 +51,7 @@
   background: url('https://images.unsplash.com/photo-1508098682722-e99c43a406b2?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') center/cover;
   opacity: 0.1;
   animation: zoomBackground 20s infinite alternate;
+  pointer-events: none;
 }
 
 .teams-container::after {
@@ -52,6 +63,7 @@
   bottom: 0;
   background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%);
   z-index: 1;
+  pointer-events: none;
 }
 
 .teams-header {
@@ -358,9 +370,15 @@
     margin-bottom: 2rem;
   }
 
-  .back-button {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
+  .back-btn {
+    top: 10px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .back-btn svg {
+    font-size: 20px;
   }
 
   .team-banner {
@@ -377,6 +395,19 @@
 
   .team-stats {
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .back-btn {
+    top: 5px;
+    left: 5px;
+    width: 35px;
+    height: 35px;
+  }
+
+  .back-btn svg {
+    font-size: 18px;
   }
 }
 
