@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './Register.css';
-
+import axios from 'axios';
 interface RegisterProps {
   onLoginClick?: () => void;
 }
@@ -133,27 +133,21 @@ export function Register({ onLoginClick }: RegisterProps) {
     setRegistrationError('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/register', {
-        method: 'POST',
+      const response = await axios.post('http://localhost:3001/api/auth/register', {
+        name: nome,
+        email,
+        password,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: nome,
-          email,
-          password,
-        }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Erro ao criar conta');
+      if (response.status !== 201) {
+        throw new Error('Erro ao criar conta');
       }
 
       // Salvar token no localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
 
       // Redirecionar para login
       if (onLoginClick) {
