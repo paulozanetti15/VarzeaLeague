@@ -114,18 +114,51 @@
   position: relative;
   padding: 1.5rem;
   z-index: 2;
+  transition: all 0.5s ease;
 }
 
 .hero-image img {
   border-radius: 8px;
   box-shadow: 0 10px 25px rgba(25, 118, 210, 0.15);
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
   border: 1px solid rgba(255, 255, 255, 0.6);
+  position: relative;
+  z-index: 1;
 }
 
-.hero-image img:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 30px rgba(25, 118, 210, 0.2);
+.hero-image::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+  background-size: 200% 200%;
+  border-radius: 8px;
+  z-index: 2;
+  pointer-events: none;
+  animation: shine 15s infinite;
+}
+
+@keyframes shine {
+  0% {
+    background-position: 200% 200%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 200% 200%;
+  }
+}
+
+.hero-image:hover {
+  transform: translateY(-5px) scale(1.02);
+}
+
+.hero-image:hover img {
+  box-shadow: 0 15px 40px rgba(25, 118, 210, 0.25);
 }
 
 .hero-image::before {

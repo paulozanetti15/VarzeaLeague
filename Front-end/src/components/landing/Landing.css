@@ -7,6 +7,25 @@
   flex-direction: column;
   background-color: var(--gray-50);
   overflow-x: hidden;
+  position: relative;
+}
+
+.no-top-space {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Garantir que o primeiro filho comece sem espaço */
+.landing-page > *:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Remover qualquer pseudoelemento que possa estar adicionando espaço */
+.landing-page::before,
+.landing-page::after {
+  display: none !important;
+  content: none !important;
 }
 
 /* Outras classes específicas da landing page aqui */ 

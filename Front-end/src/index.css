@@ -8,8 +8,8 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
   
   /* Variáveis de cor do tema azul e cinza */
   --blue-50: #e3f2fd;
@@ -62,24 +62,35 @@ a:hover {
 }
 
 body {
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  position: relative;
   min-width: 320px;
   min-height: 100vh;
   background-color: var(--gray-50);
   color: var(--gray-700);
 }
 
+body::before,
+body::after {
+  display: none !important;
+  content: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 0 !important;
+}
+
 html {
   scroll-behavior: smooth;
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden;
 }
 
 h1 {
@@ -108,6 +119,8 @@ button {
   width: 100%;
   display: flex;
   flex-direction: column;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 
 /* Classes de utilidade para texto e cores */
@@ -227,4 +240,11 @@ button {
   border-color: var(--blue-300);
   outline: 0;
   box-shadow: 0 0 0 0.25rem rgba(25, 118, 210, 0.15);
+}
+
+/* Remover margens indesejadas em todos os elementos filhos diretos do body ou #root */
+body > *:first-child,
+#root > *:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
 }
