@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
-import sequelize from '../config/databaseconfig';
+import sequelize from '../config/database';
+
 import User from './User';
 import Match from './Match';
 

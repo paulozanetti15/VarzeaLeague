@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './Register.css';
-
+import axios from 'axios';
 interface RegisterProps {
   onLoginClick?: () => void;
 }
@@ -69,7 +69,6 @@ export function Register({ onLoginClick }: RegisterProps) {
       return false;
     }
    
-
     return true;
   };
 
@@ -133,27 +132,21 @@ export function Register({ onLoginClick }: RegisterProps) {
     setRegistrationError('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/register', {
-        method: 'POST',
+      const response = await axios.post('http://localhost:3001/api/auth/register', {
+        name: nome,
+        email,
+        password,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: nome,
-          email,
-          password,
-        }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Erro ao criar conta');
+      if (response.status !== 201) {
+        throw new Error('Erro ao criar conta');
       }
 
       // Salvar token no localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
 
       // Redirecionar para login
       if (onLoginClick) {
@@ -168,107 +161,108 @@ export function Register({ onLoginClick }: RegisterProps) {
   };
 
   return (
-    <div className="login-container">
-      <div className="row justify-content-center align-items-center min-vh-100">
-        <div className="col-md-4">
-          <div className="card shadow">
-            <div className="card-body p-5">
-              <h2 className="text-center mb-4">Criar Conta</h2>
-              
-              {registrationError && (
-                <div className="alert alert-danger" role="alert">
-                  {registrationError}
+    <div className="register-container">
+      <div className="register-card">
+        <div className="register-header">
+          <h1 className="register-title">Criar Conta</h1>
+          <p className="register-subtitle">Cadastre-se para começar a usar o sistema</p>
+        </div>
+        
+        <div className="register-body">
+          {registrationError && (
+            <div className="register-error" role="alert">
+              {registrationError}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <div className="register-form-group">
+              <label htmlFor="nome" className="register-label">Nome</label>
+              <input
+                type="text"
+                className="register-input"
+                id="nome"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Seu nome completo"
+                required
+              />
+            </div>
+
+            <div className="register-form-group">
+              <label htmlFor="email" className="register-label">Email</label>
+              <input
+                type="email"
+                className={`register-input ${emailError ? 'is-invalid' : ''}`}
+                id="email"
+                value={email}
+                onChange={handleEmailChange}
+                placeholder="Seu email"
+                required
+              />
+              {emailError && (
+                <div className="register-error">
+                  {emailError}
                 </div>
               )}
-
-              <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                  <label htmlFor="nome" className="form-label">Nome</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="nome"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    placeholder="Seu nome completo"
-                    required
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="email" className="form-label">Email</label>
-                  <input
-                    type="email"
-                    className={`form-control ${emailError ? 'is-invalid' : ''}`}
-                    id="email"
-                    value={email}
-                    onChange={handleEmailChange}
-                    placeholder="Seu email"
-                    required
-                  />
-                  {emailError && (
-                    <div className="invalid-feedback">
-                      {emailError}
-                    </div>
-                  )}
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="password" className="form-label">Senha</label>
-                  <input
-                    type="password"
-                    className={`form-control ${passwordTouched && passwordError ? 'is-invalid' : ''}`}
-                    id="password"
-                    value={password}
-                    onChange={handlePasswordChange}
-                    placeholder="Sua senha"
-                    required
-                  />
-                  {passwordTouched && passwordError && !confirmPasswordTouched && (
-                    <div className="invalid-feedback">
-                      {passwordError}
-                    </div>
-                  )}
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="confirmPassword" className="form-label">Confirmar Senha</label>
-                  <input
-                    type="password"
-                    className={`form-control ${confirmPasswordTouched && passwordError ? 'is-invalid' : ''}`}
-                    id="confirmPassword"
-                    value={confirmPassword}
-                    onChange={handleConfirmPasswordChange}
-                    placeholder="Confirme sua senha"
-                    required
-                  />
-                  {confirmPasswordTouched && passwordError && (
-                    <div className="invalid-feedback">
-                      {passwordError}
-                    </div>
-                  )}
-                </div>
-
-                <div className="d-grid gap-2">
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Criando conta...' : 'Criar Conta'}
-                  </button>
-                  <button 
-                    type="button" 
-                    className="btn btn-outline-secondary"
-                    onClick={onLoginClick}
-                    disabled={isLoading}
-                  >
-                    Voltar para Login
-                  </button>
-                </div>
-              </form>
             </div>
-          </div>
+
+            <div className="register-form-group">
+              <label htmlFor="password" className="register-label">Senha</label>
+              <input
+                type="password"
+                className={`register-input ${passwordTouched && passwordError ? 'is-invalid' : ''}`}
+                id="password"
+                value={password}
+                onChange={handlePasswordChange}
+                placeholder="Sua senha"
+                required
+              />
+              {passwordTouched && passwordError && !confirmPasswordTouched && (
+                <div className="register-error">
+                  {passwordError}
+                </div>
+              )}
+            </div>
+
+            <div className="register-form-group">
+              <label htmlFor="confirmPassword" className="register-label">Confirmar Senha</label>
+              <input
+                type="password"
+                className={`register-input ${confirmPasswordTouched && passwordError ? 'is-invalid' : ''}`}
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={handleConfirmPasswordChange}
+                placeholder="Confirme sua senha"
+                required
+              />
+              {confirmPasswordTouched && passwordError && (
+                <div className="register-error">
+                  {passwordError}
+                </div>
+              )}
+            </div>
+
+            <button 
+              type="submit" 
+              className="register-btn"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Criando...' : 'Criar Conta'}
+            </button>
+            
+            <div className="register-login">
+              Já tem uma conta?
+              <button 
+                type="button" 
+                className="register-login-link"
+                onClick={onLoginClick}
+                disabled={isLoading}
+              >
+                Entrar
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

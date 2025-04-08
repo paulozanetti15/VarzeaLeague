@@ -19,20 +19,12 @@ export function Hero({ onGetStarted, onViewMatches }: HeroProps) {
               Crie times, agende partidas e acompanhe estatísticas. 
               Tudo em um só lugar para você se concentrar apenas em jogar.
             </p>
-            <div className="hero-buttons">
-              <button 
-                className="btn btn-primary btn-lg hero-cta me-3"
-                onClick={onGetStarted}
-              >
-                Criar Partida
-              </button>
-              <button 
-                className="btn btn-outline-primary btn-lg hero-cta-secondary"
-                onClick={onViewMatches}
-              >
-                Ver Partidas
-              </button>
-            </div>
+            <button 
+              className="btn btn-primary btn-lg hero-cta"
+              onClick={onGetStarted}
+            >
+              Comece Agora
+            </button>
           </div>
           <div className="col-lg-6">
             <div className="hero-image">

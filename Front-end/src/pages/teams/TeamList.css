@@ -360,54 +360,7 @@
   }
 
   .team-card {
-    max-width: 100%;
-  }
-
-  .create-team-btn {
-    width: 100%;
-    padding: 0.8rem 1.5rem;
-    font-size: 1rem;
-    margin-bottom: 2rem;
-  }
-
-  .back-btn {
-    top: 10px;
-    left: 10px;
-    width: 40px;
-    height: 40px;
-  }
-
-  .back-btn svg {
-    font-size: 20px;
-  }
-
-  .team-banner {
-    height: 100px;
-  }
-
-  .team-info {
-    padding: 1rem;
-  }
-
-  .team-name {
-    font-size: 1.3rem;
-  }
-
-  .team-stats {
-    flex-wrap: wrap;
-  }
-}
-
-@media (max-width: 480px) {
-  .back-btn {
-    top: 5px;
-    left: 5px;
-    width: 35px;
-    height: 35px;
-  }
-
-  .back-btn svg {
-    font-size: 18px;
+    margin-bottom: 1rem;
   }
 }
 

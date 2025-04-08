@@ -5,30 +5,23 @@ export function Testimonials() {
     {
       id: 1,
       name: 'João Silva',
-      role: 'Jogador Amador',
-      comment: 'A plataforma me ajudou a encontrar partidas próximas de casa e fazer novos amigos que compartilham da mesma paixão pelo futebol!',
-      photo: 'https://placehold.co/100x100/4299e1/ffffff?text=JS',
+      role: 'Organizador de Campeonato',
+      photo: '/testimonial1.jpg',
+      text: 'A Várzea League revolucionou a forma como organizo os jogos. Agora é tudo mais fácil e profissional.'
     },
     {
-      id: 2,
+      name: 'Pedro Santos',
+      role: 'Capitão de Time',
+      photo: '/testimonial2.jpg',
+      text: 'Excelente plataforma! Consigo gerenciar meu time e acompanhar as estatísticas de forma simples.'
+    },
+    {
       name: 'Carlos Oliveira',
-      role: 'Organizador de Partidas',
-      comment: 'Economizo muito tempo organizando partidas com a VarzeaLeague. A interface é intuitiva e os jogadores adoram a experiência!',
-      photo: 'https://placehold.co/100x100/4299e1/ffffff?text=CO',
-    },
-    {
-      id: 3,
-      name: 'Ana Pereira',
-      role: 'Capitã de Time',
-      comment: 'Gerenciar meu time se tornou muito mais fácil. Consigo organizar as escalações e comunicar-me com todos os jogadores por aqui.',
-      photo: 'https://placehold.co/100x100/4299e1/ffffff?text=AP',
-    },
+      role: 'Jogador',
+      photo: '/testimonial3.jpg',
+      text: 'Muito prático para confirmar presença nos jogos e ver as estatísticas do time.'
+    }
   ];
-
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    const target = e.target as HTMLImageElement;
-    target.src = 'https://placehold.co/100x100/4299e1/ffffff?text=User';
-  };
 
   return (
     <section className="testimonials-section" id="depoimentos">
@@ -57,6 +50,9 @@ export function Testimonials() {
                   <div className="testimonial-info">
                     <h4 className="testimonial-name">{testimonial.name}</h4>
                     <p className="testimonial-role">{testimonial.role}</p>
+                    <div className="testimonial-rating">
+                      {renderStars(testimonial.rating)}
+                    </div>
                   </div>
                 </div>
               </div>

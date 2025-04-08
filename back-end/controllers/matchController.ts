@@ -8,7 +8,7 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
   try {
     const { title, date, location, complement, maxPlayers, description, price } = req.body;
     const organizerId = req.user?.id;
-
+    
     if (!organizerId) {
       res.status(401).json({ message: 'Usuário não autenticado' });
       return;

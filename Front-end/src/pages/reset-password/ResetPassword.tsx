@@ -22,33 +22,25 @@ export function ResetPassword({ onBackToLogin }: ResetPasswordProps) {
 
     if (newPassword !== confirmPassword) {
       setError('As senhas não coincidem');
-      console.log(error);
       return;
     }
 
     if (newPassword.length < 8) {
       setError('A senha deve ter pelo menos 8 caracteres');
-      console.log(error);
       return;
     }
     
-
     try {
       setLoading(true);
       const response = await axios.put('http://localhost:3001/api/password/reset', {
-        token:token,
+        token: token,
         newPassword,
-      })
-      if (response.status !== 200) {
-        throw new Error(response.data.message || 'Erro ao redefinir senha');
-      }
-      else if (response.status === 200) {
-     
-        setSuccess(true);
-        setTimeout(onBackToLogin, 3000);
-      }
+      });
+      
+      setSuccess(true);
+      setTimeout(onBackToLogin, 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao redefinir senha');
+      setError(err instanceof Error ? err.message : 'Erro ao redefinir senha. Verifique o link ou tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -57,56 +49,67 @@ export function ResetPassword({ onBackToLogin }: ResetPasswordProps) {
   return (
     <div className="reset-password-container">
       <div className="reset-password-card">
-        <h2>Redefinir Senha</h2>
-        {success ? (
-          <div className="success-message">
-            <i className="bi bi-check-circle"></i>
-            <p>Senha atualizada com sucesso! Redirecionando para o login...</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="newPassword">Nova Senha</label>
-              <input
-                type="password"
-                id="newPassword"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Digite sua nova senha"
-                required
-              />
+        <div className="reset-password-header">
+          <h1 className="reset-password-title">Várzea League</h1>
+          <p className="reset-password-subtitle">Redefinir Senha</p>
+        </div>
+        
+        <div className="reset-password-body">
+          {success ? (
+            <div className="reset-password-success">
+              <p>Senha atualizada com sucesso! Você será redirecionado para o login em instantes.</p>
             </div>
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirmar Senha</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirme sua nova senha"
-                required
-              />
-            </div>
-            {error && <div className="error-message">{error}</div>}
-            <button 
-              type="submit" 
-              className="btn btn-primary w-100"
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              ) : null}
-              Redefinir Senha
-            </button>
-            <button 
-              type="button" 
-              className="btn btn-link w-100"
-              onClick={onBackToLogin}
-            >
-              Voltar para o Login
-            </button>
-          </form>
-        )}
+          ) : (
+            <form onSubmit={handleSubmit}>
+              {error && <div className="reset-password-error">{error}</div>}
+              
+              <div className="reset-password-form-group">
+                <label htmlFor="newPassword" className="reset-password-label">Nova Senha</label>
+                <input
+                  type="password"
+                  id="newPassword"
+                  className="reset-password-input"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Digite sua nova senha"
+                  required
+                />
+              </div>
+              
+              <div className="reset-password-form-group">
+                <label htmlFor="confirmPassword" className="reset-password-label">Confirmar Senha</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  className="reset-password-input"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirme sua nova senha"
+                  required
+                />
+              </div>
+              
+              <button 
+                type="submit" 
+                className="reset-password-btn"
+                disabled={loading}
+              >
+                {loading ? 'Redefinindo...' : 'Redefinir Senha'}
+              </button>
+              
+              <div className="reset-password-login">
+                Lembrou sua senha?
+                <button 
+                  type="button" 
+                  className="reset-password-login-link"
+                  onClick={onBackToLogin}
+                >
+                  Entrar
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );

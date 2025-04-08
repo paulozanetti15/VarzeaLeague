@@ -275,7 +275,6 @@ const MatchList: React.FC = () => {
         const matchDate = new Date(match.date);
         matchDate.setHours(0, 0, 0, 0);
         
-        // Verificar cada filtro de data
         if (dateFilter.includes('today')) {
           return matchDate.getTime() === today.getTime();
         } else if (dateFilter.includes('tomorrow')) {
@@ -1253,7 +1252,9 @@ const MatchList: React.FC = () => {
   // Componente para exibir a contagem de jogadores e vagas restantes
   const PlayerCountDisplay = ({ match }: { match: Match }) => {
     const totalPlayers = calculateTotalPlayers(match);
-    
+    const remainingSpots = calculateRemainingSpots(match);
+    const availabilityClass = getAvailabilityClass(match);
+
     return (
       <div className="player-count">
         <div className="player-count-header">
@@ -1325,7 +1326,6 @@ const MatchList: React.FC = () => {
                     }}
                   />
                   <label htmlFor="status-full" className={tempStatusFilter.includes('full') ? 'selected' : ''}>
-                    <span className="status-indicator full"></span>
                     Completas
                   </label>
                 </div>
@@ -1342,7 +1342,6 @@ const MatchList: React.FC = () => {
                     }}
                   />
                   <label htmlFor="status-waiting" className={tempStatusFilter.includes('waiting') ? 'selected' : ''}>
-                    <span className="status-indicator waiting"></span>
                     Aguardando
                   </label>
                 </div>
@@ -1359,7 +1358,6 @@ const MatchList: React.FC = () => {
                     }}
                   />
                   <label htmlFor="status-confirmed" className={tempStatusFilter.includes('confirmed') ? 'selected' : ''}>
-                    <span className="status-indicator confirmed"></span>
                     Confirmadas
                   </label>
                 </div>
@@ -1651,7 +1649,7 @@ const MatchList: React.FC = () => {
 
       <div className="content-container">
         <div className="header-container">
-          <h1 className="page-title" style={{ textAlign: 'center', width: '100%', display: 'flex', justifyContent: 'center' }}>Partidas Disponíveis</h1>
+          <h1 className="page-title">Partidas Disponíveis</h1>
           
           <div className="search-controls">
             <div className="search-and-filter">

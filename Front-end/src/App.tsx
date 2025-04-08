@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { Toaster } from 'react-hot-toast'
 import './App.css'
 import { Login } from './pages/login/Login'
 import { Register } from './pages/register/Register'
@@ -14,76 +15,21 @@ import TeamList from './pages/teams/TeamList'
 import CreateTeam from './pages/teams/CreateTeam'
 import EditTeam from './pages/teams/EditTeam'
 import PrivateRoute from './components/PrivateRoute'
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-}
-
-interface LoginProps {
-  onRegisterClick?: () => void;
-  onForgotPasswordClick?: () => void;
-  onLoginSuccess?: (data: { user: User; token: string }) => void;
-}
+import RoleBasedRoute from './components/RoleBasedRoute'
+import { USER_ROLES } from './utils/roleUtils'
+import { useAuth } from './hooks/useAuth'
 
 function AppContent() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
-  
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const checkAuthStatus = async () => {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    
-    if (!token || !storedUser) {
-      setIsLoggedIn(false);
-      setUser(null);
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const response = await axios.get('http://localhost:3001/api/auth/verify', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      setIsLoggedIn(true);
-      setUser(JSON.parse(storedUser));
-    } catch (error) {
-      console.error('Erro ao verificar token:', error);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setIsLoggedIn(false);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleLoginSuccess = (userData: { user: User; token: string }) => {
-    localStorage.setItem('token', userData.token);
-    localStorage.setItem('user', JSON.stringify(userData.user));
-    setUser(userData.user);
-    setIsLoggedIn(true);
+  const { isLoggedIn, isLoading, user, login, logout } = useAuth();
+  const handleLoginSuccess = (userData: { user: any; token: string }) => {
+    login(userData);
     navigate('/');
   };
-
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setIsLoggedIn(false);
-    setUser(null);
+    logout();
     navigate('/');
   };
-
   if (isLoading) {
     return (
       <div className="loading-container">
@@ -94,44 +40,43 @@ function AppContent() {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={
-        <Landing 
-          isLoggedIn={isLoggedIn}
-          user={user}
-          onLoginClick={() => navigate('/login')}
-          onRegisterClick={() => navigate('/register')}
-          onLogout={handleLogout}
-        />
-      } />
-      
-      <Route path="/login" element={
-        isLoggedIn ? (
-          <Navigate to="/" replace />
-        ) : (
-          <Login 
-            onRegisterClick={() => navigate('/register')}
-            onForgotPasswordClick={() => navigate('/forgot-password')}
-            onLoginSuccess={handleLoginSuccess}
-          />
-        )
-      } />
-      
-      <Route path="/register" element={
-        isLoggedIn ? (
-          <Navigate to="/" replace />
-        ) : (
-          <Register 
+    <>
+      <Routes>
+        <Route path="/" element={
+          <Landing 
+            isLoggedIn={isLoggedIn}
+            user={user}
             onLoginClick={() => navigate('/login')}
+            onRegisterClick={() => navigate('/register')}
+            onLogout={handleLogout}
           />
-        )
-      } />
-
-      <Route path="/forgot-password" element={
-        <ForgotPassword 
-          onBackToLogin={() => navigate('/login')}
-        />
-      } />
+        } />
+        
+        <Route path="/login" element={
+          isLoggedIn ? (
+            <Navigate to="/" replace />
+          ) : (
+            <Login 
+              onRegisterClick={() => navigate('/register')}
+              onForgotPasswordClick={() => navigate('/forgot-password')}
+              onLoginSuccess={handleLoginSuccess}
+            />
+          )
+        } />
+        <Route path="/register" element={
+          isLoggedIn ? (
+            <Navigate to="/" replace />
+          ) : (
+            <Register 
+              onLoginClick={() => navigate('/login')}
+            />
+          )
+        } />
+        <Route path="/forgot-password" element={
+          <ForgotPassword 
+            onBackToLogin={() => navigate('/login')}
+          />
+        } />
 
       <Route path="/reset-password/:token" element={
         <ResetPassword 
@@ -139,42 +84,60 @@ function AppContent() {
         />
       } />
 
-      <Route path="/matches" element={
-        <PrivateRoute isLoggedIn={isLoggedIn}>
-          <MatchList />
-        </PrivateRoute>
-      } />
-
-      <Route path="/matches/create" element={
+      <Route path="/create-match" element={
         <PrivateRoute isLoggedIn={isLoggedIn}>
           <CreateMatch />
         </PrivateRoute>
       } />
 
-      <Route path="/matches/:id" element={
-        <PrivateRoute isLoggedIn={isLoggedIn}>
-          <MatchDetail />
-        </PrivateRoute>
-      } />
-
-      <Route path="/teams" element={
-        <PrivateRoute isLoggedIn={isLoggedIn}>
-          <TeamList />
-        </PrivateRoute>
-      } />
-
-      <Route path="/teams/create" element={
-        <PrivateRoute isLoggedIn={isLoggedIn}>
-          <CreateTeam />
-        </PrivateRoute>
-      } />
-
-      <Route path="/teams/edit/:id" element={
-        <PrivateRoute isLoggedIn={isLoggedIn}>
-          <EditTeam />
-        </PrivateRoute>
-      } />
-    </Routes>
+        <Route path="/matches/:id" element={
+          <PrivateRoute isLoggedIn={isLoggedIn}>
+            <RoleBasedRoute 
+              isLoggedIn={isLoggedIn} 
+              userRole={user?.userTypeId} 
+              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
+            >
+              <MatchDetail />
+            </RoleBasedRoute>
+          </PrivateRoute>
+        } />
+        <Route path="/teams" element={
+          <PrivateRoute isLoggedIn={isLoggedIn}>
+            <RoleBasedRoute 
+              isLoggedIn={isLoggedIn} 
+              userRole={user?.userTypeId} 
+              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_TIMES]}
+            >
+              <TeamList />
+            </RoleBasedRoute>
+          </PrivateRoute>
+        } />
+        <Route path="/teams/create" element={
+          <PrivateRoute isLoggedIn={isLoggedIn}>
+            <RoleBasedRoute 
+              isLoggedIn={isLoggedIn} 
+              userRole={user?.userTypeId} 
+              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_TIMES]}
+            >
+              <CreateTeam />
+            </RoleBasedRoute>
+          </PrivateRoute>
+        } />
+        <Route path="/teams/edit/:id" element={
+          <PrivateRoute isLoggedIn={isLoggedIn}>
+            <RoleBasedRoute 
+              isLoggedIn={isLoggedIn} 
+              userRole={user?.userTypeId} 
+              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_TIMES]}
+            >
+              <EditTeam />
+            </RoleBasedRoute>
+          </PrivateRoute>
+        } />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <Toaster position="top-right" />
+    </>
   );
 }
 

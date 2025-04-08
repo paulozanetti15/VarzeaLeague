@@ -2,15 +2,17 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
-import sequelize from './config/databaseconfig';
+import sequelize from './config/database';
 import authRoutes from './routes/authRoutes';
 import matchRoutes from './routes/matchRoutes';
 import passwordResetRoutes from './routes/passwordReset';
 import teamRoutes from './routes/teamRoutes';
-import dbRoutes from './routes/dbRoutes';
-import MatchPlayer from './models/match_players';
+import UserModel from './models/User';
+import MatchModel from './models/Match';
+import TeamModel from './models/Team';
+import UserTypeModel from './models/UserType';
 import './models/associations';
-
+import userType from './routes/userTypeRoute';
 dotenv.config();
 
 const app = express();
@@ -31,8 +33,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/teams', teamRoutes);
-app.use('/api/db', dbRoutes);
-
+app.use('/api/user-types', userType); 
 // Rota de teste
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API está funcionando!' });
@@ -79,18 +80,28 @@ const PORT = process.env.PORT || 3001;
 const startServer = async () => {
   try {
     await sequelize.authenticate();
-    console.log('Conexão com o banco de dados estabelecida com sucesso.');
 
-    // Sincronizar especificamente o modelo MatchPlayer primeiro
-    await MatchPlayer.sync();
-    console.log('Modelo MatchPlayer sincronizado.');
-    
-    // Sincronizar modelos sem forçar recriação
-    await sequelize.sync();
-    console.log('Modelos sincronizados com o banco de dados.');
+    console.log('Conexão com o banco estabelecida com sucesso!');
 
-    app.listen(PORT, () => {
-      console.log(`Servidor rodando na porta ${PORT}`);
+    console.log('Sincronizando modelos com o banco de dados...');
+    console.log('Sincronizando modelo User...');
+    await UserModel.sync({ force: false }); // Avoid altering the table structure
+    console.log('Modelo User sincronizado.');
+
+    console.log('Sincronizando modelo Match...');
+    await MatchModel.sync({ force: false }); // Avoid altering the table structure
+    console.log('Modelo Match sincronizado.');
+    console.log('Sincronizando modelo Team...');  
+    await TeamModel.sync({ force: false }); // Avoid altering the table structure
+    console.log('Modelo Team sincronizado.');
+    console.log('Sincronizando modelo UserType...');
+    await UserTypeModel.sync({ force: false }); // Avoid altering the table structure
+    console.log('Modelo UserType sincronizado.');
+
+    console.log('Banco de dados sincronizado com sucesso!');
+    const port = process.env.PORT || 3001;
+    app.listen(port, () => {
+      console.log(`Servidor rodando na porta ${port}`);
       console.log('Rotas disponíveis:');
       console.log('- POST /api/auth/register');
       console.log('- POST /api/auth/login');
