@@ -1,5 +1,5 @@
-import User from './User';
-import Match from './Match';
+import User from './UserModel';
+import Match from './MatchModel';
 import Team from './TeamModel';
 import MatchPlayer from './MatchPlayersModel';
 

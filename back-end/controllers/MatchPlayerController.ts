@@ -1,10 +1,12 @@
-import MatchPlayer from "models/MatchPlayersModel";
-import Match from "models/MatchModel";
-import User from "models/UserModel";
-import Team from "models/TeamModel";
+import MatchPlayer from "../models/MatchPlayersModel";
+import Match from "../models/MatchModel";
+import User from "../models/UserModel";
+import Team from "../models/TeamModel";
 import Sequelize from "sequelize";
-import TeamPlayer from "models/TeamPlayerModel";
-export async function getMatchPlayers(req: any, res: any) {
+import TeamPlayer from "../models/TeamPlayerModel";
+
+// ... resto do código permanece igual
+async function getMatchPlayers(req: any, res: any) {
     try {
       // Verificar se a partida existe
       const matchId = parseInt(req.params.id, 10);
@@ -153,7 +155,7 @@ export async function getMatchPlayers(req: any, res: any) {
       });
     }
 }
-export async function joinMatch(req: any, res: any) {
+async function joinMatch(req: any, res: any) {
     try {
         const match = await Match.findByPk(req.params.id);
         const userId = req.user?.id;
@@ -187,7 +189,7 @@ export async function joinMatch(req: any, res: any) {
         res.status(500).json({ message: 'Erro ao entrar na partida' });
       }
 }
-export async function leaveMatchPlayer(req: any, res: any) {
+async function leaveMatchPlayer(req: any, res: any) {
     try {
         const match = await Match.findByPk(req.params.id);
         const userId = req.user?.id;
@@ -214,7 +216,7 @@ export async function leaveMatchPlayer(req: any, res: any) {
         res.status(500).json({ message: 'Erro ao sair da partida' });
       }            
 }
-export async function joinMatchByTeam(req: any, res: any) {
+async function joinMatchByTeam(req: any, res: any) {
   try {
     const matchId = parseInt(req.params.id, 10);
     const { teamId } = req.body;  
@@ -320,9 +322,5 @@ export async function joinMatchByTeam(req: any, res: any) {
     res.status(500).json({ message: 'Erro ao entrar na partida com o time' });
   }
 }
-export default {
-    getMatchPlayers,
-    getMatchPlayerById,
-    leaveMatchPlayer,
-    joinMatchByTeam
-};
+export { getMatchPlayers, joinMatch, leaveMatchPlayer, joinMatchByTeam };
+export default { getMatchPlayers, joinMatch, leaveMatchPlayer, joinMatchByTeam }; 
