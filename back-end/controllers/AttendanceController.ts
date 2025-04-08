@@ -2,7 +2,8 @@ import { Request, Response } from 'express';
 import Attendance from '../models/Attendance';
 import Match from '../models/Match';
 import User from '../models/User';
-import sequelize from '../config/databaseconfig';
+import sequelize from '../config/database';
+
 
 interface AuthRequest extends Request {
   user?: {

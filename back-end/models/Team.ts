@@ -1,5 +1,6 @@
 import { Model, DataTypes, BelongsToManyAddAssociationMixin, BelongsToManyGetAssociationsMixin, BelongsToManySetAssociationsMixin } from 'sequelize';
-import sequelize from '../config/databaseconfig';
+import sequelize from '../config/database';
+
 import User from './User';
 
 interface TeamAttributes {
