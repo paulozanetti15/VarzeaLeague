@@ -3,6 +3,7 @@ import Match from "models/MatchModel";
 import User from "models/UserModel";
 import Team from "models/TeamModel";
 import Sequelize from "sequelize";
+import TeamPlayer from "models/TeamPlayerModel";
 export async function getMatchPlayers(req: any, res: any) {
     try {
       // Verificar se a partida existe
@@ -106,12 +107,7 @@ export async function getMatchPlayers(req: any, res: any) {
     let playerCount = 1;
     const matchIdteamplayers=teamPlayersData.map((team: any) => team.matchId)[0];
     if (teamPlayersData.length === 0) {
-        const teamPlayerCount = await MatchPlayer.count({
-            where: {
-                matchId: teamPlayersData[0].matchId,
-            },
-        });
-        playerCount = teamPlayerCount || 1;
+      const playerCount = await TeamPlayer.count({ where: { teamId: matchIdteamplayers } }) || 1;
     }
     const teamPlayers = teamPlayersData.map((team: any) => ({
         id: team.teamId,
@@ -120,17 +116,14 @@ export async function getMatchPlayers(req: any, res: any) {
         isTeam: true,
         teamId: team.teamId,
         teamName: team.Team?.name || 'Time sem nome',
-        playerCount
+        playerCount: playerCount,
     })); 
-     const allPlayers = [...regularPlayers, ...teamPlayers];
-      
-
+    const allPlayers = [...regularPlayers, ...teamPlayers];
     const totalRegularPlayers = regularPlayers.length;
     const totalTeams = teamPlayers.length;
     const totalTeamPlayers = teamPlayers.reduce((acc, team) =>
         acc + (parseInt(String(team.playerCount), 10) || 1), 0);
     const totalPlayers = totalRegularPlayers + totalTeamPlayers;
-
     return res.json({
         players: allPlayers,
         meta: {
@@ -160,7 +153,7 @@ export async function getMatchPlayers(req: any, res: any) {
       });
     }
 }
-export async function getMatchPlayerById(req: any, res: any) {
+export async function joinMatch(req: any, res: any) {
     try {
         const match = await Match.findByPk(req.params.id);
         const userId = req.user?.id;
@@ -222,7 +215,7 @@ export async function leaveMatchPlayer(req: any, res: any) {
       }            
 }
 export async function joinMatchByTeam(req: any, res: any) {
-
+  try {
     const matchId = parseInt(req.params.id, 10);
     const { teamId } = req.body;  
     const match = await Match.findByPk(matchId);
@@ -243,78 +236,93 @@ export async function joinMatchByTeam(req: any, res: any) {
       return;
     }
     // Verificar se o time existe e se o usuário é capitão
-    const [teamResult] = await (Match.sequelize?.query(`
-      SELECT t.id, t.name, t.captain_id as captainId, 
-             (SELECT COUNT(*) FROM team_players WHERE team_id = t.id) as playerCount
-      FROM teams t
-      WHERE t.id = ? AND t.is_deleted = false
-    `, {
-      replacements: [teamId]
-    }) || []) as [any[], any];
+    const team = await Team.findOne({
+      where: {
+        id: teamId,
+        isDeleted: false
+      },
+      attributes: [
+        'id', 
+        'name',
+        'captainId'
+      ]
+    });
     
-    if (!teamResult || teamResult.length === 0) {
+    if (!team) {
       res.status(404).json({ message: 'Time não encontrado ou foi removido' });
       return;
     }
     
-    const team = teamResult[0];
+    // Then get the player count for this team
+    const playerCount = await TeamPlayer.count({
+      where: { teamId: teamId }
+    });
     
-    if (team.captainId !== userId) {
-      res.status(403).json({ message: 'Apenas o capitão do time pode inscrevê-lo em uma partida' });
-      return;
+    // Create a result object similar to what you had with the raw query
+    const teamResult = {
+      id: team.id,
+      name: team.name,
+      captainId: team.captainId,
+      playerCount: playerCount
+    };
+
+    const existingEntry = await MatchPlayer.findOne({
+       where: {
+       matchId,
+       userId,
     }
-    
-    // Verificar se o time já está inscrito na partida
-    const [existingEntry] = await (Match.sequelize?.query(`
-      SELECT * FROM match_players
-      WHERE match_id = ? AND user_id = ? AND is_team = true AND team_id = ?
-    `, {
-      replacements: [matchId, userId, teamId]
-    }) || []) as [any[], any];
-    
-    if (existingEntry && existingEntry.length > 0) {
-      res.status(400).json({ message: 'Este time já está inscrito nesta partida' });
-      return;
-    }
-    
-    // Verificar se há vagas suficientes na partida
-    const currentPlayerCount = await getMatchPlayerCount(matchId);
-    const teamPlayerCount = team.playerCount || 1; // Considerar pelo menos 1 jogador
-    
-    if (currentPlayerCount + teamPlayerCount > match.maxPlayers) {
-      res.status(400).json({ 
+   });
+
+   if (existingEntry) {
+     res.status(400).json({ message: 'Este time já está inscrito nesta partida' });
+     return;
+   }
+
+// Verificar se há vagas suficientes na partida
+  const currentPlayerCount = await MatchPlayer.count({
+    where: { matchId: matchId}
+  });
+  const teamPlayerCount = teamResult.playerCount || 1; // Considerar pelo menos 1 jogador
+  if (currentPlayerCount + teamPlayerCount > match.maxPlayers) {
+     res.status(400).json({ 
         message: 'Não há vagas suficientes para este time na partida',
         details: {
-          currentPlayers: currentPlayerCount,
-          teamSize: teamPlayerCount,
-          maxPlayers: match.maxPlayers,
-          remaining: match.maxPlayers - currentPlayerCount
-        }
-      });
-      return;
-    }
-    
-    // Adicionar o time à partida
-    await (Match.sequelize?.query(`
-      INSERT INTO match_players (match_id, user_id, created_at, updated_at)
-      VALUES (?, ?, NOW(), NOW())
-      ON DUPLICATE KEY UPDATE updated_at = NOW()
-    `, {
-      replacements: [matchId, userId]
-    }) || []);
-    
-    console.log(`Time ${team.name} (ID: ${teamId}) inscrito na partida ${matchId} pelo usuário ${userId}`);
-    
-    res.json({ 
-      message: 'Time inscrito na partida com sucesso',
-      details: {
-        matchId,
-        teamId,
-        teamName: team.name,
-        teamSize: teamPlayerCount
+        currentPlayers: currentPlayerCount,
+        teamSize: teamPlayerCount,
+        maxPlayers: match.maxPlayers,
+        remaining: match.maxPlayers - currentPlayerCount
+      }
+   });
+    return;
+  }
+
+  await MatchPlayer.findOrCreate({
+    where: {
+      matchId,
+      userId
+   },
+   defaults: {
+    matchId,
+    userId,
+   }
+  });
+  res.json({ 
+    message: 'Time inscrito na partida com sucesso',
+    details: {
+       matchId,
+       teamId,
+       teamName: team.name,
+       teamSize: teamPlayerCount
       }
     });
   } catch (error) {
     console.error('Erro ao entrar na partida com o time:', error);
     res.status(500).json({ message: 'Erro ao entrar na partida com o time' });
+  }
 }
+export default {
+    getMatchPlayers,
+    getMatchPlayerById,
+    leaveMatchPlayer,
+    joinMatchByTeam
+};
