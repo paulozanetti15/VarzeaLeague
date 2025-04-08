@@ -15,5 +15,7 @@ export const getRoleName = (roleId: number): string => {
       return 'Administrador de Times';
     case USER_ROLES.USUARIO_COMUM:
       return 'Usuário Comum';
+    default:
+      return 'Role desconhecida';
   }
 };
