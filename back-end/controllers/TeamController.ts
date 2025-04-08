@@ -311,7 +311,8 @@ export class TeamController {
           {
             model: User,
             as: 'players',
-            attributes: ['id', 'name', 'email']
+            attributes: ['id', 'name', 'email'],
+            through: { attributes: [] } // Não selecionar atributos da tabela de junção
           }
         ]
       });
@@ -375,7 +376,8 @@ export class TeamController {
           {
             model: User,
             as: 'players',
-            attributes: ['id', 'name', 'email']
+            attributes: ['id', 'name', 'email'],
+            through: { attributes: [] } // Não selecionar atributos da tabela de junção
           }
         ]
       });
