@@ -1,0 +1,12 @@
+.landing-page {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--gray-50);
+  overflow-x: hidden;
+}
+
+/* Outras classes específicas da landing page aqui */ 

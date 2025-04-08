@@ -1,3 +1,9 @@
+html, body {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+  overflow-x: hidden;
+}
+
 body {
   padding-top: 0 !important;
   margin-top: 0 !important;
@@ -11,7 +17,7 @@ body {
 .header {
   background: linear-gradient(to right, var(--blue-600), var(--blue-800));
   padding: 1rem 0;
-  position: sticky;
+  position: relative;
   top: 0;
   z-index: 1000;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);

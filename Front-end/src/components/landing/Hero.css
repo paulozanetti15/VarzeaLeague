@@ -1,5 +1,5 @@
 .hero-section {
-  padding: 100px 0 80px;
+  padding: 0;
   background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
   min-height: 100vh;
   display: flex;
@@ -62,7 +62,7 @@
 .hero-subtitle {
   font-size: 1.25rem;
   color: var(--gray-600);
-  margin-bottom: 3.5rem;
+  margin-bottom: 0;
   line-height: 1.6;
   position: relative;
   z-index: 2;
@@ -70,12 +70,14 @@
 
 .hero-buttons {
   display: flex;
-  justify-content: flex-start;
-  gap: 1rem;
+  justify-content: center;
+  gap: 1.5rem;
   flex-wrap: wrap;
   position: relative;
   z-index: 2;
-  margin-bottom: 2rem;
+  margin-top: auto;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
 }
 
 .hero-cta {
@@ -148,9 +150,15 @@
   .hero-title {
     font-size: 2.25rem;
   }
+  
+  .hero-subtitle {
+    margin-bottom: 2rem;
+  }
 
   .hero-buttons {
     justify-content: center;
+    padding-top: 0;
+    padding-bottom: 2rem;
   }
 
   .hero-image {
