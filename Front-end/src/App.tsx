@@ -128,7 +128,6 @@ function AppContent() {
             </RoleBasedRoute>
           </PrivateRoute>
         } />
-
         <Route path="/teams/create" element={
           <PrivateRoute isLoggedIn={isLoggedIn}>
             <RoleBasedRoute 
@@ -140,7 +139,6 @@ function AppContent() {
             </RoleBasedRoute>
           </PrivateRoute>
         } />
-
         <Route path="/teams/edit/:id" element={
           <PrivateRoute isLoggedIn={isLoggedIn}>
             <RoleBasedRoute 
