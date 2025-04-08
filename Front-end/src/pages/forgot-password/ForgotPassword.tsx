@@ -40,18 +40,15 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
       return;
     }
 
-    setIsLoading(true);
-    setErrorMessage('');
-
-    try {
-      await axios.post('http://localhost:3001/api/password/request-reset', { email });
-      setIsSubmitted(true);
-    } catch (error) {
-      console.error('Erro ao solicitar recuperação de senha:', error);
-      setErrorMessage('Não foi possível enviar o email de recuperação. Tente novamente mais tarde.');
-    } finally {
-      setIsLoading(false);
-    }
+    // Aqui você implementará a lógica de envio do email de recuperação
+    axios.post('http://localhost:3001/api/password-reset/request-reset', { email })
+      .then(response => {
+        setIsSubmitted(true);
+      })
+      .catch(error => {
+        console.error('Erro ao solicitar recuperação de senha:', error);
+      });
+    setIsSubmitted(true);
   };
 
   if (isSubmitted) {

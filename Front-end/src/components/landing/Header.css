@@ -31,6 +31,39 @@ body {
   padding-top: 0 !important;
 }
 
+/* Rolagem suave para toda a página */
+html {
+  scroll-behavior: smooth;
+}
+
+.no-top-margin {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  border-top: none !important;
+  position: relative;
+}
+
+html, body {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+  overflow-x: hidden;
+}
+
+body {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+#root {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.landing-page {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
 .header {
   background: linear-gradient(to right, var(--blue-600), var(--blue-800));
   padding: 1rem 0;
@@ -297,8 +330,17 @@ body::before {
   .navbar-dark .navbar-nav .nav-link {
     padding: 0.75rem 1rem;
     border-radius: 6px;
+  .navbar-dark .navbar-nav .nav-link {
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
   }
   
+  .navbar-dark .navbar-nav .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .navbar-dark .navbar-nav .nav-link::after {
+    display: none;
   .navbar-dark .navbar-nav .nav-link:hover {
     background-color: rgba(255, 255, 255, 0.1);
   }
@@ -309,8 +351,21 @@ body::before {
   
   .btn-outline-light, .btn-light {
     display: block;
+  .btn-outline-light, .btn-light {
+    display: block;
     width: 100%;
     margin: 0.5rem 0;
+    text-align: center;
+  }
+  
+  .dropdown-menu {
+    background-color: rgba(255, 255, 255, 0.95);
+    margin-top: 0;
+  }
+  
+  .d-flex {
+    flex-direction: column;
+    width: 100%;
     text-align: center;
   }
   
