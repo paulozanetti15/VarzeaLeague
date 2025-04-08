@@ -1,98 +1,326 @@
-.header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  background-color: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
+/* Rolagem suave para toda a página */
+html {
+  scroll-behavior: smooth;
 }
 
-.header .navbar {
-  padding: 1rem 0;
-}
-
-.header .navbar-brand {
-  font-weight: 700;
-  font-size: 1.8rem;
-  letter-spacing: 1px;
-  color: white;
-}
-
-.header .nav-link {
-  font-weight: 500;
-  font-size: 1rem;
-  padding: 0.5rem 1rem !important;
+.no-top-margin {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  border-top: none !important;
   position: relative;
-  cursor: pointer;
-  color: rgba(255, 255, 255, 0.8) !important;
-  transition: color 0.3s ease;
 }
 
-.header .nav-link::after {
+html, body {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+  overflow-x: hidden;
+}
+
+body {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+#root {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.landing-page {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.header {
+  background: linear-gradient(to right, var(--blue-600), var(--blue-800));
+  padding: 1rem 0;
+  position: relative;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-bottom: none;
+  margin-top: 0 !important;
+  padding-top: 1rem !important;
+  border-top: none !important;
+}
+
+/* Este seria um hack para casos extremos, onde podemos forçar o 
+   header a ficar sobreposto a qualquer espaço branco */
+body::before {
+  content: none !important;
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.navbar {
+  padding: 0;
+}
+
+.navbar-brand {
+  color: white !important;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  position: relative;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+  transform: translateY(-2px);
+  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
+}
+
+.navbar-brand::after {
   content: '';
   position: absolute;
   bottom: 0;
-  left: 50%;
-  width: 0;
-  height: 2px;
-  background-color: #fff;
-  transition: all 0.3s ease;
-  transform: translateX(-50%);
-}
-
-.header .nav-link:hover::after {
-  width: 70%;
-}
-
-.header .btn {
-  padding: 0.5rem 1.5rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.header .btn-outline-light:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.header .btn-light {
+  left: 0;
+  width: 40px;
+  height: 3px;
   background-color: white;
-  color: #2c3e50;
+  border-radius: 3px;
+  transition: width 0.4s ease;
 }
 
-.header .btn-light:hover {
-  background-color: #f8f9fa;
-  transform: translateY(-1px);
+.navbar-brand:hover::after {
+  width: 100%;
+  background: linear-gradient(to right, white, rgba(255, 255, 255, 0.5));
 }
 
-.header .dropdown-item {
+.navbar-brand img {
+  height: 40px;
+  margin-right: 0.5rem;
+}
+
+.navbar-brand span {
+  color: var(--blue-600);
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.85);
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  border-radius: 6px;
+  margin: 0 3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  z-index: 1;
   cursor: pointer;
 }
 
-.header .dropdown-item:active {
-  background-color: #007bff;
+.navbar-dark .navbar-nav .nav-link:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.navbar-dark .navbar-nav .nav-link::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  width: 80%;
+  height: 3px;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.3));
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.5s cubic-bezier(0.645, 0.045, 0.355, 1);
+  border-radius: 3px;
+  z-index: -1;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover::before {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+.navbar-dark .navbar-nav .nav-link::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.05);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s ease;
+  z-index: -2;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.navbar-dark .navbar-nav .nav-link.active {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-dark .navbar-nav .nav-link.active::before {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+.navbar-dark .navbar-toggler {
+  border: none;
+  padding: 0.25rem 0.75rem;
+}
+
+.navbar-dark .navbar-toggler:focus {
+  box-shadow: none;
+}
+
+.btn-outline-light {
+  border-width: 2px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn-outline-light::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  z-index: -1;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.btn-outline-light:hover {
+  background-color: transparent;
+  color: var(--blue-700);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.btn-outline-light:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.btn-light {
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  background-color: white;
+  color: var(--blue-700);
+  border: 2px solid white;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn-light::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, var(--blue-50), white);
+  z-index: -1;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.btn-light:hover {
+  color: var(--blue-800);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.btn-light:hover::after {
+  transform: scaleX(1);
+  transform-origin: right;
+}
+
+.dropdown-menu {
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  padding: 0.75rem 0;
+  margin-top: 0.5rem;
+}
+
+.dropdown-item {
+  padding: 0.6rem 1.5rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  color: var(--blue-700);
+  background-color: var(--blue-50);
+}
+
+.dropdown-divider {
+  margin: 0.5rem 0;
+  border-color: var(--gray-200);
+}
+
+.btn-link {
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
 @media (max-width: 991.98px) {
-  .header .navbar-collapse {
-    background-color: rgba(0, 0, 0, 0.9);
-    margin: 0 -12px;
-    padding: 1rem;
-    border-radius: 0 0 10px 10px;
-  }
-  
-  .header .nav-link {
-    padding: 0.5rem 0;
-  }
-  
-  .header .d-flex {
+  .navbar-collapse {
     margin-top: 1rem;
-    flex-direction: column;
-    width: 100%;
+    padding: 1rem;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
   }
   
-  .header .btn {
+  .navbar-dark .navbar-nav .nav-link {
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+  }
+  
+  .navbar-dark .navbar-nav .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .navbar-dark .navbar-nav .nav-link::after {
+    display: none;
+  }
+  
+  .btn-outline-light, .btn-light {
+    display: block;
     width: 100%;
     margin: 0.5rem 0;
+    text-align: center;
+  }
+  
+  .dropdown-menu {
+    background-color: rgba(255, 255, 255, 0.95);
+    margin-top: 0;
+  }
+  
+  .d-flex {
+    flex-direction: column;
+    width: 100%;
   }
 } 

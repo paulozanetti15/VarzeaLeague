@@ -1,5 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
-import sequelize from '../config/databaseconfig';
+import sequelize from '../config/database';
+
 
 interface MatchPlayerAttributes {
   matchId: number;

@@ -1,5 +1,6 @@
 import './Header.css';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 interface User {
   id: number;
@@ -17,9 +18,43 @@ interface HeaderProps {
 
 export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) {
   const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState("");
+
+  // Função para rolagem suave
+  const scrollToSection = (sectionId: string) => {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      setActiveSection(sectionId);
+      section.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  };
+
+  // Detectar seção ativa ao rolar
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ['beneficios', 'depoimentos', 'contato'];
+      
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= 100 && rect.bottom >= 100) {
+            setActiveSection(section);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   
   return (
-    <header className="header">
+    <header className="header no-top-margin">
       <nav className="navbar navbar-expand-lg navbar-dark">
         <div className="container">
           <a className="navbar-brand" href="#">
@@ -49,13 +84,28 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                 </>
               )}
               <li className="nav-item">
-                <a className="nav-link" href="#beneficios">Benefícios</a>
+                <span 
+                  className={`nav-link ${activeSection === "beneficios" ? "active" : ""}`}
+                  onClick={() => scrollToSection("beneficios")}
+                >
+                  Benefícios
+                </span>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="#depoimentos">Depoimentos</a>
+                <span 
+                  className={`nav-link ${activeSection === "depoimentos" ? "active" : ""}`}
+                  onClick={() => scrollToSection("depoimentos")}
+                >
+                  Depoimentos
+                </span>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="#contato">Contato</a>
+                <span 
+                  className={`nav-link ${activeSection === "contato" ? "active" : ""}`}
+                  onClick={() => scrollToSection("contato")}
+                >
+                  Contato
+                </span>
               </li>
             </ul>
             <div className="d-flex align-items-center">
