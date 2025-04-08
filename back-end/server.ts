@@ -5,14 +5,13 @@ import path from 'path';
 import sequelize from './config/database';
 import authRoutes from './routes/authRoutes';
 import matchRoutes from './routes/matchRoutes';
-import passwordResetRoutes from './routes/passwordReset';
+import passwordResetRoutes from './routes/passwordResetRoutes';
 import teamRoutes from './routes/teamRoutes';
 import UserModel from './models/User';
 import MatchModel from './models/Match';
-import TeamModel from './models/Team';
-import UserTypeModel from './models/UserType';
-import dbRoutes from './routes/dbRoutes';
-import MatchPlayer from './models/match_players';
+import TeamModel from './models/TeamModel';
+import UserTypeModel from './models/UserTypeModel';
+import MatchPlayer from './models/MatchPlayersModel';
 import './models/associations';
 import authController from 'controllers/authController';
 dotenv.config();
@@ -35,7 +34,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/teams',teamRoutes);
-app.use('/api/db', dbRoutes);
+
 
 // Rota de teste
 app.get('/api/test', (req, res) => {

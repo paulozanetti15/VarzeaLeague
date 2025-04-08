@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Attendance from '../models/Attendance';
+import Attendance from '../models/AttendanceModel';
 import Match from '../models/Match';
 import User from '../models/User';
 import sequelize from '../config/database';

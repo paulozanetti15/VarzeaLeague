@@ -1,7 +1,8 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
 
-import User from './User';
+import User from './UserModel';
+import MatchPlayer from './MatchPlayersModel';
 
 class Match extends Model {
   public id!: number;
@@ -35,8 +36,10 @@ class Match extends Model {
   }
 
   public async countPlayers(): Promise<number> {
-    const players = await (this as any).getPlayers();
-    return players.length;
+    const players =  await MatchPlayer.count({
+      where: { matchId: this.id }
+    });
+    return players
   }
 }
 

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import Team from '../models/Team';
+import Team from '../models/TeamModel';
 import User from '../models/User';
 import { Op, Sequelize } from 'sequelize';
 import multer from 'multer';

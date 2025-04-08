@@ -1,7 +1,7 @@
 import User from './User';
 import Match from './Match';
-import Team from './Team';
-import MatchPlayer from './match_players';
+import Team from './TeamModel';
+import MatchPlayer from './MatchPlayersModel';
 
 // Associações do modelo User
 User.hasMany(Match, {
