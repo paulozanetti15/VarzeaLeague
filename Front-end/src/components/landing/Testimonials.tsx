@@ -1,4 +1,5 @@
 import './Testimonials.css';
+import { SyntheticEvent } from 'react';
 
 export function Testimonials() {
   const testimonials = [
@@ -7,21 +8,40 @@ export function Testimonials() {
       name: 'João Silva',
       role: 'Organizador de Campeonato',
       photo: '/testimonial1.jpg',
-      text: 'A Várzea League revolucionou a forma como organizo os jogos. Agora é tudo mais fácil e profissional.'
+      text: 'A Várzea League revolucionou a forma como organizo os jogos. Agora é tudo mais fácil e profissional.',
+      rating: 5
     },
     {
       name: 'Pedro Santos',
       role: 'Capitão de Time',
       photo: '/testimonial2.jpg',
-      text: 'Excelente plataforma! Consigo gerenciar meu time e acompanhar as estatísticas de forma simples.'
+      text: 'Excelente plataforma! Consigo gerenciar meu time e acompanhar as estatísticas de forma simples.',
+      rating: 4
     },
     {
       name: 'Carlos Oliveira',
       role: 'Jogador',
       photo: '/testimonial3.jpg',
-      text: 'Muito prático para confirmar presença nos jogos e ver as estatísticas do time.'
+      text: 'Muito prático para confirmar presença nos jogos e ver as estatísticas do time.',
+      rating: 4
     }
   ];
+
+  function handleImageError(event: SyntheticEvent<HTMLImageElement, Event>): void {
+    event.currentTarget.src = '/default-testimonial.jpg';
+  }
+
+  function renderStars(rating: number): JSX.Element[] {
+    const stars = [];
+    for (let i = 0; i < 5; i++) {
+      stars.push(
+        <span key={i} className={i < rating ? 'star filled' : 'star'}>
+          ★
+        </span>
+      );
+    }
+    return stars;
+  }
 
   return (
     <section className="testimonials-section" id="depoimentos">
