@@ -17,11 +17,33 @@ export function Testimonials() {
     },
     {
       name: 'Carlos Oliveira',
-      role: 'Jogador',
-      photo: '/testimonial3.jpg',
-      text: 'Muito prático para confirmar presença nos jogos e ver as estatísticas do time.'
-    }
+      role: 'Organizador de Partidas',
+      comment: 'Economizo muito tempo organizando partidas com a VarzeaLeague. A interface é intuitiva e os jogadores adoram a experiência!',
+      photo: 'https://placehold.co/100x100/6A55C5/ffffff?text=CO',
+      rating: 4
+    },
+    {
+      id: 3,
+      name: 'Ana Pereira',
+      role: 'Capitã de Time',
+      comment: 'Gerenciar meu time se tornou muito mais fácil. Consigo organizar as escalações e comunicar-me com todos os jogadores por aqui.',
+      photo: 'https://placehold.co/100x100/6A55C5/ffffff?text=AP',
+      rating: 5
+    },
   ];
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.target as HTMLImageElement;
+    target.src = 'https://placehold.co/100x100/6A55C5/ffffff?text=User';
+  };
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, index) => (
+      <span key={index} className={`star ${index < rating ? 'filled' : 'empty'}`}>
+        {index < rating ? '★' : '☆'}
+      </span>
+    ));
+  };
 
   return (
     <section className="testimonials-section" id="depoimentos">
