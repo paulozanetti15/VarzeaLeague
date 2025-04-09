@@ -12,8 +12,9 @@ import MatchModel from './models/MatchModel';
 import TeamModel from './models/TeamModel';
 import UserTypeModel from './models/UserTypeModel';
 import MatchPlayer from './models/MatchPlayersModel';
+import TeamPlayer from './models/TeamPlayerModel';
 import './models/associations';
-import authController from 'controllers/authController';
+import authController from './controllers/authController';
 dotenv.config();
 
 const app = express();
@@ -99,6 +100,8 @@ const startServer = async () => {
     console.log('Banco de dados sincronizado com sucesso!');
     await MatchPlayer.sync({ force: false }); // Avoid altering the table structure
     console.log('Modelo MatchPlayer sincronizado.');
+    await TeamPlayer.sync({ force: false });
+    console.log('Modelo TeamPlayer sincronizado.');
     const port = process.env.PORT || 3001;
     app.listen(port, () => {
       console.log(`Servidor rodando na porta ${port}`);
