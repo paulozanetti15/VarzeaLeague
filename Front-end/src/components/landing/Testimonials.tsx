@@ -1,5 +1,4 @@
 import './Testimonials.css';
-import { SyntheticEvent } from 'react';
 
 export function Testimonials() {
   const testimonials = [
