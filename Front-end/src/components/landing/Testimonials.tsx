@@ -7,13 +7,15 @@ export function Testimonials() {
       name: 'João Silva',
       role: 'Organizador de Campeonato',
       photo: '/testimonial1.jpg',
-      text: 'A Várzea League revolucionou a forma como organizo os jogos. Agora é tudo mais fácil e profissional.'
+      text: 'A Várzea League revolucionou a forma como organizo os jogos. Agora é tudo mais fácil e profissional.',
+      rating: 5
     },
     {
       name: 'Pedro Santos',
       role: 'Capitão de Time',
       photo: '/testimonial2.jpg',
-      text: 'Excelente plataforma! Consigo gerenciar meu time e acompanhar as estatísticas de forma simples.'
+      text: 'Excelente plataforma! Consigo gerenciar meu time e acompanhar as estatísticas de forma simples.',
+      rating: 4
     },
     {
       name: 'Carlos Oliveira',
