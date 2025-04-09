@@ -20,16 +20,20 @@ TeamPlayer.init({
     allowNull: false,
     references: {
       model: 'teams',
-      key: 'id',
+      key: 'id'
     },
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE'
   },
   userId: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
       model: 'users',
-      key: 'id',
+      key: 'id'
     },
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE'
   }
 }, {
   sequelize,
