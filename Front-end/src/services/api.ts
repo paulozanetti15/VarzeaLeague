@@ -1,7 +1,9 @@
 import { loadPlayersForMatch } from './matchService';
-import { registerMatchError, getMatchErrorStatus, clearMatchErrors } from './apiHelpers';
+import { getMatchErrorStatus, clearMatchErrors } from './apiHelpers';
 
 const API_BASE_URL = 'http://localhost:3001/api';
+const token = localStorage.getItem('token');
+
 
 const handleResponse = async (response: Response) => {
   try {
@@ -229,6 +231,8 @@ export const api = {
   matches: {
     create: async (matchData: any) => {
       const token = localStorage.getItem('token');
+      console.log('Criando partida com dados:', matchData);
+      console.log('Token encontrado:', token);
       if (!token) {
         throw new Error('Usuário não autenticado');
       }
@@ -243,11 +247,10 @@ export const api = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': token ? `Bearer ${token}` : ''
         },
         body: JSON.stringify(matchData),
       });
-
       return handleResponse(response);
     },
     list: async () => {
@@ -549,8 +552,7 @@ export const api = {
           'Authorization': `Bearer ${token}`,
         },
       });
-
-      return handleResponse(response);
+      return handleResponse(response); 
     },
   }
 };

@@ -2,57 +2,87 @@ import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import MatchModel from '../models/MatchModel';
 import UserModel from '../models/UserModel';
-
+import jwt from 'jsonwebtoken';
+require('dotenv').config(); 
+const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
 // Criar uma nova partida
 export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const { title, date, location, complement, maxPlayers, description, price } = req.body;
-    const organizerId = req.user?.id;
-    
-    if (!organizerId) {
-      res.status(401).json({ message: 'Usuário não autenticado' });
-      return;
-    }
-
-    const match = await MatchModel.create({
-      title,
-      date,
-      location,
-      complement,
-      maxPlayers,
-      description,
-      price,
-      organizerId
-    });
-
-    res.status(201).json(match);
-  } catch (error) {
-    console.error('Erro ao criar partida:', error);
-    res.status(500).json({ message: 'Erro ao criar partida' });
-  }
    try {
       const { title, description, date, location, complement, maxPlayers, price } = req.body;
-      const userId = req.user?.id;
-      if (!userId) {
-        res.status(401).json({ message: 'Usuário não autenticado' });
+      console.log('Dados recebidos:', req.body);
+      
+      // Validações básicas
+      if (!title || !date || !location || !maxPlayers) {
+        res.status(400).json({ message: 'Campos obrigatórios faltando' });
         return;
       }
-      const fullLocation = complement ? `${location} - ${complement}` : location;
-      const match = await MatchModel.create({
-        title,
-        description,
-        date,
-        location: fullLocation,
-        maxPlayers,
-        price,
-        organizerId: userId,
-        status: 'open'
-      });
-      await UserModel.update({ userTypeId:2 }, { where: { id: userId } });
-      res.status(201).json(match);
+
+      // Validar data futura
+      const matchDate = new Date(date);
+      if (matchDate <= new Date()) {
+        res.status(400).json({ message: 'A data da partida deve ser futura' });
+        return;
+      }
+
+      // Validar número de jogadores
+      if (maxPlayers < 2 || maxPlayers > 50) {
+        res.status(400).json({ message: 'Número de jogadores deve estar entre 2 e 50' });
+        return;
+      }
+
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      try {
+        const decodedPayload = jwt.decode(token);
+        console.log('Estrutura do token (sem verificação):', decodedPayload);
+      } catch (decodeErr) {
+        console.error('Erro ao decodificar token:', decodeErr);
+      }
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+        const userId = decoded.id;
+        const fullLocation = complement ? `${location} - ${complement}` : location;
+        const match = await MatchModel.create({
+          title: title.trim(),
+          description: description?.trim(),
+          date: matchDate,
+          location: fullLocation,
+          maxPlayers,
+          price: price || null,
+          organizerId: userId,
+          status: 'open'
+        });
+
+        // Atualizar tipo do usuário para organizador
+        await UserModel.update(
+          { userTypeId: 2 }, 
+          { 
+            where: { id: userId },
+            silent: true // Não dispara hooks
+          }
+        );
+
+        res.status(201).json(match);
+      } catch (error) {
+        console.error('Erro ao criar partida:', error);
+        if (error instanceof Error) {
+          res.status(500).json({ 
+            message: 'Erro ao criar partida',
+            error: error.message 
+          });
+        } else {
+          res.status(500).json({ message: 'Erro ao criar partida' });
+        }
+      }
     } catch (error) {
       console.error('Erro ao criar partida:', error);
-      res.status(500).json({ message: 'Erro ao criar partida' });
+      if (error instanceof Error) {
+        res.status(500).json({ 
+          message: 'Erro ao criar partida',
+          error: error.message 
+        });
+      } else {
+        res.status(500).json({ message: 'Erro ao criar partida' });
+      }
     } 
 };
 
@@ -77,14 +107,11 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
         'title',
         'date',
         'location',
-        'complement',
         'maxPlayers',
         'status',
         'description',
         'price',
-        'organizerId',
-        'createdAt',
-        'updatedAt'
+        'organizerId'
       ],
       order: [['date', 'ASC']]
     });
@@ -131,12 +158,6 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
   }
 };
   
-      
- 
-      
-
-
-// Obter detalhes de uma partida específica
 export const getMatch = async (req: Request, res: Response): Promise<void> => {
   try {
     const match = await MatchModel.findByPk(req.params.id);
@@ -144,7 +165,7 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }
-    res.json(match);
+    res.status(200).json(match);
   } catch (error) {
     console.error('Erro ao obter partida:', error);
     res.status(500).json({ message: 'Erro ao obter partida' });

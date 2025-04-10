@@ -9,6 +9,9 @@ User.hasMany(Match, {
   foreignKey: 'organizerId',
   as: 'organizedMatches'
 });
+User.hasMany(MatchPlayer, { foreignKey: 'user_id' });
+// Add this to your MatchPlayer model file where associations are defined
+MatchPlayer.belongsTo(User, { foreignKey: 'user_id' });
 
 User.belongsToMany(Match, {
   through: MatchPlayer,

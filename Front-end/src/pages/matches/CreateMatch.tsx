@@ -154,7 +154,7 @@ const CreateMatch: React.FC = () => {
   const navigate = useNavigate();
   const titleInputRef = useRef<HTMLInputElement>(null);
   const btnContainerRef = useRef<HTMLDivElement>(null);
-
+  
   const [formData, setFormData] = useState<MatchFormData>({
     title: '',
     description: '',
@@ -168,6 +168,7 @@ const CreateMatch: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  console.log('token', localStorage.getItem('token'));
 
   // Ajustar largura do botão para combinar com o campo de título
   useEffect(() => {
@@ -199,34 +200,75 @@ const CreateMatch: React.FC = () => {
     setError('');
 
     try {
+      // Validações do formulário
+      if (!formData.title?.trim()) {
+        setError('O título da partida é obrigatório');
+        return;
+      }
+
+      if (!formData.date || !formData.time) {
+        setError('Data e hora são obrigatórios');
+        return;
+      }
+
+      // Validar data futura
+      const matchDateTime = new Date(`${formData.date}T${formData.time}`);
+      if (matchDateTime <= new Date()) {
+        setError('A data da partida deve ser futura');
+        return;
+      }
+
+      // Validar número de jogadores
+      if (formData.maxPlayers < 2 || formData.maxPlayers > 50) {
+        setError('O número de jogadores deve estar entre 2 e 50');
+        return;
+      }
+
+      // Validar preço
+      if (formData.price && parseFloat(formData.price) < 0) {
+        setError('O preço não pode ser negativo');
+        return;
+      }
+
       // Cria o endereço completo incluindo cidade, local e complemento
       let fullLocation = formData.city;
       
       // Adiciona o endereço específico
       if (formData.location) {
-        fullLocation += `, ${formData.location}`;
+        fullLocation += `, ${formData.location.trim()}`;
       }
       
       // Adiciona o complemento se existir
-      if (formData.complement) {
-        fullLocation += ` - ${formData.complement}`;
+      if (formData.complement?.trim()) {
+        fullLocation += ` - ${formData.complement.trim()}`;
       }
 
-      const response = await api.matches.create({
-        title: formData.title,
-        date: `${formData.date}T${formData.time}:00`,
+      const matchData = {
+        title: formData.title.trim(),
+        date: matchDateTime.toISOString(),
         location: fullLocation,
         maxPlayers: formData.maxPlayers,
-        description: formData.description,
-        price: formData.price ? parseFloat(formData.price) : undefined,
-        city: formData.city
-      });
+        description: formData.description?.trim(),
+        price: formData.price ? parseFloat(formData.price) : null,
+        city: formData.city.trim(),
+        complement: formData.complement?.trim()
+      };
+
+      await api.matches.create(matchData);
 
       toast.success('Partida criada com sucesso!');
       navigate('/matches');
-    } catch (err) {
-      setError('Erro ao criar partida. Tente novamente.');
+    } catch (err: any) {
       console.error('Erro ao criar partida:', err);
+      
+      // Tratamento de erros específicos da API
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError('Erro ao criar partida. Tente novamente.');
+      }
     } finally {
       setLoading(false);
     }

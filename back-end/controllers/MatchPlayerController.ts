@@ -4,6 +4,9 @@ import User from "../models/UserModel";
 import Team from "../models/TeamModel";
 import Sequelize from "sequelize";
 import TeamPlayer from "../models/TeamPlayerModel";
+import jwt from 'jsonwebtoken';
+require('dotenv').config(); 
+const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
 
 // ... resto do código permanece igual
 async function getMatchPlayers(req: any, res: any) {
@@ -63,8 +66,7 @@ async function getMatchPlayers(req: any, res: any) {
           model: MatchPlayer,
           attributes: [],
           where: {
-            match_id: matchId,
-            is_team: false // Garantindo que são jogadores individuais
+            match_id: matchId
           },
           required: true
         }],
@@ -156,78 +158,100 @@ async function getMatchPlayers(req: any, res: any) {
     }
 }
 async function joinMatch(req: any, res: any) {
+  try {
+    const match = await Match.findByPk(req.params.id);
+    const token = req.headers.authorization?.replace('Bearer ', '');
     try {
-        const match = await Match.findByPk(req.params.id);
-        const userId = req.user?.id;
-    
-        if (!match) {
-          res.status(404).json({ message: 'Partida não encontrada' });
-          return;
-        }
-    
-        if (!userId) {
-          res.status(401).json({ message: 'Usuário não autenticado' });
-          return;
-        }
-    
-        if (match.status !== 'open') {
-          res.status(400).json({ message: 'Esta partida não está aberta para inscrições' });
-          return;
-        }
-    
-        const playerCount = await match.countPlayers();
-        if (playerCount >= match.maxPlayers) {
-          res.status(400).json({ message: 'Esta partida já está cheia' });
-          return;
-        }
-    
-        await match.addPlayer(userId);
-        console.log('Usuário', userId, 'entrou na partida', match.id);
-        res.json({ message: 'Inscrição realizada com sucesso' });
-      } catch (error) {
-        console.error('Erro ao entrar na partida:', error);
-        res.status(500).json({ message: 'Erro ao entrar na partida' });
-      }
+      const decodedPayload = jwt.decode(token);
+      console.log('Estrutura do token (sem verificação):', decodedPayload);
+    } catch (decodeErr) {
+      console.error('Erro ao decodificar token:', decodeErr);
+    }   
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+    const userId = decoded.id
+    console.log('ID do usuário decodificado:', userId);
+    if (!match) {
+      res.status(404).json({ message: 'Partida não encontrada' });
+      return;
+    }
+  
+    if (!userId) {
+      res.status(401).json({ message: 'Usuário não autenticado' });
+      return;
+    }
+
+    if (match.status !== 'open') {
+      res.status(400).json({ message: 'Esta partida não está aberta para inscrições' });
+      return;
+    }
+
+    const playerCount = await match.countPlayers();
+    if (playerCount >= match.maxPlayers) {
+      res.status(400).json({ message: 'Esta partida já está cheia' });
+      return;
+    }
+    await match.addPlayer(parseInt(userId));
+    res.json({ message: 'Inscrição realizada com sucesso' });
+    } catch (error) {
+      console.error('Erro ao entrar na partida:', error);
+      res.status(500).json({ message: 'Erro ao entrar na partida' });
+    }
 }
 async function leaveMatchPlayer(req: any, res: any) {
-    try {
-        const match = await Match.findByPk(req.params.id);
-        const userId = req.user?.id;
-    
-        if (!match) {
-          res.status(404).json({ message: 'Partida não encontrada' });
-          return;
-        }
-    
-        if (!userId) {
-          res.status(401).json({ message: 'Usuário não autenticado' });
-          return;
-        }
-        const user = await User.findByPk(userId);
-        if (user) {
-          await (match as any).removePlayers(user);
-          console.log('Usuário', userId, 'saiu da partida', match.id);
-          res.json({ message: 'Você saiu da partida com sucesso' });
-        } else {
-          res.status(404).json({ message: 'Usuário não encontrado' });
-        }
-      } catch (error) {
-        console.error('Erro ao sair da partida:', error);
-        res.status(500).json({ message: 'Erro ao sair da partida' });
-      }            
-}
-async function joinMatchByTeam(req: any, res: any) {
   try {
-    const matchId = parseInt(req.params.id, 10);
-    const { teamId } = req.body;  
-    const match = await Match.findByPk(matchId);
-    const userId = req.user?.id;
+    const match = await Match.findByPk(req.params.id);
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    try {
+      const decodedPayload = jwt.decode(token);
+      console.log('Estrutura do token (sem verificação):', decodedPayload);
+    } catch (decodeErr) {
+      console.error('Erro ao decodificar token:', decodeErr);
+    }
 
     if (!match) {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+    const userId = parseInt(decoded.id, 10);
+    if (!userId) {
+      res.status(401).json({ message: 'Usuário não autenticado' });
+      return;
+    }
+    const user = await User.findByPk(userId);
+    if (user) {
+      await (match as any).removePlayers(user);
+      console.log('Usuário', userId, 'saiu da partida', match.id);
+      res.json({ message: 'Você saiu da partida com sucesso' });
+    } else {
+      res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+  } catch (error) {
+    console.error('Erro ao sair da partida:', error);
+    res.status(500).json({ message: 'Erro ao sair da partida' });
+  }            
+}
+async function joinMatchByTeam(req: any, res: any) {
+  try {
+    const matchId = parseInt(req.params.id, 10);
+    const { teamId } = req.body;  
+    const match = await Match.findByPk(matchId, {
+      attributes: [ 'title', 'date', 'location', 'maxPlayers', 'status', 'description', 'price', 'organizerId']
+    })
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    try {
+      const decodedPayload = jwt.decode(token);
+      console.log('Estrutura do token (sem verificação):', decodedPayload);
+    } catch (decodeErr) {
+      console.error('Erro ao decodificar token:', decodeErr);
+    }
 
+    if (!match) {
+      res.status(404).json({ message: 'Partida não encontrada' });
+      return;
+    }
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+    const userId = decoded.id
     if (!userId) {
       res.status(401).json({ message: 'Usuário não autenticado' });
       return;
@@ -271,7 +295,7 @@ async function joinMatchByTeam(req: any, res: any) {
     const existingEntry = await MatchPlayer.findOne({
        where: {
        matchId,
-       userId,
+      userId: parseInt(userId, 10),
     }
    });
 
@@ -305,7 +329,7 @@ async function joinMatchByTeam(req: any, res: any) {
    },
    defaults: {
     matchId,
-    userId,
+    userId: parseInt(userId, 10),
    }
   });
   res.json({ 
