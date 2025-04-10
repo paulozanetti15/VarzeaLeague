@@ -21,6 +21,7 @@ import { useAuth } from './hooks/useAuth'
 
 function AppContent() {
   const navigate = useNavigate();
+  console.log("TOKEN", localStorage.getItem('token'));
   const { isLoggedIn, isLoading, user, login, logout } = useAuth();
   const handleLoginSuccess = (userData: { user: any; token: string }) => {
     login(userData);
@@ -88,7 +89,7 @@ function AppContent() {
             <RoleBasedRoute 
               isLoggedIn={isLoggedIn} 
               userRole={user?.userTypeId} 
-              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
+              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
             >
               <MatchList />
             </RoleBasedRoute>

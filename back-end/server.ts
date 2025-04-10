@@ -83,7 +83,7 @@ const PORT = process.env.PORT || 3001;
 const startServer = async () => {
   try {
     await sequelize.authenticate();
-
+    console.log('Conexão com o banco de dados estabelecida com sucesso!');
     console.log('Conexão com o banco estabelecida com sucesso!');
     await UserTypeModel.sync({ force: false }); // Avoid altering the table structure
     console.log('Modelo UserType sincronizado.');
@@ -114,7 +114,6 @@ const startServer = async () => {
       console.log('- POST /api/teams');
       console.log('- PUT /api/teams/:id');
       console.log('- POST /api/teams/:id/banner');
-      
     });
   } catch (error) {
     console.error('Erro ao iniciar o servidor:', error);

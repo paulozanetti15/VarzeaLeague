@@ -32,7 +32,6 @@ class Match extends Model {
     return players
   }
 }
-
 Match.init({
   id: {
     type: DataTypes.INTEGER,
@@ -42,35 +41,60 @@ Match.init({
   title: {
     type: DataTypes.STRING,
     allowNull: false,
+    validate: {
+      notEmpty: true,
+      len: [3, 100]
+    }
   },
   date: {
     type: DataTypes.DATE,
     allowNull: false,
+    validate: {
+      isDate: true,
+      isFuture(value: Date) {
+        if (value <= new Date()) {
+          throw new Error('A data da partida deve ser futura');
+        }
+      }
+    }
   },
   location: {
     type: DataTypes.STRING,
     allowNull: false,
-  },
-  complement: {
-    type: DataTypes.STRING,
-    allowNull: true,
+    validate: {
+      notEmpty: true,
+      len: [5, 200]
+    }
   },
   maxPlayers: {
     type: DataTypes.INTEGER,
     allowNull: false,
     defaultValue: 10,
+    validate: {
+      min: 2,
+      max: 50
+    }
   },
   status: {
     type: DataTypes.ENUM('open', 'pending', 'confirmed', 'cancelled', 'completed'),
     defaultValue: 'open',
+    validate: {
+      isIn: [['open', 'pending', 'confirmed', 'cancelled', 'completed']]
+    }
   },
   description: {
     type: DataTypes.TEXT,
     allowNull: true,
+    validate: {
+      len: [0, 1000]
+    }
   },
   price: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: true,
+    validate: {
+      min: 0
+    }
   },
   organizerId: {
     type: DataTypes.INTEGER,
@@ -78,7 +102,7 @@ Match.init({
     references: {
       model: 'users',
       key: 'id',
-    },
+    }
   }
 }, {
   sequelize,
@@ -86,7 +110,16 @@ Match.init({
   timestamps: true,
   underscored: true,
   modelName: 'Match',
-  freezeTableName: true
+  freezeTableName: true,
+  hooks: {
+    beforeValidate: (match: Match) => {
+      // Garantir que strings não sejam apenas espaços em branco
+      if (match.title) match.title = match.title.trim();
+      if (match.description) match.description = match.description.trim();
+      if (match.location) match.location = match.location.trim();
+      if (match.complement) match.complement = match.complement.trim();
+    }
+  }
 });
 
 export default Match; 

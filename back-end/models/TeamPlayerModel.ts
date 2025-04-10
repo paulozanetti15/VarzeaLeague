@@ -1,15 +1,9 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
 
-class TeamPlayer extends Model {
-  public id!: number;
-  public teamId!: number;
-  public userId!: number;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
-}
+ 
 
-TeamPlayer.init({
+const TeamPlayer = sequelize.define('TeamPlayer', {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -36,7 +30,6 @@ TeamPlayer.init({
     onDelete: 'CASCADE'
   }
 }, {
-  sequelize,
   tableName: 'team_players',
   timestamps: true,
   underscored: true,

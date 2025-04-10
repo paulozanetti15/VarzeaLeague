@@ -1,17 +1,17 @@
 import express, { Request, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import { getMatchPlayers,joinMatch,leaveMatchPlayer,joinMatchByTeam } from '../controllers/MatchPlayerController';
-import {TeamController} from '../controllers/TeamController';
+import {getMatch,listMatches,createMatch} from '../controllers/matchController';
 const router = express.Router();
 // Criar uma nova partida
-router.post('/',TeamController.create,authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/',createMatch,authenticateToken, async (req: AuthRequest, res: Response): Promise<void> => {
   
 });
 
-router.get('/',TeamController.listTeams,authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.get('/',listMatches,authenticateToken, async (req: Request, res: Response): Promise<void> => {
 });
 
-router.get('/:id',TeamController.getTeam,authenticateToken, async (req: Request, res: Response): Promise<void> => {
+router.get('/:id',getMatch,authenticateToken, async (req: Request, res: Response): Promise<void> => {
 });
 
 // Endpoint detalhado para jogadores da partida específica

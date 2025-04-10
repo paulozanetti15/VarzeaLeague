@@ -398,9 +398,10 @@ export class TeamController {
   static async updateTeam(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      console.log(`Atualizando time com ID: ${id}`);
       const { name, description, playerEmails } = req.body;
       const userId = req.user?.id;
-
+     
       const team = await Team.findOne({
         where: {
           id,
@@ -443,9 +444,6 @@ export class TeamController {
         updatedAt: agora
       });
 
-      // Log para depuração
-      console.log(`Time ${id} atualizado em: ${agora.toISOString()}`);
-
       if (playerEmails && Array.isArray(playerEmails)) {
         console.log('Emails recebidos para atualização:', playerEmails);
         
@@ -456,40 +454,23 @@ export class TeamController {
         if (validEmails.length === 0) {
           console.log('Nenhum email válido fornecido. Removendo todas as associações de jogadores.');
           await team.setPlayers([]);
+          console.log('Associação de jogadores removida com sucesso');
         } else {
-          // Primeiro, encontra os usuários que já existem no banco de dados
+          console.log(`Processando ${validEmails.length} emails válidos de jogadores`);
           const existingPlayers = await User.findAll({
-          where: {
+            where: {  // <-- Fixed indentation here
               email: { [Op.in]: validEmails }
             }
           });
           
-          console.log(`Encontrados ${existingPlayers.length} jogadores existentes para os ${validEmails.length} emails válidos fornecidos`);
-          
-          // Log dos jogadores que foram encontrados
-          existingPlayers.forEach(player => {
-            console.log(`Jogador encontrado: ${player.get('email')}`);
-          });
-          
-          // Identifica os emails que não foram encontrados
+          console.log(`Encontrados ${existingPlayers.length} jogadores para os ${validEmails.length} emails fornecidos`);
           const existingEmails = existingPlayers.map(player => player.get('email'));
           const missingEmails = validEmails.filter(email => !existingEmails.includes(email));
-          
+
           if (missingEmails.length > 0) {
-            console.log('Emails não encontrados no banco de dados (precisam ser criados):', missingEmails);
-            
-            // Busca todos os usuários uma única vez para comparar
             const allUsers = await User.findAll();
-            console.log(`Buscados ${allUsers.length} usuários para verificação case insensitive`);
-            
-            // Para cada email não encontrado, verifica na lista completa
             for (const email of missingEmails) {
-              console.log(`Verificando email: ${email} com busca case insensitive`);
-              
-              // Converte o email para minúsculas e remove espaços
               const normalizedEmail = email.trim().toLowerCase();
-              
-              // Procura o usuário na lista já buscada
               const userWithDifferentCase = allUsers.find(
                 user => user.get('email').toLowerCase() === normalizedEmail
               );
@@ -511,27 +492,28 @@ export class TeamController {
       } else {
         console.log('Nenhum email de jogador fornecido ou formato inválido. Mantendo jogadores existentes.');
       }
-
+      console.log('Atualização do time concluída com sucesso:', { id, name, description });
       const updatedTeam = await Team.findOne({
         where: {
-          id,
+          id: id,
           isDeleted: false
         },
         include: [
           {
             model: User,
             as: 'captain',
-            attributes: ['id', 'name', 'email']
+            attributes: [ 'name', 'email']
           },
           {
             model: User,
             as: 'players',
-            attributes: ['id', 'name', 'email']
+            attributes: [ 'name', 'email']
           }
         ]
       });
-
+      console.log('Time atualizado:', updatedTeam);
       if (!updatedTeam) {
+        console.error(`Erro ao buscar time atualizado com ID ${id}`);
         res.status(500).json({ error: 'Erro ao atualizar time' });
         return;
       }
@@ -558,7 +540,7 @@ export class TeamController {
 
       res.json(formattedTeam);
     } catch (error) {
-      console.error('Erro ao atualizar time:', error);
+      console.error('Erro ao atualizar times:', error);
       res.status(500).json({ error: 'Erro ao atualizar time' });
     }
   }
@@ -618,12 +600,12 @@ export class TeamController {
           {
             model: User,
             as: 'captain',
-            attributes: ['id', 'name', 'email']
+            attributes: ['name', 'email']
           },
           {
             model: User,
             as: 'players',
-            attributes: ['id', 'name', 'email']
+            attributes: ['name', 'email']
           }
         ]
       });

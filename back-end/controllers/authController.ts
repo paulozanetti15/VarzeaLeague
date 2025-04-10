@@ -41,7 +41,7 @@ export const register: RequestHandler = async (req, res) => {
     const token = jwt.sign({ userId: userJson.id }, JWT_SECRET, {
       expiresIn: '24h',
     });
-
+    console.log('token', token);
     res.status(201).json({
       message: 'Usuário registrado com sucesso',
       token,
@@ -77,11 +77,10 @@ export const login: RequestHandler = async (req, res) => {
       res.status(401).json({ message: 'Email ou senha inválidos' });
       return;
     }
-
-    // Gerar token
-    const token = jwt.sign({ userId: userJson.id }, JWT_SECRET, {
+    const token = jwt.sign({ id: userJson.id }, JWT_SECRET, {
       expiresIn: '24h',
     });
+    console.log('token', token);
     const findIduserType = await UserModel.findOne({ where: { id: userJson.id } });
     const userWithType = findIduserType?.toJSON() as UserAttributes;
     console.log('userWithType', userWithType.userTypeId);
@@ -105,29 +104,35 @@ export const login: RequestHandler = async (req, res) => {
 export const verify: RequestHandler = async (req, res) => {
   try {
     const authReq = req as any;
-    const userId = authReq.user?.id;
-    
-    if (!userId) {
-      res.status(401).json({ error: 'Usuário não autenticado' });
-      return;
-    }
+    const token = req.query.token as string;
+    jwt.verify(token,JWT_SECRET, async (err: any, decoded: any) => {
+      if (err) {
+        console.error('Erro ao decodificar token:', err);
+        return res.status(401).json({ error: 'Token inválido ou expirado' });
+      }
+      const userId = decoded.id;
+      if (!userId) {
+        console.error('ID de usuário não encontrado no token');
+        res.status(401).json({ error: 'Usuário não autenticado' });
+        return;
+      }
+      const user = await UserModel.findByPk(userId);
+      if (!user) {
+        console.error('Usuário não encontrado');
+        res.status(404).json({ error: 'Usuário não encontrado' });
+        return;
+      }
 
-    const user = await UserModel.findByPk(userId);
-    if (!user) {
-      res.status(404).json({ error: 'Usuário não encontrado' });
-      return;
-    }
-
-    const userJson = user.toJSON() as UserAttributes;
-    console.log('userJson', userJson.userTypeId);
-    res.json({
-      user: {
-        id: userJson.id,
-        name: userJson.name,
-        email: userJson.email,
-        userTypeId: userJson.userTypeId
-      },
-      authenticated: true
+      const userJson = user.toJSON() as UserAttributes;
+      res.json({
+        user: {
+          id: userJson.id,
+          name: userJson.name,
+          email: userJson.email,
+          userTypeId: userJson.userTypeId
+        },
+        authenticated: true
+      });
     });
   } catch (error) {
     console.error('Erro na verificação:', error);
