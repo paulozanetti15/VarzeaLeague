@@ -98,7 +98,7 @@ const MatchDetail: React.FC = () => {
   };
 
   const isUserInMatch = () => {
-    if (!match.players || !currentUser.id) return false;
+    if (!match.players || !Array.isArray(match.players) || !currentUser.id) return false;
     return match.players.some(player => player.id === currentUser.id);
   };
 
@@ -296,7 +296,9 @@ const MatchDetail: React.FC = () => {
                 <div className="info-icon price-icon">R$</div>
                 <div className="info-content">
                   <h3>Preço</h3>
-                  <p>{match.price > 0 ? `R$ ${match.price.toFixed(2)}` : 'Gratuito'}</p>
+                  <p>{match.price !== null && match.price !== undefined && Number(match.price) > 0 
+                      ? `R$ ${Number(match.price).toFixed(2)}` 
+                      : 'Gratuito'}</p>
                 </div>
               </div>
             )}

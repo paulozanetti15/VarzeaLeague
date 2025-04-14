@@ -161,48 +161,27 @@ const perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout } : Perfil
                                 </Form>
                             )}
                         {usuario && (                 
-                            <Container className="d-flex justify-content-center gap-2 mt-3 mb-4" >
-                                <Row>
-                                    <Col xs={12} sm={4}>
+                            <Container className="d-flex justify-content-center mt-3 mb-4" >
+                                <Row className="w-100">
+                                    <Col xs={12} sm={6} className="mb-2 mb-sm-0 pe-sm-2">
                                         <Button 
                                             variant="primary" 
                                             onClick={() => updatedUser(usuario.id)} 
-                                            className="w-100 rounded-0 text-nowrap" 
+                                            className="w-100 rounded-0 text-nowrap py-2" 
                                             size="sm"
                                         >
                                         Atualizar
                                         </Button>
                                     </Col>
-                                    <Col xs={12} sm={4}>
+                                    <Col xs={12} sm={6} className="ps-sm-2">
                                         <Button 
                                             variant="danger" 
                                             onClick={() => deleteUser(usuario.id)} 
-                                            className="w-100 rouded-0" 
+                                            className="w-100 rounded-0 text-nowrap py-2" 
                                             size="sm"
                                         >
                                             Deletar
                                         </Button>
-                                    </Col>
-                                    <Col xs={12} sm={4}>
-                                    { localStorage.getItem('isAtleta') === 'false' ? (
-                                        <Button 
-                                            variant="secondary" 
-                                            onClick={() => tornarAtleta()} 
-                                            className="w-[120] text-nowrap rounded-0" 
-                                            size="sm"
-                                        >
-                                            Tornar-se atleta
-                                        </Button>
-                                    ) : (
-                                        <Button 
-                                            variant="secondary" 
-                                            onClick={() => entrarModalAtleta(usuario.id)} 
-                                            className="w-[120] text-nowrap rounded-0" 
-                                            size="sm"
-                                        >
-                                        Dados de atleta
-                                        </Button>
-                                    )}
                                     </Col>
                                 </Row>
                             </Container>
