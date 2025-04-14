@@ -83,7 +83,6 @@ export const login: RequestHandler = async (req, res) => {
     console.log('token', token);
     const findIduserType = await UserModel.findOne({ where: { id: userJson.id } });
     const userWithType = findIduserType?.toJSON() as UserAttributes;
-    console.log('userWithType', userWithType.userTypeId);
     
     res.status(200).json({
       message: 'Login realizado com sucesso',
@@ -129,6 +128,7 @@ export const verify: RequestHandler = async (req, res) => {
           id: userJson.id,
           name: userJson.name,
           email: userJson.email,
+          senha: userJson.password,
           userTypeId: userJson.userTypeId
         },
         authenticated: true
