@@ -2,9 +2,9 @@ import {useState, useEffect } from 'react';
 import { Form, Button, Row, Col, Container } from 'react-bootstrap';
 import axios from 'axios';
 import ToastSucessComponent from '../../components/Toast/ToastComponent';
-import AthleteFormModal from '../../components/Modals/Athlete/AthleteFormModal';
+import AthleteFormModal from '../../components/Modals/Athlete/AthleteFormRegisterModal';
 import UpdatePasswordModal from '../../components/Modals/Password/UpdatePasswordModal';
-import AtlheteInfoModal from '../../components/Modals/Athlete/UpdateAtlheteFormModal';
+import AtlheteInfoModal from '../../components/Modals/Athlete/AtlheteFormInfoModal';
 import { Header } from '../../components/landing/Header';
 import './Perfil.css';
 interface User {
