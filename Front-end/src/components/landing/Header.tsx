@@ -57,7 +57,7 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
     <header className="header no-top-margin">
       <nav className="navbar navbar-expand-lg navbar-dark">
         <div className="container">
-          <a className="navbar-brand" href="#">
+          <a className="navbar-brand" href="/">
             Várzea League
           </a>
           <button
@@ -75,12 +75,10 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
             <ul className="navbar-nav me-auto">
               {isLoggedIn && (
                 <>
-                   { (localStorage.getItem('Tipo_usuário:') === '1' || localStorage.getItem('Tipo_usuário:') === '2') && (
-                    <li className="nav-item">
-                      <span className="nav-link" onClick={() => navigate('/matches')}>Partidas</span>
-                    </li>
-                   ) }
-                  {(localStorage.getItem('Tipo_usuário:') === '1' || localStorage.getItem('Tipo_usuário:') === '3') && (
+                  <li className="nav-item">
+                    <span className="nav-link" onClick={() => navigate('/matches')}>Partidas</span>
+                  </li>
+                  {(localStorage.getItem('Tipo_usuário:') === '1'|| localStorage.getItem('Tipo_usuário:') === '4' || localStorage.getItem('Tipo_usuário:') === '3') && (
                     <li className="nav-item">
                       <span className="nav-link" onClick={() => navigate('/teams')}>Times</span>
                     </li>
@@ -120,9 +118,6 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                       {user.name}
                     </button>
                     <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                      {(localStorage.getItem('Tipo_usuário:') === '1' || localStorage.getItem('Tipo_usuário:') === '2') && (
-                        <li><span className="dropdown-item" onClick={() => navigate('/matches')}>Partidas</span></li>
-                      )}
                       {(localStorage.getItem('Tipo_usuário:') === '1' || localStorage.getItem('Tipo_usuário:') === '3') && (
                         <li><span className="dropdown-item" onClick={() => navigate('/teams')}>Times</span></li>
                       )}

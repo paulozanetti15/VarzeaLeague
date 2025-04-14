@@ -75,7 +75,7 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
                     <Form.Label style={{"color":"black"}}>Senha</Form.Label>
                     <Form.Control
                         type="password"
-                        placeholder="senha"
+                        placeholder="Senha"
                         onChange={(e) => setSenha(e.target.value)}
                         autoFocus
                     />
@@ -87,7 +87,7 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
                     <Form.Label style={{"color":"black"}}>Confirmar senha</Form.Label>
                     <Form.Control 
                     type="password"
-                    placeholder="confirma senha"
+                    placeholder="Confirmar senha"
                     onChange={(e) => setConfirmarSenha(e.target.value)}
                     autoFocus/>
                     </Form.Group>
