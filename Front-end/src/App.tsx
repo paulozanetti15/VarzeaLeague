@@ -18,7 +18,7 @@ import PrivateRoute from './components/PrivateRoute'
 import RoleBasedRoute from './components/RoleBasedRoute'
 import { USER_ROLES } from './utils/roleUtils'
 import { useAuth } from './hooks/useAuth'
-
+import Profile from './pages/perfil/Perfil'
 function AppContent() {
   const navigate = useNavigate();
   console.log("TOKEN", localStorage.getItem('token'));
@@ -52,7 +52,20 @@ function AppContent() {
             onLogout={handleLogout}
           />
         } />
-        
+        <Route path="/perfil" element={
+           isLoggedIn ? (
+             <Profile
+              isLoggedIn={isLoggedIn}
+              onLoginClick={() => navigate('/login')}
+              onRegisterClick={() => navigate('/register')}
+              onLogout={handleLogout}
+             />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        } />
+         
+
         <Route path="/login" element={
           isLoggedIn ? (
             <Navigate to="/" replace />
