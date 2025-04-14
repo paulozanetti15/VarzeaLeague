@@ -43,14 +43,12 @@ app.use('/api/teams',teamRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/athlete', AthleteRoute);
 
-
-
 // Rota de teste
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API está funcionando!' });
 });
 
-// Rota de health check aprimorada
+// Rota de health check
 app.get('/api/health', (req, res) => {
   try {
     // Verificar se o banco de dados está conectado
@@ -93,34 +91,31 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log('Conexão com o banco de dados estabelecida com sucesso!');
     
-    // Sincronizar o modelo UserType apenas se não existir
-    await UserTypeModel.sync();
-    console.log('Modelo UserType sincronizado.');
+    try {
+      // Abordagem alternativa: primeiro apagar todas as tabelas manualmente
+      console.log('Apagando todas as tabelas...');
+      await sequelize.query('DROP TABLE IF EXISTS attendances');
+      await sequelize.query('DROP TABLE IF EXISTS athletes');
+      await sequelize.query('DROP TABLE IF EXISTS team_players');
+      await sequelize.query('DROP TABLE IF EXISTS match_players');
+      await sequelize.query('DROP TABLE IF EXISTS match_participants');
+      await sequelize.query('DROP TABLE IF EXISTS matches');
+      await sequelize.query('DROP TABLE IF EXISTS teams');
+      await sequelize.query('DROP TABLE IF EXISTS users');
+      await sequelize.query('DROP TABLE IF EXISTS usertype');
+      console.log('Todas as tabelas foram apagadas com sucesso!');
+    } catch (dropError) {
+      console.error('Erro ao apagar tabelas:', dropError);
+    }
     
-    // Sincronizar os outros modelos sem recriar as tabelas
-    await UserModel.sync();
-    console.log('Modelo User sincronizado.');
-    
-    await TeamModel.sync();
-    console.log('Modelo Team sincronizado.');
-    
-    await MatchModel.sync();
-    console.log('Modelo Match sincronizado.');
-    
-    await MatchPlayer.sync();
-    console.log('Modelo MatchPlayer sincronizado.');
-    
-    await TeamPlayer.sync();
-    console.log('Modelo TeamPlayer sincronizado.');
-    
-    await AthleteModel.sync();
-    console.log('Modelo Athlete sincronizado.');
-    
-    await AttendanceModel.sync();
-    console.log('Modelo Attendance sincronizado.');
+    // Recriar todas as tabelas de uma vez
+    console.log('Recriando todas as tabelas...');
+    await sequelize.sync({ force: true });
+    console.log('Todas as tabelas foram recriadas com sucesso!');
     
     // Inserir os tipos de usuário
     await seedUserTypes();
+    console.log('Tipos de usuário inseridos com sucesso!');
     
     const port = process.env.PORT || 3001;
     app.listen(port, () => {
@@ -141,4 +136,4 @@ const startServer = async () => {
   }
 };
 
-startServer();
+startServer(); 
