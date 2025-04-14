@@ -269,6 +269,7 @@ export class TeamController {
   static async updateTeam(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      console.log(`Atualizando time com ID: ${id}`);
       const { name, description, playerEmails } = req.body;
       const userId = req.user?.id;
      
@@ -311,6 +312,7 @@ export class TeamController {
         const validEmails = playerEmails.filter(email => email && typeof email === 'string' && email.trim() !== '');
         if (validEmails.length === 0) {
           await team.setPlayers([]);
+          console.log('Associação de jogadores removida com sucesso');
         } else {
           const existingPlayers = await User.findAll({
             where: {  // <-- Fixed indentation here
