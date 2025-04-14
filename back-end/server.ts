@@ -5,6 +5,7 @@ import path from 'path';
 import sequelize from './config/database';
 import authRoutes from './routes/authRoutes';
 import matchRoutes from './routes/matchRoutes';
+import userRoutes from './routes/userRoutes';
 import passwordResetRoutes from './routes/passwordResetRoutes';
 import teamRoutes from './routes/teamRoutes';
 import UserModel from './models/UserModel';
@@ -13,6 +14,9 @@ import TeamModel from './models/TeamModel';
 import UserTypeModel from './models/UserTypeModel';
 import MatchPlayer from './models/MatchPlayersModel';
 import TeamPlayer from './models/TeamPlayerModel';
+import AthleteModel from './models/AthleteModel';
+import AttendanceModel from './models/AttendanceModel'; 
+import AthleteRoute from './routes/AthleteRoutes'; 
 import './models/associations';
 import authController from './controllers/authController';
 dotenv.config();
@@ -35,6 +39,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/teams',teamRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/athlete', AthleteRoute);
+
 
 
 // Rota de teste
@@ -102,6 +109,8 @@ const startServer = async () => {
     console.log('Modelo MatchPlayer sincronizado.');
     await TeamPlayer.sync({ force: false });
     console.log('Modelo TeamPlayer sincronizado.');
+    await AthleteModel.sync({ force: false });
+    console.log('Modelo Athlete sincronizado.');
     const port = process.env.PORT || 3001;
     app.listen(port, () => {
       console.log(`Servidor rodando na porta ${port}`);

@@ -1,0 +1,72 @@
+/* Aumentando a especificidade para garantir que sobrescreva o Bootstrap */
+input:focus, 
+input.form-control:focus,
+input.form-control-lg:focus,
+textarea:focus,
+select:focus,
+.form-control:focus,
+.form-check-input:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: transparent !important;
+}
+
+/* Adicionando regras para estados de hover também */
+input:hover, 
+.form-control:hover {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: transparent !important;
+}
+
+/* Adicionando regras para input-focus-style */
+.input-focus-style,
+.input-focus-style:focus,
+.input-focus-style:active {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: transparent !important;
+}
+
+/* Sobrescrevendo estilos específicos do React Bootstrap */
+.form-control-lg:focus,
+.form-control-lg:active {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: transparent !important;
+}
+
+.register-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f7f9fc 0%, #eef1f5 100%);
+    padding: 2rem 1rem;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+}
+
+.register-card {
+    width: 100%;
+    max-width: 550px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgb(3, 3, 3);
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .register-header {
+    background:linear-gradient(135deg, #f7f9fc 0%, #eef1f5 100%);
+    color: rgb(1, 1, 1);
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+  }
+
