@@ -14,9 +14,9 @@ import TeamModel from './models/TeamModel';
 import UserTypeModel from './models/UserTypeModel';
 import MatchPlayer from './models/MatchPlayersModel';
 import TeamPlayer from './models/TeamPlayerModel';
-import AthleteModel from './models/AthleteModel';
+import RulesModel from './models/RulesModel';
 import AttendanceModel from './models/AttendanceModel'; 
-import AthleteRoute from './routes/AthleteRoutes'; 
+import RulesRoutes from './routes/RulesRoutes'; 
 import './models/associations';
 import authController from './controllers/authController';
 import { seedUserTypes } from './seeds/userTypes';
@@ -41,7 +41,7 @@ app.use('/api/matches', matchRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/teams',teamRoutes);
 app.use('/api/user', userRoutes);
-app.use('/api/athlete', AthleteRoute);
+app.use('/api/rules', RulesRoutes);
 
 
 
@@ -113,8 +113,8 @@ const startServer = async () => {
     await TeamPlayer.sync();
     console.log('Modelo TeamPlayer sincronizado.');
     
-    await AthleteModel.sync();
-    console.log('Modelo Athlete sincronizado.');
+    await RulesModel.sync();
+    console.log('Modelo Rules sincronizado.');
     
     await AttendanceModel.sync();
     console.log('Modelo Attendance sincronizado.');
