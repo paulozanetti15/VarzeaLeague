@@ -11,6 +11,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { api } from '../../services/api';
 import './CreateMatch.css';
 import { toast } from 'react-hot-toast';
+import RegrasFormRegisterModal from '../../components/Modals/Athlete/RegrasFormRegisterModal';
 
 interface MatchFormData {
   title: string;
@@ -154,7 +155,9 @@ const CreateMatch: React.FC = () => {
   const navigate = useNavigate();
   const titleInputRef = useRef<HTMLInputElement>(null);
   const btnContainerRef = useRef<HTMLDivElement>(null);
-  
+  const [showInfoAthleteModal, setShowInfoAthleteModal] = useState(false);
+  const [usuario, setUsuario] = useState<any>(null);
+  const [dadosPartida, setDadosPartida] = useState<any>(null);	
   const [formData, setFormData] = useState<MatchFormData>({
     title: '',
     description: '',
@@ -168,10 +171,12 @@ const CreateMatch: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  console.log('token', localStorage.getItem('token'));
+   
 
   // Ajustar largura do botão para combinar com o campo de título
   useEffect(() => {
+    const user= JSON.parse(localStorage.getItem('user') || '{}');
+    setUsuario(user);
     if (titleInputRef.current && btnContainerRef.current) {
       const titleWidth = titleInputRef.current.offsetWidth;
       btnContainerRef.current.style.width = `${titleWidth}px`;
@@ -193,7 +198,7 @@ const CreateMatch: React.FC = () => {
       [name]: value
     }));
   };
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -242,7 +247,6 @@ const CreateMatch: React.FC = () => {
       if (formData.complement?.trim()) {
         fullLocation += ` - ${formData.complement.trim()}`;
       }
-
       const matchData = {
         title: formData.title.trim(),
         date: matchDateTime.toISOString(),
@@ -253,11 +257,8 @@ const CreateMatch: React.FC = () => {
         city: formData.city.trim(),
         complement: formData.complement?.trim()
       };
-
-      await api.matches.create(matchData);
-
-      toast.success('Partida criada com sucesso!');
-      navigate('/matches');
+      setDadosPartida(matchData);
+      setShowInfoAthleteModal(true);
     } catch (err: any) {
       console.error('Erro ao criar partida:', err);
       
@@ -467,21 +468,6 @@ const CreateMatch: React.FC = () => {
           <div className="form-row">
             <div className="form-col">
               <div className="form-group">
-                <label className="form-label">Máximo de Jogadores</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  name="maxPlayers"
-                  value={formData.maxPlayers}
-                  onChange={handleInputChange}
-                  required
-                  min="2"
-                  max="50"
-                />
-              </div>
-            </div>
-            <div className="form-col">
-              <div className="form-group">
                 <label className="form-label">Preço (opcional)</label>
                 <input
                   type="number"
@@ -496,18 +482,27 @@ const CreateMatch: React.FC = () => {
               </div>
             </div>
           </div>
-
-          <div className="btn-container" ref={btnContainerRef}>
+         <div className="btn-container" ref={btnContainerRef}>
             <button
               type="submit"
               className="submit-btn"
               disabled={loading}
             >
-              {loading ? 'Criando...' : 'Criar Partida'}
+               Continuar para criar partida
             </button>
           </div>
         </form>
-      </div>
+      </div> 
+      {usuario && (
+      <>
+        <RegrasFormRegisterModal
+            userId={usuario.id} 
+            show={showInfoAthleteModal}
+            partidaDados={dadosPartida}
+            onHide={() => setShowInfoAthleteModal(false)}
+        />
+      </>
+    )} 
     </div>
   );
 };
