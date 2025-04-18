@@ -113,7 +113,7 @@ function AppContent() {
             <RoleBasedRoute 
               isLoggedIn={isLoggedIn} 
               userRole={user?.userTypeId} 
-              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS]}
+              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
             >
               <CreateMatch />
             </RoleBasedRoute>
