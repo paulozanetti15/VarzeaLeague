@@ -2,9 +2,7 @@ import {useState, useEffect } from 'react';
 import { Form, Button, Row, Col, Container } from 'react-bootstrap';
 import axios from 'axios';
 import ToastSucessComponent from '../../components/Toast/ToastComponent';
-import AthleteFormModal from '../../components/Modals/Athlete/AthleteFormRegisterModal';
 import UpdatePasswordModal from '../../components/Modals/Password/UpdatePasswordModal';
-import AtlheteInfoModal from '../../components/Modals/Athlete/AtlheteFormInfoModal';
 import { Header } from '../../components/landing/Header';
 import './Perfil.css';
 interface User {
@@ -188,28 +186,10 @@ const perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout } : Perfil
                         )}
                         {usuario && (
                             <>
-                                <AthleteFormModal 
-                                    userId={usuario.id}
-                                    show={showAthleteRegisterModal}
-                                    onHide={() => setShowAthleteRegisterModal(false)}
-                                />
-                            </>
-                        )}
-                        {usuario && (
-                            <>
                                 <UpdatePasswordModal 
                                     userId={usuario.id}
                                     show={showUpdatePasswordModal}
                                     onHide={() => setShowUpdatePasswordModal(false)}
-                                />
-                            </>
-                        )} 
-                        {usuario && (
-                            <>
-                                <AtlheteInfoModal 
-                                    userId={usuario.id}
-                                    show={showInfoAthleteModal}
-                                    onHide={() => setShowInfoAthleteModal(false)}
                                 />
                             </>
                         )} 
