@@ -3,16 +3,17 @@ import { AuthRequest } from '../middleware/auth';
 import MatchModel from '../models/MatchModel';
 import UserModel from '../models/UserModel';
 import jwt from 'jsonwebtoken';
+import { where } from 'sequelize';
 require('dotenv').config(); 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
 // Criar uma nova partida
 export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
    try {
-      const { title, description, date, location, complement, maxPlayers, price } = req.body;
+      const { title, description, date, location, complement,price } = req.body;
       console.log('Dados recebidos:', req.body);
       
       // Validações básicas
-      if (!title || !date || !location || !maxPlayers) {
+      if (!title || !date || !location) {
         res.status(400).json({ message: 'Campos obrigatórios faltando' });
         return;
       }
@@ -23,13 +24,6 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
         res.status(400).json({ message: 'A data da partida deve ser futura' });
         return;
       }
-
-      // Validar número de jogadores
-      if (maxPlayers < 2 || maxPlayers > 50) {
-        res.status(400).json({ message: 'Número de jogadores deve estar entre 2 e 50' });
-        return;
-      }
-
       const token = req.headers.authorization?.replace('Bearer ', '');
       try {
         const decodedPayload = jwt.decode(token);
@@ -46,7 +40,6 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
           description: description?.trim(),
           date: matchDate,
           location: fullLocation,
-          maxPlayers,
           price: price || null,
           organizerId: userId,
           status: 'open'
@@ -107,7 +100,6 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
         'title',
         'date',
         'location',
-        'maxPlayers',
         'status',
         'description',
         'price',
