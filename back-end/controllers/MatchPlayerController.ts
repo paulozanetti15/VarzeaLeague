@@ -236,7 +236,7 @@ async function joinMatchByTeam(req: any, res: any) {
     const matchId = parseInt(req.params.id, 10);
     const { teamId } = req.body;  
     const match = await Match.findByPk(matchId, {
-      attributes: [ 'title', 'date', 'location', 'maxPlayers', 'status', 'description', 'price', 'organizerId']
+      attributes: [ 'title', 'date', 'location', 'status', 'description', 'price', 'organizerId']
     })
     const token = req.headers.authorization?.replace('Bearer ', '');
     try {
@@ -308,19 +308,7 @@ async function joinMatchByTeam(req: any, res: any) {
   const currentPlayerCount = await MatchPlayer.count({
     where: { matchId: matchId}
   });
-  const teamPlayerCount = teamResult.playerCount || 1; // Considerar pelo menos 1 jogador
-  if (currentPlayerCount + teamPlayerCount > match.maxPlayers) {
-     res.status(400).json({ 
-        message: 'Não há vagas suficientes para este time na partida',
-        details: {
-        currentPlayers: currentPlayerCount,
-        teamSize: teamPlayerCount,
-        maxPlayers: match.maxPlayers,
-        remaining: match.maxPlayers - currentPlayerCount
-      }
-   });
-    return;
-  }
+  
 
   await MatchPlayer.findOrCreate({
     where: {
@@ -338,7 +326,6 @@ async function joinMatchByTeam(req: any, res: any) {
        matchId,
        teamId,
        teamName: team.name,
-       teamSize: teamPlayerCount
       }
     });
   } catch (error) {
