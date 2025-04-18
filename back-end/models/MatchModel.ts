@@ -66,15 +66,6 @@ Match.init({
       len: [5, 200]
     }
   },
-  maxPlayers: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    defaultValue: 10,
-    validate: {
-      min: 2,
-      max: 50
-    }
-  },
   status: {
     type: DataTypes.ENUM('open', 'pending', 'confirmed', 'cancelled', 'completed'),
     defaultValue: 'open',
