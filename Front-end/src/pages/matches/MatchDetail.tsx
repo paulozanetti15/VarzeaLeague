@@ -10,6 +10,8 @@ import { api } from '../../services/api';
 import { geocodeAddress } from '../../services/geocodeService';
 import './MatchDetail.css';
 import toast from 'react-hot-toast';
+import RegrasFormInfoModal from '../../components/Modals/Athlete/RegrasFormInfoModal';
+import { Button } from 'react-bootstrap';
 
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,7 +33,7 @@ const MatchDetail: React.FC = () => {
   const [userIsInMatch, setUserIsInMatch] = useState(false);
   const [selectedTeamForView, setSelectedTeamForView] = useState<any>(null);
   const [showTeamDetailsModal, setShowTeamDetailsModal] = useState(false);
-  
+  const [showRulesModal, setShowRulesModal] = useState(false);
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
   // Função fallback para obter localização aproximada por IP (definida globalmente para o componente)
@@ -1056,9 +1058,6 @@ const MatchDetail: React.FC = () => {
   useEffect(() => {
     // Função para obter a localização do usuário com alta precisão
     const getUserLocation = () => {
-      console.log('Tentando obter localização do usuário...');
-      
-      // Verificar se o navegador suporta geolocalização
       if (navigator.geolocation) {
         toast.loading('Obtendo sua localização...');
         
@@ -1338,16 +1337,12 @@ const MatchDetail: React.FC = () => {
     match.players.some((player: any) => {
       if (!player) return false;
       
-      // Verifica se é o próprio usuário como jogador individual
       const isCurrentUser = player.id === currentUser?.id;
-      
-      // Verifica se é um time do usuário
+  
       const isUserTeam = player && player.isTeam && match.teams && Array.isArray(match.teams) && 
         match.teams.some((t: any) => 
           t && t.id === player.teamId && t.ownerId === currentUser?.id
         );
-      
-      console.log(`Verificando jogador: ${player.name || player.id}. É o usuário atual? ${isCurrentUser}. É time do usuário? ${isUserTeam}`);
       
       return isCurrentUser || isUserTeam;
     });
@@ -1437,6 +1432,19 @@ const MatchDetail: React.FC = () => {
             <h3>Descrição</h3>
             <p>{match.description}</p>
           </div>
+        )}
+        <div className="match-description">
+            <h3>Regras</h3>
+             <Button variant="info" onClick={() => setShowRulesModal(true)}>Visualizar regras</Button>
+          </div>
+
+
+        {match && (
+          <RegrasFormInfoModal
+            idpartida={match.id} 
+            show={showRulesModal} 
+            onHide={() => setShowRulesModal(false)}
+          />
         )}
         
         <div className="map-section">
