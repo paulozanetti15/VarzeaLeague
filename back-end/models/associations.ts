@@ -8,6 +8,8 @@ import MatchGoal from './MatchGoalModel';
 import MatchCard from './MatchCardModel';
 import MatchEvaluation from './MatchEvaluationModel';
 import Championship from './ChampionshipModel';
+import './TesteModel';
+
 
 // Associações do modelo User
 User.hasMany(Match, {

@@ -17,7 +17,6 @@ import TeamPlayer from './models/TeamPlayerModel';
 import RulesModel from './models/RulesModel';
 import AttendanceModel from './models/AttendanceModel'; 
 import RulesRoutes from './routes/RulesRoutes'; 
-import './models/associations';
 import authController from './controllers/authController';
 import { seedUserTypes } from './seeds/userTypes';
 dotenv.config();
@@ -93,11 +92,10 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log('Conexão com o banco de dados estabelecida com sucesso!');
     
-    // Sincronizar o modelo UserType apenas se não existir
+    // Sincronizar os modelos principais
     await UserTypeModel.sync();
     console.log('Modelo UserType sincronizado.');
     
-    // Sincronizar os outros modelos sem recriar as tabelas
     await UserModel.sync();
     console.log('Modelo User sincronizado.');
     
@@ -118,6 +116,27 @@ const startServer = async () => {
     
     await AttendanceModel.sync();
     console.log('Modelo Attendance sincronizado.');
+    
+    // Modelos adicionados na modelagem v2
+    const { default: ChampionshipModel } = await import('./models/ChampionshipModel');
+    await ChampionshipModel.sync();
+    console.log('Modelo Championship sincronizado.');
+    
+    const { default: MatchReportModel } = await import('./models/MatchReportModel');
+    await MatchReportModel.sync();
+    console.log('Modelo MatchReport sincronizado.');
+    
+    const { default: MatchGoalModel } = await import('./models/MatchGoalModel');
+    await MatchGoalModel.sync();
+    console.log('Modelo MatchGoal sincronizado.');
+    
+    const { default: MatchCardModel } = await import('./models/MatchCardModel');
+    await MatchCardModel.sync();
+    console.log('Modelo MatchCard sincronizado.');
+    
+    const { default: MatchEvaluationModel } = await import('./models/MatchEvaluationModel');
+    await MatchEvaluationModel.sync();
+    console.log('Modelo MatchEvaluation sincronizado.');
     
     // Inserir os tipos de usuário
     await seedUserTypes();
