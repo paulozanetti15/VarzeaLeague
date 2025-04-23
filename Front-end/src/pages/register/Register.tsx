@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import './Register.css';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
 interface RegisterProps {
   onLoginClick?: () => void;
 }
@@ -16,6 +18,9 @@ export function Register({ onLoginClick }: RegisterProps) {
   const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false);
   const [registrationError, setRegistrationError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
@@ -118,6 +123,14 @@ export function Register({ onLoginClick }: RegisterProps) {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -160,27 +173,199 @@ export function Register({ onLoginClick }: RegisterProps) {
     }
   };
 
+  // Aplicando os estilos inline diretamente para garantir que sejam aplicados
+  const containerStyle = {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+    padding: '2rem 1rem',
+    width: '100%',
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 10,
+  };
+
+  const cardStyle = {
+    width: '100%',
+    maxWidth: '450px',
+    backgroundColor: '#ffffff',
+    borderRadius: '8px',
+    boxShadow: '0 8px 30px rgba(25, 118, 210, 0.15)',
+    overflow: 'hidden' as const,
+    position: 'relative' as const,
+  };
+
+  const headerStyle = {
+    backgroundColor: '#1e88e5',
+    color: '#ffffff',
+    padding: '2rem',
+    textAlign: 'center' as const,
+    position: 'relative' as const,
+  };
+
+  const titleStyle = {
+    fontSize: '1.75rem',
+    fontWeight: 700,
+    marginBottom: '0.5rem',
+    color: '#ffffff',
+  };
+
+  const subtitleStyle = {
+    fontSize: '1rem',
+    opacity: 0.9,
+    color: '#ffffff',
+  };
+
+  const bodyStyle = {
+    padding: '2.5rem',
+    backgroundColor: '#ffffff',
+  };
+
+  const formGroupStyle = {
+    marginBottom: '1.75rem',
+    position: 'relative' as const,
+  };
+
+  const labelStyle = {
+    display: 'block',
+    marginBottom: '0.5rem',
+    fontWeight: 500,
+    color: '#374151',
+    fontSize: '0.95rem',
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '0.875rem 1rem',
+    fontSize: '1rem',
+    border: '1px solid #d1d5db',
+    borderRadius: '6px',
+    backgroundColor: '#f9fafb',
+    transition: 'all 0.3s ease',
+  };
+
+  const passwordInputStyle = {
+    ...inputStyle,
+    paddingRight: '3rem', // Espaço para o botão de mostrar/ocultar
+  };
+
+  const invalidInputStyle = {
+    ...inputStyle,
+    borderColor: '#ef4444',
+    paddingRight: '3rem',
+  };
+
+  const invalidPasswordInputStyle = {
+    ...invalidInputStyle,
+    paddingRight: '3rem', // Espaço para o botão de mostrar/ocultar
+  };
+
+  const passwordToggleStyle = {
+    position: 'absolute' as const,
+    right: '1rem',
+    top: '38px', // Ajustado para alinhar com o campo
+    background: 'none',
+    border: 'none',
+    color: '#4b5563',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '0.9rem',
+    padding: '0.25rem',
+  };
+
+  const eyeIconStyle = {
+    width: '20px',
+    height: '20px',
+    display: 'inline-block',
+  };
+
+  const buttonStyle = {
+    width: '100%',
+    padding: '1rem',
+    backgroundColor: '#1e88e5',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    fontSize: '1rem',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    marginTop: '0.5rem',
+    marginBottom: '1.5rem',
+    boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)',
+  };
+
+  const linkContainerStyle = {
+    textAlign: 'center' as const,
+    fontSize: '0.95rem',
+    color: '#4b5563',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.5rem',
+  };
+
+  const linkStyle = {
+    color: '#1e88e5',
+    fontWeight: 600,
+    textDecoration: 'none',
+    background: 'none',
+    border: 'none',
+    padding: 0,
+    cursor: 'pointer',
+  };
+
+  const errorStyle = {
+    color: '#ef4444',
+    fontSize: '0.875rem',
+    marginBottom: '1.5rem',
+    padding: '0.75rem 1rem',
+    backgroundColor: 'rgba(254, 226, 226, 1)',
+    border: '1px solid rgba(254, 202, 202, 1)',
+    borderRadius: '6px',
+  };
+
+  const triangleStyle = {
+    content: '',
+    position: 'absolute' as const,
+    bottom: '-10px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: '50px',
+    height: '20px',
+    backgroundColor: '#ffffff',
+    clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
+  };
+
   return (
-    <div className="register-container">
-      <div className="register-card">
-        <div className="register-header">
-          <h1 className="register-title">Criar Conta</h1>
-          <p className="register-subtitle">Cadastre-se para começar a usar o sistema</p>
+    <div style={containerStyle}>
+      <div style={cardStyle}>
+        <div style={headerStyle}>
+          <h1 style={titleStyle}>Várzea League</h1>
+          <p style={subtitleStyle}>Crie sua conta para começar</p>
+          <div style={triangleStyle}></div>
         </div>
         
-        <div className="register-body">
+        <div style={bodyStyle}>
           {registrationError && (
-            <div className="register-error" role="alert">
+            <div style={errorStyle} role="alert">
               {registrationError}
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
-            <div className="register-form-group">
-              <label htmlFor="nome" className="register-label">Nome</label>
+            <div style={formGroupStyle}>
+              <label htmlFor="nome" style={labelStyle}>Nome</label>
               <input
                 type="text"
-                className="register-input"
+                style={inputStyle}
                 id="nome"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
@@ -189,11 +374,11 @@ export function Register({ onLoginClick }: RegisterProps) {
               />
             </div>
 
-            <div className="register-form-group">
-              <label htmlFor="email" className="register-label">Email</label>
+            <div style={formGroupStyle}>
+              <label htmlFor="email" style={labelStyle}>Email</label>
               <input
                 type="email"
-                className={`register-input ${emailError ? 'is-invalid' : ''}`}
+                style={emailError ? invalidInputStyle : inputStyle}
                 id="email"
                 value={email}
                 onChange={handleEmailChange}
@@ -201,43 +386,79 @@ export function Register({ onLoginClick }: RegisterProps) {
                 required
               />
               {emailError && (
-                <div className="register-error">
+                <div style={errorStyle}>
                   {emailError}
                 </div>
               )}
             </div>
 
-            <div className="register-form-group">
-              <label htmlFor="password" className="register-label">Senha</label>
+            <div style={formGroupStyle}>
+              <label htmlFor="password" style={labelStyle}>Senha</label>
               <input
-                type="password"
-                className={`register-input ${passwordTouched && passwordError ? 'is-invalid' : ''}`}
+                type={showPassword ? "text" : "password"}
+                style={passwordTouched && passwordError ? invalidPasswordInputStyle : passwordInputStyle}
                 id="password"
                 value={password}
                 onChange={handlePasswordChange}
                 placeholder="Sua senha"
                 required
               />
+              <button 
+                type="button" 
+                onClick={togglePasswordVisibility}
+                style={passwordToggleStyle}
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <svg style={eyeIconStyle} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+                    <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg style={eyeIconStyle} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745a10.029 10.029 0 003.3-4.38 1.651 1.651 0 000-1.185A10.004 10.004 0 009.999 3a9.956 9.956 0 00-4.744 1.194L3.28 2.22zM7.752 6.69l1.092 1.092a2.5 2.5 0 013.374 3.373l1.091 1.092a4 4 0 00-5.557-5.557z" clipRule="evenodd" />
+                    <path d="M10.748 13.93l2.523 2.523a9.987 9.987 0 01-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 010-1.186A10.007 10.007 0 012.839 6.02L6.07 9.252a4 4 0 004.678 4.678z" />
+                  </svg>
+                )}
+              </button>
               {passwordTouched && passwordError && !confirmPasswordTouched && (
-                <div className="register-error">
+                <div style={errorStyle}>
                   {passwordError}
                 </div>
               )}
             </div>
 
-            <div className="register-form-group">
-              <label htmlFor="confirmPassword" className="register-label">Confirmar Senha</label>
+            <div style={formGroupStyle}>
+              <label htmlFor="confirmPassword" style={labelStyle}>Confirmar Senha</label>
               <input
-                type="password"
-                className={`register-input ${confirmPasswordTouched && passwordError ? 'is-invalid' : ''}`}
+                type={showConfirmPassword ? "text" : "password"}
+                style={confirmPasswordTouched && passwordError ? invalidPasswordInputStyle : passwordInputStyle}
                 id="confirmPassword"
                 value={confirmPassword}
                 onChange={handleConfirmPasswordChange}
                 placeholder="Confirme sua senha"
                 required
               />
+              <button 
+                type="button" 
+                onClick={toggleConfirmPasswordVisibility}
+                style={passwordToggleStyle}
+                tabIndex={-1}
+              >
+                {showConfirmPassword ? (
+                  <svg style={eyeIconStyle} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
+                    <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg style={eyeIconStyle} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745a10.029 10.029 0 003.3-4.38 1.651 1.651 0 000-1.185A10.004 10.004 0 009.999 3a9.956 9.956 0 00-4.744 1.194L3.28 2.22zM7.752 6.69l1.092 1.092a2.5 2.5 0 013.374 3.373l1.091 1.092a4 4 0 00-5.557-5.557z" clipRule="evenodd" />
+                    <path d="M10.748 13.93l2.523 2.523a9.987 9.987 0 01-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 010-1.186A10.007 10.007 0 012.839 6.02L6.07 9.252a4 4 0 004.678 4.678z" />
+                  </svg>
+                )}
+              </button>
               {confirmPasswordTouched && passwordError && (
-                <div className="register-error">
+                <div style={errorStyle}>
                   {passwordError}
                 </div>
               )}
@@ -245,17 +466,17 @@ export function Register({ onLoginClick }: RegisterProps) {
 
             <button 
               type="submit" 
-              className="register-btn"
+              style={buttonStyle}
               disabled={isLoading}
             >
-              {isLoading ? 'Criando...' : 'Criar Conta'}
+              {isLoading ? 'Criando conta...' : 'Criar Conta'}
             </button>
             
-            <div className="register-login">
+            <div style={linkContainerStyle}>
               Já tem uma conta?
               <button 
                 type="button" 
-                className="register-login-link"
+                style={linkStyle}
                 onClick={onLoginClick}
                 disabled={isLoading}
               >

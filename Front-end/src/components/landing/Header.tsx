@@ -1,5 +1,5 @@
 import './Header.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
 interface User {
@@ -18,22 +18,48 @@ interface HeaderProps {
 
 export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeSection, setActiveSection] = useState("");
+  const isHomePage = location.pathname === '/';
+
+  // Handle navigation with hash when the component loads
+  useEffect(() => {
+    // Check if we're on the home page with a hash
+    if (isHomePage && location.hash) {
+      const sectionId = location.hash.substring(1); // Remove the # symbol
+      const section = document.getElementById(sectionId);
+      
+      if (section) {
+        // Add a slight delay to ensure the page is fully loaded
+        setTimeout(() => {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          setActiveSection(sectionId);
+        }, 300);
+      }
+    }
+  }, [isHomePage, location.hash]);
 
   // Função para rolagem suave
   const scrollToSection = (sectionId: string) => {
-    const section = document.getElementById(sectionId);
-    if (section) {
-      setActiveSection(sectionId);
-      section.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
+    if (isHomePage) {
+      const section = document.getElementById(sectionId);
+      if (section) {
+        setActiveSection(sectionId);
+        section.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    } else {
+      // Se não estiver na página inicial, navega para a página inicial com o hash do section
+      navigate(`/?section=${sectionId}#${sectionId}`);
     }
   };
 
   // Detectar seção ativa ao rolar
   useEffect(() => {
+    if (!isHomePage) return; // Só verifica scroll na home page
+    
     const handleScroll = () => {
       const sections = ['beneficios', 'depoimentos', 'contato'];
       
@@ -51,7 +77,7 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isHomePage]);
   
   return (
     <header className="header no-top-margin">
@@ -80,7 +106,7 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                   </li>
                   {(localStorage.getItem('Tipo_usuário:') === '1'|| localStorage.getItem('Tipo_usuário:') === '4' || localStorage.getItem('Tipo_usuário:') === '3') && (
                     <li className="nav-item">
-                      <span className="nav-link" onClick={() => navigate('/teams')}>Times</span>
+                      <span className="nav-link" onClick={() => navigate('/teams')}>Meu time</span>
                     </li>
                   )}
                 </>
@@ -119,7 +145,7 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                     </button>
                     <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                       {(localStorage.getItem('Tipo_usuário:') === '1' || localStorage.getItem('Tipo_usuário:') === '3') && (
-                        <li><span className="dropdown-item" onClick={() => navigate('/teams')}>Times</span></li>
+                        <li><span className="dropdown-item" onClick={() => navigate('/teams')}>Meu time</span></li>
                       )}
                       <li><span className="dropdown-item" onClick={() => navigate('/perfil')}>Meu perfil</span></li>
                       <li><hr className="dropdown-divider" /></li>

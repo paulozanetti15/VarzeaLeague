@@ -403,7 +403,7 @@ const EditTeam: React.FC = () => {
               cursor: 'pointer'
             }}
           >
-            Voltar para Lista de Times
+            Voltar
           </button>
         </div>
       </div>
@@ -436,8 +436,8 @@ const EditTeam: React.FC = () => {
         onClick={() => navigate('/teams')}
       >
         <ArrowBackIcon sx={{ fontSize: 24, color: '#fff' }} />
+        <span>Voltar</span>
       </motion.button>
-
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -446,7 +446,7 @@ const EditTeam: React.FC = () => {
         className="form-container"
       >
         <div className="form-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-          <h1 className="form-title">Editar Time</h1>
+          <h1 className="form-title">Editar meu time</h1>
         </div>
 
         {error && (
@@ -465,7 +465,7 @@ const EditTeam: React.FC = () => {
                   onClick={() => navigate('/teams')}
                   className="return-btn"
                 >
-                  Voltar para Lista de Times
+                  Voltar
                 </button>
               </div>
             )}
@@ -599,7 +599,7 @@ const EditTeam: React.FC = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              className="submit-btn"
+              className="save-btn"
               disabled={loading}
             >
               {loading ? 'Salvando...' : 'Salvar Alterações'}

@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom';
 interface BenefitsProps {
   isLoggedIn: boolean;
   onViewMatches: () => void;
+  id?: string;
 }
 
-export function Benefits({ isLoggedIn, onViewMatches }: BenefitsProps) {
+export function Benefits({ isLoggedIn, onViewMatches, id }: BenefitsProps) {
   const navigate = useNavigate();
 
   const handleNavigation = (path: string) => {
@@ -49,7 +50,7 @@ export function Benefits({ isLoggedIn, onViewMatches }: BenefitsProps) {
   ];
 
   return (
-    <section className="benefits-section" id="beneficios">
+    <section className="benefits-section" id={id || "beneficios"}>
       <div className="container">
         <h2 className="section-title text-center">
           Por que escolher a Várzea League?

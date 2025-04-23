@@ -286,12 +286,33 @@ body::before {
   transform-origin: right;
 }
 
+.btn-link.dropdown-toggle {
+  transition: none !important; /* Desabilita transições no botão para evitar piscar */
+  background-color: transparent !important; /* Garante que o fundo seja transparente */
+  color: white !important; /* Forçar a cor branca no texto */
+  text-decoration: none !important; /* Remover sublinhado */
+  opacity: 1 !important; /* Garantir opacidade total */
+}
+
+.btn-link.dropdown-toggle:hover,
+.btn-link.dropdown-toggle:focus,
+.btn-link.dropdown-toggle:active,
+.btn-link.dropdown-toggle[aria-expanded="true"] {
+  color: white !important;
+  background-color: rgba(255, 255, 255, 0.1) !important; /* Fundo sutil ao interagir */
+}
+
 .dropdown-menu {
   border: none;
   border-radius: 8px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
   padding: 0.75rem 0;
   margin-top: 0.5rem;
+  animation: none !important; /* Previne animação que causa flash */
+  opacity: 1 !important; /* Garante que o dropdown seja sempre opaco */
+  transition: none !important; /* Remove todas as transições para evitar piscar */
+  transform-origin: top right;
+  transform: none !important; /* Garante que não haja transformações */
 }
 
 .dropdown-item {
@@ -330,9 +351,6 @@ body::before {
   .navbar-dark .navbar-nav .nav-link {
     padding: 0.75rem 1rem;
     border-radius: 6px;
-  .navbar-dark .navbar-nav .nav-link {
-    padding: 0.75rem 1rem;
-    border-radius: 6px;
   }
   
   .navbar-dark .navbar-nav .nav-link:hover {
@@ -341,31 +359,12 @@ body::before {
   
   .navbar-dark .navbar-nav .nav-link::after {
     display: none;
-  .navbar-dark .navbar-nav .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
   }
   
-  .navbar-dark .navbar-nav .nav-link::after {
-    display: none;
-  }
-  
-  .btn-outline-light, .btn-light {
-    display: block;
   .btn-outline-light, .btn-light {
     display: block;
     width: 100%;
     margin: 0.5rem 0;
-    text-align: center;
-  }
-  
-  .dropdown-menu {
-    background-color: rgba(255, 255, 255, 0.95);
-    margin-top: 0;
-  }
-  
-  .d-flex {
-    flex-direction: column;
-    width: 100%;
     text-align: center;
   }
   

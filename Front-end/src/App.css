@@ -1,12 +1,28 @@
 html, body {
-  margin: 0 !important;
-  padding: 0 !important;
-  border-top: none !important;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scrollbar-width: thin;
+  scrollbar-color: #bbbbbb #f1f1f1;
+}
+
+html {
+  /* Removido overflow-y: scroll para evitar dois scrollbars */
 }
 
 body::before {
   display: none !important;
   content: none !important;
+}
+
+/* Modal handling - prevent any page shift when modal opens */
+body.modal-open {
+  overflow: hidden;
+  padding-right: 8px; /* Compensate for scrollbar width */
+  width: 100%;
+  position: fixed;
 }
 
 #root {
@@ -390,4 +406,29 @@ body::before {
     flex-direction: column;
     gap: 1rem;
   }
+}
+
+/* Custom scrollbar - available on all pages */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #bbbbbb;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #bbbbbb #f1f1f1;
 }

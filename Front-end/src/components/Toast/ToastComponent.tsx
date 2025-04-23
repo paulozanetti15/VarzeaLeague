@@ -1,41 +1,54 @@
 import { useState, useEffect } from 'react';
-import Toast from 'react-bootstrap/Toast';
-import ToastContainer from 'react-bootstrap/ToastContainer';
+import { Toast } from 'react-bootstrap';
+import "./Toast.css";
 
-interface ToastProps {
+interface Props {
   message: string;
-  bg?: string;
-  onClose?: () => void;
+  bg: string;
+  onClose: () => void;
   autoHide?: boolean;
 }
 
-function ToastComponent({ message, bg = 'success', onClose, autoHide = true }: ToastProps) {
+const ToastComponent = ({ message, bg, onClose, autoHide = true }: Props) => {
   const [show, setShow] = useState(true);
+
+  useEffect(() => {
+    setShow(true);
+  }, [message]);
+
   const handleClose = () => {
-    setShow(false);
-    if (onClose) {
+    const toast = document.querySelector('.toast');
+    if (toast) {
+      toast.classList.add('toast-exit');
+      setTimeout(() => {
+        setShow(false);
+        onClose();
+      }, 300);
+    } else {
+      setShow(false);
       onClose();
     }
   };
-  
+
+  const toastClass = `toast-${bg}`;
+
   return (
-    <ToastContainer position="top-end" className="p-3" style={{ zIndex: 1070 }}>
-      <Toast
-        onClose={handleClose}
-        show={show}
-        delay={3000}
+    <div className="toast-container">
+      <Toast 
+        show={show} 
+        onClose={handleClose} 
+        delay={3000} 
         autohide={autoHide}
-        bg={bg as any}
+        className={toastClass}
+        style={{ zIndex: 9999 }}
       >
         <Toast.Header>
-          <strong className="me-auto">Varzea League</strong>
+          <strong className="me-auto">Notification</strong>
         </Toast.Header>
-        <Toast.Body className={bg === 'dark' ? 'text-white' : ''}>
-          {message}
-        </Toast.Body>
+        <Toast.Body>{message}</Toast.Body>
       </Toast>
-    </ToastContainer>
+    </div>
   );
-}
+};
 
 export default ToastComponent;
