@@ -1,6 +1,10 @@
 import './Testimonials.css';
 
-export function Testimonials() {
+interface TestimonialsProps {
+  id?: string;
+}
+
+export function Testimonials({ id }: TestimonialsProps) {
   const testimonials = [
     {
       id: 1,
@@ -48,7 +52,7 @@ export function Testimonials() {
   };
 
   return (
-    <section className="testimonials-section" id="depoimentos">
+    <section className="testimonials-section" id={id || "depoimentos"}>
       <div className="container">
         <h2 className="section-title text-center">
           O que dizem nossos usuários

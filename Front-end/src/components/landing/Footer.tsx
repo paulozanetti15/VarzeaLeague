@@ -1,8 +1,12 @@
 import './Footer.css';
 
-export function Footer() {
+interface FooterProps {
+  id?: string;
+}
+
+export function Footer({ id }: FooterProps) {
   return (
-    <footer className="footer" id="contato">
+    <footer className="footer" id={id || "contato"}>
       <div className="container">
         <div className="row justify-content-between">
           <div className="col-lg-3 mb-4 mb-lg-0">

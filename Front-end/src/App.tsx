@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import axios from 'axios'
 import { Toaster } from 'react-hot-toast'
+// import { AnimatePresence } from 'framer-motion'
 import './App.css'
 import { Login } from './pages/login/Login'
 import { Register } from './pages/register/Register'
@@ -19,84 +20,108 @@ import RoleBasedRoute from './components/RoleBasedRoute'
 import { USER_ROLES } from './utils/roleUtils'
 import { useAuth } from './hooks/useAuth'
 import Profile from './pages/perfil/Perfil'
+import PageTransition from './components/PageTransition'
+import React, { lazy, Suspense } from 'react'
+
+// Componente simples para loading
+const Loading = () => (
+  <div className="loading-container">
+    <div className="loading-spinner"></div>
+    <p>Carregando...</p>
+  </div>
+);
+
 function AppContent() {
   const navigate = useNavigate();
-  console.log("TOKEN", localStorage.getItem('token'));
+  const location = useLocation();
   const { isLoggedIn, isLoading, user, login, logout } = useAuth();
+  
   const handleLoginSuccess = (userData: { user: any; token: string }) => {
     login(userData);
     navigate('/');
   };
+  
   const handleLogout = () => {
     logout();
     navigate('/');
   };
+  
   if (isLoading) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p>Carregando...</p>
-      </div>
-    );
+    return <Loading />;
   }
 
   return (
     <>
       <Routes>
         <Route path="/" element={
-          <Landing 
-            isLoggedIn={isLoggedIn}
-            user={user}
-            onLoginClick={() => navigate('/login')}
-            onRegisterClick={() => navigate('/register')}
-            onLogout={handleLogout}
-          />
-        } />
-        <Route path="/perfil" element={
-           isLoggedIn ? (
-             <Profile
+          <PageTransition>
+            <Landing 
               isLoggedIn={isLoggedIn}
+              user={user}
               onLoginClick={() => navigate('/login')}
               onRegisterClick={() => navigate('/register')}
               onLogout={handleLogout}
-             />
+            />
+          </PageTransition>
+        } />
+        
+        <Route path="/perfil" element={
+          isLoggedIn ? (
+            <PageTransition>
+              <Profile
+                isLoggedIn={isLoggedIn}
+                onLoginClick={() => navigate('/login')}
+                onRegisterClick={() => navigate('/register')}
+                onLogout={handleLogout}
+              />
+            </PageTransition>
           ) : (
             <Navigate to="/login" replace />
           )
         } />
-         
-
+        
         <Route path="/login" element={
           isLoggedIn ? (
             <Navigate to="/" replace />
           ) : (
-            <Login 
-              onRegisterClick={() => navigate('/register')}
-              onForgotPasswordClick={() => navigate('/forgot-password')}
-              onLoginSuccess={handleLoginSuccess}
-            />
+            <PageTransition>
+              <Login 
+                onRegisterClick={() => navigate('/register')}
+                onForgotPasswordClick={() => navigate('/forgot-password')}
+                onLoginSuccess={handleLoginSuccess}
+              />
+            </PageTransition>
           )
         } />
+        
         <Route path="/register" element={
           isLoggedIn ? (
             <Navigate to="/" replace />
           ) : (
-            <Register 
-              onLoginClick={() => navigate('/login')}
-            />
+            <PageTransition>
+              <Register 
+                onLoginClick={() => navigate('/login')}
+              />
+            </PageTransition>
           )
         } />
+        
         <Route path="/forgot-password" element={
-          <ForgotPassword 
-            onBackToLogin={() => navigate('/login')}
-          />
+          <PageTransition>
+            <ForgotPassword 
+              onBackToLogin={() => navigate('/login')}
+            />
+          </PageTransition>
         } />
 
         <Route path="/reset-password/:token" element={
-          <ResetPassword 
-            onBackToLogin={() => navigate('/login')}
-          />
+          <PageTransition>
+            <ResetPassword 
+              onBackToLogin={() => navigate('/login')}
+            />
+          </PageTransition>
         } />
+        
         <Route path="/matches" element={
           <PrivateRoute isLoggedIn={isLoggedIn}>
             <RoleBasedRoute 
@@ -104,10 +129,13 @@ function AppContent() {
               userRole={user?.userTypeId} 
               allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
             >
-              <MatchList />
+              <PageTransition>
+                <MatchList />
+              </PageTransition>
             </RoleBasedRoute>
           </PrivateRoute>
         } />
+        
         <Route path="/matches/create" element={
           <PrivateRoute isLoggedIn={isLoggedIn}>
             <RoleBasedRoute 
@@ -115,7 +143,9 @@ function AppContent() {
               userRole={user?.userTypeId} 
               allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
             >
-              <CreateMatch />
+              <PageTransition>
+                <CreateMatch />
+              </PageTransition>
             </RoleBasedRoute>
           </PrivateRoute>
         } />
@@ -127,10 +157,13 @@ function AppContent() {
               userRole={user?.userTypeId} 
               allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
             >
-              <MatchDetail />
+              <PageTransition>
+                <MatchDetail />
+              </PageTransition>
             </RoleBasedRoute>
           </PrivateRoute>
         } />
+        
         <Route path="/teams" element={
           <PrivateRoute isLoggedIn={isLoggedIn}>
             <RoleBasedRoute 
@@ -138,10 +171,13 @@ function AppContent() {
               userRole={user?.userTypeId} 
               allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
             >
-              <TeamList />
+              <PageTransition>
+                <TeamList />
+              </PageTransition>
             </RoleBasedRoute>
           </PrivateRoute>
         } />
+        
         <Route path="/teams/create" element={
           <PrivateRoute isLoggedIn={isLoggedIn}>
             <RoleBasedRoute 
@@ -149,23 +185,54 @@ function AppContent() {
               userRole={user?.userTypeId} 
               allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
             >
-              <CreateTeam />
+              <PageTransition>
+                <CreateTeam />
+              </PageTransition>
             </RoleBasedRoute>
           </PrivateRoute>
         } />
+        
         <Route path="/teams/edit/:id" element={
           <PrivateRoute isLoggedIn={isLoggedIn}>
             <RoleBasedRoute 
               isLoggedIn={isLoggedIn} 
               userRole={user?.userTypeId} 
-              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}            >
-              <EditTeam />
+              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+            >
+              <PageTransition>
+                <EditTeam />
+              </PageTransition>
             </RoleBasedRoute>
           </PrivateRoute>
         } />
+        
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <Toaster position="top-right" />
+      
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+          success: {
+            duration: 3000,
+            style: {
+              background: '#28a745',
+              color: '#fff',
+            },
+          },
+          error: {
+            duration: 4000,
+            style: {
+              background: '#dc3545',
+              color: '#fff',
+            },
+          },
+        }}
+      />
     </>
   );
 }
@@ -173,7 +240,9 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
-      <AppContent />
+      <Suspense fallback={<Loading />}>
+        <AppContent />
+      </Suspense>
     </BrowserRouter>
   );
 }
