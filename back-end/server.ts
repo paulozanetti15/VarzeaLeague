@@ -19,6 +19,7 @@ import AttendanceModel from './models/AttendanceModel';
 import RulesRoutes from './routes/RulesRoutes'; 
 import authController from './controllers/authController';
 import { seedUserTypes } from './seeds/userTypes';
+import { associateModels } from './models/associations'; // Importando as associações
 dotenv.config();
 
 const app = express();
@@ -91,7 +92,8 @@ const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log('Conexão com o banco de dados estabelecida com sucesso!');
-    
+    associateModels(); // Execute a função de associação aqui
+    console.log('Associações entre modelos definidas com sucesso.');
     // Sincronizar os modelos principais
     await UserTypeModel.sync();
     console.log('Modelo UserType sincronizado.');
@@ -116,7 +118,7 @@ const startServer = async () => {
     
     await AttendanceModel.sync();
     console.log('Modelo Attendance sincronizado.');
-    
+     
     // Modelos adicionados na modelagem v2
     const { default: ChampionshipModel } = await import('./models/ChampionshipModel');
     await ChampionshipModel.sync();

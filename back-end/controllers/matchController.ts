@@ -143,6 +143,7 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
         }
       }	
     );
+    console.log('Partidas:', matches);
     res.json(matches);
   } catch (error) {
     console.error('Erro ao listar partidas:', error);
