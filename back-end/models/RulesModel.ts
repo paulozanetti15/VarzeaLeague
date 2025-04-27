@@ -38,6 +38,10 @@ const Rules = sequelize.define('Athlete', {
         type: DataTypes.DATE,    
         allowNull: false,
     },
+    sexo:{
+        type: DataTypes.STRING,    
+        allowNull: false,
+    },
 }, {
     modelName: 'Rules',
     tableName: 'rules',

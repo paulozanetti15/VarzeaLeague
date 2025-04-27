@@ -9,9 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
 // Criar uma nova partida
 export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
    try {
-      const { title, description, date, location, complement,price } = req.body;
-      console.log('Dados recebidos:', req.body);
-      
+      const { title, description, date, location, complement,price,Category } = req.body;
       // Validações básicas
       if (!title || !date || !location) {
         res.status(400).json({ message: 'Campos obrigatórios faltando' });
@@ -42,7 +40,8 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
           location: fullLocation,
           price: price || null,
           organizerId: userId,
-          status: 'open'
+          status: 'open',
+          categories:Category
         });
 
         // Atualizar tipo do usuário para organizador

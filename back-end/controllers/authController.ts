@@ -15,8 +15,7 @@ interface UserAttributes {
 
 export const register: RequestHandler = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-
+    const { name, email, password,DataNasc,sexo } = req.body;
     const existingUser = await UserModel.findOne({ where: { email } });
 
     if (existingUser) {
@@ -32,6 +31,8 @@ export const register: RequestHandler = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      DataNasc,
+      sexo,
       userTypeId: 4, // Definindo o tipo de usuário como "comum"
     });
 

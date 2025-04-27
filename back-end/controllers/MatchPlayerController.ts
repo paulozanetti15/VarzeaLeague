@@ -4,6 +4,7 @@ import User from "../models/UserModel";
 import Team from "../models/TeamModel";
 import Sequelize from "sequelize";
 import TeamPlayer from "../models/TeamPlayerModel";
+import RulesModel from "../models/RulesModel";
 import jwt from 'jsonwebtoken';
 require('dotenv').config(); 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
@@ -157,46 +158,6 @@ async function getMatchPlayers(req: any, res: any) {
       });
     }
 }
-async function joinMatch(req: any, res: any) {
-  try {
-    const match = await Match.findByPk(req.params.id);
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    try {
-      const decodedPayload = jwt.decode(token);
-      console.log('Estrutura do token (sem verificação):', decodedPayload);
-    } catch (decodeErr) {
-      console.error('Erro ao decodificar token:', decodeErr);
-    }   
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-    const userId = decoded.id
-    console.log('ID do usuário decodificado:', userId);
-    if (!match) {
-      res.status(404).json({ message: 'Partida não encontrada' });
-      return;
-    }
-  
-    if (!userId) {
-      res.status(401).json({ message: 'Usuário não autenticado' });
-      return;
-    }
-
-    if (match.status !== 'open') {
-      res.status(400).json({ message: 'Esta partida não está aberta para inscrições' });
-      return;
-    }
-
-    const playerCount = await match.countPlayers();
-    if (playerCount >= match.maxPlayers) {
-      res.status(400).json({ message: 'Esta partida já está cheia' });
-      return;
-    }
-    await match.addPlayer(parseInt(userId));
-    res.json({ message: 'Inscrição realizada com sucesso' });
-    } catch (error) {
-      console.error('Erro ao entrar na partida:', error);
-      res.status(500).json({ message: 'Erro ao entrar na partida' });
-    }
-}
 async function leaveMatchPlayer(req: any, res: any) {
   try {
     const match = await Match.findByPk(req.params.id);
@@ -295,7 +256,7 @@ async function joinMatchByTeam(req: any, res: any) {
     const existingEntry = await MatchPlayer.findOne({
        where: {
        matchId,
-      userId: parseInt(userId, 10),
+       teamId: parseInt(userId, 10),
     }
    });
 
@@ -303,22 +264,23 @@ async function joinMatchByTeam(req: any, res: any) {
      res.status(400).json({ message: 'Este time já está inscrito nesta partida' });
      return;
    }
-
 // Verificar se há vagas suficientes na partida
-  const currentPlayerCount = await MatchPlayer.count({
-    where: { matchId: matchId}
+  const matchRules = await RulesModel.findOne({
+    where: { matchId: matchId }
   });
-  
-
-  await MatchPlayer.findOrCreate({
-    where: {
-      matchId,
-      userId
-   },
-   defaults: {
-    matchId,
-    userId: parseInt(userId, 10),
-   }
+  matchRules.toJSON();
+  if (teamResult.playerCount > matchRules.toJSON().maxparticipantes) {
+    res.status(400).json({ message: 'Número máximo de jogadores excedido para este time' });
+    return;
+  }
+  if (teamResult.playerCount < matchRules.toJSON().minparticipantes) {
+    res.status(400).json({ message: 'Número mínimo de jogadores não atingido para este time' });
+    return;
+  }
+ else 
+  await MatchPlayer.create({
+    matchId: matchId,
+    teamId: teamId,
   });
   res.json({ 
     message: 'Time inscrito na partida com sucesso',
@@ -333,5 +295,6 @@ async function joinMatchByTeam(req: any, res: any) {
     res.status(500).json({ message: 'Erro ao entrar na partida com o time' });
   }
 }
-export { getMatchPlayers, joinMatch, leaveMatchPlayer, joinMatchByTeam };
-export default { getMatchPlayers, joinMatch, leaveMatchPlayer, joinMatchByTeam }; 
+
+export { getMatchPlayers,  leaveMatchPlayer, joinMatchByTeam };
+export default { getMatchPlayers, leaveMatchPlayer, joinMatchByTeam }; 

@@ -5,7 +5,7 @@ import fs from 'fs';
 // Configuração do multer para upload de arquivos
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    const uploadDir = 'uploads/teams';
+    const uploadDir = path.resolve(__dirname, '../uploads/teams');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -13,7 +13,8 @@ const storage = multer.diskStorage({
   },
   filename: (_req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
   }
 });
 
@@ -36,6 +37,11 @@ export const upload = multer({
 });
 
 // Função para processar o upload da imagem
-export const uploadImage = async (file: Express.Multer.File): Promise<string> => {
-  return `/uploads/teams/${file.filename}`;
-}; 
+export const processUpload = (req: any, res: any) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+  }
+
+  const filePath = path.join(__dirname, '../uploads/teams', req.file.filename);
+  return res.status(200).json({ message: 'Arquivo enviado com sucesso!', filePath });
+};

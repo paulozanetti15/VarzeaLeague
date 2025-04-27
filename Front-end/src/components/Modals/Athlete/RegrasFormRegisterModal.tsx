@@ -6,6 +6,7 @@ import Modal from 'react-bootstrap/Modal';
 import axios from 'axios';
 import ToastSucessComponent from '../../Toast/ToastComponent';
 import { set } from 'date-fns';
+import { Category } from '@mui/icons-material';
 interface regrasModalProps {
     userId: number;
     show: boolean;
@@ -18,6 +19,7 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
     const [minimaIntegrantes, setMinimaIntegrantes] = useState<number | null>(null);
     const [maximoIntegrante, setMaximoIntegrante] = useState<number | null>(null);
     const [limitestimes, setLimitestimes] = useState<number | null>(null);
+    const [sexo, setSexo] = useState<string | null>(null);
     const [dataLimite, setDataLimite] = useState<Date | null>(null);
     const [error,setError]=useState<string>("");
     const [showToast, setShowToast] = useState(false);
@@ -38,7 +40,8 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                     maxPlayers: partidaDados.maxPlayers,
                     price: partidaDados.price ? parseFloat(partidaDados.price) : null,
                     city: partidaDados.city.trim(),
-                    complement: partidaDados.complement?.trim()
+                    complement: partidaDados.complement?.trim(),
+                    Category: partidaDados.category
                 },
                 {
                     headers: {
@@ -75,7 +78,8 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                     minimaIntegrantes: minimaIntegrantes,
                     maximoIntegrante: maximoIntegrante,
                     limitestimes: limitestimes,
-                    dataLimite: dataLimite
+                    dataLimite: dataLimite,
+                    sexo: sexo,
                 },
                 {
                     headers: {
@@ -190,6 +194,15 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                                 placeholder="Data limite para inscrição"
                                 onChange={(e) => convertendoDataLimite(e.target.value)}
                                 autoFocus/>
+                        </Form.Group>
+                        <Form.Group>
+                            <Form.Label style={{"color": "black"}}>Sexo permitdo:</Form.Label>
+                            <Form.Select onChange={(e) => setSexo(e.target.value)} aria-label="Default select example">
+                                <option value="">Selecione o sexo</option>
+                                <option value="Masculino">Masculino</option>
+                                <option value="Feminino">Feminino</option>
+                                <option value="Ambos">Ambos</option>
+                            </Form.Select>
                         </Form.Group>
                     </Form>
                     </Modal.Body>

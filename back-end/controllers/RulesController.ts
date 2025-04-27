@@ -3,7 +3,7 @@ import Rules from "../models/RulesModel";
 import MatchModel from "../models/MatchModel";
 export const insertRules= async (req, res) => {
     try {
-        const {idadeMaxima,idadeMinima,minimaIntegrantes,maximoIntegrante,limitestimes,dataLimite } = req.body;
+        const {idadeMaxima,idadeMinima,minimaIntegrantes,maximoIntegrante,limitestimes,dataLimite,sexo } = req.body;
         const idPartida = await MatchModel.findOne({
             order: [['id', 'DESC']]
         });
@@ -14,7 +14,8 @@ export const insertRules= async (req, res) => {
             maxparticipantes:maximoIntegrante,
             quantidade_times:limitestimes,
             datalimiteinscricao:dataLimite,
-            partidaid:idPartida.id
+            partidaid:idPartida.id,
+            sexo:sexo
         });   
         res.status(201).json({ message: "Regra criada com sucesso!" });
     } catch (error) {

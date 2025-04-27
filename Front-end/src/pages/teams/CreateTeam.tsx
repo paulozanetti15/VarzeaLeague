@@ -10,14 +10,17 @@ import ImageIcon from '@mui/icons-material/Image';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import ToastComponent from '../../components/Toast/ToastComponent';
-
 interface TeamFormData {
   name: string;
   description: string;
+  idademinima: number;
+  idademaxima: number;
+  sexo: string;
   primaryColor: string;
   secondaryColor: string;
   playerEmails: string[];
   logo?: File | null;
+  quantidadejogadores?: number;
 }
 
 export default function CreateTeam() {
@@ -28,18 +31,23 @@ export default function CreateTeam() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastBg, setToastBg] = useState('');
-  
+  const [valido, setValido] = useState(false);
+
   const [formData, setFormData] = useState<TeamFormData>({
     name: '',
     description: '',
+    idademinima: 0,
+    idademaxima: 0,
+    sexo: '',
     primaryColor: '#1a237e',
     secondaryColor: '#0d47a1',
-    playerEmails: ['']
+    playerEmails: [''],
+    quantidadejogadores: 0,
   });
   
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -57,10 +65,17 @@ export default function CreateTeam() {
   };
 
   const addPlayerEmail = () => {
+    if(formData.quantidadejogadores! == 0) {
+      setError('Número máximo de jogadores deve ser maior que 0.');
+    }else if (formData.playerEmails.length >= formData.quantidadejogadores!) {
+      setError('Número máximo de jogadores atingido.');
+      return;
+    }
     setFormData({
       ...formData,
       playerEmails: [...formData.playerEmails, '']
     });
+    setError('');
   };
 
   const removePlayerEmail = (index: number) => {
@@ -89,63 +104,116 @@ export default function CreateTeam() {
   };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Preview the image
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
       
-      // Update form data
+      // Armazenar o arquivo real, não apenas o nome
       setFormData({
         ...formData,
         logo: file
       });
+      
+      // Criar URL para preview
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && event.target.result) {
+          setLogoPreview(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
     }
   };
+  const valdacaoCampos=()=>{
+    if (formData.name.trim() === '') {
+      setError('Nome do time é obrigatório.');
+      return false;
+    }
+    if (formData.description.trim() === '') {
+      setError('Descrição é obrigatória.');
+      return false;
+    }
+    if (formData.idademinima <= 0) {
+      setError('Idade mínima deve ser maior que 0.');
+      return false;
+    }
+    if (formData.idademaxima <= 0) {
+      setError('Idade máxima deve ser maior que 0.');
+      return false;
+    }
+    if (formData.sexo === '') {
+      setError('Sexo é obrigatório.');
+      return false;
+    }
+    if (formData.quantidadejogadores! <= 0) {
+      setError('Número máximo de jogadores deve ser maior que 0.');
+      return false;
+    }
+    if (formData.playerEmails.length > formData.quantidadejogadores!) {
+      setError('Número máximo de jogadores atingido.');
+      return false;
+    }
+    
+    // Verifica se todos os emails são válidos
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    for (const email of formData.playerEmails) {
+      if (email && !emailRegex.test(email)) {
+        setError(`Email inválido: ${email}`);
+        return false;
+      }
+    }
+
+    setValido(true);
+    return true;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
+    if (!valdacaoCampos()) {
+      setLoading(false);
+      return;
+    }
     try {
       // Remove empty emails
-      const filteredEmails = formData.playerEmails.filter(email => email.trim() !== '');
+      const submitFormData = new FormData();
+      submitFormData.append('name', formData.name);
+      submitFormData.append('description', formData.description);
+      submitFormData.append('idademinima', formData.idademinima.toString());
+      submitFormData.append('idademaxima', formData.idademaxima.toString());
+      submitFormData.append('sexo', formData.sexo);
+      submitFormData.append('maxPlayers', formData.quantidadejogadores?.toString() || '0');
+      submitFormData.append('primaryColor', formData.primaryColor);
+      submitFormData.append('secondaryColor', formData.secondaryColor);
       
-      // Create FormData object to send file
-      const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('primaryColor', formData.primaryColor);
-      formDataToSend.append('secondaryColor', formData.secondaryColor);
-      
-      // Add each email
-      filteredEmails.forEach(email => {
-        formDataToSend.append('playerEmails', email);
+      // Append emails
+      formData.playerEmails.forEach((email, index) => {
+        if (email.trim() !== '') {
+          submitFormData.append(`playerEmails[${index}]`, email);
+        }
       });
       
-      // Add logo if exists
+      // Append file if exists
       if (formData.logo) {
-        formDataToSend.append('logo', formData.logo);
+        submitFormData.append('banner', formData.logo);
       }
-
-      const response = await axios.post('http://localhost:3001/teams', formDataToSend, {
+      
+      await axios.post('http://localhost:3001/api/teams/',
+      submitFormData,
+      {
         headers: {
           'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+
         },
-        withCredentials: true
-      });
+      }
+      );
 
       setLoading(false);
       // Show success toast
       setToastMessage('Time criado com sucesso!');
       setToastBg('success');
       setShowToast(true);
-      
-      // Navigate after a brief delay
       setTimeout(() => {
         navigate('/teams');
       }, 1500);
@@ -153,7 +221,6 @@ export default function CreateTeam() {
       setLoading(false);
       const errorMsg = err.response?.data?.message || 'Erro ao criar time. Tente novamente.';
       setError(errorMsg);
-      
       // Show error toast
       setToastMessage(errorMsg);
       setToastBg('danger');
@@ -217,14 +284,15 @@ export default function CreateTeam() {
             <input 
               type="file" 
               ref={logoInputRef}
-              className="hidden-file-input" 
-              accept="image/*"
+              className="hidden-file-input"
+              name="banner" 
               onChange={handleLogoChange}
             />
           </div>
         </div>
 
         <form onSubmit={handleSubmit}>
+          
           <motion.div 
             className="form-group"
             initial={{ opacity: 0, y: 5 }}
@@ -261,14 +329,89 @@ export default function CreateTeam() {
               required
             />
           </motion.div>
-
+          <motion.div 
+            className="form-group"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+          >
+            <label className="form-label" htmlFor="idademinima">Idade minima</label>
+            <input
+              type="number"
+              id="idademinima"
+              name="idademinima"
+              className="form-control"
+              value={formData.idademinima}
+              onChange={handleInputChange}
+              placeholder="Adicione uma descrição para seu time"
+              required
+            />
+          </motion.div>
+          <motion.div 
+            className="form-group"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <label className="form-label" htmlFor="idademaxima">Idade maxima</label>
+            <input
+              type="number"
+              id="idademaxima"
+              name="idademaxima"
+              className="form-control"
+              value={formData.idademaxima}
+              onChange={handleInputChange}
+              placeholder="Adicione uma descrição para seu time"
+              required
+            />
+          </motion.div>
+          <motion.div 
+            className="form-group"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <label className="form-label" htmlFor="sexo">Sexo permitido para inscrição</label>
+            <select
+              id="sexo"
+              name="sexo"
+              className="form-control"
+              value={formData.sexo}
+              onChange={handleInputChange}
+              required
+            >
+              <option value="">Selecione uma opção</option>
+              <option value="masculino">Masculino</option>
+              <option value="feminino">Feminino</option>
+              <option value="ambos">Ambos</option>
+            </select>
+          </motion.div>
+          <motion.div 
+            className="form-group"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+          >
+            <label className="form-label" htmlFor="idademinima">Quantidade jogadores permitido</label>
+            <input
+              type="number"
+              id="qtdjogadores"
+              name="quantidadejogadores"
+              className="form-control"
+              value={formData.quantidadejogadores}
+              onChange={handleInputChange}
+              placeholder="Adicione uma descrição para seu time"
+              required
+            />
+          </motion.div>
+        
           <motion.div 
             className="colors-section"
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
           >
-            <label className="form-label">
+            <label className="form-label"> 
               <PaletteIcon style={{ marginRight: '8px', verticalAlign: 'middle' }} />
               Cores do Time
             </label>
@@ -308,7 +451,7 @@ export default function CreateTeam() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <label className="form-label">Convidar Jogadores</label>
+            <label className="form-label">Convidar Jogadores - 0 {formData.playerEmails.length} / { formData.quantidadejogadores ?? 0} jogadores</label>
             <p className="player-email-help">
               Adicione os emails dos jogadores que deseja convidar para seu time.
             </p>

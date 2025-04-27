@@ -19,11 +19,18 @@ import AttendanceModel from './models/AttendanceModel';
 import RulesRoutes from './routes/RulesRoutes'; 
 import authController from './controllers/authController';
 import { seedUserTypes } from './seeds/userTypes';
-import { associateModels } from './models/associations'; // Importando as associações
+import { associateModels } from './models/associations'; 
+import fs from 'fs';
+// Importando as associações
 dotenv.config();
 
 const app = express();
 
+const uploadDir = path.join(__dirname, 'uploads/teams');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log(`Diretório criado: ${uploadDir}`);
+}
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -95,6 +102,10 @@ const startServer = async () => {
     associateModels(); // Execute a função de associação aqui
     console.log('Associações entre modelos definidas com sucesso.');
     // Sincronizar os modelos principais
+    await sequelize.sync();
+   
+    console.log('Todos os modelos sincronizados usando alter: true');
+    
     await UserTypeModel.sync();
     console.log('Modelo UserType sincronizado.');
     

@@ -6,13 +6,35 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { AuthRequest } from '../middleware/auth';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv'
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
+import { processUpload } from '../services/uploadService';
+dotenv.config();
 export class TeamController {
   static async create(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { name, description, playerEmails } = req.body;
-      const captainId = req.user?.id;
-
+      const { name, description, playerEmails, sexo, idademinima, idademaxima,maxPlayers,primaryColor, secondaryColor} = req.body;
+      console.log('Dados recebidos:', req.body);
+      let bannerFilename = null;
+      if (req.file) {
+        bannerFilename = req.file.filename;
+      }    
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        res.status(401).json({ error: 'Token não fornecido' });
+        return;
+      }
+      let decodedPayload;
+      try {
+        decodedPayload = jwt.decode(token);
+        console.log('Estrutura do token (sem verificação):', decodedPayload);
+      } catch (decodeErr) {
+        console.error('Erro ao decodificar token:', decodeErr);
+        res.status(401).json({ error: 'Token inválido' });
+        return;
+      }
+      let captainId=decodedPayload.id;
       if (!captainId) {
         res.status(401).json({ error: 'Usuário não autenticado' });
         return;
@@ -35,7 +57,7 @@ export class TeamController {
             isDeleted: true
           }
         });
-
+        
         if (existingDeletedTeam) {
           const agora = new Date();
           agora.setHours(agora.getHours() - 3);
@@ -100,7 +122,14 @@ export class TeamController {
         name: name.trim(),
         description,
         captainId,
-        isDeleted: false
+        sexo,
+        idademinima,
+        idademaxima,
+        maxparticipantes:maxPlayers,
+        primaryColor: primaryColor,
+        secondaryColor: secondaryColor,
+        isDeleted: false,
+        banner: bannerFilename 
       });
       if (playerEmails && Array.isArray(playerEmails)) {
         const validEmails = playerEmails.filter(email => email && typeof email === 'string' && email.trim() !== '');
@@ -270,9 +299,9 @@ export class TeamController {
     try {
       const { id } = req.params;
       console.log(`Atualizando time com ID: ${id}`);
-      const { name, description, playerEmails } = req.body;
+      const { name, description, playerEmails,idademinima,idademaxima,sexo,primaryColor,secondaryColor,maxparticipantes } = req.body;
       const userId = req.user?.id;
-     
+      console.log('Dados recebidos:',req.body);
       const team = await Team.findOne({
         where: {
           id,
@@ -305,6 +334,12 @@ export class TeamController {
       await team.update({
         name,
         description,
+        idademinima,
+        idademaxima,
+        sexo,
+        maxparticipantes,
+        primaryColor: primaryColor,
+        secondaryColor: secondaryColor,
         updatedAt: agora
       });
 
@@ -360,7 +395,6 @@ export class TeamController {
           }
         ]
       });
-      console.log('Time atualizado:', updatedTeam);
       if (!updatedTeam) {
         console.error(`Erro ao buscar time atualizado com ID ${id}`);
         res.status(500).json({ error: 'Erro ao atualizar time' });
@@ -505,3 +539,4 @@ export class TeamController {
     }
   }
 } 
+
