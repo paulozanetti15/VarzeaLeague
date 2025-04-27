@@ -15,7 +15,7 @@ export class TeamController {
   static async create(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { name, description, playerEmails, sexo, idademinima, idademaxima,maxPlayers,primaryColor, secondaryColor} = req.body;
-      console.log('Dados recebidos:', req.body);
+    
       let bannerFilename = null;
       if (req.file) {
         bannerFilename = req.file.filename;

@@ -12,6 +12,8 @@ import './MatchDetail.css';
 import toast from 'react-hot-toast';
 import RegrasFormInfoModal from '../../components/Modals/Athlete/RegrasFormInfoModal';
 import { Button } from 'react-bootstrap';
+import axios from 'axios';
+import { get } from 'http';
 
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,12 +37,13 @@ const MatchDetail: React.FC = () => {
   const [showTeamDetailsModal, setShowTeamDetailsModal] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-
-  // Função fallback para obter localização aproximada por IP (definida globalmente para o componente)
+  const [timeCadastrados, setTimeCadastrados] = useState<any>([]); 
   const fetchLocationByIP = async () => {
     toast.loading('Obtendo localização aproximada pelo seu IP...');
     try {
-      const ipResponse = await fetch('https://ipapi.co/json/');
+      const ipResponse = await fetch('https://geolocation-db.com/json/', {
+        mode: 'cors'
+      });
       const data = await ipResponse.json();
       
       if (data.latitude && data.longitude) {
@@ -48,7 +51,6 @@ const MatchDetail: React.FC = () => {
           lat: data.latitude,
           lng: data.longitude
         };
-        console.log('Localização por IP obtida:', userLoc);
         setUserLocation(userLoc);
         toast.dismiss();
         toast.success('Localização aproximada obtida pelo seu IP');
@@ -63,10 +65,6 @@ const MatchDetail: React.FC = () => {
             locationData.lng
           );
           setDistance(dist);
-          console.log(`Distância calculada: ${dist} km`);
-        } else if (locationData && locationData.address && !locationData.lat && !locationData.lng) {
-          // Temos apenas o endereço, não podemos geocodificar aqui
-          console.log("Temos apenas o endereço, mas não as coordenadas. Geocodificação será feita posteriormente.");
         }
       } else {
         toast.dismiss();
@@ -75,63 +73,52 @@ const MatchDetail: React.FC = () => {
     } catch (error) {
       toast.dismiss();
       toast.error('Erro ao obter localização por IP');
-      console.error('Erro ao obter localização por IP:', error);
     }
   };
-
-  // Limpar dados de times simulados e buscar times reais uma vez ao carregar
-  useEffect(() => {
-    // Migrar formato antigo de joinedMatches para novo formato (array)
+  
+  const getTimeInscrito = async (matchId: string) => {
     try {
-      const oldJoinedMatches = JSON.parse(localStorage.getItem('joinedMatches') || '[]');
-      if (!Array.isArray(oldJoinedMatches)) {
-        console.log('Migrando joinedMatches de objeto para array...');
-        const newJoinedMatches = [];
-        for (const matchId in oldJoinedMatches) {
-          if (oldJoinedMatches[matchId]) {
-            newJoinedMatches.push(Number(matchId));
-          }
+      const response = await axios.get(`http://localhost:3001/api/matches/${matchId}/join-team`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
         }
-        localStorage.setItem('joinedMatches', JSON.stringify(newJoinedMatches));
-        console.log('Migração concluída:', newJoinedMatches);
+      });
+      setTimeCadastrados(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar times cadastrados:', error);
+    }
+  };
+  useEffect(() => {
+    if (id) {
+      getTimeInscrito(id);
+    }
+  }, [id]); 
+  
+  useEffect(() => {
+    try {
+      const joinedMatchesWithTeam = JSON.parse(localStorage.getItem('joinedMatchesWithTeam') || '{}');
+      if (typeof joinedMatchesWithTeam !== 'object') {
+        localStorage.setItem('joinedMatchesWithTeam', JSON.stringify({}));
       }
     } catch (e) {
-      console.warn('Erro ao migrar formato de joinedMatches:', e);
-      // Em caso de erro, limpar o item para garantir que esteja no formato correto
-      localStorage.setItem('joinedMatches', JSON.stringify([]));
+      localStorage.setItem('joinedMatchesWithTeam', JSON.stringify({}));
     }
-
+  
     const fetchRealTeams = async () => {
       try {
-        // Limpar completamente qualquer cache de times simulados
         localStorage.removeItem('userTeams');
-        console.log("Cache de times limpo no carregamento inicial");
-        
-        // Pre-carregar times reais do usuário
-        try {
-          const teamsFromAPI = await api.teams.getUserTeams();
-          
-          if (teamsFromAPI && Array.isArray(teamsFromAPI) && teamsFromAPI.length > 0) {
-            console.log(`Encontrados ${teamsFromAPI.length} times reais do usuário:`, teamsFromAPI);
-          } else {
-            console.log("Nenhum time encontrado para o usuário na API. Você pode criar um time na página /teams");
-          }
-        } catch (e) {
-          // Não mostrar erro ao usuário, apenas logar
-          console.warn("Não foi possível carregar times do usuário:", e);
-        }
+        await api.teams.getUserTeams();
       } catch (e) {
-        console.error("Erro ao inicializar busca de times:", e);
+        toast.error('Erro ao buscar times do usuário. Verifique sua conexão ou tente novamente mais tarde.');
       }
     };
     
-    // Executar a busca de times apenas se o usuário estiver logado
     const userExists = localStorage.getItem('user');
     if (userExists && JSON.parse(userExists).id) {
       fetchRealTeams();
     }
   }, [currentUser?.id]); // Executar apenas uma vez no início
-
+  
   // Garantir que currentUser tenha ao menos um objeto vazio
   useEffect(() => {
     // Verificar se o usuário está logado
@@ -139,57 +126,25 @@ const MatchDetail: React.FC = () => {
     if (!token) {
       navigate('/login');
     }
-    
-    // Garantir que temos pelo menos um id no objeto currentUser
-    if (!currentUser || typeof currentUser !== 'object') {
-      console.error('Erro: Dados do usuário não encontrados');
-      setError('Sessão expirada ou usuário não encontrado. Por favor, faça login novamente.');
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      navigate('/login');
-    }
-  }, [navigate, currentUser]);
-
+  }, []); // Add missing closing parenthesis for the first useEffect
   useEffect(() => {
     const fetchMatchDetailsInit = async () => {
       try {
         setLoading(true);
-        
-        // Limpar o cache de times para forçar o carregamento dos times reais
         try {
-          // Verificamos se já existe algum time salvo no localStorage
           const storedTeams = localStorage.getItem('userTeams');
-          if (storedTeams) {
-            const teams = JSON.parse(storedTeams);
-            // Se os times salvos têm nomes genéricos como "Meu Time 1", limpamos o cache
-            const hasGenericNames = teams.some((team: any) => 
-              team.name === 'Meu Time 1' || 
-              team.name === 'Meu Time 2' || 
-              team.name === `${currentUser?.name || 'Meu'} FC` ||
-              team.name === `Time do ${currentUser?.name || 'Usuário'}`
-            );
-            
-            if (hasGenericNames) {
-              console.log("Encontrados times com nomes genéricos. Limpando cache para buscar times reais.");
-              localStorage.removeItem('userTeams');
-            }
-          }
         } catch (e) {
-          console.error("Erro ao verificar cache de times:", e);
+          // Silenciar erro
         }
         
         const response = await api.matches.getById(Number(id));
-        console.log('Resposta da API para getById:', response);
-        console.log('Tipo do campo price:', typeof response.price);
-        console.log('Valor do campo price:', response.price);
+
         setMatch(response);
-        
-        // Obter coordenadas do endereço se não existirem
+  
         if (response.location?.address && 
             (!response.location.latitude || !response.location.longitude)) {
           try {
             const coordinates = await geocodeAddress(response.location.address);
-            console.log('Coordenadas obtidas por geocodificação:', coordinates);
             if (coordinates) {
               setMatch((prev: any) => ({
                 ...prev,
@@ -201,122 +156,58 @@ const MatchDetail: React.FC = () => {
               }));
             }
           } catch (error) {
-            console.error("Erro ao geocodificar endereço:", error);
+            // Silenciar erro de geocodificação
           }
         }
-        
-        // Verificar se o usuário já entrou nesta partida anteriormente (localStorage)
+       
         try {
           const matchId = id || '';
-          
-          // Verificar entrada individual
-          const joinedMatches = JSON.parse(localStorage.getItem('joinedMatches') || '[]');
-          const hasJoinedIndividually = Array.isArray(joinedMatches) 
-            ? joinedMatches.includes(Number(matchId)) 
-            : !!joinedMatches[matchId]; // compatibilidade com formato antigo
-          
-          // Verificar entrada com time
           const joinedMatchesWithTeam = JSON.parse(localStorage.getItem('joinedMatchesWithTeam') || '{}');
           const hasJoinedWithTeam = joinedMatchesWithTeam[matchId] && Array.isArray(joinedMatchesWithTeam[matchId]) && joinedMatchesWithTeam[matchId].length > 0;
           
-          console.log(`Verificação do localStorage - Entrou individualmente: ${hasJoinedIndividually}, Entrou com time: ${hasJoinedWithTeam}`);
-          
-          // Se o usuário entrou na partida (individualmente ou com time) mas não está na lista atual (API),
-          // restauramos o estado anterior
-          const userInResponse = response.players && response.players.some((p: any) => 
-            (p && p.id === currentUser?.id) || // como jogador individual
-            (p?.isTeam && response.teams?.some((t: any) => t && t.id === p.teamId && t.ownerId === currentUser?.id)) // como time
-          );
-          
-          if ((hasJoinedIndividually || hasJoinedWithTeam) && !userInResponse) {
-            console.log("Usuário participou da partida anteriormente, mas não está na resposta da API. Restaurando estado...");
-            
-            // Cria uma cópia para não modificar a resposta original
-            const updatedResponse = {...response};
-            updatedResponse.players = updatedResponse.players ? [...updatedResponse.players] : [];
-            updatedResponse.teams = updatedResponse.teams ? [...updatedResponse.teams] : [];
-            
-            // Adiciona o jogador individual se necessário
-            if (hasJoinedIndividually && !updatedResponse.players.some((p: any) => p && p.id === currentUser?.id) && currentUser) {
-              updatedResponse.players.push({
-                id: currentUser.id,
-                name: currentUser.name || currentUser.username || 'Jogador'
-              });
-              console.log("Restaurado jogador individual");
-            }
-            
-            // Adiciona os times se necessário
-            if (hasJoinedWithTeam && currentUser) {
-              const userTeamIds = joinedMatchesWithTeam[matchId] || [];
+          if (hasJoinedWithTeam && currentUser) {
+            let updatedResponse = {...response};            
+            const userTeamIds = joinedMatchesWithTeam[matchId] || [];
+            try {
+              // Buscar times diretamente da API
+              let userTeams: any[] = [];
               
-              // Primeiro, carrega os times do usuário
               try {
-                console.log("Carregando times do usuário para restaurar");
-                
-                // Buscar times diretamente da API
-                let userTeams: any[] = [];
-                
-                try {
-                  // Tenta buscar da API específica
-                  userTeams = await api.teams.getUserTeams();
-                  console.log("Times do usuário carregados da API:", userTeams);
-                } catch (e) {
-                  console.warn("Erro ao buscar times do usuário da API específica:", e);
-                  
-                  // Se falhar, tenta da lista geral
-                  try {
-                    const allTeams = await api.teams.list();
-                    if (Array.isArray(allTeams) && currentUser.id) {
-                      userTeams = allTeams.filter(t => t.ownerId === currentUser.id);
-                      console.log("Times do usuário filtrados da lista geral:", userTeams);
-                    }
-                  } catch (e2) {
-                    console.warn("Erro também na lista geral de times:", e2);
-                  }
-                }
-                
-                // Se não encontrou por nenhum método, exibe mensagem para criar
-                if (userTeams.length === 0) {
-                  console.warn("Não foi possível restaurar os times usados anteriormente porque você não possui times cadastrados.");
-                  setError("Você não tem times cadastrados mas participou anteriormente com times. Por favor, crie seus times na página de Times.");
-                }
-                
-                // Adiciona cada time que o usuário participou
-                for (const teamId of userTeamIds) {
-                  // Procura o time com este ID na lista de times do usuário
-                  const team = userTeams.find((t: any) => t && t.id === teamId);
-                  
-                  if (team && !updatedResponse.players.some((p: any) => p?.isTeam && p.teamId === teamId)) {
-                    // Adiciona o time à lista de jogadores
-                    updatedResponse.players.push({
-                      id: `team-${teamId}`,
-                      name: `${team.name} (Time)`,
-                      isTeam: true,
-                      playerCount: team.playerCount || 5,
-                      teamId: teamId
-                    });
-                    
-                    // Adiciona o time à lista de times se não existir
-                    if (!updatedResponse.teams.some((t: any) => t && t.id === teamId)) {
-                      updatedResponse.teams.push(team);
-                    }
-                    
-                    console.log(`Restaurado time ${team.name} (ID: ${teamId})`);
-                  } else if (!team) {
-                    console.warn(`Time com ID ${teamId} não foi encontrado na sua lista de times.`);
-                  }
-                }
+                // Tenta buscar da API específica
+                userTeams = await api.teams.getUserTeams();
               } catch (e) {
-                console.error("Erro ao restaurar times do usuário:", e);
+                // Se falhar, tenta da lista geral
+                try {
+                  const allTeams = await api.teams.list();
+                  if (Array.isArray(allTeams) && currentUser.id) {
+                    userTeams = allTeams.filter(t => t.ownerId === currentUser.id);
+                  }
+                } catch (e2) {
+                  // Silenciar erro
+                }
               }
+              if (userTeams.length === 0) {
+                setError("Você não tem times cadastrados mas participou anteriormente com times. Por favor, crie seus times na página de Times.");
+              }
+              
+              for (const teamId of userTeamIds) {
+                // Procura o time com este ID na lista de times do usuário
+                const team = userTeams.find((t: any) => t && t.id === teamId);
+                
+                if (team && !updatedResponse.players.some((p: any) => p?.isTeam && p.teamId === teamId)) {
+                  if (!updatedResponse.teams.some((t: any) => t && t.id === teamId)) {
+                    updatedResponse.teams.push(team);
+                  }
+                }
+              }
+              setMatch(updatedResponse);
+              setSimulationMode(true); // Marca como simulação, já que os dados locais são usados
+            } catch (e) {
+              // Silenciar erro
             }
-            
-            // Atualiza o estado com os dados restaurados
-            setMatch(updatedResponse);
-            setSimulationMode(true); // Marca como simulação, já que os dados locais são usados
           }
         } catch (e) {
-          console.error("Erro ao verificar/restaurar estado do localStorage:", e);
+          // Silenciar erro
         }
         
         // Tentar obter a localização do usuário
@@ -327,7 +218,6 @@ const MatchDetail: React.FC = () => {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
               };
-              console.log('Localização do usuário obtida:', userLoc);
               setUserLocation(userLoc);
               toast.success('Sua localização foi obtida com sucesso!');
               
@@ -341,15 +231,12 @@ const MatchDetail: React.FC = () => {
                   locationData.lng
                 );
                 setDistance(dist);
-                console.log(`Distância calculada: ${dist} km`);
               } else if (locationData && locationData.address && !locationData.lat && !locationData.lng) {
                 // Temos apenas o endereço, precisamos geocodificar
                 geocodeAddressAndCalculateDistance(locationData.address, userLoc);
               }
             },
             (error) => {
-              console.error('Erro ao obter localização do usuário:', error);
-              
               // Mensagens de erro específicas
               let errorMsg = 'Não foi possível obter sua localização.';
               switch (error.code) {
@@ -365,11 +252,8 @@ const MatchDetail: React.FC = () => {
               }
               
               toast.error(errorMsg);
-              
-              // Tentar usar uma API de geolocalização por IP como fallback
               fetchLocationByIP();
             },
-            // Opções para a API de geolocalização
             {
               enableHighAccuracy: true,
               timeout: 10000,
@@ -378,29 +262,22 @@ const MatchDetail: React.FC = () => {
           );
         }
       } catch (err) {
-        console.error('Erro ao buscar detalhes da partida:', err);
         setError('Não foi possível carregar os detalhes da partida. Tente novamente mais tarde.');
       } finally {
         setLoading(false);
       }
     };
-
+  
     if (id) {
       fetchMatchDetailsInit();
     }
   }, [id]);
-
+  
   // Efeito para verificar o status do usuário na partida após o carregamento
   useEffect(() => {
     if (match && !loading && !error) {
       // Verificar se o usuário atual está na partida
       const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-      
-      // Adicionar verificações de segurança para evitar erros de acesso a propriedades de valores undefined
-      const userInMatch = 
-        // Usuário está como jogador individual
-        (match.players && Array.isArray(match.players) && match.players.some((player: any) => player && player.id === currentUser.id)) || 
-        // Usuário está como jogador em um time
         (match.teams && Array.isArray(match.teams) && match.teams.some((team: any) => 
           team && team.players && Array.isArray(team.players) && team.players.some((player: any) => player && player.id === currentUser.id)
         )) ||
@@ -413,184 +290,15 @@ const MatchDetail: React.FC = () => {
           player && player.isTeam && player.teamId && match.teams && 
           match.teams.some((team: any) => team && team.id === player.teamId && team.captainId === currentUser.id)
         ));
-                      
-      console.log(`Verificação: usuário está na partida? ${userInMatch}`);
-      setUserIsInMatch(userInMatch);
-      
-      // Atualizar lista de partidas ingressadas no localStorage
-      if (userInMatch && match.id) {
-        const joinedMatches = JSON.parse(localStorage.getItem('joinedMatches') || '[]');
-        // Garantir que joinedMatches seja um array
-        const matchesArray = Array.isArray(joinedMatches) ? joinedMatches : [];
-        
-        if (!matchesArray.includes(match.id)) {
-          matchesArray.push(match.id);
-          localStorage.setItem('joinedMatches', JSON.stringify(matchesArray));
-        }
-      }
     }
   }, [match, loading, error]);
-
-  // Função para buscar times do usuário
-  const fetchUserTeams = async () => {
-    setError(null);
-    setLoadingTeams(true);
-    
-    try {
-      console.log("Buscando times do usuário via API");
-      
-      // Buscar times do usuário da API
-      const userTeamsData = await api.teams.getUserTeams();
-      console.log("Times do usuário recebidos da API:", userTeamsData);
-      
-      if (userTeamsData && Array.isArray(userTeamsData) && userTeamsData.length > 0) {
-        // Filtrar times onde o usuário é capitão para mostrar primeiro
-        const ownedTeams = userTeamsData.filter(team => team.isCurrentUserCaptain);
-        const memberTeams = userTeamsData.filter(team => !team.isCurrentUserCaptain);
-        
-        console.log(`O usuário é capitão de ${ownedTeams.length} times`);
-        console.log(`O usuário é membro de ${memberTeams.length} times`);
-        
-        // Ordenar por times onde é capitão primeiro, depois por nome
-        const sortedTeams = [...ownedTeams, ...memberTeams];
-        
-        setUserTeams(sortedTeams);
-        setShowTeamOptions(true);
-      } else {
-        console.warn("Nenhum time encontrado para este usuário");
-        setError("Você não tem times cadastrados. Por favor, crie um time primeiro.");
-        toast.error("Você não tem times cadastrados. Por favor, crie um time primeiro.");
-        
-        // Adicionar opção para criar time
-        setUserTeams([]);
-        setShowTeamOptions(true);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar times do usuário:", error);
-      setError("Não foi possível carregar seus times. Tente novamente ou crie um novo time.");
-      toast.error("Não foi possível carregar seus times. Tente novamente ou crie um novo time.");
-      
-      // Mesmo com erro, mostrar a opção para criar time
-      setUserTeams([]);
-      setShowTeamOptions(true);
-    } finally {
-      setLoadingTeams(false);
-    }
-  };
-
-  // Função para forçar recálculo do estado
+ 
   const forceRefresh = () => {
     setRefreshCounter(prevCount => prevCount + 1);
-    console.log("Forçando atualização da interface");
   };
 
-  // Função para entrar na partida
-  const handleJoinMatch = async () => {
-    console.log('Tentando entrar na partida como jogador individual');
-    setJoining(true);
-    setError(null);
-    
-    try {
-      if (!match) {
-        throw new Error('Detalhes da partida não estão disponíveis');
-      }
-
-      // Verificar se já está na partida
-      if (userIsInMatch) {
-        console.log('Usuário já está participando desta partida');
-        setError('Você já está participando desta partida. Não é possível entrar novamente.');
-        toast('Você já está participando desta partida');
-        setJoining(false);
-        return;
-      }
-
-      // Verificar se a partida está cheia
-      const totalCurrentPlayers = calculateTotalPlayers();
-      if (totalCurrentPlayers >= match.maxPlayers) {
-        console.warn('Partida está cheia, não é possível entrar');
-        setError('Esta partida está cheia, não é possível entrar');
-        toast.error('Esta partida está cheia, não é possível entrar');
-        setJoining(false);
-        return;
-      }
-
-      // Criar representação local do jogador para feedback imediato
-      const playerToAdd = {
-        id: currentUser.id,
-        name: currentUser.name,
-        email: currentUser.email,
-        avatar: currentUser.avatar || '/assets/default-avatar.png',
-        teamId: null // Jogando individualmente
-      };
-
-      // Atualizar estado local primeiro para feedback imediato
-      const updatedPlayers = [...match.players, playerToAdd];
-      
-      setMatch({
-        ...match,
-        players: updatedPlayers
-      });
-
-      // Adicionar à lista de partidas ingressadas no localStorage
-      const joinedMatches = JSON.parse(localStorage.getItem('joinedMatches') || '[]');
-      // Garantir que joinedMatches seja um array
-      const matchesArray = Array.isArray(joinedMatches) ? joinedMatches : [];
-
-      if (!matchesArray.includes(match.id)) {
-        matchesArray.push(match.id);
-        localStorage.setItem('joinedMatches', JSON.stringify(matchesArray));
-      }
-
-      // Tentar chamar a API
-      try {
-        if (match.id) {
-          const result = await api.matches.join(match.id);
-          console.log('API de entrada chamada com sucesso:', result);
-        }
-      } catch (apiError) {
-        console.warn('Erro ao chamar API de entrada, simulando comportamento:', apiError);
-        // Se a API falhar, pelo menos o estado local foi atualizado
-      }
-
-      // Recarregar detalhes da partida após um breve atraso
-      setTimeout(() => {
-        if (match && match.id) {
-          fetchMatchDetails(match.id);
-          setUserIsInMatch(true);
-        }
-      }, 500);
-
-      toast.success('Você entrou na partida com sucesso');
-    } catch (error) {
-      console.error('Erro ao entrar na partida:', error);
-      setError('Erro ao entrar na partida. Tente novamente.');
-      toast.error('Erro ao entrar na partida. Tente novamente.');
-    } finally {
-      setJoining(false);
-    }
-  };
-  
-  // Função auxiliar para calcular o número de jogadores em um array
-  const calculatePlayersCount = (players: any[]) => {
-    if (!players || !Array.isArray(players)) return 0;
-    
-    let total = 0;
-    players.forEach((player: any) => {
-      if (!player) return; // Ignora jogadores undefined ou null
-      
-      if (player.isTeam && typeof player.playerCount === 'number') {
-        total += player.playerCount;
-      } else {
-        total += 1; // Jogador individual
-      }
-    });
-    
-    return total;
-  };
-
-  // Função para entrar com time
   const handleJoinWithTeam = async (teamId: number) => {
-    console.log(`Tentando entrar na partida com o time ID ${teamId}`);
+    console.log("Entrando na partida com time:", teamId);
     setJoining(true);
     setError(null);
     
@@ -602,14 +310,11 @@ const MatchDetail: React.FC = () => {
       // Buscar o time selecionado
       const selectedTeam = userTeams.find(team => team.id === teamId);
       if (!selectedTeam) {
-        console.error(`Time com ID ${teamId} não encontrado`);
         setError('Time não encontrado. Por favor, tente novamente.');
         toast.error('Time não encontrado. Por favor, tente novamente.');
         setJoining(false);
         return;
       }
-      
-      console.log(`Time selecionado: ${selectedTeam.name}, ID: ${selectedTeam.id}`);
       
       // Verificar se o time já está na partida
       const teamAlreadyInMatch = match.players && Array.isArray(match.players) && match.players.some(
@@ -617,30 +322,33 @@ const MatchDetail: React.FC = () => {
       );
       
       if (teamAlreadyInMatch) {
-        console.log('Este time já está participando desta partida');
         setError('Este time já está participando desta partida.');
         toast.error('Este time já está participando desta partida.');
         setJoining(false);
         return;
       }
-      
-      // Verificar se a partida está cheia
-      const totalCurrentPlayers = calculateTotalPlayers();
+
       const teamSize = selectedTeam.players?.length + 1 || 1; // +1 para o capitão
-      
-      console.log(`Total atual de jogadores: ${totalCurrentPlayers}`);
-      console.log(`Tamanho do time: ${teamSize}`);
-      console.log(`Máximo de jogadores: ${match.maxPlayers}`);
-      
-      if (totalCurrentPlayers + teamSize > match.maxPlayers) {
-        console.warn('Não há vagas suficientes para este time');
-        setError(`Não há vagas suficientes para o time ${selectedTeam.name} (${teamSize} jogadores). Apenas ${match.maxPlayers - totalCurrentPlayers} vagas disponíveis.`);
-        toast.error(`Não há vagas suficientes para o time ${selectedTeam.name}`);
-        setJoining(false);
-        return;
+      try {
+        // Importante: usar joinWithTeam em vez de join
+        await axios.post(`http://localhost:3001/api/matches/${id}/join-team`, {
+          teamId: teamId,
+          matchId: id,
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        setSimulationMode(false);
+        toast.success(`Seu time ${selectedTeam.name} entrou na partida com sucesso!`);
+      } catch (apiError) {
+        console.error("Erro na API ao entrar com time:", apiError);
+        toast.error(`Erro ao se comunicar com o servidor. Modo simulação ativado.`);
+        setSimulationMode(true);
       }
       
-      // Atualizamos o estado local imediatamente para feedback visual
+      // Atualizamos o estado local apenas após tentar a API
       // Cria uma representação do time para a lista de jogadores
       const teamEntry = {
         id: `team-${teamId}`,
@@ -665,13 +373,10 @@ const MatchDetail: React.FC = () => {
         updatedMatch.players.push(teamEntry);
         // Adiciona o time na lista de times
         updatedMatch.teams.push(selectedTeam);
-        console.log("Time adicionado localmente:", teamEntry);
       }
 
-      // Salvamos imediatamente no estado para feedback visual
       setMatch(updatedMatch);
 
-      // Guardamos no localStorage para persistência entre recargas
       try {
         const matchId = id || '';
         const joinedMatchesWithTeam = JSON.parse(localStorage.getItem('joinedMatchesWithTeam') || '{}');
@@ -688,25 +393,13 @@ const MatchDetail: React.FC = () => {
         }
         
         localStorage.setItem('joinedMatchesWithTeam', JSON.stringify(joinedMatchesWithTeam));
-        console.log(`Time ${teamId} salvo em localStorage para partida ${matchId}`);
       } catch (err) {
-        console.error("Erro ao salvar time no localStorage:", err);
+        // Silenciar erro
       }
 
       // Fecha as opções de time
       setShowTeamOptions(false);
       setUserIsInMatch(true);
-
-      try {
-        // Tenta usar a API real
-        console.log(`Tentando entrar na partida ${id} com o time ${teamId} via API`);
-        await api.matches.joinWithTeam(Number(id), teamId);
-        console.log("API de joinWithTeam retornou com sucesso");
-        setSimulationMode(false);
-      } catch (apiError) {
-        console.warn('API para entrar com time indisponível, usando simulação local:', apiError);
-        setSimulationMode(true);
-      }
 
       // Tenta recarregar os detalhes após um intervalo
       setTimeout(async () => {
@@ -720,76 +413,78 @@ const MatchDetail: React.FC = () => {
           
           if (teamInResponse) {
             setMatch(response);
-          } else {
-            console.warn("Resposta da API não contém nosso time, mantendo versão local");
           }
         } catch (apiError) {
-          console.warn('API indisponível para atualizar detalhes após entrar com time, continuando com simulação local:', apiError);
-          setSimulationMode(true);
+          console.error("Erro ao recarregar detalhes da partida:", apiError);
         }
         forceRefresh();
       }, 800);
-
-      toast.success(`Seu time ${selectedTeam.name} entrou na partida com sucesso!`);
     } catch (error) {
-      console.error('Erro ao entrar na partida com o time:', error);
+      console.error("Erro geral ao entrar na partida:", error);
       setError('Erro ao entrar na partida com o time. Tente novamente.');
       toast.error('Erro ao entrar na partida com o time. Tente novamente.');
     } finally {
       setJoining(false);
     }
   };
-
-  // Função para sair da partida
+// ...existing code...
   const handleLeaveMatch = async () => {
     setLeaving(true);
     setError(null);
     
-    console.log('Tentando sair da partida...');
-    
     try {
       // Verificar se o usuário está na partida
       if (!userIsInMatch || !match) {
-        console.error('Usuário não está na partida ou partida não encontrada');
         setError('Você não está participando desta partida');
         toast.error('Você não está participando desta partida');
         setLeaving(false);
         return;
       }
       
-      // Atualizar estado local primeiro para feedback imediato
-      const updatedPlayers = match.players.filter((player: any) => 
-        player.id !== currentUser.id && player.teamId === null
-      );
+      // Identificar os times do usuário na partida
+      const userTeamsInMatch = match.teams?.filter((team: any) => 
+        team && (team.captainId === currentUser.id || 
+          (team.players && team.players.some((p: any) => p && p.id === currentUser.id))
+        )
+      ) || [];
       
-      const updatedTeams = match.teams.filter((team: any) => 
-        !team.players.some((player: any) => player.id === currentUser.id)
-      );
-      
-      setMatch({
-        ...match,
-        players: updatedPlayers,
-        teams: updatedTeams
-      });
-      
-      // Remover da lista de partidas ingressadas no localStorage
-      const joinedMatches = JSON.parse(localStorage.getItem('joinedMatches') || '[]');
-      // Garantir que joinedMatches seja um array
-      const matchesArray = Array.isArray(joinedMatches) ? joinedMatches : [];
-      const updatedJoinedMatches = matchesArray.filter((id: number) => id !== match.id);
-      localStorage.setItem('joinedMatches', JSON.stringify(updatedJoinedMatches));
-      
-      // Tentar chamar a API
+      if (userTeamsInMatch.length === 0) {
+        setError('Não foi possível identificar seu time nesta partida');
+        toast.error('Não foi possível identificar seu time nesta partida');
+        setLeaving(false);
+        return;
+      }
       try {
-        if (match.id) {
-          await api.matches.leave(match.id);
-          console.log('API de saída chamada com sucesso');
+        const joinedMatchesWithTeam = JSON.parse(localStorage.getItem('joinedMatchesWithTeam') || '{}');
+        
+        if (joinedMatchesWithTeam[match.id]) {
+          // Remover os times que estamos saindo
+          const teamIds: number[] = userTeamsInMatch.map((team: { id: number }) => team.id);
+          joinedMatchesWithTeam[match.id] = joinedMatchesWithTeam[match.id].filter(
+            (id: number) => !teamIds.includes(id)
+          );
+
+          if (joinedMatchesWithTeam[match.id].length === 0) {
+            delete joinedMatchesWithTeam[match.id];
+          }
+          
+          localStorage.setItem('joinedMatchesWithTeam', JSON.stringify(joinedMatchesWithTeam));
         }
-      } catch (apiError) {
-        console.warn('Erro ao chamar API de saída, simulando comportamento:', apiError);
-        // Se a API falhar, pelo menos o estado local foi atualizado
+      } catch (e) {
+        // Silenciar erro
       }
       
+      // Tentar chamar a API para cada time
+      for (const team of userTeamsInMatch) {
+        try {
+          if (match.id && team.id) {
+            await api.matches.leave(match.id);
+          }
+        } catch (apiError) {
+          // Silenciar erro
+        }
+      }
+
       // Recarregar detalhes da partida após um breve atraso
       setTimeout(() => {
         if (match && match.id) {
@@ -798,33 +493,48 @@ const MatchDetail: React.FC = () => {
         }
       }, 500);
       
-      toast.success('Você saiu da partida com sucesso');
+      toast.success('Seu time saiu da partida com sucesso');
     } catch (error) {
-      console.error('Erro ao sair da partida:', error);
       setError('Erro ao sair da partida. Tente novamente.');
       toast.error('Erro ao sair da partida. Tente novamente.');
     } finally {
       setLeaving(false);
     }
   };
-
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  
+    // Função melhorada para calcular distância entre coordenadas
+  const calculateDistance = (lat1: number | string, lon1: number | string, lat2: number | string, lon2: number | string): number | null => {
+    // Converter explicitamente para números e validar
+    const lat1Num = typeof lat1 === 'string' ? parseFloat(lat1) : Number(lat1);
+    const lon1Num = typeof lon1 === 'string' ? parseFloat(lon1) : Number(lon1);
+    const lat2Num = typeof lat2 === 'string' ? parseFloat(lat2) : Number(lat2);
+    const lon2Num = typeof lon2 === 'string' ? parseFloat(lon2) : Number(lon2);
+    
+    // Verificar se todas as coordenadas são números válidos e estão dentro de intervalos permitidos
+    if (isNaN(lat1Num) || isNaN(lon1Num) || isNaN(lat2Num) || isNaN(lon2Num) ||
+        lat1Num < -90 || lat1Num > 90 || lat2Num < -90 || lat2Num > 90 || 
+        lon1Num < -180 || lon1Num > 180 || lon2Num < -180 || lon2Num > 180) {
+      console.log('Coordenadas inválidas ou fora de limites:', { lat1, lon1, lat2, lon2 });
+      return null;
+    }
+    
     const R = 6371; // Raio da Terra em km
-    const dLat = deg2rad(lat2 - lat1);
-    const dLon = deg2rad(lon2 - lon1);
+    const dLat = deg2rad(lat2Num - lat1Num);
+    const dLon = deg2rad(lon2Num - lon1Num);
     const a = 
       Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.cos(deg2rad(lat1Num)) * Math.cos(deg2rad(lat2Num)) * 
       Math.sin(dLon/2) * Math.sin(dLon/2); 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
     const distance = R * c; // Distância em km
-    return parseFloat(distance.toFixed(1));
+    
+    // Arredondar para uma casa decimal e verificar validade
+    return !isNaN(distance) && isFinite(distance) ? parseFloat(distance.toFixed(1)) : null;
   };
-
   const deg2rad = (deg: number): number => {
     return deg * (Math.PI/180);
   };
-
+  
   const formatDate = (dateString: string | undefined): string => {
     if (!dateString) return 'Data não informada';
     try {
@@ -832,11 +542,10 @@ const MatchDetail: React.FC = () => {
       if (isNaN(date.getTime())) return 'Data inválida';
       return format(date, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR });
     } catch (error) {
-      console.error('Erro ao formatar data:', error);
       return 'Data inválida';
     }
   };
-
+  
   const formatTime = (timeString: string | undefined): string => {
     if (!timeString) {
       // Se não tiver o campo time separado, mas tiver uma data completa no formato '2025-04-23 18:00:00'
@@ -848,7 +557,7 @@ const MatchDetail: React.FC = () => {
     }
     return timeString.slice(0, 5); // Extrai apenas hora e minuto (HH:MM) se existir
   };
-
+  
   const formatPrice = (price: number | string | null | undefined): string => {
     if (price === null || price === undefined) return 'Gratuito';
     
@@ -876,7 +585,7 @@ const MatchDetail: React.FC = () => {
     
     return 'Gratuito';
   };
-
+  
   const getMapUrl = () => {
     const locationData = getLocationData();
     
@@ -901,119 +610,23 @@ const MatchDetail: React.FC = () => {
     
     return '#';
   };
-
+  
   const toggleMap = (): void => {
     setShowMap(!showMap);
   };
-
+  
   const toggleMapType = (): void => {
     setUseIframeMap(!useIframeMap);
   };
-
-  // Calcular total de vagas ocupadas, considerando que times ocupam múltiplas vagas
-  const calculateTotalPlayers = () => {
-    if (!match || !match.players || !Array.isArray(match.players)) {
-      console.error("Não foi possível calcular o total de jogadores: partida inválida ou sem lista de jogadores");
-      return 0;
-    }
-    
-    let total = 0;
-    
-    console.log(`Calculando jogadores para partida ${match.id} - ${match.title}`);
-    console.log(`Total de entradas na lista players: ${match.players.length}`);
-    
-    for (let i = 0; i < match.players.length; i++) {
-      const player = match.players[i];
-      
-      if (!player) {
-        console.log(`Entrada ${i} é inválida, pulando...`);
-        continue;
-      }
-      
-      if (player.isTeam) {
-        // Caso 1: É um time
-        if (player.teamId) {
-          console.log(`Entrada ${i}: Time com ID ${player.teamId}`);
-          
-          if (match.teams && Array.isArray(match.teams)) {
-            const team = match.teams.find((t: { id: number }) => t && t.id === player.teamId);
-            
-            if (team) {
-              if (team.players && Array.isArray(team.players)) {
-                // Contar jogadores do time
-                let teamSize = team.players.length;
-                
-                // Verificar se capitão está na lista
-                const captainInList = team.captainId && team.players.some((p: { id: number }) => p && p.id === team.captainId);
-                if (!captainInList && team.captainId) {
-                  teamSize += 1;
-                  console.log(`  Time ${team.name}: Adicionando capitão à contagem`);
-                }
-                
-                console.log(`  Time ${team.name}: ${teamSize} jogadores no total`);
-                total += teamSize;
-              } else if (player.playerCount && typeof player.playerCount === 'number') {
-                console.log(`  Time ${team.name}: Usando playerCount = ${player.playerCount}`);
-                total += player.playerCount;
-              } else {
-                console.log(`  Time ${team.name}: Sem informações completas, assumindo 1 jogador`);
-                total += 1;
-              }
-            } else {
-              // Time não encontrado
-              if (player.playerCount && typeof player.playerCount === 'number') {
-                console.log(`  Time ID ${player.teamId} não encontrado, usando playerCount = ${player.playerCount}`);
-                total += player.playerCount;
-              } else {
-                console.log(`  Time ID ${player.teamId} não encontrado, assumindo 1 jogador`);
-                total += 1;
-              }
-            }
-          } else {
-            // Não há lista de times válida
-            if (player.playerCount && typeof player.playerCount === 'number') {
-              console.log(`  Lista de times ausente, usando playerCount = ${player.playerCount}`);
-              total += player.playerCount;
-            } else {
-              console.log(`  Lista de times ausente, assumindo 1 jogador`);
-              total += 1;
-            }
-          }
-        } else {
-          // Time sem ID
-          if (player.playerCount && typeof player.playerCount === 'number') {
-            console.log(`  Time sem ID, usando playerCount = ${player.playerCount}`);
-            total += player.playerCount;
-          } else {
-            console.log(`  Time sem ID, assumindo 1 jogador`);
-            total += 1;
-          }
-        }
-      } else {
-        // Caso 2: Jogador individual
-        console.log(`Entrada ${i}: Jogador individual ${player.name || player.id || 'sem nome'}`);
-        total += 1;
-      }
-    }
-    
-    console.log(`Total final de jogadores: ${total}`);
-    return total;
-  };
-
-  // Adicionar função fetchMatchDetails se estiver faltando
+  
   const fetchMatchDetails = async (matchId: number) => {
     try {
       setLoading(true);
-      console.log(`Buscando detalhes da partida: ${matchId}`);
       const matchData = await api.matches.getById(matchId);
       setMatch(matchData);
-      console.log('Detalhes da partida carregados:', matchData);
       
-      // Verificar se o usuário atual está na partida, com verificações de segurança para evitar erros
+      // Verificar se o usuário atual está na partida, removendo verificação de jogador individual
       const userPresent = 
-        // Usuário está como jogador individual
-        (matchData && matchData.players && Array.isArray(matchData.players) && 
-          matchData.players.some((player: any) => player && player.id === currentUser?.id)) || 
         // Usuário está como jogador em um time
         (matchData && matchData.teams && Array.isArray(matchData.teams) && 
           matchData.teams.some((team: any) => 
@@ -1031,15 +644,13 @@ const MatchDetail: React.FC = () => {
           ));
           
       setUserIsInMatch(userPresent);
-      console.log(`Usuário está na partida: ${userPresent}`);
     } catch (error) {
-      console.error('Erro ao buscar detalhes da partida:', error);
       setError('Erro ao carregar detalhes da partida');
     } finally {
       setLoading(false);
     }
   };
-
+  
   // Adicionar função para abrir modal com detalhes do time
   const handleViewTeamDetails = (teamId: number) => {
     if (!match || !match.teams) return;
@@ -1048,12 +659,9 @@ const MatchDetail: React.FC = () => {
     if (teamInfo) {
       setSelectedTeamForView(teamInfo);
       setShowTeamDetailsModal(true);
-      console.log(`Visualizando detalhes do time: ${teamInfo.name}`);
-    } else {
-      console.warn(`Time com ID ${teamId} não encontrado para visualização`);
     }
   };
-
+  
   // No início do componente, adicionar o useEffect para obter a localização do usuário
   useEffect(() => {
     // Função para obter a localização do usuário com alta precisão
@@ -1069,8 +677,6 @@ const MatchDetail: React.FC = () => {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
               };
-              console.log('Localização do usuário obtida:', userLoc);
-              console.log('Precisão da localização:', position.coords.accuracy, 'metros');
               
               setUserLocation(userLoc);
               toast.dismiss();
@@ -1086,22 +692,18 @@ const MatchDetail: React.FC = () => {
                   locationData.lng
                 );
                 setDistance(dist);
-                console.log(`Distância calculada: ${dist} km`);
                 
                 // Obter o endereço reverso do usuário para exibição
                 try {
                   fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${userLoc.lat}&lon=${userLoc.lng}&zoom=18&addressdetails=1`)
                     .then(response => response.json())
                     .then(data => {
-                      if (data && data.display_name) {
-                        console.log('Endereço do usuário:', data.display_name);
-                        // Opcional: salvar o endereço do usuário em um estado
-                        // setUserAddress(data.display_name);
-                      }
+                      // Opcional: salvar o endereço do usuário em um estado
+                      // setUserAddress(data.display_name);
                     })
-                    .catch(err => console.error('Erro ao obter endereço reverso:', err));
+                    .catch(err => {});
                 } catch (e) {
-                  console.error('Erro ao buscar endereço do usuário:', e);
+                  // Erro silencioso
                 }
               } else if (locationData && locationData.address && !locationData.lat && !locationData.lng) {
                 // Temos apenas o endereço, precisamos geocodificar
@@ -1109,7 +711,6 @@ const MatchDetail: React.FC = () => {
               }
             },
             (error) => {
-              console.error('Erro ao obter localização do usuário:', error);
               toast.dismiss();
               
               // Mensagens de erro específicas
@@ -1139,149 +740,174 @@ const MatchDetail: React.FC = () => {
             }
           );
         } catch (e) {
-          console.error('Erro ao chamar API de geolocalização:', e);
           toast.dismiss();
           toast.error('Erro ao acessar serviço de localização');
           fetchLocationByIP();
         }
       } else {
-        console.warn('Geolocalização não suportada neste navegador');
         toast.error('Seu navegador não suporta geolocalização');
         // Tentar usar uma API de geolocalização por IP como fallback
         fetchLocationByIP();
       }
     };
-
+  
     // Chamar função para obter localização
     getUserLocation();
     
     // Adicionar getUserLocation ao escopo global para poder ser chamado pelo botão
     (window as any).getUserLocation = getUserLocation;
   }, [match?.id]); // Dependência alterada para match.id para evitar loops infinitos
-
+  
   // Função para normalizar e obter os dados de localização, independente de como estão armazenados
+   // Função melhorada para extrair dados de localização
   const getLocationData = () => {
     if (!match) return null;
     
-    // Caso 1: Dados completos no objeto location
-    if (match.location && match.location.latitude && match.location.longitude) {
-      return {
-        lat: match.location.latitude,
-        lng: match.location.longitude,
-        address: match.location.address || '',
-        formattedAddress: match.location.formattedAddress || match.location.address || ''
-      };
-    }
-    
-    // Caso 2: Latitude e longitude diretamente no objeto match
-    if (match.latitude && match.longitude) {
-      return {
-        lat: match.latitude,
-        lng: match.longitude,
-        address: typeof match.location === 'string' ? match.location : '',
-        formattedAddress: typeof match.location === 'string' ? match.location : ''
-      };
-    }
-    
-    // Caso 3: Apenas endereço (string) no campo location
-    if (typeof match.location === 'string' && match.location.trim()) {
-      return {
-        lat: null,
-        lng: null,
-        address: match.location,
-        formattedAddress: match.location
-      };
-    }
-    
-    // Caso 4: Apenas endereço no objeto location
-    if (match.location && match.location.address && typeof match.location.address === 'string') {
-      return {
-        lat: null,
-        lng: null,
-        address: match.location.address,
-        formattedAddress: match.location.formattedAddress || match.location.address || ''
-      };
-    }
-    
-    // Nenhuma informação de localização disponível
-    return null;
-  };
+    // Inicializar objeto de retorno com valores padrão
+    const result: {
+      lat: number | null;
+      lng: number | null;
+      address: string;
+      formattedAddress: string;
+    } = {
+      lat: null,
+      lng: null,
+      address: '',
+      formattedAddress: ''
+    };
 
-  // Função para geocodificar endereço e calcular distância com melhor tratamento de erros
-  const geocodeAddressAndCalculateDistance = async (address: string, userLoc: {lat: number, lng: number}) => {
     try {
-      console.log('Geocodificando endereço da partida:', address);
+      // Caso 1: Dados completos no objeto location
+      if (match.location && typeof match.location === 'object') {
+        // Tentar obter latitude/longitude do objeto location
+        if (match.location.latitude && match.location.longitude) {
+          const lat = Number(match.location.latitude);
+          const lng = Number(match.location.longitude);
+          
+          if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
+            result.lat = lat;
+            result.lng = lng;
+          }
+        }
+        
+        // Obter endereço do objeto location
+        if (match.location.address) {
+          result.address = match.location.address;
+          result.formattedAddress = match.location.formattedAddress || match.location.address;
+        }
+      }
+      
+      // Caso 2: Latitude e longitude diretamente no objeto match
+      if ((!result.lat || !result.lng) && match.latitude && match.longitude) {
+        const lat = Number(match.latitude);
+        const lng = Number(match.longitude);
+        
+        if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
+          result.lat = lat;
+          result.lng = lng;
+        }
+      }
+      
+      // Caso 3: Apenas endereço (string) no campo location
+      if ((!result.address) && typeof match.location === 'string' && match.location.trim()) {
+        result.address = match.location;
+        result.formattedAddress = match.location;
+      }
+      
+      // Verificar se temos alguma informação
+      if (result.lat !== null || result.address) {
+        return result;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Erro ao obter dados de localização:', error);
+      return null;
+    }
+  };
+  // Função melhorada para geocodificar endereço
+  const geocodeAddressAndCalculateDistance = async (address: string, userLoc: {lat: number; lng: number}) => {
+    if (!address || address.trim().length < 3) {
+      toast.error('Endereço muito curto ou inválido');
+      return;
+    }
+    
+    try {
       toast.loading('Buscando coordenadas do local da partida...');
       
       const coordinates = await geocodeAddress(address);
       
-      if (coordinates && coordinates.latitude && coordinates.longitude) {
+      if (coordinates && 
+          typeof coordinates.latitude === 'number' && 
+          typeof coordinates.longitude === 'number' &&
+          !isNaN(coordinates.latitude) && 
+          !isNaN(coordinates.longitude)) {
+        
         toast.dismiss();
-        console.log('Coordenadas obtidas:', coordinates);
+        
+        // Validar coordenadas obtidas
+        if (coordinates.latitude < -90 || coordinates.latitude > 90 || 
+            coordinates.longitude < -180 || coordinates.longitude > 180) {
+          toast.error('Coordenadas obtidas são inválidas');
+          return;
+        }
         
         // Atualizar o match com as coordenadas obtidas
         setMatch((prev: any) => {
-          // Verificar se location é um objeto ou string
           if (!prev) return prev;
           
-          // Determinar o endereço formatado para exibição
           const formattedAddress = coordinates.displayName || address;
           
-          if (typeof prev.location === 'string') {
-            return {
-              ...prev,
-              location: {
-                address: prev.location,
-                latitude: coordinates.latitude,
-                longitude: coordinates.longitude,
-                formattedAddress: formattedAddress
-              }
-            };
-          } else {
-            return {
-              ...prev,
-              location: {
-                ...prev.location,
-                latitude: coordinates.latitude,
-                longitude: coordinates.longitude,
-                address: prev.location?.address || address,
-                formattedAddress: formattedAddress
-              }
-            };
-          }
+          // Criar estrutura consistente independente do formato atual
+          return {
+            ...prev,
+            location: {
+              ...(typeof prev.location === 'object' ? prev.location : {}),
+              address: typeof prev.location === 'string' ? prev.location : 
+                    (prev.location?.address || address),
+              latitude: coordinates.latitude,
+              longitude: coordinates.longitude,
+              formattedAddress: formattedAddress
+            },
+            // Adicionar também no nível superior para compatibilidade
+            latitude: coordinates.latitude,
+            longitude: coordinates.longitude
+          };
         });
         
-        // Calcular distância
+        // Calcular distância com validação
         const dist = calculateDistance(
           userLoc.lat,
           userLoc.lng,
           coordinates.latitude,
           coordinates.longitude
         );
-        setDistance(dist);
-        console.log(`Distância calculada: ${dist} km`);
         
-        // Exibir mensagem de sucesso com nome formatado do local
-        if (coordinates.displayName) {
-          // Formatar o nome para exibição mais amigável
-          const formattedName = coordinates.displayName.split(',').slice(0, 2).join(', ');
-          toast.success(`Local encontrado: ${formattedName}`);
+        if (dist !== null) {
+          setDistance(dist);
+          
+          // Exibir mensagem de sucesso com nome formatado do local
+          if (coordinates.displayName) {
+            const formattedName = coordinates.displayName.split(',').slice(0, 2).join(', ');
+            toast.success(`Local encontrado: ${formattedName}`);
+          } else {
+            toast.success('Local encontrado com sucesso!');
+          }
         } else {
-          toast.success('Local encontrado com sucesso!');
+          toast.error('Não foi possível calcular a distância');
         }
       } else {
         toast.dismiss();
         toast.error('Não foi possível encontrar coordenadas para o endereço');
-        console.warn('Não foi possível obter coordenadas para o endereço:', address);
       }
     } catch (error) {
       toast.dismiss();
       toast.error('Erro ao buscar coordenadas do endereço');
-      console.error('Erro ao geocodificar endereço:', error);
+      console.error('Erro na geocodificação:', error);
     }
   };
+  
 
-  // Adicionar o estilo personalizado para a informação de endereço
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
@@ -1301,56 +927,34 @@ const MatchDetail: React.FC = () => {
       document.head.removeChild(style);
     };
   }, []);
-
+  
   // Coloque essas variáveis após as verificações de carregamento e erro
   if (loading) {
     return <div className="match-detail-container loading">Carregando detalhes da partida...</div>;
   }
-
+  
   if (error) {
     return <div className="match-detail-container error">{error}</div>;
   }
-
+  
   if (!match) {
     return <div className="match-detail-container error">Partida não encontrada.</div>;
   }
-
-  console.log('Dados do usuário atual:', currentUser);
-  console.log('Lista de jogadores da partida:', match.players);
-  console.log('Estrutura completa do objeto match:', match);
-  console.log('Estrutura do campo location:', match.location);
-  console.log('Contador de refreshes:', refreshCounter); // Log do contador de refreshes
-
-  const totalPlayersCount = calculateTotalPlayers();
-  const isFull = totalPlayersCount >= match.maxPlayers;
-  
-  console.log('------- DETALHES DA PARTIDA -------');
-  console.log(`ID: ${match.id}, Título: ${match.title}`);
-  console.log(`Máximo de jogadores: ${match.maxPlayers}`);
-  console.log(`Total atual de jogadores: ${totalPlayersCount}`);
-  console.log(`A partida está cheia? ${isFull ? 'SIM' : 'NÃO'}`);
-  console.log(`Número de items na lista players: ${match.players?.length || 0}`);
-  console.log('----------------------------------');
-  
-  // Verificar se o usuário já está na partida
   const userHasJoined = match && match.players && Array.isArray(match.players) && 
     match.players.some((player: any) => {
       if (!player) return false;
       
-      const isCurrentUser = player.id === currentUser?.id;
-  
+      // Removida verificação de jogador individual
       const isUserTeam = player && player.isTeam && match.teams && Array.isArray(match.teams) && 
         match.teams.some((t: any) => 
           t && t.id === player.teamId && t.ownerId === currentUser?.id
         );
       
-      return isCurrentUser || isUserTeam;
+      return isUserTeam;
     });
-    
-  console.log(`O usuário atual ${currentUser?.name || currentUser?.id || 'desconhecido'} está na partida? ${userHasJoined}`);
-
+  
   const locationData = getLocationData();
-
+  
   return (
     <div className="match-detail-container">
       <button className="back-button" onClick={() => navigate(-1)}>
@@ -1417,16 +1021,13 @@ const MatchDetail: React.FC = () => {
               {formatPrice(match.price)}
             </div>
           </div>
-          
           <div className="info-row">
-            <div className="info-label">Vagas:</div>
-            <div className="info-value">
-              {totalPlayersCount} / {match?.maxPlayers || 0}
-              {isFull && <span className="full-tag">LOTADO</span>}
+            <div className="info-label">Categoria:</div>
+              <div className="info-value">
+                {match.categories || 'Não informada'}
+              </div>
             </div>
           </div>
-        </div>
-        
         {match.description && (
           <div className="match-description">
             <h3>Descrição</h3>
@@ -1434,11 +1035,9 @@ const MatchDetail: React.FC = () => {
           </div>
         )}
         <div className="match-description">
-            <h3>Regras</h3>
-             <Button variant="info" onClick={() => setShowRulesModal(true)}>Visualizar regras</Button>
-          </div>
-
-
+          <h3>Regras</h3>
+          <Button variant="info" onClick={() => setShowRulesModal(true)}>Visualizar regras</Button>
+        </div>
         {match && (
           <RegrasFormInfoModal
             idpartida={match.id} 
@@ -1446,18 +1045,15 @@ const MatchDetail: React.FC = () => {
             onHide={() => setShowRulesModal(false)}
           />
         )}
-        
         <div className="map-section">
           <h3>Localização</h3>
           <button className="toggle-map-button" onClick={toggleMap}>
             {showMap ? 'Ocultar mapa' : 'Mostrar mapa'}
           </button>
-          
           {showMap && (
             <div className="map-container">
               {(() => {
                 const locationData = getLocationData();
-                
                 if (locationData && typeof locationData.lat === 'number' && typeof locationData.lng === 'number') {
                   // Temos coordenadas válidas, mostrar o mapa
                   return (
@@ -1511,12 +1107,12 @@ const MatchDetail: React.FC = () => {
                     <div className="loading-map">
                       <p>Carregando mapa para o endereço:</p>
                       <p><strong>{match.location?.formattedAddress || locationData.address}</strong></p>
-                      <button
+                      <Button
                         className="geocode-address-btn"
                         onClick={() => userLocation && geocodeAddressAndCalculateDistance(locationData.address, userLocation)}
                       >
                         Localizar no mapa
-                      </button>
+                      </Button>
                     </div>
                   );
                 } else {
@@ -1559,291 +1155,220 @@ const MatchDetail: React.FC = () => {
             </div>
           )}
         </div>
-        
-        {/* Informações de distância abaixo dos controles do mapa */}
-        {distance !== null && userLocation && (
-          <div className="distance-info">
-            <p><strong>Distância:</strong> {distance} km da sua localização</p>
-            {locationData && locationData.formattedAddress && (
-              <p className="address-info">
-                <strong>Endereço completo:</strong> {locationData.formattedAddress}
-              </p>
-            )}
-            <div className="route-options">
-              <a 
-                href={getMapUrl()} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="route-button osm"
-              >
-                <DirectionsIcon /> Ver rota no OpenStreetMap
-              </a>
-              <a 
-                href={`https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${getLocationData()?.lat},${getLocationData()?.lng}`} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="route-button gmaps"
-              >
-                <DirectionsIcon /> Ver rota no Google Maps
-              </a>
-            </div>
+      </div>
+      {distance !== null && userLocation && (
+        <div className="distance-info">
+          <p><strong>Distância:</strong> {distance} km da sua localização</p>
+          {locationData && locationData.formattedAddress && (
+            <p className="address-info">
+              <strong>Endereço completo:</strong> {locationData.formattedAddress}
+            </p>
+          )}
+          <div className="route-options">
+            <a 
+              href={getMapUrl()} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="route-button osm"
+            >
+              <DirectionsIcon /> Ver rota no OpenStreetMap
+            </a>
+            <a 
+              href={`https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${getLocationData()?.lat},${getLocationData()?.lng}`} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="route-button gmaps"
+            >
+              <DirectionsIcon /> Ver rota no Google Maps
+            </a>
           </div>
-        )}
-        
-        <div className="players-section">
-          <h3>Jogadores ({totalPlayersCount}/{match?.maxPlayers || 0})</h3>
-          {match.players && match.players.length > 0 ? (
-            <ul className="players-list">
-              {match.players.map((player: any) => (
-                <li key={player?.id || `player-${Math.random()}`} className={`player-item ${player?.isTeam ? 'team-player' : ''}`}>
-                  {player?.isTeam ? (
-                    <>
-                      <div className="team-player-header">
-                        <span className="team-name">{player?.name || 'Time sem nome'}</span>
-                        <span className="team-count-badge">
-                          {(() => {
-                            // Buscar o número real de jogadores para este time
-                            if (player?.teamId && match.teams && Array.isArray(match.teams)) {
-                              const teamInfo = match.teams.find((t: any) => t && t.id === player.teamId);
-                              if (teamInfo && teamInfo.players && Array.isArray(teamInfo.players)) {
-                                // Verificar se o capitão já está na lista de jogadores
-                                const captainInPlayers = teamInfo.captainId && 
-                                  teamInfo.players.some((p: any) => p && p.id === teamInfo.captainId);
-                                
-                                // Calcular o total (jogadores + capitão se não estiver na lista)
-                                const totalPlayers = teamInfo.players.length + (!captainInPlayers && teamInfo.captainId ? 1 : 0);
-                                
-                                return `${totalPlayers} jogador${totalPlayers !== 1 ? 'es' : ''}`;
-                              }
-                            }
-                            // Fallback para playerCount se não conseguirmos encontrar o time
-                            return `${player?.playerCount || 0} jogador${player?.playerCount !== 1 ? 'es' : ''}`;
-                          })()}
-                        </span>
-                      </div>
-                      {/* Mostrar quem é o capitão do time */}
-                      {player?.teamId && match.teams && Array.isArray(match.teams) && (() => {
-                        const teamInfo = match.teams.find((t: any) => t && t.id === player.teamId);
-                        if (teamInfo && teamInfo.captain) {
-                          return (
-                            <div className="team-captain-info">
-                              <span className="captain-indicator">Capitão: {teamInfo.captain.name}</span>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })()}
-                      {/* Botão para visualizar detalhes do time */}
-                      {player?.teamId && (
-                        <button 
-                          className="view-team-btn" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewTeamDetails(player.teamId);
-                          }}
-                        >
-                          Ver jogadores
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {player?.name || 'Jogador desconhecido'}
-                      {player?.id === match.organizer?.id && (
-                        <span className="organizer-badge">
-                          <SportsSoccerIcon fontSize="small" /> Organizador
-                        </span>
-                      )}
-                      {player?.id === currentUser?.id && (
-                        <span className="you-badge">Você</span>
-                      )}
-                    </>
+        </div>
+      )}
+      <div className="players-section">
+      <div className="players-section">
+  <h3>Times {match.currentTeams || 0}/{match.maxTeams || 0}</h3>
+  
+  {/* Seção de times cadastrados */}
+  {timeCadastrados  && timeCadastrados.length > 0 ? (
+    <div className="registered-teams">
+      <div className="teams-grid">
+        {timeCadastrados.map((team: any) => (
+          <div key={team.id} className="registered-team-card">
+            {team.banner && (
+              <img 
+                src={`http://localhost:3001${team.banner}`} 
+                className="team-card-logo" 
+                alt={team.name} 
+              />
+            )}
+            <div className="registered-team-info">
+              <h5>{team.name}</h5>
+            </div>  
+              
+          </div>
+        ))}
+      </div>
+    </div>
+  ) : (
+    <div className="no-teams">
+      <p>Nenhum time cadastrado para esta partida.</p>
+      {!userHasJoined && (
+        <button 
+          className="join-match-btn"
+          onClick={() => setShowTeamOptions(true)}
+        >
+          Entrar com um Time
+        </button>
+      )}
+    </div>
+  )}
+
+  {/* Modal de opções de time */}
+  {showTeamOptions && (
+    <div className="team-options">
+      <h4>Selecione um time para entrar na partida:</h4>
+      {loadingTeams ? (
+        <div className="loading-teams">
+          <div className="loading-spinner"></div>
+          <p>Carregando seus times...</p>
+        </div>
+      ) : (
+        <>
+          {userTeams && userTeams.length > 0 ? (
+            <ul className="teams-list">
+              {userTeams.map(team => (
+                <li 
+                  key={team.id} 
+                  className={`team-item ${team.isCurrentUserCaptain ? 'captain-team' : ''}`}
+                  onClick={() => handleJoinWithTeam(team.id)}
+                >
+                  {team.banner && (
+                    <img 
+                      src={`http://localhost:3001${team.banner}`} 
+                      className="team-logo" 
+                      alt={team.name} 
+                    />
                   )}
+                  <div className="team-details">
+                    <span className="team-name">{team.name}</span>
+                    <div className="team-info">
+                      <span className="player-count">
+                        {team.players?.length || 0} jogadores
+                      </span>
+                      {team.isCurrentUserCaptain && (
+                        <span className="captain-badge">Capitão</span>
+                      )}
+                    </div>
+                  </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="no-players">Nenhum jogador inscrito ainda.</p>
-          )}
-        </div>
-        
-        <div className="action-buttons">
-          {!userHasJoined ? (
-            <>
-              {showTeamOptions ? (
-                <div className="team-options">
-                  <h4>Selecione um time para entrar na partida:</h4>
-                  {loadingTeams ? (
-                    <div className="loading-teams">
-                      <div className="loading-spinner"></div>
-                      <p>Carregando seus times...</p>
-                    </div>
-                  ) : (
-                    <>
-                      {userTeams && userTeams.length > 0 ? (
-                        <ul className="teams-list">
-                          {userTeams.map(team => (
-                            <li 
-                              key={team.id} 
-                              className={`team-item ${team.isCurrentUserCaptain ? 'captain-team' : ''}`}
-                              onClick={() => handleJoinWithTeam(team.id)}
-                            >
-                              {team.banner && <img src={team.banner} alt={team.name} className="team-logo" />}
-                              <div className="team-details">
-                                <span className="team-name">{team.name}</span>
-                                <div className="team-info">
-                                  <span className="player-count">{team.players?.length || 0} jogadores</span>
-                                  {team.isCurrentUserCaptain && <span className="captain-badge">Capitão</span>}
-                                </div>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <div className="no-teams">
-                          <p>Você não tem times para participar desta partida.</p>
-                          <button 
-                            className="create-team-btn" 
-                            onClick={() => navigate('/teams/create')}
-                          >
-                            Criar um Time
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  <button 
-                    className="cancel-button" 
-                    onClick={() => setShowTeamOptions(false)}
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              ) : (
-                <div className="join-options">
-                  <button 
-                    className="join-button individual" 
-                    onClick={handleJoinMatch} 
-                    disabled={joining || loading || isFull}
-                  >
-                    {joining ? (
-                      <>
-                        <span className="button-spinner"></span>
-                        Entrando...
-                      </>
-                    ) : isFull ? (
-                      'Partida Cheia'
-                    ) : (
-                      'Entrar como Jogador'
-                    )}
-                  </button>
-                  
-                  <button 
-                    className="join-button team" 
-                    onClick={fetchUserTeams} 
-                    disabled={joining || isFull || loadingTeams || loading}
-                  >
-                    {loadingTeams ? (
-                      <>
-                        <span className="button-spinner"></span>
-                        Carregando Times...
-                      </>
-                    ) : isFull ? (
-                      'Partida Cheia'
-                    ) : (
-                      'Entrar com Time'
-                    )}
-                  </button>
-                </div>
-              )}
-            </>
-          ) : (
-            <button 
-              className="leave-button" 
-              onClick={handleLeaveMatch} 
-              disabled={leaving || loading}
-            >
-              {leaving ? (
-                <>
-                  <div className="button-spinner" /> Saindo...
-                </>
-              ) : (
-                'Sair da Partida'
-              )}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Modal para exibir detalhes do time */}
-      {showTeamDetailsModal && selectedTeamForView && (
-        <div className="modal-overlay" onClick={() => setShowTeamDetailsModal(false)}>
-          <div className="team-details-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="close-modal" onClick={() => setShowTeamDetailsModal(false)}>×</button>
-            
-            <div className="team-details-header">
-              {selectedTeamForView.banner && (
-                <img 
-                  src={selectedTeamForView.banner} 
-                  alt={selectedTeamForView.name} 
-                  className="team-banner"
-                />
-              )}
-              <h2>{selectedTeamForView.name}</h2>
-              {selectedTeamForView.description && (
-                <p className="team-description">{selectedTeamForView.description}</p>
-              )}
+            <div className="no-teams">
+              <p>Você não tem times para participar desta partida.</p>
+              <button 
+                className="create-team-btn"
+                onClick={() => navigate('/teams/create')}
+              >
+                Criar um Time
+              </button>
             </div>
-            
-            <div className="team-members-section">
-              <h3>Jogadores do Time</h3>
-              
-              {/* Exibir o capitão primeiro */}
-              {selectedTeamForView.captain && (
-                <div className="team-captain-row">
-                  <h4>Capitão</h4>
-                  <div className="player-card captain">
-                    <div className="player-info">
-                      <div className="player-name">{selectedTeamForView.captain.name}</div>
-                      <div className="player-email">{selectedTeamForView.captain.email}</div>
-                    </div>
-                    {selectedTeamForView.captain.id === currentUser?.id && (
-                      <span className="you-badge">Você</span>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              {/* Exibir os jogadores */}
-              {selectedTeamForView.players && selectedTeamForView.players.length > 0 ? (
-                <>
-                  <h4>Jogadores</h4>
-                  <div className="team-players-list">
-                    {selectedTeamForView.players
-                      .filter((p: any) => p && p.id !== selectedTeamForView.captainId)
-                      .map((player: any) => (
-                        <div key={player.id} className="player-card">
-                          <div className="player-info">
-                            <div className="player-name">{player.name}</div>
-                            <div className="player-email">{player.email}</div>
-                          </div>
-                          {player.id === currentUser?.id && (
-                            <span className="you-badge">Você</span>
-                          )}
-                        </div>
-                      ))
-                    }
-                  </div>
-                </>
-              ) : (
-                <p className="no-players-message">Este time não tem jogadores adicionais além do capitão.</p>
-              )}
-            </div>
-          </div>
-        </div>
+          )}
+          <button 
+            className="cancel-button"
+            onClick={() => setShowTeamOptions(false)}
+          >
+            Cancelar
+          </button>
+        </>
       )}
     </div>
+  )}
+</div>
+            
+    {showTeamDetailsModal && selectedTeamForView && (
+      <div className="modal-overlay" onClick={() => setShowTeamDetailsModal(false)}>
+        <div className="team-details-modal" onClick={(e) => e.stopPropagation()}>
+          <button className="close-modal" onClick={() => setShowTeamDetailsModal(false)}>×</button>
+          
+          <div className="team-details-header">
+            {selectedTeamForView.banner && (
+              <img 
+                src={`http://localhost:3001${selectedTeamForView.banner}`} 
+                alt="Banner do time"
+                className="team-banner"
+              />
+            )}
+            <h2>{selectedTeamForView.name || 'Time sem nome'}</h2>
+            {selectedTeamForView.description && (
+              <p className="team-description">{selectedTeamForView.description}</p>
+            )}
+          </div>
+          
+          <div className="team-members-section">
+            <h3>Jogadores do Time</h3>
+            
+            {/* Exibir o capitão primeiro */}
+            {selectedTeamForView.captain ? (
+              <div className="team-captain-row">
+                <h4>Capitão</h4>
+                <div className="player-card captain">
+                  <div className="player-info">
+                    <div className="player-name">{selectedTeamForView.captain.name}</div>
+                    {selectedTeamForView.captain.email && (
+                      <div className="player-email">{selectedTeamForView.captain.email}</div>
+                    )}
+                  </div>
+                  {currentUser?.id && selectedTeamForView.captain.id === currentUser.id && (
+                    <span className="you-badge">Você</span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p>Informações do capitão não disponíveis</p>
+            )}
+            
+            {/* Exibir os jogadores */}
+            {selectedTeamForView.players && Array.isArray(selectedTeamForView.players) && selectedTeamForView.players.length > 0 ? (
+              <>
+                <h4>Jogadores</h4>
+                <div className="team-players-list">
+                  {selectedTeamForView.players
+                    .filter((p: any) => p && p.id && (!selectedTeamForView.captainId || p.id !== selectedTeamForView.captainId))
+                    .map((player: any) => (
+                      <div key={player.id} className="player-card">
+                        <div className="player-info">
+                          <div className="player-name">{player.name || 'Jogador sem nome'}</div>
+                          {player.email && (
+                            <div className="player-email">{player.email}</div>
+                          )}
+                        </div>
+                        {currentUser?.id && player.id === currentUser.id && (
+                          <span className="you-badge">Você</span>
+                        )}
+                      </div>
+                    ))
+                  }
+                </div>
+              </>
+            ) : (
+              <p className="no-players-message">
+                {selectedTeamForView.captain ? 
+                  'Este time não tem jogadores adicionais além do capitão.' : 
+                  'Nenhum jogador encontrado neste time.'}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+    </div>
+    </div> 
   );
-};
+}; 
 
-export default MatchDetail; 
+
+export default MatchDetail;
+
+
+

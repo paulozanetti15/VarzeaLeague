@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database';
-const Rules = sequelize.define('Athlete', {
+const Rules = sequelize.define('Rules', {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
