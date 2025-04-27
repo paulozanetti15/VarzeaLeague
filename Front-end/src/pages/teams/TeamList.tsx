@@ -40,7 +40,7 @@ const TeamList = () => {
         return;
       }
 
-      const response = await axios.get('http://localhost:3001/api/teams', {
+      const response = await axios.get('http://localhost:3001/api/teams/', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -149,7 +149,7 @@ const TeamList = () => {
                   <div className="team-banner">
                     {team.banner ? (
                       <img 
-                        src={team.banner} 
+                        src={`http://localhost:3001${team.banner}`} 
                         alt={team.name} 
                         className="team-banner-img" 
                       />

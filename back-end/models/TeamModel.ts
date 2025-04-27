@@ -12,6 +12,12 @@ interface TeamAttributes {
   isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  idademinima?: number;
+  idademaxima?: number;
+  maxparticipantes?: number;
+  primaryColor?: string;
+  secondaryColor?: string;
+  sexo?: string;
   captain?: User;
   players?: User[];
 }
@@ -25,6 +31,12 @@ class Team extends Model<TeamAttributes, TeamCreationAttributes> {
   public name!: string;
   public description!: string;
   public banner!: string | null;
+  public idademinima!: number | null;
+  public idademaxima!: number | null;
+  public maxparticipantes!: number | null;
+  public sexo!: string | null;
+  public primaryColor!: string | null;
+  public secondaryColor!: string | null;
   public captainId!: number;
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
@@ -56,7 +68,31 @@ Team.init(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    idademinima: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    idademaxima: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    maxparticipantes: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    sexo: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     banner: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    primaryColor: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    secondaryColor: {
       type: DataTypes.STRING,
       allowNull: true,
     },
