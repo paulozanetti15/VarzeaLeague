@@ -12,6 +12,7 @@ import { api } from '../../services/api';
 import './CreateMatch.css';
 import { toast } from 'react-hot-toast';
 import RegrasFormRegisterModal from '../../components/Modals/Athlete/RegrasFormRegisterModal';
+import { ca } from 'date-fns/locale';
 
 interface MatchFormData {
   title: string;
@@ -23,6 +24,7 @@ interface MatchFormData {
   price: string;
   complement: string;
   city: string;
+  category: string; // Added category property
 }
 
 const cities = [
@@ -167,7 +169,8 @@ const CreateMatch: React.FC = () => {
     maxPlayers: 10,
     price: '',
     complement: '',
-    city: ''
+    city: '',
+    category: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -255,7 +258,8 @@ const CreateMatch: React.FC = () => {
         description: formData.description?.trim(),
         price: formData.price ? parseFloat(formData.price) : null,
         city: formData.city.trim(),
-        complement: formData.complement?.trim()
+        complement: formData.complement?.trim(),
+        category: formData.category
       };
       setDadosPartida(matchData);
       setShowInfoAthleteModal(true);
@@ -451,7 +455,25 @@ const CreateMatch: React.FC = () => {
               className="form-control"
             />
           </div>
-
+          <div className="form-group">
+            <label htmlFor="location">Categoria *</label>
+            <select
+              id="category"
+              name="category"
+              value={formData.category}
+              onChange={handleSelectChange}
+              required
+              className="form-control"
+            >
+              <option value="">Selecione uma categoria</option>
+              <option value="sub-10">Sub-10</option>
+              <option value="sub-12">Sub-12</option>
+              <option value="sub-14">Sub-14</option>
+              <option value="sub-16">Sub-16</option>
+              <option value="sub-18">Sub-18</option>
+              <option value="adulto">Adulto</option>
+            </select> 
+          </div>  
           <div className="form-group">
             <label htmlFor="complement">Complemento (opcional)</label>
             <input
