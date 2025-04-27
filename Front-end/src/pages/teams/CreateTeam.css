@@ -321,6 +321,9 @@ textarea.form-control {
   transition: all 0.3s ease;
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  /* Sombra do texto para melhorar visibilidade */
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+
 }
 
 .player-email:hover {
@@ -333,7 +336,7 @@ textarea.form-control {
   min-width: 0;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  color: white;
+  color: rgb(6, 5, 5);
   border-radius: 8px;
   padding: 0.75rem 1rem;
   font-size: 1rem;
@@ -347,7 +350,7 @@ textarea.form-control {
 }
 
 .player-email input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(56, 21, 21, 0.6);
 }
 
 .add-player-btn, .remove-player-btn {
