@@ -91,11 +91,17 @@ Match.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'User',
+      model: 'users',
       key: 'id',
     },
     field: 'organizer_id',
-  }
+  },
+  categories: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  } 
+  
+  
 }, {
   sequelize,
   tableName: 'matches',
