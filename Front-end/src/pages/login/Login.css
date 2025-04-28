@@ -109,23 +109,23 @@
 .login-btn {
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(to right, var(--blue-600), var(--blue-700));
+  background: linear-gradient(90deg, #6366f1 0%, #7c3aed 100%);
   color: var(--white);
   border: none;
-  border-radius: 6px;
-  font-size: 1rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 0.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.18);
 }
 
 .login-btn:hover {
-  background: linear-gradient(to right, var(--blue-700), var(--blue-800));
+  background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(25, 118, 210, 0.25);
+  box-shadow: 0 6px 15px rgba(99, 102, 241, 0.25);
 }
 
 .login-divider {

@@ -18,11 +18,13 @@ const returnUser = async (req: any, res: any) => {
 }
 const updateUser = async (req,res) => {
     const {id} = req.params;
-    const {name, email} = req.body;
+    const {name, email, phone, sexo} = req.body;
     console.log(name,email)
     const updatedUser = await userModel.update({
         name,
         email,
+        phone,
+        sexo,
     },{where:{id}})
    
     return res.status(200).json(updatedUser)
@@ -37,16 +39,18 @@ const deleteUser = async (req,res) => {
 }
 const updateUserPassword = async (req: any, res: any) => {
     const { id } = req.params;
-    const { password } = req.body;
+    const { currentPassword, password } = req.body;
+    const user = await userModel.findOne({ where: { id } });
+    if (!user) {
+        return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+        return res.status(400).json({ error: 'Senha atual incorreta' });
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await userModel.findOne({ where: { password:hashedPassword } });
-    if (user) {
-        return res.status(400).json({ error: 'Password already in use' });
-    }
-    else{
-        await userModel.update({ password: hashedPassword }, { where: { id:id } });
-        return res.status(200).json({ message: 'Password updated successfully' });
-    }
+    await userModel.update({ password: hashedPassword }, { where: { id } });
+    return res.status(200).json({ message: 'Senha atualizada com sucesso' });
 }
 
 export default {

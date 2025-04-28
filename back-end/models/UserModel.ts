@@ -5,10 +5,11 @@ import UserType from './UserTypeModel';
 class User extends Model {
   public id!: number;
   public name!: string;
+  public cpf!: string;
+  public phone!: string;
   public email!: string;
   public password!: string;
   public sexo!: string; 
-  public DataNasc!: Date;
   public resetPasswordExpires?: Date;
   public resetPasswordToken?: string;
   public readonly createdAt!: Date;
@@ -25,6 +26,15 @@ User.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
+  cpf: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  phone: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
   email: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -38,11 +48,6 @@ User.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
-  DataNasc: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
-
   userTypeId: {
     type: DataTypes.INTEGER,
     allowNull: false,

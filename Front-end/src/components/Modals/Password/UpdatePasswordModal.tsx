@@ -16,6 +16,7 @@ interface UpdatePasswordModalProps {
 }
 
 export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswordModalProps) {
+    const [senhaAtual, setSenhaAtual] = useState<string | null>(null);
     const [senha, setSenha] = useState<string | null>(null);
     const [confirmarSenha, setConfirmarSenha] = useState<string | null>(null);
     const [passwordError, setPasswordError] = useState('');
@@ -26,6 +27,7 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [currentPasswordError, setCurrentPasswordError] = useState('');
     
     useEffect(() => {   
         if (!senha || !confirmarSenha) return;
@@ -57,42 +59,54 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
     }, [show]);
 
     const updatePasswordRequest = async (userId: number) => {
-        if(senha && senha === confirmarSenha){
+        setCurrentPasswordError('');
+        if (!senhaAtual) {
+            setCurrentPasswordError('Digite a senha atual');
+            setConfirmPasswordTouched(true);
+            return;
+        }
+        if (senha && senha === confirmarSenha) {
             setIsLoading(true);
             try {
-                const response = await axios.put(`http://localhost:3001/api/user/password/${userId}`, 
+                const response = await axios.put(`http://localhost:3001/api/user/password/${userId}`,
                     {
+                        currentPassword: senhaAtual,
                         password: senha,
                     },
                     {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`
-                    },               
-                });
-               
-                if(response.status === 200) {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem('token')}`
+                        },
+                    });
+                if (response.status === 200) {
                     setToastMessage("Senha alterada com sucesso");
                     setToastBg("success");
                     setShowToast(true);
                     setTimeout(() => {
                         onHide();
-                    }, 1500); 
+                    }, 1500);
                 }
-            } catch (error) {
-                setToastMessage("Erro ao alterar senha");
-                setToastBg("danger");
-                setShowToast(true);
+            } catch (error: any) {
+                if (error.response?.data?.message?.toLowerCase().includes('atual')) {
+                    setCurrentPasswordError(error.response.data.message);
+                } else {
+                    setToastMessage(error.response?.data?.message || "Erro ao alterar senha");
+                    setToastBg("danger");
+                    setShowToast(true);
+                }
             } finally {
                 setIsLoading(false);
             }
-        }  
+        }
     }
     
     const handleClose = () => {
         // Reset form state when closing
+        setSenhaAtual(null);
         setSenha(null);
         setConfirmarSenha(null);
         setPasswordError('');
+        setCurrentPasswordError('');
         setConfirmPasswordTouched(false);
         setShowPassword(false);
         setShowConfirmPassword(false);
@@ -122,6 +136,21 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
                 </Modal.Header>
                 <Modal.Body className="modal-body">
                     <Form className="password-form">
+                        <Form.Group className="mb-4" controlId="currentPassword">
+                            <Form.Label className="form-label-password">Senha atual</Form.Label>
+                            <div className="password-input-container">
+                                <Form.Control
+                                    type="password"
+                                    placeholder="Digite sua senha atual"
+                                    onChange={(e) => setSenhaAtual(e.target.value)}
+                                    autoFocus
+                                    className="password-input"
+                                />
+                            </div>
+                            {currentPasswordError && (
+                                <div className="password-error" style={{marginTop: 8}}>{currentPasswordError}</div>
+                            )}
+                        </Form.Group>
                         <Form.Group className="mb-4" controlId="password">
                             <Form.Label className="form-label-password">Nova senha</Form.Label>
                             <div className="password-input-container">
@@ -129,7 +158,6 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Digite sua nova senha"
                                     onChange={(e) => setSenha(e.target.value)}
-                                    autoFocus
                                     className="password-input"
                                 />
                                 <button 
@@ -142,7 +170,7 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
                             </div>
                         </Form.Group>
                         <Form.Group className="mb-4" controlId="confirmPassword">
-                            <Form.Label className="form-label-password">Confirmar senha</Form.Label>
+                            <Form.Label className="form-label-password">Confirmar nova senha</Form.Label>
                             <div className="password-input-container">
                                 <Form.Control 
                                     type={showConfirmPassword ? "text" : "password"}
