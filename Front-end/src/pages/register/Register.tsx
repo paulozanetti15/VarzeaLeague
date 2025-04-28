@@ -39,6 +39,8 @@ const Register: React.FC = () => {
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
     if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
@@ -84,7 +86,7 @@ const Register: React.FC = () => {
     setIsLoading(true);
     setErrors({});
     try {
-      const response = await fetch('http://localhost:3000/api/auth/register', {
+      const response = await fetch(`${apiUrl}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

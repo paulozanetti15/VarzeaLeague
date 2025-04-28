@@ -5,6 +5,8 @@ import UserType from './UserTypeModel';
 class User extends Model {
   public id!: number;
   public name!: string;
+  public cpf!: string;
+  public phone!: string;
   public email!: string;
   public password!: string;
   public sexo!: string; 
@@ -21,6 +23,15 @@ User.init({
     primaryKey: true,
   },
   name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  cpf: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  phone: {
     type: DataTypes.STRING,
     allowNull: false,
   },

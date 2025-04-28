@@ -15,11 +15,15 @@ interface UserAttributes {
 
 export const register: RequestHandler = async (req, res) => {
   try {
-    const { name, email, password, sexo } = req.body;
+    const { name, cpf, phone, email, password, sexo } = req.body;
     const existingUser = await UserModel.findOne({ where: { email } });
-
     if (existingUser) {
-      res.status(400).json({ message: 'Email já cadastrado' });
+      res.status(400).json({ message: 'E-mail já cadastrado' });
+      return;
+    }
+    const existingCpf = await UserModel.findOne({ where: { cpf } });
+    if (existingCpf) {
+      res.status(400).json({ message: 'CPF já cadastrado' });
       return;
     }
 
@@ -29,6 +33,8 @@ export const register: RequestHandler = async (req, res) => {
 
     const user = await UserModel.create({
       name,
+      cpf,
+      phone,
       email,
       password: hashedPassword,
       sexo,
