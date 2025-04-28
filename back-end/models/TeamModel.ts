@@ -20,6 +20,9 @@ interface TeamAttributes {
   sexo?: string;
   captain?: User;
   players?: User[];
+  estado?: string;
+  cidade?: string;
+  jogadores?: any[];
 }
 
 interface TeamCreationAttributes extends Omit<TeamAttributes, 'id'> {
@@ -41,6 +44,9 @@ class Team extends Model<TeamAttributes, TeamCreationAttributes> {
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+  public estado!: string | null;
+  public cidade!: string | null;
+  public jogadores!: any[] | null;
 
   // Métodos de associação
   public addPlayer!: BelongsToManyAddAssociationMixin<User, number>;
@@ -109,7 +115,19 @@ Team.init(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
-    }
+    },
+    estado: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    cidade: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    jogadores: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
   },
   {
     sequelize,

@@ -20,6 +20,10 @@ interface Team {
   banner?: string;
   createdAt?: string;
   players?: any[];
+  primaryColor?: string;
+  secondaryColor?: string;
+  estado?: string;
+  cidade?: string;
 }
 
 const TeamList = () => {
@@ -99,7 +103,7 @@ const TeamList = () => {
             onClick={() => navigate('/teams/create')}
           >
             <AddIcon sx={{ mr: 1 }} />
-            Criar novo time
+            Criar meu time
           </button>
         )}
       </div>
@@ -140,13 +144,13 @@ const TeamList = () => {
         <div className="teams-content">
           {hasTeam ? (
             <div className="team-container">
-              {teams.map((team, index) => (
+              {teams.slice(0, 1).map((team, index) => (
                 <div
                   key={team.id}
                   className="team-card team-detail-card"
                   onClick={() => handleTeamClick(team.id)}
                 >
-                  <div className="team-banner">
+                  <div className="team-banner" style={{ background: team.primaryColor && team.secondaryColor ? `linear-gradient(135deg, ${team.primaryColor} 0%, ${team.secondaryColor} 100%)` : undefined }}>
                     {team.banner ? (
                       <img 
                         src={`http://localhost:3001${team.banner}`} 
@@ -159,20 +163,30 @@ const TeamList = () => {
                   </div>
                   <div className="team-info">
                     <h2 className="team-name">{team.name}</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.2rem', marginBottom: '0.7rem' }}>
+                      <span style={{ color: '#fff', fontWeight: 500, fontSize: '1.05rem', opacity: 0.85 }}>
+                        {team.estado && <>{team.estado}{team.cidade ? ' - ' : ''}</>}{team.cidade}
+                      </span>
+                      {(team.primaryColor || team.secondaryColor) && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          {team.primaryColor && <span title="Cor Primária" style={{ width: 22, height: 22, borderRadius: '50%', background: team.primaryColor, border: '2px solid #fff', display: 'inline-block', boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }}></span>}
+                          {team.secondaryColor && <span title="Cor Secundária" style={{ width: 22, height: 22, borderRadius: '50%', background: team.secondaryColor, border: '2px solid #fff', display: 'inline-block', boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }}></span>}
+                        </span>
+                      )}
+                    </div>
                     <p className="team-description">
                       {team.description || "Sem descrição disponível"}
                     </p>
                     <div className="team-stats">
                       <div className="stat">
                         <GroupIcon sx={{ fontSize: 20, color: '#2196F3' }} />
-                        <span>{team.players?.length || team.playerCount || 0} Jogadores</span>
+                        <span>{Array.isArray(team.jogadores) ? team.jogadores.length : 0} Jogadores</span>
                       </div>
                       <div className="stat">
                         <EmojiEventsIcon sx={{ fontSize: 20, color: '#FFD700' }} />
                         <span>{team.matchCount || 0} Partidas</span>
                       </div>
                     </div>
-                    
                     <button
                       className="edit-team-btn"
                       onClick={(e) => {
@@ -187,20 +201,7 @@ const TeamList = () => {
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="no-team-container">
-              <div className="no-teams-message">
-                <p>Você ainda não tem um time cadastrado.</p>
-                <button 
-                  className="create-first-team-btn"
-                  onClick={() => navigate('/teams/create')}
-                >
-                  <AddIcon sx={{ mr: 1 }} />
-                  Criar meu time
-                </button>
-              </div>
-            </div>
-          )}
+          ) : null}
         </div>
       )}
     </div>
