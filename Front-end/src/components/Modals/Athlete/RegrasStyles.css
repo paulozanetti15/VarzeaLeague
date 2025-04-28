@@ -1,12 +1,26 @@
 .custom-modal-width {
-  max-width: 450px !important;
-  width: 90% !important;
+  max-width: 350px !important;
+  width: 80% !important;
   margin: 0 auto;
+}
+
+.modal-dialog {
+  width: auto !important;
+  max-width: 350px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.modal-content {
+  width: 100% !important;
+  max-width: 350px !important;
 }
 
 .small-modal-content {
   width: 100%;
+  max-width: 350px !important;
   border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .small-modal-content .form-control,
