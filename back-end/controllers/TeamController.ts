@@ -229,10 +229,12 @@ export class TeamController {
         res.status(404).json({ error: 'Time não encontrado' });
         return;
       }
+
       if (team.captainId !== userId) {
         res.status(403).json({ error: 'Apenas o capitão pode atualizar o time' });
         return;
       }
+
       const existingTeam = await Team.findOne({
         where: { name, id: { [Op.ne]: id }, isDeleted: false }
       });
@@ -250,9 +252,23 @@ export class TeamController {
           jogadoresUpdate = [];
         }
       }
+
+      if (team.banner !== null) {
+        const oldBannerPath = path.join(__dirname, '..', 'uploads', 'teams', team.banner);
+        if (fs.existsSync(oldBannerPath)) {
+          fs.unlinkSync(oldBannerPath);
+        }
+      }
+
+      let bannerFilename = null;
+      if (req.file) {
+        bannerFilename = req.file.filename;
+      }
+
       await team.update({
         name,
         description,
+        banner: bannerFilename,
         idademinima,
         idademaxima,
         sexo,
@@ -280,81 +296,6 @@ export class TeamController {
     } catch (error) {
       console.error('Erro detalhado ao atualizar time:', error);
       res.status(500).json({ error: 'Erro ao atualizar time' });
-    }
-  }
-
-  static async uploadBanner(req: AuthRequest, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const userId = req.user?.id;
-
-      const team = await Team.findOne({
-        where: {
-          id,
-          isDeleted: false
-        }
-      });
-      if (!team) {
-        res.status(404).json({ error: 'Time não encontrado' });
-        return;
-      }
-
-      if (team.captainId !== userId) {
-        res.status(403).json({ error: 'Apenas o capitão pode atualizar o banner' });
-        return;
-      }
-
-      if (!req.file) {
-        res.status(400).json({ error: 'Nenhum arquivo enviado' });
-        return;
-      }
-
-      if (team.banner) {
-        const oldBannerPath = path.join('uploads/teams', team.banner);
-        if (fs.existsSync(oldBannerPath)) {
-          fs.unlinkSync(oldBannerPath);
-        }
-      }
-      const agora = new Date();
-      agora.setHours(agora.getHours() - 3);
-      await team.update({ 
-        banner: req.file.filename,
-        updatedAt: agora
-      });
-      const updatedTeam = await Team.findOne({
-        where: {
-          id,
-          isDeleted: false
-        },
-        include: [
-          {
-            model: User,
-            as: 'captain',
-            attributes: ['name', 'email']
-          },
-          {
-            model: User,
-            as: 'players',
-            attributes: ['name', 'email']
-          }
-        ]
-      });
-
-      if (!updatedTeam) {
-        res.status(500).json({ error: 'Erro ao atualizar banner' });
-        return;
-      }
-
-      const plainTeam = updatedTeam.get({ plain: true });
-      const formattedTeam = {
-        ...plainTeam,
-        banner: `/uploads/teams/${plainTeam.banner}`
-      };
-
-      res.json(formattedTeam);
-    } catch (error) {
-      console.error('Erro ao fazer upload do banner:', error);
-      res.status(500).json({ error: 'Erro ao fazer upload do banner' });
     }
   }
 
