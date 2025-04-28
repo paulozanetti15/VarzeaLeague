@@ -99,7 +99,7 @@ const TeamList = () => {
             onClick={() => navigate('/teams/create')}
           >
             <AddIcon sx={{ mr: 1 }} />
-            Criar novo time
+            Criar meu time
           </button>
         )}
       </div>
@@ -140,7 +140,7 @@ const TeamList = () => {
         <div className="teams-content">
           {hasTeam ? (
             <div className="team-container">
-              {teams.map((team, index) => (
+              {teams.slice(0, 1).map((team, index) => (
                 <div
                   key={team.id}
                   className="team-card team-detail-card"
@@ -172,7 +172,6 @@ const TeamList = () => {
                         <span>{team.matchCount || 0} Partidas</span>
                       </div>
                     </div>
-                    
                     <button
                       className="edit-team-btn"
                       onClick={(e) => {
@@ -187,20 +186,7 @@ const TeamList = () => {
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="no-team-container">
-              <div className="no-teams-message">
-                <p>Você ainda não tem um time cadastrado.</p>
-                <button 
-                  className="create-first-team-btn"
-                  onClick={() => navigate('/teams/create')}
-                >
-                  <AddIcon sx={{ mr: 1 }} />
-                  Criar meu time
-                </button>
-              </div>
-            </div>
-          )}
+          ) : null}
         </div>
       )}
     </div>
