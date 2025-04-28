@@ -14,12 +14,11 @@ dotenv.config();
 export class TeamController {
   static async create(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { name, description, playerEmails, sexo, idademinima, idademaxima,maxPlayers,primaryColor, secondaryColor} = req.body;
-    
+      const { name, description, sexo, idademinima, idademaxima, maxPlayers, primaryColor, secondaryColor, estado, cidade, jogadores } = req.body;
       let bannerFilename = null;
       if (req.file) {
         bannerFilename = req.file.filename;
-      }    
+      }
       const token = req.headers.authorization?.replace('Bearer ', '');
       if (!token) {
         res.status(401).json({ error: 'Token não fornecido' });
@@ -28,36 +27,26 @@ export class TeamController {
       let decodedPayload;
       try {
         decodedPayload = jwt.decode(token);
-        console.log('Estrutura do token (sem verificação):', decodedPayload);
       } catch (decodeErr) {
-        console.error('Erro ao decodificar token:', decodeErr);
         res.status(401).json({ error: 'Token inválido' });
         return;
       }
-      let captainId=decodedPayload.id;
+      let captainId = decodedPayload.id;
       if (!captainId) {
         res.status(401).json({ error: 'Usuário não autenticado' });
         return;
       }
       if (name) {
         const existingActiveTeam = await Team.findOne({
-        where: {
-            name: name.trim(),
-            isDeleted: false 
-          }
+          where: { name: name.trim(), isDeleted: false }
         });
-
         if (existingActiveTeam) {
           res.status(400).json({ error: 'Este nome de time já está em uso. Escolha outro nome.' });
           return;
         }
         const existingDeletedTeam = await Team.findOne({
-          where: {
-            name: name.trim(),
-            isDeleted: true
-          }
+          where: { name: name.trim(), isDeleted: true }
         });
-        
         if (existingDeletedTeam) {
           const agora = new Date();
           agora.setHours(agora.getHours() - 3);
@@ -65,57 +54,22 @@ export class TeamController {
             description,
             captainId,
             isDeleted: false,
-            updatedAt: agora
+            updatedAt: agora,
+            estado,
+            cidade,
+            jogadores,
+            sexo,
+            idademinima,
+            idademaxima,
+            maxparticipantes: maxPlayers,
+            primaryColor,
+            secondaryColor,
+            banner: bannerFilename
           });
-          if (playerEmails && Array.isArray(playerEmails)) {
-            const validEmails = playerEmails.filter(email => email && typeof email === 'string' && email.trim() !== ''); 
-            if (validEmails.length > 0) {
-              await existingDeletedTeam.setPlayers([]);
-              const existingPlayers = await User.findAll({
-                where: {
-                  email: { [Op.in]: validEmails }
-                }
-              });
-              const existingEmails = existingPlayers.map(player => player.get('email'));
-              const missingEmails = validEmails.filter(email => !existingEmails.includes(email));
-              if (missingEmails.length > 0) {
-                const allUsers = await User.findAll();
-                console.log(`Buscados ${allUsers.length} usuários para verificação case insensitive`);
-                for (const email of missingEmails) {
-                  console.log(`Verificando email: ${email} com busca case insensitive`);
-                  const normalizedEmail = email.trim().toLowerCase();
-                  const userWithDifferentCase = allUsers.find(
-                    user => user.get('email').toLowerCase() === normalizedEmail
-                  )
-                  if (userWithDifferentCase) {
-                    existingPlayers.push(userWithDifferentCase);
-                  } else {
-                    console.log(`Usuário com email ${email} não existe. Não é possível adicioná-lo.`);
-                  }
-                }
-              }
-              await existingDeletedTeam.setPlayers(existingPlayers);
-            } else {
-              await existingDeletedTeam.setPlayers([]);
-            }
-          }
-          const teamWithAssociations = await Team.findByPk(existingDeletedTeam.id, {
-            include: [
-              {
-                model: User,
-                as: 'captain',
-                attributes: ['id', 'name', 'email']
-              },
-              {
-                model: User,
-                as: 'players',
-                attributes: ['id', 'name', 'email']
-              }
-            ]
-          });
+          const teamWithAssociations = await Team.findByPk(existingDeletedTeam.id);
           const plainTeam = teamWithAssociations.get({ plain: true });
           res.status(201).json(plainTeam);
-        return;
+          return;
         }
       }
       const team = await Team.create({
@@ -125,63 +79,22 @@ export class TeamController {
         sexo,
         idademinima,
         idademaxima,
-        maxparticipantes:maxPlayers,
-        primaryColor: primaryColor,
-        secondaryColor: secondaryColor,
+        maxparticipantes: maxPlayers,
+        primaryColor,
+        secondaryColor,
         isDeleted: false,
-        banner: bannerFilename 
+        banner: bannerFilename,
+        estado,
+        cidade,
+        jogadores
       });
-      if (playerEmails && Array.isArray(playerEmails)) {
-        const validEmails = playerEmails.filter(email => email && typeof email === 'string' && email.trim() !== '');
-        if (validEmails.length > 0) {
-          const existingPlayers = await User.findAll({
-            where: {
-              email: { [Op.in]: validEmails }
-            }
-          });
-          const existingEmails = existingPlayers.map(player => player.get('email'));
-          const missingEmails = validEmails.filter(email => !existingEmails.includes(email));
-          if (missingEmails.length > 0) {
-            const allUsers = await User.findAll();
-            for (const email of missingEmails) {
-              const normalizedEmail = email.trim().toLowerCase();
-              const userWithDifferentCase = allUsers.find(
-                user => user.get('email').toLowerCase() === normalizedEmail
-              );
-              if (userWithDifferentCase) {
-                existingPlayers.push(userWithDifferentCase);
-              } else {
-                console.log(`Usuário com email ${email} não existe. Não é possível adicioná-lo.`);
-              }
-            }
-          }
-          await team.setPlayers(existingPlayers);
-        }
-      }
-
-      const teamWithAssociations = await Team.findByPk(team.id, {
-        include: [
-          {
-            model: User,
-            as: 'captain',
-            attributes: ['id', 'name', 'email']
-          },
-          {
-            model: User,
-            as: 'players',
-            attributes: ['id', 'name', 'email']
-          }
-        ]
-      });
-
-      if (!teamWithAssociations) {
+      if (!team) {
         res.status(500).json({ error: 'Erro ao criar time' });
         return;
       }
-      const plainTeam = teamWithAssociations.get({ plain: true });
+      const plainTeam = team.get({ plain: true });
       res.status(201).json(plainTeam);
     } catch (error) {
-      console.error('Erro ao criar time:', error);
       res.status(500).json({ error: 'Erro ao criar time' });
     }
   }
@@ -298,33 +211,22 @@ export class TeamController {
   static async updateTeam(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      console.log(`Atualizando time com ID: ${id}`);
-      const { name, description, playerEmails,idademinima,idademaxima,sexo,primaryColor,secondaryColor,maxparticipantes } = req.body;
+      const { name, description, idademinima, idademaxima, sexo, primaryColor, secondaryColor, maxparticipantes, estado, cidade, jogadores } = req.body;
       const userId = req.user?.id;
-      console.log('Dados recebidos:',req.body);
       const team = await Team.findOne({
-        where: {
-          id,
-          isDeleted: false
-        }
+        where: { id, isDeleted: false }
       });
       if (!team) {
         res.status(404).json({ error: 'Time não encontrado' });
         return;
       }
-
       if (team.captainId !== userId) {
         res.status(403).json({ error: 'Apenas o capitão pode atualizar o time' });
         return;
       }
       const existingTeam = await Team.findOne({
-        where: {
-          name,
-          id: { [Op.ne]: id },
-          isDeleted: false
-        }
+        where: { name, id: { [Op.ne]: id }, isDeleted: false }
       });
-
       if (existingTeam) {
         res.status(400).json({ error: 'Este nome de time já está em uso' });
         return;
@@ -338,78 +240,22 @@ export class TeamController {
         idademaxima,
         sexo,
         maxparticipantes,
-        primaryColor: primaryColor,
-        secondaryColor: secondaryColor,
-        updatedAt: agora
+        primaryColor,
+        secondaryColor,
+        updatedAt: agora,
+        estado,
+        cidade,
+        jogadores
       });
-
-      if (playerEmails && Array.isArray(playerEmails)) {
-        const validEmails = playerEmails.filter(email => email && typeof email === 'string' && email.trim() !== '');
-        if (validEmails.length === 0) {
-          await team.setPlayers([]);
-          console.log('Associação de jogadores removida com sucesso');
-        } else {
-          const existingPlayers = await User.findAll({
-            where: {  // <-- Fixed indentation here
-              email: { [Op.in]: validEmails }
-            }
-          });
-          const existingEmails = existingPlayers.map(player => player.get('email'));
-          const missingEmails = validEmails.filter(email => !existingEmails.includes(email));
-
-          if (missingEmails.length > 0) {
-            const allUsers = await User.findAll();
-            for (const email of missingEmails) {
-              const normalizedEmail = email.trim().toLowerCase();
-              const userWithDifferentCase = allUsers.find(
-                user => user.get('email').toLowerCase() === normalizedEmail
-              );
-              
-              if (userWithDifferentCase) {
-                existingPlayers.push(userWithDifferentCase);
-              } else {
-                console.log(`Usuário com email ${email} não existe. Não é possível adicioná-lo.`);
-              }
-            }
-          }
-          await team.setPlayers(existingPlayers);
-        }
-      } else {
-        console.log('Nenhum email de jogador fornecido ou formato inválido. Mantendo jogadores existentes.');
-      }
       const updatedTeam = await Team.findOne({
-        where: {
-          id: id,
-          isDeleted: false
-        },
-        include: [
-          {
-            model: User,
-            as: 'captain',
-            attributes: [ 'name', 'email']
-          },
-          {
-            model: User,
-            as: 'players',
-            attributes: [ 'name', 'email']
-          }
-        ]
+        where: { id: id, isDeleted: false }
       });
       if (!updatedTeam) {
-        console.error(`Erro ao buscar time atualizado com ID ${id}`);
         res.status(500).json({ error: 'Erro ao atualizar time' });
         return;
       }
       const plainTeam = updatedTeam.get({ plain: true });
-      const formattedTeam = {
-        ...plainTeam,
-        banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
-        // Formatando a data para o cliente
-        updatedAt: plainTeam.updatedAt ? new Date(plainTeam.updatedAt).toLocaleString('pt-BR') : null,
-        createdAt: plainTeam.createdAt ? new Date(plainTeam.createdAt).toLocaleString('pt-BR') : null
-      };
-
-      res.json(formattedTeam);
+      res.json(plainTeam);
     } catch (error) {
       res.status(500).json({ error: 'Erro ao atualizar time' });
     }
