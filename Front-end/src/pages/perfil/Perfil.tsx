@@ -264,6 +264,9 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
         {
           name: formName,
           email: formEmail,
+          phone: formPhone,
+          sexo: formSexo,
+          // cpf: formCpf, // descomente se quiser permitir edição do CPF
         },
         {
           headers: {
@@ -276,7 +279,10 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
         setUsuario({
           ...usuario,
           name: formName,
-          email: formEmail
+          email: formEmail,
+          phone: formPhone,
+          sexo: formSexo,
+          // cpf: formCpf, // descomente se quiser permitir edição do CPF
         });
         setEditMode(false);
         showToastMessage('Perfil atualizado com sucesso', 'success');
@@ -285,6 +291,9 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
         const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
         storedUser.name = formName;
         storedUser.email = formEmail;
+        storedUser.phone = formPhone;
+        storedUser.sexo = formSexo;
+        // storedUser.cpf = formCpf; // descomente se quiser permitir edição do CPF
         localStorage.setItem('user', JSON.stringify(storedUser));
       }
     } catch (error) {

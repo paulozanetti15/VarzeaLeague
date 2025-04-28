@@ -27,6 +27,7 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [currentPasswordError, setCurrentPasswordError] = useState('');
     
     useEffect(() => {   
         if (!senha || !confirmarSenha) return;
@@ -58,8 +59,9 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
     }, [show]);
 
     const updatePasswordRequest = async (userId: number) => {
+        setCurrentPasswordError('');
         if (!senhaAtual) {
-            setPasswordError('Digite a senha atual');
+            setCurrentPasswordError('Digite a senha atual');
             setConfirmPasswordTouched(true);
             return;
         }
@@ -85,9 +87,13 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
                     }, 1500);
                 }
             } catch (error: any) {
-                setToastMessage(error.response?.data?.message || "Erro ao alterar senha");
-                setToastBg("danger");
-                setShowToast(true);
+                if (error.response?.data?.message?.toLowerCase().includes('atual')) {
+                    setCurrentPasswordError(error.response.data.message);
+                } else {
+                    setToastMessage(error.response?.data?.message || "Erro ao alterar senha");
+                    setToastBg("danger");
+                    setShowToast(true);
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -100,6 +106,7 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
         setSenha(null);
         setConfirmarSenha(null);
         setPasswordError('');
+        setCurrentPasswordError('');
         setConfirmPasswordTouched(false);
         setShowPassword(false);
         setShowConfirmPassword(false);
@@ -140,6 +147,9 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
                                     className="password-input"
                                 />
                             </div>
+                            {currentPasswordError && (
+                                <div className="password-error" style={{marginTop: 8}}>{currentPasswordError}</div>
+                            )}
                         </Form.Group>
                         <Form.Group className="mb-4" controlId="password">
                             <Form.Label className="form-label-password">Nova senha</Form.Label>

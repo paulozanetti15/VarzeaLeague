@@ -18,11 +18,13 @@ const returnUser = async (req: any, res: any) => {
 }
 const updateUser = async (req,res) => {
     const {id} = req.params;
-    const {name, email} = req.body;
+    const {name, email, phone, sexo} = req.body;
     console.log(name,email)
     const updatedUser = await userModel.update({
         name,
         email,
+        phone,
+        sexo,
     },{where:{id}})
    
     return res.status(200).json(updatedUser)
