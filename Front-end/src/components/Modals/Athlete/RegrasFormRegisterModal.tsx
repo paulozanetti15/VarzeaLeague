@@ -7,12 +7,15 @@ import axios from 'axios';
 import ToastSucessComponent from '../../Toast/ToastComponent';
 import { set } from 'date-fns';
 import { Category } from '@mui/icons-material';
+import './RegrasStyles.css';
+
 interface regrasModalProps {
     userId: number;
     show: boolean;
     partidaDados: any;
     onHide: () => void;
 }
+
 export default function regrasModal({show, onHide,partidaDados}: regrasModalProps) {
     const [idadeMinima, setIdadeMinima] = useState<number | null>(null);
     const [idadeMaxima, setIdadeMaxima] = useState<number | null>(null);
@@ -26,6 +29,7 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
     const [toastMessage, setToastMessage] = useState('');
     const [toastBg, setToastBg] = useState('success');
     const navigate = useNavigate();
+    
     const insertPartida = async () => {
         if(dataLimite && verificarDataLimite(dataLimite) === true &&
             idadeMinima !== null && idadeMaxima !== null && isValidaIdade(idadeMaxima, idadeMinima) === true && isValidTamanhoTime(minimaIntegrantes, maximoIntegrante) === true &&
@@ -55,6 +59,7 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
         }  
                
     };
+    
     const isValidTamanhoTime = (tamanhoMinimo: number | null, tamanhoMaximo: number | null) => {
         if (!tamanhoMinimo || !tamanhoMaximo) {
             setError("Tamanho mínimo e máximo são obrigatórios");
@@ -123,6 +128,7 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
         };
         return true;
     }
+    
     const isValidaIdade= (idademaxima: number  , idademenor: number ) => {
         if (idademaxima < 0 || idademenor < 0) {
             setError("Idade inválida");
@@ -135,87 +141,125 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
         return true;
     }
     
-
     return (
         <>
-            <Modal show={show} onHide={onHide}>
-                <Modal.Header closeButton>
-                <Modal.Title>Cadastrar regras</Modal.Title>
+            <Modal 
+                show={show} 
+                onHide={onHide} 
+                centered 
+                dialogClassName="custom-modal-width"
+                contentClassName="small-modal-content"
+            >
+                <Modal.Header closeButton className="bg-primary text-white">
+                    <Modal.Title>Cadastrar Regras</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body className="bg-white">
                     <Form>
-                        <Form.Group
-                        className="mb-3"
-                        controlId="exampleForm.ControlTextarea1"
-                        >
-                            <Form.Label style={{"color": "black"}}>Idade mínima permitida </Form.Label>
-                            <Form.Control 
-                                type="number"
-                                placeholder="Idade minima"
-                                onChange={(e) => setIdadeMinima(parseFloat(e.target.value))}
-                                autoFocus/>
-                        </Form.Group> 
-                        <Form.Group> 
-                            <Form.Label style={{"color": "black"}}>Idade máxima permitida</Form.Label>
-                            <Form.Control 
-                                type="number"
-                                placeholder="Idade máxima"
-                                onChange={(e) => setIdadeMaxima(parseFloat(e.target.value))}
-                                autoFocus/>
-                        </Form.Group> 
-                        <Form.Group> 
-                            <Form.Label style={{"color": "black"}}>Mínimo integrantes permitidos</Form.Label>
-                            <Form.Control 
-                                type="number"
-                                placeholder="Minimo integrantes"
-                                onChange={(e) => setMinimaIntegrantes(parseFloat(e.target.value))}
-                                autoFocus/>
-                        </Form.Group> 
-                        <Form.Group> 
-                            <Form.Label style={{"color": "black"}}>Máximo integrantes permitidos</Form.Label>
-                            <Form.Control 
-                                type="number"
-                                placeholder="Maximo integrantes"
-                                onChange={(e) => setMaximoIntegrante(parseFloat(e.target.value) || null)}
-                                autoFocus/>
-                        </Form.Group>
-                        <Form.Group>
-                            <Form.Label style={{"color": "black"}}>Limites times</Form.Label>
-                            <Form.Control 
-                                type="number"
-                                placeholder="Limites times"
-                                onChange={(e) => setLimitestimes(parseFloat(e.target.value) || null)}
-                                autoFocus/>
-                        </Form.Group>
-                        <Form.Group>
-                            <Form.Label style={{"color": "black"}}>Data limite para inscrição</Form.Label>
+                        <div className="row">
+                            <div className="col-md-6">
+                                <Form.Group className="mb-3" controlId="idadeMinima">
+                                    <Form.Label>Idade mínima permitida</Form.Label>
+                                    <Form.Control 
+                                        type="number"
+                                        placeholder="Idade mínima"
+                                        onChange={(e) => setIdadeMinima(parseFloat(e.target.value))}
+                                        className="border-primary"
+                                        autoFocus
+                                    />
+                                </Form.Group>
+                            </div>
+                            <div className="col-md-6">
+                                <Form.Group className="mb-3" controlId="idadeMaxima">
+                                    <Form.Label>Idade máxima permitida</Form.Label>
+                                    <Form.Control 
+                                        type="number"
+                                        placeholder="Idade máxima"
+                                        onChange={(e) => setIdadeMaxima(parseFloat(e.target.value))}
+                                        className="border-primary"
+                                    />
+                                </Form.Group>
+                            </div>
+                        </div>
+                        
+                        <div className="row">
+                            <div className="col-md-6">
+                                <Form.Group className="mb-3" controlId="minimoIntegrantes">
+                                    <Form.Label>Mínimo de integrantes</Form.Label>
+                                    <Form.Control 
+                                        type="number"
+                                        placeholder="Mínimo de integrantes"
+                                        onChange={(e) => setMinimaIntegrantes(parseFloat(e.target.value))}
+                                        className="border-primary"
+                                    />
+                                </Form.Group>
+                            </div>
+                            <div className="col-md-6">
+                                <Form.Group className="mb-3" controlId="maximoIntegrantes">
+                                    <Form.Label>Máximo de integrantes</Form.Label>
+                                    <Form.Control 
+                                        type="number"
+                                        placeholder="Máximo de integrantes"
+                                        onChange={(e) => setMaximoIntegrante(parseFloat(e.target.value) || null)}
+                                        className="border-primary"
+                                    />
+                                </Form.Group>
+                            </div>
+                        </div>
+                        
+                        <div className="row">
+                            <div className="col-md-6">
+                                <Form.Group className="mb-3" controlId="limitesTimes">
+                                    <Form.Label>Limites de times</Form.Label>
+                                    <Form.Control 
+                                        type="number"
+                                        placeholder="Número de times"
+                                        onChange={(e) => setLimitestimes(parseFloat(e.target.value) || null)}
+                                        className="border-primary"
+                                    />
+                                </Form.Group>
+                            </div>
+                            <div className="col-md-6">
+                                <Form.Group className="mb-3" controlId="sexo">
+                                    <Form.Label>Sexo permitido</Form.Label>
+                                    <Form.Select 
+                                        onChange={(e) => setSexo(e.target.value)} 
+                                        className="border-primary"
+                                        aria-label="Sexo permitido">
+                                        <option value="">Selecione o sexo</option>
+                                        <option value="Masculino">Masculino</option>
+                                        <option value="Feminino">Feminino</option>
+                                        <option value="Ambos">Ambos</option>
+                                    </Form.Select>
+                                </Form.Group>
+                            </div>
+                        </div>
+                        
+                        <Form.Group className="mb-3" controlId="dataLimite">
+                            <Form.Label>Data limite para inscrição</Form.Label>
                             <Form.Control 
                                 type="date"
-                                placeholder="Data limite para inscrição"
                                 onChange={(e) => convertendoDataLimite(e.target.value)}
-                                autoFocus/>
-                        </Form.Group>
-                        <Form.Group>
-                            <Form.Label style={{"color": "black"}}>Sexo permitdo:</Form.Label>
-                            <Form.Select onChange={(e) => setSexo(e.target.value)} aria-label="Default select example">
-                                <option value="">Selecione o sexo</option>
-                                <option value="Masculino">Masculino</option>
-                                <option value="Feminino">Feminino</option>
-                                <option value="Ambos">Ambos</option>
-                            </Form.Select>
+                                className="border-primary"
+                            />
                         </Form.Group>
                     </Form>
-                    </Modal.Body>
-                    {error && <p className='container' style={{ color: 'red' }}>{error}</p>}
-                    <Modal.Footer>
-                        <Button variant="secondary" onClick={onHide}>
-                            Fechar
-                        </Button>
-                        <Button variant="success" onClick={()=> insertPartida()}>
-                            Cadastrar partida
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
+                    
+                    {error && (
+                        <div className="alert alert-danger mt-3" role="alert">
+                            {error}
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer className="bg-white">
+                    <Button variant="outline-secondary" onClick={onHide}>
+                        Fechar
+                    </Button>
+                    <Button variant="primary" onClick={() => insertPartida()}>
+                        Cadastrar Partida
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+            
             {showToast && (
                 <ToastSucessComponent
                     message={toastMessage}

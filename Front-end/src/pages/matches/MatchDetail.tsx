@@ -1036,7 +1036,14 @@ const MatchDetail: React.FC = () => {
         )}
         <div className="match-description">
           <h3>Regras</h3>
-          <Button variant="info" onClick={() => setShowRulesModal(true)}>Visualizar regras</Button>
+          <Button 
+            className="view-rules-btn" 
+            variant="primary" 
+            onClick={() => setShowRulesModal(true)}
+          >
+            <i className="fas fa-clipboard-list me-2"></i>
+            Visualizar regras
+          </Button>
         </div>
         {match && (
           <RegrasFormInfoModal
@@ -1155,136 +1162,143 @@ const MatchDetail: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
-      {distance !== null && userLocation && (
-        <div className="distance-info">
-          <p><strong>Distância:</strong> {distance} km da sua localização</p>
-          {locationData && locationData.formattedAddress && (
-            <p className="address-info">
-              <strong>Endereço completo:</strong> {locationData.formattedAddress}
-            </p>
-          )}
-          <div className="route-options">
-            <a 
-              href={getMapUrl()} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="route-button osm"
-            >
-              <DirectionsIcon /> Ver rota no OpenStreetMap
-            </a>
-            <a 
-              href={`https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${getLocationData()?.lat},${getLocationData()?.lng}`} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="route-button gmaps"
-            >
-              <DirectionsIcon /> Ver rota no Google Maps
-            </a>
-          </div>
-        </div>
-      )}
-      <div className="players-section">
-      <div className="players-section">
-  <h3>Times {match.currentTeams || 0}/{match.maxTeams || 0}</h3>
-  
-  {/* Seção de times cadastrados */}
-  {timeCadastrados  && timeCadastrados.length > 0 ? (
-    <div className="registered-teams">
-      <div className="teams-grid">
-        {timeCadastrados.map((team: any) => (
-          <div key={team.id} className="registered-team-card">
-            {team.banner && (
-              <img 
-                src={`http://localhost:3001${team.banner}`} 
-                className="team-card-logo" 
-                alt={team.name} 
-              />
+        
+        {distance !== null && userLocation && (
+          <div className="distance-info">
+            <p><strong>Distância:</strong> {distance} km da sua localização</p>
+            {locationData && locationData.formattedAddress && (
+              <p className="address-info">
+                <strong>Endereço completo:</strong> {locationData.formattedAddress}
+              </p>
             )}
-            <div className="registered-team-info">
-              <h5>{team.name}</h5>
-            </div>  
-              
+            <div className="route-options">
+              <a 
+                href={getMapUrl()} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="route-button osm"
+              >
+                <DirectionsIcon /> Ver rota no OpenStreetMap
+              </a>
+              <a 
+                href={`https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${getLocationData()?.lat},${getLocationData()?.lng}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="route-button gmaps"
+              >
+                <DirectionsIcon /> Ver rota no Google Maps
+              </a>
+            </div>
           </div>
-        ))}
+        )}
       </div>
-    </div>
-  ) : (
-    <div className="no-teams">
-      <p>Nenhum time cadastrado para esta partida.</p>
-      {!userHasJoined && (
-        <button 
-          className="join-match-btn"
-          onClick={() => setShowTeamOptions(true)}
-        >
-          Entrar com um Time
-        </button>
-      )}
-    </div>
-  )}
-
-  {/* Modal de opções de time */}
-  {showTeamOptions && (
-    <div className="team-options">
-      <h4>Selecione um time para entrar na partida:</h4>
-      {loadingTeams ? (
-        <div className="loading-teams">
-          <div className="loading-spinner"></div>
-          <p>Carregando seus times...</p>
-        </div>
-      ) : (
-        <>
-          {userTeams && userTeams.length > 0 ? (
-            <ul className="teams-list">
-              {userTeams.map(team => (
-                <li 
-                  key={team.id} 
-                  className={`team-item ${team.isCurrentUserCaptain ? 'captain-team' : ''}`}
-                  onClick={() => handleJoinWithTeam(team.id)}
-                >
+      <div className="players-section">
+        <h3>Times {match.currentTeams || 0}/{match.maxTeams || 0}</h3>
+        
+        {/* Seção de times cadastrados */}
+        {timeCadastrados && timeCadastrados.length > 0 ? (
+          <div className="registered-teams">
+            <div className="teams-grid">
+              {timeCadastrados.map((team: any) => (
+                <div key={team.id} className="registered-team-card">
                   {team.banner && (
                     <img 
                       src={`http://localhost:3001${team.banner}`} 
-                      className="team-logo" 
+                      className="team-card-logo" 
                       alt={team.name} 
                     />
                   )}
-                  <div className="team-details">
-                    <span className="team-name">{team.name}</span>
-                    <div className="team-info">
-                      <span className="player-count">
-                        {team.players?.length || 0} jogadores
-                      </span>
-                      {team.isCurrentUserCaptain && (
-                        <span className="captain-badge">Capitão</span>
-                      )}
-                    </div>
-                  </div>
-                </li>
+                  <div className="registered-team-info">
+                    <h5>{team.name}</h5>
+                  </div>  
+                </div>
               ))}
-            </ul>
-          ) : (
-            <div className="no-teams">
-              <p>Você não tem times para participar desta partida.</p>
-              <button 
-                className="create-team-btn"
-                onClick={() => navigate('/teams/create')}
-              >
-                Criar um Time
-              </button>
             </div>
-          )}
-          <button 
-            className="cancel-button"
-            onClick={() => setShowTeamOptions(false)}
-          >
-            Cancelar
-          </button>
-        </>
-      )}
-    </div>
-  )}
-</div>
+          </div>
+        ) : (
+          <div className="no-teams-container">
+            <div className="no-teams">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <p>Nenhum time cadastrado para esta partida.</p>
+              {!userHasJoined && (
+                <button 
+                  className="join-match-btn"
+                  onClick={() => setShowTeamOptions(true)}
+                >
+                  Entrar com um Time
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Modal de opções de time */}
+        {showTeamOptions && (
+          <div className="team-options">
+            <h4>Selecione um time para entrar na partida:</h4>
+            {loadingTeams ? (
+              <div className="loading-teams">
+                <div className="loading-spinner"></div>
+                <p>Carregando seus times...</p>
+              </div>
+            ) : (
+              <>
+                {userTeams && userTeams.length > 0 ? (
+                  <ul className="teams-list">
+                    {userTeams.map(team => (
+                      <li 
+                        key={team.id} 
+                        className={`team-item ${team.isCurrentUserCaptain ? 'captain-team' : ''}`}
+                        onClick={() => handleJoinWithTeam(team.id)}
+                      >
+                        {team.banner && (
+                          <img 
+                            src={`http://localhost:3001${team.banner}`} 
+                            className="team-logo" 
+                            alt={team.name} 
+                          />
+                        )}
+                        <div className="team-details">
+                          <span className="team-name">{team.name}</span>
+                          <div className="team-info">
+                            <span className="player-count">
+                              {team.players?.length || 0} jogadores
+                            </span>
+                            {team.isCurrentUserCaptain && (
+                              <span className="captain-badge">Capitão</span>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="no-teams">
+                    <p>Você não tem times para participar desta partida.</p>
+                    <button 
+                      className="create-team-btn"
+                      onClick={() => navigate('/teams/create')}
+                    >
+                      Criar um Time
+                    </button>
+                  </div>
+                )}
+                <button 
+                  className="cancel-button"
+                  onClick={() => setShowTeamOptions(false)}
+                >
+                  Cancelarc
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
             
     {showTeamDetailsModal && selectedTeamForView && (
       <div className="modal-overlay" onClick={() => setShowTeamDetailsModal(false)}>
@@ -1363,7 +1377,6 @@ const MatchDetail: React.FC = () => {
       </div>
     )}
     </div>
-    </div> 
   );
 }; 
 
