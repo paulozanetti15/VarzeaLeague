@@ -218,13 +218,16 @@ export class TeamController {
 
   static async updateTeam(req: AuthRequest, res: Response): Promise<void> {
     console.log('REQ.BODY:', req.body);
+    console.log('REQ.FILE:', req.file);
     try {
       const { id } = req.params;
-      const { name, description, idademinima, idademaxima, sexo, primaryColor, secondaryColor, maxparticipantes, estado, cidade, jogadores } = req.body;
       const userId = req.user?.id;
+      
+      // Buscar o time atual para preservar o banner se não houver um novo
       const team = await Team.findOne({
         where: { id, isDeleted: false }
       });
+      
       if (!team) {
         res.status(404).json({ error: 'Time não encontrado' });
         return;
@@ -235,63 +238,101 @@ export class TeamController {
         return;
       }
 
-      const existingTeam = await Team.findOne({
-        where: { name, id: { [Op.ne]: id }, isDeleted: false }
-      });
-      if (existingTeam) {
-        res.status(400).json({ error: 'Este nome de time já está em uso' });
-        return;
+      // Verificar se o nome já existe em outro time
+      if (req.body.name) {
+        const existingTeam = await Team.findOne({
+          where: { 
+            name: req.body.name.trim(), 
+            id: { [Op.ne]: id }, 
+            isDeleted: false 
+          }
+        });
+        if (existingTeam) {
+          res.status(400).json({ error: 'Este nome de time já está em uso' });
+          return;
+        }
       }
+      
       const agora = new Date();
       agora.setHours(agora.getHours() - 3);
-      let jogadoresUpdate = req.body.jogadores;
-      if (typeof jogadoresUpdate === 'string') {
+      
+      // Processar jogadores do FormData
+      let jogadoresUpdate = [];
+      if (req.body.jogadores) {
         try {
-          jogadoresUpdate = JSON.parse(jogadoresUpdate);
+          jogadoresUpdate = JSON.parse(req.body.jogadores);
         } catch (e) {
+          console.error('Erro ao processar jogadores:', e);
           jogadoresUpdate = [];
         }
       }
 
-      if (team.banner !== null) {
-        const oldBannerPath = path.join(__dirname, '..', 'uploads', 'teams', team.banner);
-        if (fs.existsSync(oldBannerPath)) {
-          fs.unlinkSync(oldBannerPath);
-        }
-      }
-
-      let bannerFilename = null;
+      // Preservar o banner atual se não houver um novo arquivo
+      let bannerFilename = team.banner;
+      console.log('Banner atual:', bannerFilename);
+      
+      // Só atualizar o banner se um novo arquivo for enviado
       if (req.file) {
+        console.log('Novo arquivo recebido:', req.file.filename);
+        // Deletar o arquivo antigo se existir
+        if (team.banner !== null) {
+          const oldBannerPath = path.join(__dirname, '..', 'uploads', 'teams', team.banner);
+          console.log('Caminho do arquivo antigo:', oldBannerPath);
+          if (fs.existsSync(oldBannerPath)) {
+            fs.unlinkSync(oldBannerPath);
+            console.log('Arquivo antigo deletado');
+          } else {
+            console.log('Arquivo antigo não encontrado');
+          }
+        }
+        // Usar o novo arquivo
         bannerFilename = req.file.filename;
+        console.log('Novo banner definido:', bannerFilename);
+      } else {
+        console.log('Nenhum novo arquivo recebido, mantendo o banner atual');
       }
 
-      await team.update({
-        name,
-        description,
-        banner: bannerFilename,
-        idademinima,
-        idademaxima,
-        sexo,
-        maxparticipantes,
-        primaryColor,
-        secondaryColor,
-        updatedAt: agora,
-        estado,
-        cidade,
-        jogadores: jogadoresUpdate
-      });
+      // Preparar os dados para atualização
+      const updateData: any = {
+        name: req.body.name?.trim(),
+        description: req.body.description,
+        primaryColor: req.body.primaryColor,
+        secondaryColor: req.body.secondaryColor,
+        estado: req.body.estado,
+        cidade: req.body.cidade,
+        jogadores: jogadoresUpdate,
+        updatedAt: agora
+      };
+
+      // Só incluir o banner se ele existir
+      if (bannerFilename) {
+        updateData.banner = bannerFilename;
+        console.log('Banner incluído nos dados de atualização:', bannerFilename);
+      } else {
+        console.log('Nenhum banner incluído nos dados de atualização');
+      }
+
+      console.log('Dados de atualização:', updateData);
+      
+      // Atualizar o time com os novos dados
+      await team.update(updateData);
+      console.log('Time atualizado com sucesso');
+      
       const updatedTeam = await Team.findOne({
         where: { id: id, isDeleted: false }
       });
+      
       if (!updatedTeam) {
         res.status(500).json({ error: 'Erro ao atualizar time' });
         return;
       }
+      
       const plainTeam = updatedTeam.get({ plain: true });
       const formattedTeam = {
         ...plainTeam,
         banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null
       };
+      
       res.json(formattedTeam);
     } catch (error) {
       console.error('Erro detalhado ao atualizar time:', error);

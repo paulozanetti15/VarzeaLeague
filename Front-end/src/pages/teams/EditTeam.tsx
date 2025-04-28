@@ -203,9 +203,17 @@ export default function EditTeam() {
       submitFormData.append('estado', formData.estado);
       submitFormData.append('cidade', formData.cidade);
       submitFormData.append('jogadores', JSON.stringify(formData.jogadores));
+      
       if (formData.logo) {
         submitFormData.append('banner', formData.logo);
       }
+      
+      console.log('Enviando dados para atualização:', {
+        name: formData.name,
+        description: formData.description,
+        logo: formData.logo ? 'Nova imagem selecionada' : 'Nenhuma nova imagem'
+      });
+      
       const response = await axios.put(`http://localhost:3001/api/teams/${id}`,
         submitFormData,
         {
@@ -215,15 +223,20 @@ export default function EditTeam() {
           },
         }
       );
+      
+      console.log('Resposta da atualização:', response.data);
+      
       if (response.data.banner) {
         setLogoPreview(`http://localhost:3001${response.data.banner}`);
       }
+      
       setLoading(false);
       setTimeout(() => {
         navigate('/teams');
       }, 1200);
     } catch (err: any) {
       setLoading(false);
+      console.error('Erro ao atualizar time:', err);
       const errorMsg = err.response?.data?.message || 'Erro ao atualizar time. Tente novamente.';
       setError(errorMsg);
     }
