@@ -1,358 +1,248 @@
-import { useState } from 'react';
-import './Register.css';
-import axios from 'axios';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { format, parse } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import './Register.css';
 
-interface RegisterProps {
-  onLoginClick?: () => void;
+interface FormData {
+  name: string;
+  cpf: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
 }
 
-export function Register({ onLoginClick }: RegisterProps) {
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [passwordTouched, setPasswordTouched] = useState(false);
-  const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false);
-  const [registrationError, setRegistrationError] = useState('');
+interface FormErrors {
+  name?: string;
+  cpf?: string;
+  email?: string;
+  phone?: string;
+  password?: string;
+  confirmPassword?: string;
+  general?: string;
+}
+
+const Register: React.FC = () => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [dataNascimento, setDataNascimento] = useState('');
-  const [sexo, setSexo] = useState('');
-  const navigate = useNavigate();
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    cpf: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    if (!emailRegex.test(email)) {
-      setEmailError('Email inválido. Use um formato válido (exemplo@dominio.com)');
-      return false;
-    }
-    setEmailError('');
-    return true;
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+    if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
+    if (!formData.cpf.trim()) newErrors.cpf = 'CPF é obrigatório';
+    else if (!/^\d{11}$/.test(formData.cpf.replace(/\D/g, ''))) newErrors.cpf = 'CPF inválido';
+    if (!formData.email.trim()) newErrors.email = 'Email é obrigatório';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email inválido';
+    if (!formData.phone.trim()) newErrors.phone = 'Telefone é obrigatório';
+    else if (!/^\d{10,11}$/.test(formData.phone.replace(/\D/g, ''))) newErrors.phone = 'Telefone inválido';
+    if (!formData.password) newErrors.password = 'Senha é obrigatória';
+    else if (formData.password.length < 6) newErrors.password = 'A senha deve ter pelo menos 6 caracteres';
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'As senhas não coincidem';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newEmail = e.target.value;
-    setEmail(newEmail);
-    if (newEmail) {
-      validateEmail(newEmail);
-    } else {
-      setEmailError('');
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    let newValue = value;
+    if (name === 'name') {
+      newValue = value.replace(/[^A-Za-zÀ-ÿ\s]/g, '');
     }
-  };
-
-  const validatePassword = (password: string) => {
-    const minLength = 8;
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-    const errors = [];
-    if (password.length < minLength) {
-      errors.push(`Mínimo de ${minLength} caracteres`);
+    if (name === 'cpf') {
+      newValue = value.replace(/\D/g, '').slice(0, 11);
+      if (newValue.length > 9) newValue = newValue.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+      else if (newValue.length > 6) newValue = newValue.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1.$2.$3');
+      else if (newValue.length > 3) newValue = newValue.replace(/(\d{3})(\d{0,3})/, '$1.$2');
     }
-    else if (password.length >= minLength) {
-      setPasswordError('');
+    if (name === 'phone') {
+      newValue = value.replace(/\D/g, '').slice(0, 11);
+      if (newValue.length > 10) newValue = newValue.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      else if (newValue.length > 6) newValue = newValue.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+      else if (newValue.length > 2) newValue = newValue.replace(/(\d{2})(\d{0,5})/, '($1) $2');
     }
-    if (!hasUpperCase) {
-      errors.push('Uma letra maiúscula');
-    }
-    if (!hasLowerCase) {
-      errors.push('Uma letra minúscula');
-    }
-    if (!hasNumbers) {
-      errors.push('Um número');
-    }
-    if (!hasSpecialChar) {
-      errors.push('Um caractere especial');
-    }
-
-    if (errors.length > 0) {
-      setPasswordError(`Sua senha precisa ter: ${errors.join(', ')}`);
-      return false;
-    }
-   
-    return true;
-  };
-
-  const validatePasswords = () => {
-    if (!validatePassword(password)) {
-      return false;
-    }
-
-    if (password !== confirmPassword) {
-      setPasswordError('As senhas não coincidem');
-      return false;
-    }
-
-    setPasswordError('');
-    return true;
-  };
-
-  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmPassword(e.target.value);
-    setConfirmPasswordTouched(true);
-    
-    if (password && e.target.value) {
-      if (password !== e.target.value) {
-        setPasswordError('As senhas não coincidem');
-      } else {
-        validatePassword(password);
-      }
-    } else {
-      setPasswordError('');
-    }
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newPassword = e.target.value;
-    setPassword(newPassword);
-    setPasswordTouched(true);
-    
-    if (newPassword) {
-      if (!validatePassword(newPassword)) {
-        return;
-      }
-      if (confirmPassword && newPassword !== confirmPassword) {
-        setPasswordError('As senhas não coincidem');
-      }
-    } else {
-      setPasswordError('');
-    }
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
+    setFormData(prev => ({ ...prev, [name]: newValue }));
+    if (errors[name as keyof FormErrors]) setErrors(prev => ({ ...prev, [name]: undefined }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const isEmailValid = validateEmail(email);
-    const isPasswordValid = validatePasswords();
-
-    if (!isEmailValid || !isPasswordValid) {
-      return;
-    }
-
+    if (!validateForm()) return;
     setIsLoading(true);
-    setRegistrationError('');
-
+    setErrors({});
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/register', {
-        name: nome,
-        email,
-        password,
-        DataNasc: dataNascimento,
-        sexo,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch('http://localhost:3000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
       });
-      if (response.status !== 201) {
-        throw new Error('Erro ao criar conta');
-      }
-
-      // Salvar token no localStorage
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-
-      // Redirecionar para login
-      if (onLoginClick) {
-        onLoginClick();
-      }
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Erro ao registrar usuário');
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      navigate('/dashboard');
     } catch (error) {
-      console.error('Erro no registro:', error);
-      setRegistrationError(error instanceof Error ? error.message : 'Erro ao criar conta');
+      setErrors(prev => ({ ...prev, general: error instanceof Error ? error.message : 'Erro ao registrar usuário' }));
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <div className="register-container">
       <div className="register-card">
         <div className="register-header">
-          <h1 className="register-title">Várzea League</h1>
-          <p className="register-subtitle">Crie sua conta para começar</p>
+          <h1 className="register-title">Criar Conta</h1>
+          <p className="register-subtitle">Junte-se à nossa comunidade de futebol</p>
         </div>
-
         <div className="register-body">
-          {registrationError && (
-            <div className="register-error" role="alert">
-              {registrationError}
-            </div>
-          )}
-  
-        <form onSubmit={handleSubmit}>
-          <div className="register-form-group">
-            <label htmlFor="nome" className="register-label">Nome</label>
-            <input
-              type="text"
-              className="register-input"
-              id="nome"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              placeholder="Seu nome completo"
-              required
-            />
-          </div>
-  
-          <div className="register-form-group">
-            <label htmlFor="email" className="register-label">Email</label>
-            <input
-              type="email"
-              className={`register-input ${emailError ? "is-invalid" : ""}`}
-              id="email"
-              value={email}
-              onChange={handleEmailChange}
-              placeholder="Seu email"
-              required
-            />
-            {emailError && (
-              <div className="register-error">
-                {emailError}
-              </div>
+          <form onSubmit={handleSubmit} className="register-form">
+            {errors.general && (
+              <div className="register-error" role="alert">{errors.general}</div>
             )}
-          </div>
-  
-          <div className="register-form-group">
-            <label htmlFor="password" className="register-label">Senha</label>
-            <div className="register-password-container">
-              <input
-                type={showPassword ? "text" : "password"}
-                className={`register-input register-password-input ${passwordTouched && passwordError ? "is-invalid" : ""}`}
-                id="password"
-                value={password}
-                onChange={handlePasswordChange}
-                placeholder="Sua senha"
-                required
-              />
-              <button 
-                type="button" 
-                onClick={togglePasswordVisibility}
-                className="register-password-toggle"
-                tabIndex={-1}
-                aria-label="Mostrar/ocultar senha"
-              >
-                {showPassword ? (
-                  <svg className="register-eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
-                    <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg className="register-eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745a10.029 10.029 0 003.3-4.38 1.651 1.651 0 000-1.185A10.004 10.004 0 009.999 3a9.956 9.956 0 00-4.744 1.194L3.28 2.22zM7.752 6.69l1.092 1.092a2.5 2.5 0 013.374 3.373l1.091 1.092a4 4 0 00-5.557-5.557z" clipRule="evenodd" />
-                    <path d="M10.748 13.93l2.523 2.523a9.987 9.987 0 01-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 010-1.186A10.007 10.007 0 012.839 6.02L6.07 9.252a4 4 0 004.678 4.678z" />
-                  </svg>
-                )}
-              </button>
-            </div>
-            {passwordTouched && passwordError && !confirmPasswordTouched && (
-              <div className="register-error">
-                {passwordError}
+            <div className="register-row">
+              <div className="register-form-group">
+                <label htmlFor="name" className="register-label">Nome</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className={`register-input${errors.name ? ' register-input-error' : ''}`}
+                  placeholder="Digite seu nome completo"
+                  disabled={isLoading}
+                />
+                {errors.name && <span className="register-error-message">{errors.name}</span>}
               </div>
-            )}
-          </div>
-  
-          <div className="register-form-group">
-            <label htmlFor="confirmPassword" className="register-label">Confirmar Senha</label>
-            <div className="register-password-container">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                className={`register-input register-password-input ${confirmPasswordTouched && passwordError ? "is-invalid" : ""}`}
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={handleConfirmPasswordChange}
-                placeholder="Confirme sua senha"
-                required
-              />
-              <button 
-                type="button" 
-                onClick={toggleConfirmPasswordVisibility}
-                className="register-password-toggle"
-                tabIndex={-1}
-                aria-label="Mostrar/ocultar senha de confirmação"
-              >
-                {showConfirmPassword ? (
-                  <svg className="register-eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
-                    <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg className="register-eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745a10.029 10.029 0 003.3-4.38 1.651 1.651 0 000-1.185A10.004 10.004 0 009.999 3a9.956 9.956 0 00-4.744 1.194L3.28 2.22zM7.752 6.69l1.092 1.092a2.5 2.5 0 013.374 3.373l1.091 1.092a4 4 0 00-5.557-5.557z" clipRule="evenodd" />
-                    <path d="M10.748 13.93l2.523 2.523a9.987 9.987 0 01-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 010-1.186A10.007 10.007 0 012.839 6.02L6.07 9.252a4 4 0 004.678 4.678z" />
-                  </svg>
-                )}
-              </button>
-            </div>
-            {confirmPasswordTouched && passwordError && (
-              <div className="register-error">
-                {passwordError}
+              <div className="register-form-group">
+                <label htmlFor="cpf" className="register-label">CPF</label>
+                <input
+                  type="text"
+                  id="cpf"
+                  name="cpf"
+                  value={formData.cpf}
+                  onChange={handleChange}
+                  className={`register-input${errors.cpf ? ' register-input-error' : ''}`}
+                  placeholder="000.000.000-00"
+                  disabled={isLoading}
+                  maxLength={14}
+                />
+                {errors.cpf && <span className="register-error-message">{errors.cpf}</span>}
               </div>
-            )}
-          </div>
-  
-          <div className="register-form-group">
-            <label htmlFor="dataNascimento" className="register-label">Data Nascimento</label>
-            <input
-              type="date"
-              className="register-input register-input-date"
-              id="dataNascimento"
-              value={dataNascimento}
-              onChange={(e) => setDataNascimento(e.target.value)}
-              placeholder="DD/MM/AAAA"
-              min={format(new Date(), 'dd-MM-yyyy', { locale: ptBR })}
-              required
-            />
-          </div>
-  
-          <div className="register-form-group">
-            <label htmlFor="sexo" className="register-label">Sexo</label>
-            <select
-              className="register-input register-input-select"
-              id="sexo"
-              value={sexo}
-              onChange={(e) => setSexo(e.target.value)}
-              required
-            >
-              <option value="">Selecione seu sexo</option>
-              <option value="masculino">Masculino</option>
-              <option value="feminino">Feminino</option>
-            </select>
-          </div>
-          <button 
-            type="submit" 
-            className="register-button"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Criando conta...' : 'Criar Conta'}
-          </button>
-          
-          <div className="register-link-container">
-            Já tem uma conta?
-            <button 
-              type="button" 
-              className="register-link"
-              onClick={onLoginClick}
-              disabled={isLoading}
-            >
-              Entrar
-            </button>
-          </div>
-        </form>
+            </div>
+            <div className="register-row">
+              <div className="register-form-group">
+                <label htmlFor="email" className="register-label">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`register-input${errors.email ? ' register-input-error' : ''}`}
+                  placeholder="Digite seu email"
+                  disabled={isLoading}
+                />
+                {errors.email && <span className="register-error-message">{errors.email}</span>}
+              </div>
+              <div className="register-form-group">
+                <label htmlFor="phone" className="register-label">Telefone</label>
+                <input
+                  type="text"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className={`register-input${errors.phone ? ' register-input-error' : ''}`}
+                  placeholder="(99) 99999-9999"
+                  disabled={isLoading}
+                  maxLength={15}
+                />
+                {errors.phone && <span className="register-error-message">{errors.phone}</span>}
+              </div>
+            </div>
+            <div className="register-row">
+              <div className="register-form-group">
+                <label htmlFor="password" className="register-label">Senha</label>
+                <div className="register-password-container">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className={`register-input${errors.password ? ' register-input-error' : ''}`}
+                    placeholder="Digite sua senha"
+                    disabled={isLoading}
+                    style={{ paddingRight: '3rem' }}
+                  />
+                  <button
+                    type="button"
+                    className="register-password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {showPassword ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.81 21.81 0 0 1 5.06-6.06"/><path d="M1 1l22 22"/><path d="M9.53 9.53A3 3 0 0 0 12 15a3 3 0 0 0 2.47-5.47"/></svg>
+                    )}
+                  </button>
+                </div>
+                {errors.password && <span className="register-error-message">{errors.password}</span>}
+              </div>
+              <div className="register-form-group">
+                <label htmlFor="confirmPassword" className="register-label">Confirmar Senha</label>
+                <div className="register-password-container">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className={`register-input${errors.confirmPassword ? ' register-input-error' : ''}`}
+                    placeholder="Confirme sua senha"
+                    disabled={isLoading}
+                    style={{ paddingRight: '3rem' }}
+                  />
+                  <button
+                    type="button"
+                    className="register-password-toggle"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    tabIndex={-1}
+                    aria-label={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {showConfirmPassword ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.81 21.81 0 0 1 5.06-6.06"/><path d="M1 1l22 22"/><path d="M9.53 9.53A3 3 0 0 0 12 15a3 3 0 0 0 2.47-5.47"/></svg>
+                    )}
+                  </button>
+                </div>
+                {errors.confirmPassword && <span className="register-error-message">{errors.confirmPassword}</span>}
+              </div>
+            </div>
+            <button type="submit" className="register-btn" disabled={isLoading}>{isLoading ? 'Registrando...' : 'Criar Conta'}</button>
+            <div className="register-login-link">
+              Já tem uma conta?
+              <a href="/login" onClick={(e) => {e.preventDefault();navigate('/login');}}>Faça login</a>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
   );
-}
+};
+
+export default Register;

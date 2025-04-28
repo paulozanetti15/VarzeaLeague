@@ -11,8 +11,11 @@ const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Renderiza o conteúdo diretamente
-  return <>{children}</>;
+  return (
+    <div className="page-transition">
+      {children}
+    </div>
+  );
 };
 
 export default PageTransition; 
