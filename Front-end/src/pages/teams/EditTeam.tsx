@@ -206,7 +206,7 @@ export default function EditTeam() {
       if (formData.logo) {
         submitFormData.append('banner', formData.logo);
       }
-      await axios.put(`http://localhost:3001/api/teams/${id}`,
+      const response = await axios.put(`http://localhost:3001/api/teams/${id}`,
         submitFormData,
         {
           headers: {
@@ -215,8 +215,13 @@ export default function EditTeam() {
           },
         }
       );
+      if (response.data.banner) {
+        setLogoPreview(`http://localhost:3001${response.data.banner}`);
+      }
       setLoading(false);
-      navigate('/teams');
+      setTimeout(() => {
+        navigate('/teams');
+      }, 1200);
     } catch (err: any) {
       setLoading(false);
       const errorMsg = err.response?.data?.message || 'Erro ao atualizar time. Tente novamente.';
@@ -513,21 +518,61 @@ export default function EditTeam() {
           </div>
         </motion.div>
         {showDeleteConfirm && (
-          <div className="delete-modal">
+          <div className="delete-modal" style={{
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            bottom: '2.5rem',
+            width: '100%',
+            background: 'rgba(0,0,0,0.18)',
+            zIndex: 99,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className="delete-modal-content"
+              style={{
+                background: 'rgba(20, 20, 40, 0.98)',
+                borderRadius: 18,
+                padding: '2.5rem 2rem 2rem 2rem',
+                boxShadow: '0 8px 32px rgba(220,53,69,0.18)',
+                minWidth: 340,
+                maxWidth: 420,
+                textAlign: 'center',
+                color: '#fff',
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <div className="warning-icon-container">
-                <WarningIcon className="large-warning-icon" />
+              <div className="warning-icon-container" style={{ marginBottom: 16 }}>
+                <WarningIcon className="large-warning-icon" style={{ fontSize: 48, color: '#dc3545' }} />
               </div>
-              <h2>Confirmar Deleção</h2>
-              <p>Tem certeza que deseja deletar o time "<strong>{formData.name}</strong>"?</p>
-              <p className="warning-text">Esta ação não pode ser desfeita!</p>
-              <div className="delete-modal-actions">
+              <h2 style={{ color: '#dc3545', fontWeight: 800, fontSize: '2rem', marginBottom: 8 }}>Confirmar exclusão de time</h2>
+              <p style={{ color: '#fff', fontSize: '1.1rem', marginBottom: 8 }}>
+                Tem certeza que deseja excluir o time <strong style={{ color: '#ffc107' }}>{formData.name}</strong>?
+              </p>
+              <p className="warning-text" style={{ color: '#fff', opacity: 0.7, marginBottom: 24 }}>Esta ação não pode ser desfeita!</p>
+              <div className="delete-modal-actions" style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 16 }}>
                 <button 
                   className="confirm-delete-btn"
+                  style={{
+                    background: 'linear-gradient(90deg, #dc3545 60%, #ff6f61 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 30,
+                    padding: '0.8rem 2.2rem',
+                    fontWeight: 700,
+                    fontSize: '1.1rem',
+                    boxShadow: '0 4px 15px rgba(220, 53, 69, 0.18)',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
                   onClick={async () => {
                     setLoading(true);
                     try {
@@ -553,10 +598,22 @@ export default function EditTeam() {
                     }
                   }}
                 >
-                  Sim, Deletar Time
+                  Sim, excluir time
                 </button>
                 <button 
                   className="cancel-delete-btn"
+                  style={{
+                    background: 'linear-gradient(90deg, #444 60%, #666 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 30,
+                    padding: '0.8rem 2.2rem',
+                    fontWeight: 700,
+                    fontSize: '1.1rem',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
                   onClick={() => setShowDeleteConfirm(false)}
                 >
                   Cancelar

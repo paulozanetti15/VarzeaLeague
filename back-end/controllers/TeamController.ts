@@ -272,7 +272,11 @@ export class TeamController {
         return;
       }
       const plainTeam = updatedTeam.get({ plain: true });
-      res.json(plainTeam);
+      const formattedTeam = {
+        ...plainTeam,
+        banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null
+      };
+      res.json(formattedTeam);
     } catch (error) {
       console.error('Erro detalhado ao atualizar time:', error);
       res.status(500).json({ error: 'Erro ao atualizar time' });
