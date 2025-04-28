@@ -5,13 +5,17 @@ import UpdatePasswordModal from '../../components/Modals/Password/UpdatePassword
 import ToastSucessComponent from '../../components/Toast/ToastComponent';
 import { useNavigate } from 'react-router-dom';
 import './Perfil.css';
-import { IoChevronBackOutline } from 'react-icons/io5';
+import { IoChevronBackOutline, IoWarningOutline } from 'react-icons/io5';
+import Modal from 'react-bootstrap/Modal';
+import Button from 'react-bootstrap/Button';
 
 interface User {
   id: number;
   name: string;
   email: string;
-  password: string;
+  cpf: string;
+  phone: string;
+  sexo: string;
 }
 
 interface PerfilProps {
@@ -30,6 +34,10 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
   const [toastBg, setToastBg] = useState('success');
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
+  const [formCpf, setFormCpf] = useState('');
+  const [formPhone, setFormPhone] = useState('');
+  const [formSexo, setFormSexo] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const navigate = useNavigate();
 
   // Estilos inline para manter consistência visual com outras páginas
@@ -181,10 +189,11 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
   };
 
   const buttonGroupStyle = {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    display: 'flex',
+    flexWrap: 'wrap',
     gap: '1rem',
     marginTop: '1.5rem',
+    justifyContent: 'center',
   };
 
   const backButtonStyle = {
@@ -226,6 +235,9 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
           setUsuario(response.data);
           setFormName(response.data.name);
           setFormEmail(response.data.email);
+          setFormCpf(response.data.cpf);
+          setFormPhone(response.data.phone);
+          setFormSexo(response.data.sexo);
         }
       } catch (error) {
         console.error('Erro ao buscar dados do usuário:', error);
@@ -283,28 +295,31 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
 
   const handleDeleteAccount = async () => {
     if (!usuario) return;
-    
-    if (window.confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.')) {
-      try {
-        const response = await axios.delete(`http://localhost:3001/api/user/${usuario.id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        
-        if (response.status === 200) {
-          showToastMessage('Conta excluída com sucesso', 'success');
-          setTimeout(() => {
-            localStorage.removeItem('user');
-            localStorage.removeItem('token');
-            onLogout();
-            window.location.href = '/login';
-          }, 2000);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteAccount = async () => {
+    if (!usuario) return;
+    try {
+      const response = await axios.delete(`http://localhost:3001/api/user/${usuario.id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
         }
-      } catch (error) {
-        console.error('Erro ao excluir conta:', error);
-        showToastMessage('Erro ao excluir conta', 'danger');
+      });
+      if (response.status === 200) {
+        showToastMessage('Conta excluída com sucesso', 'success');
+        setTimeout(() => {
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          onLogout();
+          window.location.href = '/login';
+        }, 2000);
       }
+    } catch (error) {
+      console.error('Erro ao excluir conta:', error);
+      showToastMessage('Erro ao excluir conta', 'danger');
+    } finally {
+      setShowDeleteModal(false);
     }
   };
 
@@ -377,92 +392,94 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
                     setEditMode(true);
                   }
                 }}>
-                  <div style={formGroupStyle}>
-                    <label style={labelStyle}>Nome</label>
-                    <input
-                      type="text"
-                      style={editMode ? inputStyle : disabledInputStyle}
-                      value={formName}
-                      onChange={(e) => setFormName(e.target.value)}
-                      placeholder="Seu nome completo"
-                      disabled={!editMode}
-                      required
-                    />
+                  <div style={{ display: 'flex', gap: '2rem', marginBottom: '1.5rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={labelStyle}>Nome</label>
+                      <input
+                        type="text"
+                        style={editMode ? inputStyle : disabledInputStyle}
+                        value={formName}
+                        onChange={(e) => setFormName(e.target.value)}
+                        placeholder="Seu nome completo"
+                        disabled={!editMode}
+                        required
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={labelStyle}>CPF</label>
+                      <input
+                        type="text"
+                        style={disabledInputStyle}
+                        value={formCpf}
+                        disabled
+                        readOnly
+                      />
+                    </div>
                   </div>
-                  
-                  <div style={formGroupStyle}>
-                    <label style={labelStyle}>Email</label>
+                  <div style={{ display: 'flex', gap: '2rem', marginBottom: '1.5rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={labelStyle}>Sexo</label>
+                      {editMode ? (
+                        <select
+                          style={inputStyle}
+                          value={formSexo}
+                          onChange={(e) => setFormSexo(e.target.value)}
+                          required
+                        >
+                          <option value="">Selecione</option>
+                          <option value="Masculino">Masculino</option>
+                          <option value="Feminino">Feminino</option>
+                          <option value="Prefiro não informar">Prefiro não informar</option>
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          style={disabledInputStyle}
+                          value={formSexo}
+                          disabled
+                          readOnly
+                        />
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={labelStyle}>Telefone</label>
+                      <input
+                        type="text"
+                        style={editMode ? inputStyle : disabledInputStyle}
+                        value={formPhone}
+                        onChange={(e) => setFormPhone(e.target.value)}
+                        placeholder="Seu telefone"
+                        disabled={!editMode}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={labelStyle}>E-mail</label>
                     <input
                       type="email"
                       style={editMode ? inputStyle : disabledInputStyle}
                       value={formEmail}
                       onChange={(e) => setFormEmail(e.target.value)}
-                      placeholder="Seu email"
+                      placeholder="Seu e-mail"
                       disabled={!editMode}
                       required
                     />
                   </div>
-                  
-                  <div style={formGroupStyle}>
-                    <label style={labelStyle}>Senha</label>
-                    <div style={{ 
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between'
-                    }}>
-                      <input
-                        type="password"
-                        style={disabledInputStyle}
-                        value="••••••••"
-                        disabled
-                        readOnly
-                      />
-                      <a 
-                        onClick={handlePasswordChange}
-                        style={{
-                          ...linkStyle,
-                          marginLeft: '1rem',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        Alterar senha
-                      </a>
-                    </div>
+                  <div style={buttonGroupStyle}>
+                    {editMode ? (
+                      <>
+                        <button type="button" style={buttonSecondaryStyle} onClick={handleCancelEdit}>Cancelar</button>
+                        <button type="submit" style={buttonPrimaryStyle}>Salvar alterações</button>
+                      </>
+                    ) : (
+                      <>
+                        <button type="button" style={buttonPrimaryStyle} onClick={handlePasswordChange}>Alterar senha</button>
+                        <button type="submit" style={buttonPrimaryStyle}>Editar perfil</button>
+                        <button type="button" style={buttonDangerStyle} onClick={handleDeleteAccount}>Excluir conta</button>
+                      </>
+                    )}
                   </div>
-                  
-                  {editMode ? (
-                    <div style={buttonGroupStyle}>
-                      <button 
-                        type="button" 
-                        style={buttonSecondaryStyle}
-                        onClick={handleCancelEdit}
-                      >
-                        Cancelar
-                      </button>
-                      <button 
-                        type="submit" 
-                        style={buttonPrimaryStyle}
-                      >
-                        Salvar alterações
-                      </button>
-                    </div>
-                  ) : (
-                    <div style={buttonGroupStyle}>
-                      <button 
-                        type="button" 
-                        style={buttonDangerStyle}
-                        onClick={handleDeleteAccount}
-                      >
-                        Excluir conta
-                      </button>
-                      <button 
-                        type="submit" 
-                        style={buttonPrimaryStyle}
-                      >
-                        Editar perfil
-                      </button>
-                    </div>
-                  )}
                 </form>
               </>
             )}
@@ -484,6 +501,32 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
           bg={toastBg}
           onClose={() => setShowToast(false)}
         />
+      )}
+      
+      {showDeleteModal && (
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered dialogClassName="delete-account-modal">
+          <Modal.Header closeButton style={{ background: '#fff8e1', borderBottom: 'none', justifyContent: 'center' }}>
+            <Modal.Title style={{ color: '#b45309', display: 'flex', alignItems: 'center', gap: 10, fontSize: '1.3rem', justifyContent: 'center', width: '100%' }}>
+              <IoWarningOutline size={32} style={{ color: '#f59e42', marginBottom: 2 }} /> Atenção
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body style={{ textAlign: 'center', background: '#fffde7', padding: '2rem 1.5rem 1.5rem 1.5rem' }}>
+            <div style={{ fontWeight: 600, color: '#b45309', fontSize: '1.08rem', marginBottom: 10 }}>
+              Tem certeza que deseja excluir sua conta?
+            </div>
+            <div style={{ color: '#b45309', fontSize: '0.97rem', marginBottom: 8 }}>
+              Esta ação <b>não pode ser desfeita</b> e todos os seus dados serão perdidos.
+            </div>
+          </Modal.Body>
+          <Modal.Footer style={{ background: '#fffde7', borderTop: 'none', justifyContent: 'center', padding: '1rem 1.5rem 1.5rem 1.5rem' }}>
+            <Button variant="outline-secondary" onClick={() => setShowDeleteModal(false)} style={{ minWidth: 110, fontWeight: 500 }}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={confirmDeleteAccount} style={{ minWidth: 130, fontWeight: 600, marginLeft: 10 }}>
+              Excluir conta
+            </Button>
+          </Modal.Footer>
+        </Modal>
       )}
     </div>
   );

@@ -132,3 +132,58 @@ button:active {
   }
 }
 
+.delete-account-modal .modal-dialog {
+  max-width: 340px;
+  margin: 2.5rem auto;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+}
+.delete-account-modal .modal-content {
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+  background: #fffef7;
+}
+.delete-account-modal .modal-header {
+  border-radius: 18px 18px 0 0;
+  background: #fff8e1;
+  border-bottom: none;
+  justify-content: center;
+}
+.delete-account-modal .modal-title {
+  color: #b45309;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.35rem;
+  justify-content: center;
+  width: 100%;
+}
+.delete-account-modal .modal-body {
+  text-align: center;
+  background: #fffde7;
+  padding: 2.2rem 1.5rem 1.5rem 1.5rem;
+}
+.delete-account-modal .modal-body svg {
+  font-size: 2.7rem !important;
+  margin-bottom: 0.5rem;
+  color: #f59e42;
+}
+.delete-account-modal .modal-footer {
+  background: #fffde7;
+  border-top: none;
+  justify-content: center;
+  padding: 1.1rem 1.5rem 1.7rem 1.5rem;
+  border-radius: 0 0 18px 18px;
+}
+.delete-account-modal .btn {
+  border-radius: 8px !important;
+  font-weight: 500;
+  padding: 0.6rem 1.5rem;
+  font-size: 1rem;
+  margin: 0 0.2rem;
+}
+.delete-account-modal .btn-danger {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
