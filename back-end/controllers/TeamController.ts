@@ -261,6 +261,15 @@ export class TeamController {
       if (req.body.jogadores) {
         try {
           jogadoresUpdate = JSON.parse(req.body.jogadores);
+          
+          // Validar idade dos jogadores
+          for (const jogador of jogadoresUpdate) {
+            const idade = parseInt(jogador.idade);
+            if (isNaN(idade) || idade < 0 || idade > 120) {
+              res.status(400).json({ error: 'Idade do jogador deve ser um número entre 0 e 120.' });
+              return;
+            }
+          }
         } catch (e) {
           console.error('Erro ao processar jogadores:', e);
           jogadoresUpdate = [];

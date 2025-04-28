@@ -112,6 +112,18 @@ export default function EditTeam() {
 
   const handlePlayerChange = (index: number, field: keyof PlayerData, value: string) => {
     const updated = [...formData.jogadores];
+    
+    // Validação especial para o campo idade
+    if (field === 'idade') {
+      const idadeNum = parseInt(value);
+      if (idadeNum < 0) {
+        return; // Não permite idade negativa
+      }
+      if (idadeNum > 120) {
+        return; // Limite máximo razoável de idade
+      }
+    }
+    
     updated[index][field] = value;
     setFormData({ ...formData, jogadores: updated });
   };
@@ -174,8 +186,9 @@ export default function EditTeam() {
         setError('Sexo do jogador é obrigatório.');
         return false;
       }
-      if (!jogador.idade || isNaN(Number(jogador.idade))) {
-        setError('Idade do jogador é obrigatória e deve ser um número.');
+      const idadeNum = parseInt(jogador.idade);
+      if (!jogador.idade || isNaN(idadeNum) || idadeNum < 0 || idadeNum > 120) {
+        setError('Idade do jogador é obrigatória e deve ser um número entre 0 e 120.');
         return false;
       }
       if (!jogador.posicao) {
