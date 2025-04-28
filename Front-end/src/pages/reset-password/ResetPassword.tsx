@@ -32,7 +32,7 @@ export function ResetPassword({ onBackToLogin }: ResetPasswordProps) {
     
     try {
       setLoading(true);
-      const response = await axios.put('http://localhost:3001/api/password/reset', {
+      const response = await axios.put('http://localhost:3001/api/password-reset/reset', {
         token: token,
         newPassword,
       });
