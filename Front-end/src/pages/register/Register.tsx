@@ -7,6 +7,7 @@ interface FormData {
   cpf: string;
   email: string;
   phone: string;
+  sexo: string;
   password: string;
   confirmPassword: string;
 }
@@ -16,6 +17,7 @@ interface FormErrors {
   cpf?: string;
   email?: string;
   phone?: string;
+  sexo?: string;
   password?: string;
   confirmPassword?: string;
   general?: string;
@@ -31,6 +33,7 @@ const Register: React.FC = () => {
     cpf: '',
     email: '',
     phone: '',
+    sexo: '',
     password: '',
     confirmPassword: ''
   });
@@ -45,6 +48,7 @@ const Register: React.FC = () => {
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email inválido';
     if (!formData.phone.trim()) newErrors.phone = 'Telefone é obrigatório';
     else if (!/^\d{10,11}$/.test(formData.phone.replace(/\D/g, ''))) newErrors.phone = 'Telefone inválido';
+    if (!formData.sexo) newErrors.sexo = 'Selecione o sexo';
     if (!formData.password) newErrors.password = 'Senha é obrigatória';
     else if (formData.password.length < 6) newErrors.password = 'A senha deve ter pelo menos 6 caracteres';
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'As senhas não coincidem';
@@ -52,7 +56,7 @@ const Register: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     let newValue = value;
     if (name === 'name') {
@@ -142,18 +146,21 @@ const Register: React.FC = () => {
             </div>
             <div className="register-row">
               <div className="register-form-group">
-                <label htmlFor="email" className="register-label">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={`register-input${errors.email ? ' register-input-error' : ''}`}
-                  placeholder="Digite seu email"
+                <label htmlFor="sexo" className="register-label">Sexo</label>
+                <select
+                  id="sexo"
+                  name="sexo"
+                  value={formData.sexo}
+                  onChange={handleChange as any}
+                  className={`register-input${errors.sexo ? ' register-input-error' : ''}`}
                   disabled={isLoading}
-                />
-                {errors.email && <span className="register-error-message">{errors.email}</span>}
+                >
+                  <option value="">Selecione</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Feminino">Feminino</option>
+                  <option value="Prefiro não informar">Prefiro não informar</option>
+                </select>
+                {errors.sexo && <span className="register-error-message">{errors.sexo}</span>}
               </div>
               <div className="register-form-group">
                 <label htmlFor="phone" className="register-label">Telefone</label>
@@ -169,6 +176,22 @@ const Register: React.FC = () => {
                   maxLength={15}
                 />
                 {errors.phone && <span className="register-error-message">{errors.phone}</span>}
+              </div>
+            </div>
+            <div className="register-row">
+              <div className="register-form-group" style={{ flex: 2 }}>
+                <label htmlFor="email" className="register-label">E-mail</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`register-input${errors.email ? ' register-input-error' : ''}`}
+                  placeholder="Digite seu e-mail"
+                  disabled={isLoading}
+                />
+                {errors.email && <span className="register-error-message">{errors.email}</span>}
               </div>
             </div>
             <div className="register-row">

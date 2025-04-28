@@ -8,7 +8,6 @@ class User extends Model {
   public email!: string;
   public password!: string;
   public sexo!: string; 
-  public DataNasc!: Date;
   public resetPasswordExpires?: Date;
   public resetPasswordToken?: string;
   public readonly createdAt!: Date;
@@ -38,11 +37,6 @@ User.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
-  DataNasc: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
-
   userTypeId: {
     type: DataTypes.INTEGER,
     allowNull: false,
