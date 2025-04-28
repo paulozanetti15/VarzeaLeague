@@ -1,902 +1,571 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import './CreateTeam.css';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PaletteIcon from '@mui/icons-material/Palette';
+import ImageIcon from '@mui/icons-material/Image';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
-import GroupIcon from '@mui/icons-material/Group';
-import DescriptionIcon from '@mui/icons-material/Description';
 import DeleteIcon from '@mui/icons-material/Delete';
 import WarningIcon from '@mui/icons-material/Warning';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
-import HourglassTopIcon from '@mui/icons-material/HourglassTop';
-import WcIcon from '@mui/icons-material/Wc';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import PaletteIcon from '@mui/icons-material/Palette';
-import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-import './EditTeam.css';
-import { toast } from 'react-hot-toast';
+
+interface PlayerData {
+  nome: string;
+  sexo: string;
+  idade: string;
+  posicao: string;
+}
 
 interface TeamFormData {
   name: string;
   description: string;
-  playerEmails: string[];
-  idademaxima: number | null;
-  idademinima: number | null;
-  maxparticipantes: number | null;
-  sexo: string | null;
-  primaryColor: string | null;
-  secondaryColor: string | null;
-  banner: string | null;
-  bannerFile: File | null;
-  bannerPreview: string | null;
+  primaryColor: string;
+  secondaryColor: string;
+  estado: string;
+  cidade: string;
+  logo?: File | null;
+  jogadores: PlayerData[];
 }
 
-interface Team {
-  id: string;
-  name: string;
-  description: string;
-  banner: string | null;
-  idademinima: number | null;
-  idademaxima: number | null;
-  maxparticipantes: number | null;
-  sexo: string | null;
-  primaryColor: string | null;
-  secondaryColor: string | null;
-  players: {
-    id: string;
-    email: string;
-  }[];
-}
-
-const EditTeam: React.FC = () => {
+export default function EditTeam() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState<TeamFormData>({
     name: '',
     description: '',
-    playerEmails: [''],
-    idademaxima: null,
-    idademinima: null,
-    maxparticipantes: null,
-    sexo: null,
-    primaryColor: null,
-    secondaryColor: null,
-    banner: null,
-    bannerFile: null,
-    bannerPreview: null
+    primaryColor: '#1a237e',
+    secondaryColor: '#0d47a1',
+    estado: '',
+    cidade: '',
+    logo: null,
+    jogadores: [{ nome: '', sexo: '', idade: '', posicao: '' }],
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [isWarning, setIsWarning] = useState(false);
-  const [team, setTeam] = useState<Team | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [loadingInitial, setLoadingInitial] = useState(true);
-
-  // Movida para dentro do componente e corrigido o problema de atribuição dupla
- 
+  const [cidadesDisponiveis, setCidadesDisponiveis] = useState<string[]>([]);
+  const estadosCidades = {
+    'MG': ['Belo Horizonte', 'Ouro Preto', 'Uberlândia'],
+    'PR': [
+      'Cascavel', 'Colombo', 'Curitiba', 'Foz do Iguaçu', 'Guarapuava',
+      'Londrina', 'Maringá', 'Paranaguá', 'Ponta Grossa', 'São José dos Pinhais', 'União da Vitória'
+    ],
+    'RJ': ['Niterói', 'Petrópolis', 'Rio de Janeiro'],
+    'SP': ['Campinas', 'Santos', 'São Paulo'],
+  };
+  const estadosOrdem = Object.keys(estadosCidades).sort();
 
   useEffect(() => {
-    if (!id) {
-      setError('ID do time não especificado. Redirecionando para a lista de times...');
-      setTimeout(() => navigate('/teams'), 2000);
-      return;
-    }
-    
+    if (!id) return;
+    const fetchTeam = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+        const response = await axios.get(`http://localhost:3001/api/teams/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const teamData = response.data;
+        setFormData({
+          name: teamData.name || '',
+          description: teamData.description || '',
+          primaryColor: teamData.primaryColor || '#1a237e',
+          secondaryColor: teamData.secondaryColor || '#0d47a1',
+          estado: teamData.estado || '',
+          cidade: teamData.cidade || '',
+          logo: null,
+          jogadores: Array.isArray(teamData.jogadores) && teamData.jogadores.length > 0
+            ? teamData.jogadores
+            : [{ nome: '', sexo: '', idade: '', posicao: '' }],
+        });
+        if (teamData.banner) {
+          setLogoPreview(`http://localhost:3001${teamData.banner}`);
+        }
+        if (teamData.estado) {
+          setCidadesDisponiveis(estadosCidades[teamData.estado] || []);
+        }
+      } catch (err: any) {
+        setError('Erro ao carregar o time.');
+      }
+    };
     fetchTeam();
-  }, [id, navigate]);
+  }, [id]);
 
-  const fetchTeam = async () => {
-    // Código existente mantido como está
-    // ...
-    setLoadingInitial(true);
-    setError('');
-    setIsWarning(false);
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
+  useEffect(() => {
+    if (formData.estado) {
+      setCidadesDisponiveis(estadosCidades[formData.estado] || []);
+    } else {
+      setCidadesDisponiveis([]);
+    }
+  }, [formData.estado]);
 
-      const response = await axios.get(`http://localhost:3001/api/teams/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
-      const teamData = response.data;
-      console.log('Dados do time recebidos da API:', teamData);
-      if (teamData.players) {
-        console.log(`Recebidos ${teamData.players.length} jogadores do back-end:`, 
-          teamData.players.map((p: any) => `${p.email} (${p.id})`).join(', '));
-      }
-      
-      setTeam(teamData);
-      
-      // Garante que todos os emails dos jogadores sejam carregados
-      let playerEmails: string[] = [];
-      
-      // Verifica se players existe e é um array
-      if (teamData.players && Array.isArray(teamData.players) && teamData.players.length > 0) {
-        // Extrai os emails dos jogadores
-        playerEmails = teamData.players
-          .filter((player: any) => player && player.email) // Garante que o jogador e o email existem
-          .map((player: { email: string }) => player.email || '');
-        
-        console.log('Emails extraídos dos jogadores existentes:', playerEmails);
-      }
-      
-      // Se não houver emails válidos, inicializa com um campo vazio
-      if (playerEmails.length === 0) {
-        playerEmails = [''];
-        console.log('Nenhum jogador encontrado, inicializando com campo vazio');
-      }
-      
-      console.log('Lista final de emails dos jogadores a serem exibidos:', playerEmails);
-      
-      setFormData({
-        name: teamData.name || '',
-        description: teamData.description || '',
-        playerEmails: playerEmails,
-        idademaxima: teamData.idademaxima || null,
-        idademinima: teamData.idademinima || null,
-        maxparticipantes: teamData.maxparticipantes || null,
-        sexo: teamData.sexo || null,
-        primaryColor: teamData.primaryColor || null,
-        secondaryColor: teamData.secondaryColor || null,
-        banner: teamData.banner || null,
-        bannerFile: null,
-        bannerPreview: null
-      });
-    } catch (err: any) {
-      console.error('Erro ao buscar time:', err);
-      
-      // Mensagem específica para erro de permissão
-      if (err.response?.status === 403) {
-        setError('Você não tem permissão para visualizar este time. Apenas o capitão e jogadores do time podem acessá-lo.');
-        setTimeout(() => navigate('/teams'), 4000);
-      } else {
-        setError('Erro ao carregar o time. Tente novamente.');
-      }
-    } finally {
-      setLoadingInitial(false);
+  const handlePlayerChange = (index: number, field: keyof PlayerData, value: string) => {
+    const updated = [...formData.jogadores];
+    updated[index][field] = value;
+    setFormData({ ...formData, jogadores: updated });
+  };
+
+  const addPlayer = () => {
+    setFormData({
+      ...formData,
+      jogadores: [...formData.jogadores, { nome: '', sexo: '', idade: '', posicao: '' }],
+    });
+  };
+
+  const removePlayer = (index: number) => {
+    if (formData.jogadores.length > 1) {
+      const updated = [...formData.jogadores];
+      updated.splice(index, 1);
+      setFormData({ ...formData, jogadores: updated });
     }
   };
-  // Adicione esta função de validação ao componente EditTeam
-  const validateFields = (): boolean => {
-  // Verificar campos obrigatórios
-    if (!formData.name || formData.name.trim() === '') {
+
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleLogoClick = () => {
+    if (logoInputRef.current) {
+      logoInputRef.current.click();
+    }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setFormData({ ...formData, logo: file });
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && event.target.result) {
+          setLogoPreview(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const validateFields = () => {
+    if (formData.name.trim() === '') {
       setError('Nome do time é obrigatório.');
       return false;
     }
-
-    if (!formData.description || formData.description.trim() === '') {
-      setError('Descrição do time é obrigatória.');
+    if (formData.description.trim() === '') {
+      setError('Descrição é obrigatória.');
       return false;
     }
-
-    if (formData.idademinima === null || formData.idademinima <= 0) {
-      setError('Idade mínima deve ser um número válido maior que zero.');
-      return false;
+    for (const jogador of formData.jogadores) {
+      if (!jogador.nome.trim()) {
+        setError('Nome do jogador é obrigatório.');
+        return false;
+      }
+      if (!jogador.sexo) {
+        setError('Sexo do jogador é obrigatório.');
+        return false;
+      }
+      if (!jogador.idade || isNaN(Number(jogador.idade))) {
+        setError('Idade do jogador é obrigatória e deve ser um número.');
+        return false;
+      }
+      if (!jogador.posicao) {
+        setError('Posição do jogador é obrigatória.');
+        return false;
+      }
     }
-
-    if (formData.idademaxima === null || formData.idademaxima <= 0) {
-      setError('Idade máxima deve ser um número válido maior que zero.');
-      return false;
-    }
-
-    if (formData.idademinima > formData.idademaxima) {
-      setError('Idade mínima não pode ser maior que a idade máxima.');
-      return false;
-    }
-
-    if (formData.maxparticipantes === null || formData.maxparticipantes <= 0) {
-      setError('Máximo de participantes deve ser um número válido maior que zero.');
-      return false;
-    }
-
-    if (!formData.sexo || formData.sexo.trim() === '') {
-      setError('Sexo do time é obrigatório.');
-      return false;
-    }
-
-    if (!formData.primaryColor || formData.primaryColor.trim() === '') {
-      setError('Cor primária é obrigatória.');
-      return false;
-    }
-
-    if (!formData.secondaryColor || formData.secondaryColor.trim() === '') {
-      setError('Cor secundária é obrigatória.');
-      return false;
-    }
-
-    // Validação dos emails
-    const emailsPreenchidos = formData.playerEmails.filter(email => email && email.trim() !== '');
-    
-    if (emailsPreenchidos.length === 0) {
-      setError('É necessário adicionar pelo menos um jogador ao time.');
-      return false;
-    }
-
-    // Verificar se há emails inválidos
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const emailsInvalidos = emailsPreenchidos.filter(email => !emailRegex.test(email));
-    
-    if (emailsInvalidos.length > 0) {
-      setError(`Os seguintes emails são inválidos: ${emailsInvalidos.join(', ')}`);
-      return false;
-    }
-
-    // Verificar se há emails duplicados
-    const emailsUnicos = new Set(emailsPreenchidos.map(email => email.toLowerCase()));
-    if (emailsUnicos.size < emailsPreenchidos.length) {
-      setError('Existem emails duplicados na lista de jogadores.');
-      return false;
-    }
-
-    // Verificar se o número máximo de jogadores não é excedido
-    if (emailsPreenchidos.length > formData.maxparticipantes) {
-      setError(`Você adicionou ${emailsPreenchidos.length} jogadores, mas o máximo permitido é ${formData.maxparticipantes}.`);
-      return false;
-    }
-
     return true;
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setIsWarning(false);
-    if(!validateFields()) {
+    if (!validateFields()) {
       setLoading(false);
       return;
     }
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
+      const submitFormData = new FormData();
+      submitFormData.append('name', formData.name);
+      submitFormData.append('description', formData.description);
+      submitFormData.append('primaryColor', formData.primaryColor);
+      submitFormData.append('secondaryColor', formData.secondaryColor);
+      submitFormData.append('estado', formData.estado);
+      submitFormData.append('cidade', formData.cidade);
+      submitFormData.append('jogadores', JSON.stringify(formData.jogadores));
+      if (formData.logo) {
+        submitFormData.append('banner', formData.logo);
       }
-
-      // Filtra os emails vazios antes de enviar
-      const filteredEmails = formData.playerEmails
-        .filter(email => email && email.trim() !== '')
-        .map(email => email.trim());
-      
-      // Verifica se os dados obrigatórios estão preenchidos
-      if (!formData.name || !formData.description) {
-        setError('Nome e descrição são obrigatórios.');
-        setLoading(false);
-        return;
-      }
-
-      // Usando FormData para enviar o arquivo junto com os outros dados
-      const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name);
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('playerEmails', JSON.stringify(filteredEmails));
-      console.log('Emails filtrados para envio:', formData.name);
-
-      if (formData.idademinima !== null) {
-        formDataToSend.append('idademinima', formData.idademinima.toString());
-      }
-      
-      if (formData.idademaxima !== null) {
-        formDataToSend.append('idademaxima', formData.idademaxima.toString());
-      }
-      
-      if (formData.maxparticipantes !== null) {
-        formDataToSend.append('maxparticipantes', formData.maxparticipantes.toString());
-      }
-      
-      if (formData.sexo) {
-        formDataToSend.append('sexo', formData.sexo);
-      }
-      
-      if (formData.primaryColor) {
-        formDataToSend.append('primaryColor', formData.primaryColor);
-      }
-      
-      if (formData.secondaryColor) {
-        formDataToSend.append('secondaryColor', formData.secondaryColor);
-      }
-     
-      
-      const response = await axios.put(`http://localhost:3001/api/teams/${id}`,
-        {
-          name: formData.name,         
-          description: formData.description,
-          idademinima: formData.idademinima,
-          idademaxima: formData.idademaxima,
-          maxparticipantes: formData.maxparticipantes,
-          sexo: formData.sexo,
-          primaryColor: formData.primaryColor,
-          secondaryColor: formData.secondaryColor,
-          playerEmails: filteredEmails,
-          bannerFile: formData.bannerFile // Envia o arquivo do banner, se houver
-        },
-
-        {
-        headers: {
-          Authorization: `Bearer ${token}`
-          // Importante para envio de arquivos
-        }
-      });
-      
-      console.log('Resposta da API:', response.data);
-      
-      // Verifica se todos os emails foram associados
-      if (response.data.players && Array.isArray(response.data.players)) {
-        const emailsEnviados = filteredEmails.map(email => email.toLowerCase());
-        const emailsRecebidos = response.data.players.map((p: any) => p.email.toLowerCase());
-        
-        // Emails que foram enviados mas não retornados na resposta
-        const emailsNaoEncontrados = emailsEnviados.filter(email => !emailsRecebidos.includes(email));
-        
-        if (emailsNaoEncontrados.length > 0) {
-          console.log('Alguns emails não puderam ser adicionados:', emailsNaoEncontrados);
-          
-          // Indicamos que o time foi atualizado, mas com aviso sobre emails
-          const mensagemSucesso = `Time "${formData.name}" atualizado com sucesso!`;
-          const mensagemAviso = `No entanto, os seguintes emails não foram encontrados no sistema: ${emailsNaoEncontrados.join(', ')}. Apenas usuários já cadastrados podem ser adicionados ao time.`;
-          
-          setError(`${mensagemSucesso} ${mensagemAviso}`);
-          setIsWarning(true);
-          
-          // Mantemos o usuário na página para que ele possa ver a mensagem
-          setLoading(false);
-          return;
-        }
-      }
-      
-      navigate('/teams');
-    } catch (err: any) {
-      console.error('Erro ao atualizar time:', err);
-      // Mostra mensagem de erro mais detalhada, se disponível
-      if (err.response?.data?.message) {
-        setError(`Erro: ${err.response.data.message}`);
-      } else if (err.response?.data?.error) {
-        setError(`Erro: ${err.response.data.error}`);
-      } else {
-        setError('Erro ao atualizar time. Tente novamente.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addPlayerEmail = () => {
-    setFormData(prev => ({
-      ...prev,
-      playerEmails: [...prev.playerEmails, ''],
-    }));
-  };
-
-  const removePlayerEmail = async (index: number) => {
-    // Código existente mantido como está
-    // ...
-    // Armazenar o email que está sendo removido antes de atualizar o estado
-    const emailToRemove = formData.playerEmails[index];
-    
-    // Atualizar o estado local para feedback imediato
-    setFormData(prev => ({
-      ...prev,
-      playerEmails: prev.playerEmails.filter((_, i) => i !== index),
-    }));
-    
-    // Se o email estiver vazio, não precisamos enviar para o servidor
-    if (!emailToRemove || emailToRemove.trim() === '') {
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-      
-      // Criar uma cópia dos emails atuais sem o removido
-      const updatedEmails = formData.playerEmails.filter((_, i) => i !== index);
-      
-      // Filtrar emails vazios
-      const filteredEmails = updatedEmails
-        .filter(email => email && email.trim() !== '')
-        .map(email => email.trim());
-        console.log('Emails filtrados após remoção:', formData.name);
-         const response = await axios.put(`http://localhost:3001/api/teams/${id}`,
-        {
-          name: formData.name,
-          description: formData.description,
-          idademinima: formData.idademinima,
-          idademaxima: formData.idademaxima,
-          maxparticipantes: formData.maxparticipantes,
-          sexo: formData.sexo,
-          primaryColor: formData.primaryColor,
-          secondaryColor: formData.secondaryColor,
-          playerEmails: filteredEmails
-        },
+      await axios.put(`http://localhost:3001/api/teams/${id}`,
+        submitFormData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }, 
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
         }
       );
-      
-      console.log('Resposta da API após remoção:', response.data);
-      
-      // Atualizar o estado do time com a resposta do servidor
-      if (response.data) {
-        setTeam(response.data);
-        toast.success(`Jogador ${emailToRemove} removido com sucesso!`, {
-          position: "top-right",
-          duration: 3000
-        });
-      }
-    } catch (err: any) {
-      console.error('Erro ao remover jogador:', err);
-      
-      // Reverter a alteração local em caso de erro
-      setFormData(prev => ({
-        ...prev,
-        playerEmails: [
-          ...prev.playerEmails.slice(0, index),
-          emailToRemove,
-          ...prev.playerEmails.slice(index)
-        ],
-      }));
-      
-      // Mostra mensagem de erro
-      toast.error('Erro ao remover jogador. Por favor, tente novamente.');
-      
-      if (err.response?.data?.message) {
-        setError(`Erro: ${err.response.data.message}`);
-      } else if (err.response?.data?.error) {
-        setError(`Erro: ${err.response.data.error}`);
-      } else {
-        setError('Erro ao remover jogador. Tente novamente.');
-      }
-    } finally {
       setLoading(false);
-    }
-  };
-
-  const updatePlayerEmail = (index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      playerEmails: prev.playerEmails.map((email, i) => 
-        i === index ? value : email
-      ),
-    }));
-  };
-
-  const handleDeleteTeam = async () => {
-    // Código existente mantido como está
-    // ...
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
-      await axios({
-        method: 'delete',
-        url: `http://localhost:3001/api/teams/${id}`,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        data: { confirm: true }
-      });
-
       navigate('/teams');
     } catch (err: any) {
-      console.error('Erro ao deletar time:', err);
-      if (err.response?.data?.message) {
-        setError(`Erro: ${err.response.data.message}`);
-      } else if (err.response?.data?.error) {
-        setError(`Erro: ${err.response.data.error}`);
-      } else {
-        setError('Erro ao deletar time. Tente novamente.');
-      }
-      setShowDeleteConfirm(false);
+      setLoading(false);
+      const errorMsg = err.response?.data?.message || 'Erro ao atualizar time. Tente novamente.';
+      setError(errorMsg);
     }
   };
 
-  if (loadingInitial) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p>Carregando time...</p>
-      </div>
-    );
-  }
+  const bannerStyle = {
+    background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`,
+  };
 
-  if (error && !team) {
-    return (
-      <div className="error-container">
-        <div className="error-content">
-          <span role="img" aria-label="error" className="error-icon">❌</span>
-          <h2>Erro</h2>
-          <p>{error}</p>
-          <button 
-            onClick={() => navigate('/teams')}
-            className="error-back-btn"
-          >
-            Voltar
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!team) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p>Time não encontrado. Redirecionando...</p>
-      </div>
-    );
-  }
+  const cidadesDisponiveisOrdenadas = [...cidadesDisponiveis].sort();
 
   return (
-    <div className="edit-team-container">
-      <motion.div
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="soccer-ball-container"
-      >
-        <SportsSoccerIcon className="soccer-ball-icon" />
-      </motion.div>
-
-      <motion.button
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="back-btn"
-        onClick={() => navigate('/teams')}
-      >
-        <ArrowBackIcon className="back-icon" />
-        <span>Voltar</span>
-      </motion.button>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
+    <div className="create-team-container">
+      <div className="top-navigation">
+        <button 
+          onClick={() => navigate('/teams')} 
+          className="back-btn"
+        >
+          <ArrowBackIcon /> Voltar
+        </button>
+      </div>
+      <div className="teams-header">
+        <h1 className="teams-title">Editar meu time</h1>
+        <p className="teams-subtitle">
+          Edite as informações do seu time e seus jogadores
+        </p>
+      </div>
+      <motion.div 
+        className="form-container" 
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="form-container"
+        transition={{ duration: 0.3 }}
       >
-        <div className="form-header">
-          <h1 className="form-title">Editar meu time</h1>
-        </div>
-
         {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={isWarning ? "warning-message" : "error-message"}
-          >
-            <div className="error-content">
-              {error}
-            </div>
-            {error.includes('não foram encontrados no sistema') && (
-              <div className="error-actions">
-                <p>Suas alterações foram salvas, mas nem todos os jogadores foram adicionados.</p>
-                <button 
-                  onClick={() => navigate('/teams')}
-                  className="return-btn"
-                >
-                  Voltar
-                </button>
+          <div className="error-message">
+            <p>{error}</p>
+          </div>
+        )}
+        <div className="preview-banner" style={bannerStyle}>
+          <div className="logo-preview-container" onClick={handleLogoClick}>
+            {logoPreview ? (
+              <img src={logoPreview} alt="Logo preview" className="logo-preview" />
+            ) : (
+              <div className="logo-placeholder">
+                <ImageIcon />
+                <span>Adicionar Logo</span>
               </div>
             )}
-          </motion.div>
-        )}
-        
-        <form onSubmit={handleSubmit} className="edit-team-form">
-          {/* Banner com upload */}
-          <div className="preview-banner">
-            <div className="logo-preview-container">
-              {(formData.bannerPreview || team.banner) ? (
-                <img 
-                  src={formData.bannerPreview || `http://localhost:3001${team.banner}`} 
-                  className="team-banner-img" 
-                />
-              ) : (
-                <GroupIcon className="default-team-icon" />
-              )}   
-            </div>
-          </div>      
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
+            <input 
+              type="file" 
+              ref={logoInputRef}
+              className="hidden-file-input"
+              name="banner" 
+              onChange={handleLogoChange}
+            />
+          </div>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <motion.div 
             className="form-group"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
           >
-            <label className="form-label">
-              <GroupIcon className="input-icon" />
-              Nome do Time
-            </label>
+            <label className="form-label" htmlFor="name">Nome do Time</label>
             <input
               type="text"
+              id="name"
+              name="name"
               className="form-control"
               value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              onChange={handleInputChange}
               placeholder="Digite o nome do time"
               required
             />
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
+          <motion.div 
             className="form-group"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
           >
-            <label className="form-label">
-              <DescriptionIcon className="input-icon" />
-              Descrição
-            </label>
+            <label className="form-label" htmlFor="description">Descrição</label>
             <textarea
+              id="description"
+              name="description"
               className="form-control"
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Descreva seu time"
-              rows={3}
+              onChange={handleInputChange}
+              placeholder="Adicione a história, curiosidades, conquistas do seu time"
               required
             />
           </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
+          <motion.div 
             className="form-group"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
           >
-            <label className="form-label">
-              <CalendarTodayIcon className="input-icon" />
-              Idade Mínima
-            </label>
-            <input
-              className="form-control"
-              value={formData.idademinima || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, idademinima: e.target.value ? parseInt(e.target.value, 10) : null }))}
-              placeholder="Digite a idade mínima"
-              required
-            />
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="form-group"
-          >
-            <label className="form-label">
-              <HourglassTopIcon className="input-icon" />
-              Idade Máxima
-            </label>
-            <input
-              className="form-control"
-              value={formData.idademaxima || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, idademaxima: e.target.value ? parseInt(e.target.value, 10) : null }))}
-              placeholder="Digite a idade máxima"
-              required
-            />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="form-group"
-          >
-            <label className="form-label">
-              <PeopleAltIcon className="input-icon" />
-              Máximo de Participantes permitidos
-            </label>
-            <input
-              className="form-control"
-              value={formData.maxparticipantes || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, maxparticipantes: e.target.value ? parseInt(e.target.value, 10) : null }))}
-              placeholder="Digite o máximo de participantes"
-              required
-            />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="form-group"
-          >
-            <label className="form-label">
-              <WcIcon className="input-icon" />
-              Sexo do Time
-            </label>
+            <label className="form-label" htmlFor="estado">Estado</label>
             <select
+              id="estado"
+              name="estado"
               className="form-control"
-              value={formData.sexo || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, sexo: e.target.value }))}
+              value={formData.estado}
+              onChange={handleInputChange}
               required
             >
-              <option value="">Selecione o sexo do time</option>
-              <option value="masculino">Masculino</option>
-              <option value="feminino">Feminino</option>
-              <option value="misto">Misto</option>
-            </select>  
+              <option value="">Selecione o estado</option>
+              {estadosOrdem.map(uf => (
+                <option key={uf} value={uf}>{uf}</option>
+              ))}
+            </select>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
+          <motion.div 
             className="form-group"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
           >
-            <label className="form-label">
-              <PaletteIcon className="input-icon" />
-              Cor Primária
-            </label>
-            <input
-              className="form-control color-input"
-              type="color"
-              value={formData.primaryColor || '#1a237e'}
-              onChange={(e) => setFormData(prev => ({ ...prev, primaryColor: e.target.value}))}
+            <label className="form-label" htmlFor="cidade">Cidade</label>
+            <select
+              id="cidade"
+              name="cidade"
+              className="form-control"
+              value={formData.cidade}
+              onChange={handleInputChange}
               required
-            />
+              disabled={!formData.estado}
+            >
+              <option value="">Selecione a cidade</option>
+              {cidadesDisponiveisOrdenadas.map(cidade => (
+                <option key={cidade} value={cidade}>{cidade}</option>
+              ))}
+            </select>
           </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="form-group"
+          <motion.div 
+            className="colors-section"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
           >
-            <label className="form-label">
-              <PaletteIcon className="input-icon" />
-              Cor Secundária
+            <label className="form-label"> 
+              <PaletteIcon style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+              Cores do Time
             </label>
-            <input
-              className="form-control color-input"
-              type="color"
-              value={formData.secondaryColor || '#0d47a1'}
-              onChange={(e) => setFormData(prev => ({ ...prev, secondaryColor: e.target.value}))}
-              required
-            />
+            <div className="color-pickers">
+              <div className="color-picker">
+                <label htmlFor="primaryColor">Cor Primária</label>
+                <input
+                  type="color"
+                  id="primaryColor"
+                  name="primaryColor"
+                  className="color-input"
+                  value={formData.primaryColor}
+                  onChange={handleColorChange}
+                />
+                <div className="color-text">{formData.primaryColor}</div>
+              </div>
+              <div className="color-picker">
+                <label htmlFor="secondaryColor">Cor Secundária</label>
+                <input
+                  type="color"
+                  id="secondaryColor"
+                  name="secondaryColor"
+                  className="color-input"
+                  value={formData.secondaryColor}
+                  onChange={handleColorChange}
+                />
+                <div className="color-text">{formData.secondaryColor}</div>
+              </div>
+            </div>
           </motion.div>
-           
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
+          <motion.div 
             className="form-group"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
           >
-            <label className="form-label">
-              <GroupIcon className="input-icon" />
-              Integrantes do Time ({formData.playerEmails.length}) / {formData.maxparticipantes}
-            </label>
-            <p className="player-email-help">
-              Os emails abaixo correspondem aos jogadores do time. Você pode adicionar ou remover jogadores conforme necessário.
-            </p>
-            <div className="player-emails">
-              {formData.playerEmails.map((email, index) => (
-                <motion.div
-                  key={index}
+            <label className="form-label">Gerenciar Jogadores ({formData.jogadores.length})</label>
+            <AnimatePresence>
+              {formData.jogadores.map((jogador, index) => (
+                <motion.div 
+                  key={index} 
+                  className="player-email"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + index * 0.1 }}
-                  className="player-email"
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
                 >
                   <input
-                    type="email"
-                    className="form-control"
-                    value={email}
-                    onChange={(e) => updatePlayerEmail(index, e.target.value)}
-                    placeholder={`Email do jogador #${index + 1}`}
+                    type="text"
+                    placeholder="Nome do jogador"
+                    value={jogador.nome}
+                    onChange={e => handlePlayerChange(index, 'nome', e.target.value)}
+                    className="form-control nome-jogador"
+                    required
                   />
-                  <button
-                    type="button"
+                  <select
+                    value={jogador.sexo}
+                    onChange={e => handlePlayerChange(index, 'sexo', e.target.value)}
+                    className="form-control"
+                    required
+                  >
+                    <option value="">Sexo</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Feminino">Feminino</option>
+                  </select>
+                  <input
+                    type="number"
+                    placeholder="Idade"
+                    value={jogador.idade}
+                    onChange={e => handlePlayerChange(index, 'idade', e.target.value)}
+                    className="form-control"
+                    required
+                  />
+                  <select
+                    value={jogador.posicao}
+                    onChange={e => handlePlayerChange(index, 'posicao', e.target.value)}
+                    className="form-control"
+                    required
+                  >
+                    <option value="">Posição</option>
+                    <option value="Goleiro">Goleiro</option>
+                    <option value="Defensor">Defensor</option>
+                    <option value="Meio Campo">Meio Campo</option>
+                    <option value="Atacante">Atacante</option>
+                  </select>
+                  <button 
+                    type="button" 
                     className="remove-player-btn"
-                    onClick={() => removePlayerEmail(index)}
-                    aria-label="Remover jogador"
-                    title="Remover jogador"
+                    onClick={() => removePlayer(index)}
                   >
                     <RemoveIcon />
                   </button>
                 </motion.div>
               ))}
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              type="button"
+            </AnimatePresence>
+            <button 
+              type="button" 
               className="add-player-btn"
-              onClick={addPlayerEmail}
-              title="Adicionar novo jogador"
+              onClick={addPlayer}
             >
-              <AddIcon className="button-icon" />
-              Adicionar Jogador
-            </motion.button>
+              <AddIcon style={{ marginRight: '5px' }} /> Adicionar Jogador
+            </button>
           </motion.div>
-
-          {/* Seção de Exclusão do Time */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-            className="form-group delete-section"
-          >
-            <label className="form-label delete-label">
-              <WarningIcon className="warning-icon" />
-              Área de Perigo
-            </label>
-            <div className="delete-card">
-              <div className="delete-card-content">
-                <h3>Deletar Time</h3>
-                <p>Esta ação não pode ser desfeita. Todos os dados do time serão permanentemente excluídos.</p>
-                <button 
-                  type="button"
-                  className="delete-team-btn"
-                  onClick={() => setShowDeleteConfirm(true)}
-                >
-                  <DeleteIcon className="button-icon" />
-                  Deletar Time
-                </button>
-              </div>
-            </div>
-          </motion.div>
-
-          <div className="form-buttons">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+          <div className="form-actions">
+            <motion.button 
               type="submit"
-              className="save-btn"
+              className="submit-btn"
               disabled={loading}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              style={{
+                background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
+              }}
             >
-              {loading ? 'Salvando...' : 'Salvar Alterações'}
+              {loading ? (
+                <span className="loading-text">Salvando...</span>
+              ) : (
+                'Salvar Alterações'
+              )}
             </motion.button>
           </div>
         </form>
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5 }}
+          className="form-group delete-section"
+        >
+          <label className="form-label delete-label" style={{ color: '#dc3545', fontWeight: 700, display: 'flex', alignItems: 'center', marginBottom: '1rem', fontSize: '1.2rem' }}>
+            <WarningIcon className="warning-icon" style={{ marginRight: 8 }} />
+            Área de Perigo
+          </label>
+          <div className="delete-card" style={{ background: 'rgba(220, 53, 69, 0.1)', border: '1px solid rgba(220, 53, 69, 0.3)', borderRadius: 10, padding: '1.5rem', textAlign: 'center', boxShadow: '0 10px 25px rgba(220, 53, 69, 0.15)' }}>
+            <div className="delete-card-content">
+              <h3 style={{ color: '#dc3545', marginBottom: '1rem', fontSize: '1.4rem', fontWeight: 700 }}>Deletar Time</h3>
+              <p style={{ color: '#fff', marginBottom: '1.5rem', fontSize: '1rem', opacity: 0.9, lineHeight: 1.5, maxWidth: '80%', marginLeft: 'auto', marginRight: 'auto' }}>
+                Esta ação não pode ser desfeita. Todos os dados do time serão permanentemente excluídos.
+              </p>
+              <button 
+                type="button"
+                className="delete-team-btn"
+                style={{ backgroundColor: '#dc3545', color: 'white', borderRadius: 50, padding: '0.8rem 2rem', fontWeight: 600, fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', boxShadow: '0 4px 15px rgba(220, 53, 69, 0.25)' }}
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <DeleteIcon className="button-icon" style={{ marginRight: 8 }} />
+                Deletar Time
+              </button>
+            </div>
+          </div>
+        </motion.div>
+        {showDeleteConfirm && (
+          <div className="delete-modal">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="delete-modal-content"
+            >
+              <div className="warning-icon-container">
+                <WarningIcon className="large-warning-icon" />
+              </div>
+              <h2>Confirmar Deleção</h2>
+              <p>Tem certeza que deseja deletar o time "<strong>{formData.name}</strong>"?</p>
+              <p className="warning-text">Esta ação não pode ser desfeita!</p>
+              <div className="delete-modal-actions">
+                <button 
+                  className="confirm-delete-btn"
+                  onClick={async () => {
+                    setLoading(true);
+                    try {
+                      const token = localStorage.getItem('token');
+                      if (!token) {
+                        navigate('/login');
+                        return;
+                      }
+                      await axios({
+                        method: 'delete',
+                        url: `http://localhost:3001/api/teams/${id}`,
+                        headers: {
+                          'Authorization': `Bearer ${token}`,
+                          'Content-Type': 'application/json'
+                        },
+                        data: { confirm: true }
+                      });
+                      navigate('/teams');
+                    } catch (err) {
+                      setError('Erro ao deletar time.');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                >
+                  Sim, Deletar Time
+                </button>
+                <button 
+                  className="cancel-delete-btn"
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </motion.div>
-
-      {showDeleteConfirm && (
-        <div className="delete-modal">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="delete-modal-content"
-          >
-            <div className="warning-icon-container">
-              <WarningIcon className="large-warning-icon" />
-            </div>
-            <h2>Confirmar Deleção</h2>
-            <p>Tem certeza que deseja deletar o time "<strong>{team?.name}</strong>"?</p>
-            <p className="warning-text">Esta ação não pode ser desfeita!</p>
-            
-            <div className="delete-modal-actions">
-              <button 
-                className="confirm-delete-btn"
-                onClick={handleDeleteTeam}
-              >
-                Sim, Deletar Time
-              </button>
-              <button 
-                className="cancel-delete-btn"
-                onClick={() => setShowDeleteConfirm(false)}
-              >
-                Cancelar
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
-};
-
-export default EditTeam;
+}

@@ -14,7 +14,15 @@ dotenv.config();
 export class TeamController {
   static async create(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { name, description, sexo, idademinima, idademaxima, maxPlayers, primaryColor, secondaryColor, estado, cidade, jogadores } = req.body;
+      const { name, description, sexo, idademinima, idademaxima, maxPlayers, primaryColor, secondaryColor, estado, cidade } = req.body;
+      let jogadores = req.body.jogadores;
+      if (typeof jogadores === 'string') {
+        try {
+          jogadores = JSON.parse(jogadores);
+        } catch (e) {
+          jogadores = [];
+        }
+      }
       let bannerFilename = null;
       if (req.file) {
         bannerFilename = req.file.filename;
@@ -209,6 +217,7 @@ export class TeamController {
   }
 
   static async updateTeam(req: AuthRequest, res: Response): Promise<void> {
+    console.log('REQ.BODY:', req.body);
     try {
       const { id } = req.params;
       const { name, description, idademinima, idademaxima, sexo, primaryColor, secondaryColor, maxparticipantes, estado, cidade, jogadores } = req.body;
@@ -233,6 +242,14 @@ export class TeamController {
       }
       const agora = new Date();
       agora.setHours(agora.getHours() - 3);
+      let jogadoresUpdate = req.body.jogadores;
+      if (typeof jogadoresUpdate === 'string') {
+        try {
+          jogadoresUpdate = JSON.parse(jogadoresUpdate);
+        } catch (e) {
+          jogadoresUpdate = [];
+        }
+      }
       await team.update({
         name,
         description,
@@ -245,7 +262,7 @@ export class TeamController {
         updatedAt: agora,
         estado,
         cidade,
-        jogadores
+        jogadores: jogadoresUpdate
       });
       const updatedTeam = await Team.findOne({
         where: { id: id, isDeleted: false }
@@ -257,6 +274,7 @@ export class TeamController {
       const plainTeam = updatedTeam.get({ plain: true });
       res.json(plainTeam);
     } catch (error) {
+      console.error('Erro detalhado ao atualizar time:', error);
       res.status(500).json({ error: 'Erro ao atualizar time' });
     }
   }

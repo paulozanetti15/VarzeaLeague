@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', authenticateToken, TeamController.listTeams);
 router.get('/:id', authenticateToken, TeamController.getTeam);
 router.post('/', authenticateToken,upload.single('banner'), TeamController.create);
-router.put('/:id', authenticateToken, TeamController.updateTeam);
+router.put('/:id', authenticateToken, upload.single('banner'), TeamController.updateTeam);
 router.post('/:id/banner', authenticateToken, upload.single('banner'), TeamController.uploadBanner);
 router.delete('/:id', authenticateToken, TeamController.deleteTeam);
 
