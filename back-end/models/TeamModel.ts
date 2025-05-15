@@ -12,8 +12,6 @@ interface TeamAttributes {
   isDeleted?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
-  idademinima?: number;
-  idademaxima?: number;
   maxparticipantes?: number;
   primaryColor?: string;
   secondaryColor?: string;
@@ -34,8 +32,6 @@ class Team extends Model<TeamAttributes, TeamCreationAttributes> {
   public name!: string;
   public description!: string;
   public banner!: string | null;
-  public idademinima!: number | null;
-  public idademaxima!: number | null;
   public maxparticipantes!: number | null;
   public sexo!: string | null;
   public primaryColor!: string | null;
@@ -72,14 +68,6 @@ Team.init(
     },
     description: {
       type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    idademinima: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-    idademaxima: {
-      type: DataTypes.INTEGER,
       allowNull: true,
     },
     maxparticipantes: {

@@ -14,7 +14,7 @@ import ToastComponent from '../../components/Toast/ToastComponent';
 interface PlayerData {
   nome: string;
   sexo: string;
-  idade: string;
+  ano: string;
   posicao: string;
 }
 
@@ -47,7 +47,7 @@ export default function CreateTeam() {
     estado: '',
     cidade: '',
     logo: null,
-    jogadores: [{ nome: '', sexo: '', idade: '', posicao: '' }],
+    jogadores: [{ nome: '', sexo: '', ano: '', posicao: '' }],
   });
   
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -62,14 +62,33 @@ export default function CreateTeam() {
 
   const handlePlayerChange = (index: number, field: keyof PlayerData, value: string) => {
     const updated = [...formData.jogadores];
-    updated[index][field] = value;
+    
+    if (field === 'ano') {
+      // Remove qualquer caractere não numérico
+      const numericValue = value.replace(/\D/g, '');
+      
+      // Atualiza o valor mesmo que esteja vazio ou incompleto
+      updated[index][field] = numericValue;
+      
+      // Validação opcional do ano completo
+      if (numericValue.length === 4) {
+        const ano = parseInt(numericValue);
+        
+        if (ano < 1925 || ano > 2019) {
+          // Aqui você pode adicionar alguma lógica de validação/feedback
+          // mas não impede a digitação
+        }
+      }
+    } else {
+      updated[index][field] = value;
+    }
     setFormData({ ...formData, jogadores: updated });
   };
 
   const addPlayer = () => {
     setFormData({
       ...formData,
-      jogadores: [...formData.jogadores, { nome: '', sexo: '', idade: '', posicao: '' }],
+      jogadores: [...formData.jogadores, { nome: '', sexo: '', ano: '', posicao: '' }],
     });
   };
 
@@ -124,6 +143,7 @@ export default function CreateTeam() {
       setError('Descrição é obrigatória.');
       return false;
     }
+    
     for (const jogador of formData.jogadores) {
       if (!jogador.nome.trim()) {
         setError('Nome do jogador é obrigatório.');
@@ -133,8 +153,13 @@ export default function CreateTeam() {
         setError('Sexo do jogador é obrigatório.');
         return false;
       }
-      if (!jogador.idade || isNaN(Number(jogador.idade))) {
-        setError('Idade do jogador é obrigatória e deve ser um número.');
+      if (!jogador.ano) {
+        setError('Ano de nascimento do jogador é obrigatório.');
+        return false;
+      }
+      const anoNascimento = parseInt(jogador.ano);
+      if (isNaN(anoNascimento) || anoNascimento < 1925 || anoNascimento > 2019) {
+        setError(`Ano de nascimento inválido. Deve ser entre 1925 e ${2019}.`);
         return false;
       }
       if (!jogador.posicao) {
@@ -198,7 +223,7 @@ export default function CreateTeam() {
   };
 
   // Adicionar estados e cidades (exemplo simples)
-  const estadosCidades = {
+  const estadosCidades: {[key: string]: string[]} = {
     'MG': ['Belo Horizonte', 'Ouro Preto', 'Uberlândia'],
     'PR': [
       'Cascavel',
@@ -448,11 +473,12 @@ export default function CreateTeam() {
                     <option value="Feminino">Feminino</option>
                   </select>
                   <input
-                    type="number"
-                    placeholder="Idade"
-                    value={jogador.idade}
-                    onChange={e => handlePlayerChange(index, 'idade', e.target.value)}
+                    type="text"
+                    placeholder="Ano"
+                    value={jogador.ano}
+                    onChange={e => handlePlayerChange(index, 'ano', e.target.value)}
                     className="form-control"
+                    maxLength={4}
                     required
                   />
                   <select

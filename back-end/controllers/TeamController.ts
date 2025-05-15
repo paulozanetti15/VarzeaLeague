@@ -14,7 +14,7 @@ dotenv.config();
 export class TeamController {
   static async create(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { name, description, sexo, idademinima, idademaxima, maxPlayers, primaryColor, secondaryColor, estado, cidade } = req.body;
+      const { name, description, sexo, maxPlayers, primaryColor, secondaryColor, estado, cidade } = req.body;
       let jogadores = req.body.jogadores;
       if (typeof jogadores === 'string') {
         try {
@@ -67,8 +67,6 @@ export class TeamController {
             cidade,
             jogadores,
             sexo,
-            idademinima,
-            idademaxima,
             maxparticipantes: maxPlayers,
             primaryColor,
             secondaryColor,
@@ -85,8 +83,6 @@ export class TeamController {
         description,
         captainId,
         sexo,
-        idademinima,
-        idademaxima,
         maxparticipantes: maxPlayers,
         primaryColor,
         secondaryColor,
