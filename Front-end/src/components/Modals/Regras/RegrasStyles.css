@@ -1,0 +1,100 @@
+.custom-modal-width {
+  max-width: 350px !important;
+  width: 80% !important;
+  margin: 0 auto;
+}
+
+.modal-dialog {
+  width: auto !important;
+  max-width: 350px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.modal-content {
+  width: 100% !important;
+  max-width: 350px !important;
+}
+
+.small-modal-content {
+  width: 100%;
+  max-width: 350px !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.small-modal-content .form-control,
+.small-modal-content .form-select {
+  padding-left: 8px;
+  padding-right: 8px;
+  font-size: 13px;
+}
+
+.small-modal-content .modal-title {
+  font-size: 15px !important;
+  font-weight: 600;
+}
+
+.small-modal-content .modal-header {
+  padding: 8px 12px;
+}
+
+.small-modal-content .modal-footer {
+  padding: 8px 12px;
+  justify-content: space-between;
+}
+
+.small-modal-content .modal-body {
+  padding: 10px;
+}
+
+.small-modal-content .form-label {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.small-modal-content .btn {
+  font-size: 13px;
+  padding: 4px 12px;
+}
+
+/* Estilo para visualização de regras */
+.rules-info {
+  padding: 5px 0;
+}
+
+/* Layout de uma coluna mais estreita */
+.rules-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rule-item {
+  background-color: rgba(33, 150, 243, 0.05);
+  border-radius: 6px;
+  padding: 8px 10px;
+  border-left: 3px solid #2196F3;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rule-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: rgba(33, 150, 243, 0.08);
+}
+
+.rule-title {
+  margin-bottom: 2px;
+  color: #1976D2;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rule-value {
+  margin-bottom: 0;
+  font-size: 13px;
+  color: #424242;
+  font-weight: 500;
+} 
