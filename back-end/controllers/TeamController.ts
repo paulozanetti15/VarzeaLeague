@@ -85,16 +85,12 @@ export class TeamController {
         description,
         captainId,
         sexo,
-        idademinima,
-        idademaxima,
-        maxparticipantes: maxPlayers,
         primaryColor,
         secondaryColor,
         isDeleted: false,
         banner: bannerFilename,
         estado,
-        cidade,
-        jogadores
+        cidade
       });
       if (!team) {
         res.status(500).json({ error: 'Erro ao criar time' });

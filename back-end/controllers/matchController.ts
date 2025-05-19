@@ -9,8 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
 // Criar uma nova partida
 export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
    try {
-      const { title, description, date, location, complement,price,Category } = req.body;
-      // Validações básicas
+      const { title, description, date, location, complement,price,Uf,Cep } = req.body;
       if (!title || !date || !location) {
         res.status(400).json({ message: 'Campos obrigatórios faltando' });
         return;
@@ -41,7 +40,8 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
           price: price || null,
           organizerId: userId,
           status: 'open',
-          categories:Category
+          Uf: Uf,
+          Cep: Cep
         });
 
         // Atualizar tipo do usuário para organizador
@@ -152,7 +152,15 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
   
 export const getMatch = async (req: Request, res: Response): Promise<void> => {
   try {
-    const match = await MatchModel.findByPk(req.params.id);
+    const match = await MatchModel.findByPk(req.params.id,{
+      include: [
+        {
+          model: UserModel,
+          as: 'organizer',
+          attributes: ['id', 'name']
+        }
+      ]
+    });
     if (!match) {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;

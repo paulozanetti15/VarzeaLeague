@@ -1,4 +1,4 @@
-import MatchPlayer from "../models/MatchPlayersModel";
+import MatchTeams from "../models/MatchTeamsModel";
 import Match from "../models/MatchModel";
 import User from "../models/UserModel";
 import Team from "../models/TeamModel";
@@ -9,11 +9,10 @@ import jwt from 'jsonwebtoken';
 require('dotenv').config(); 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
 
-async function joinMatchByTeam(req: any, res: any) {
+export const joinMatchByTeam = async (req: any, res: any) => {
 
   try {
-    const matchId = parseInt(req.params.id, 10);
-    const { teamId } = req.body;  
+    const { teamId,matchId } = req.body; 
     const match = await Match.findByPk(matchId, {
       attributes: [ 'title', 'date', 'location', 'status', 'description', 'price', 'organizerId']
     })
@@ -68,7 +67,7 @@ async function joinMatchByTeam(req: any, res: any) {
       captainId: team.captainId,
       playerCount: playerCount
     };
-    const existingEntry = await MatchPlayer.findOne({
+    const existingEntry = await MatchTeams.findOne({
        where: {
        matchId,
        teamId: parseInt(userId, 10),
@@ -78,19 +77,8 @@ async function joinMatchByTeam(req: any, res: any) {
      res.status(400).json({ message: 'Este time já está inscrito nesta partida' });
      return;
    }
-// Verificar se há vagas suficientes na partida
-  const matchRules = await RulesModel.findOne({
-    where: { partidaid: matchId }
-  });
-  if (teamResult.playerCount > matchRules.toJSON().maxparticipantes) {
-    res.status(400).json({ message: 'Número máximo de jogadores excedido para este time' });
-    return;
-  }
-  if (teamResult.playerCount < matchRules.toJSON().minparticipantes) {
-    res.status(400).json({ message: 'Número mínimo de jogadores não atingido para este time' });
-    return;
-  }
-  await MatchPlayer.create({
+   
+  await MatchTeams.create({
     matchId: matchId,
     teamId: teamId,
   });
@@ -108,7 +96,7 @@ async function joinMatchByTeam(req: any, res: any) {
   }
 }
 
-const getMattchTeams = async (req: any, res: any) => {
+export const getMatchTeams = async (req: any, res: any) => {
   try {
     const matchId = parseInt(req.params.id, 10);
     const match = await Match.findByPk(matchId, {
@@ -120,7 +108,7 @@ const getMattchTeams = async (req: any, res: any) => {
       return;
     }
 
-    const teams=await MatchPlayer.findAll({
+    const teams=await MatchTeams.findAll({
       where: { matchId },
     });
     const teamIds = teams.map((team: any) =>team.teamId);
@@ -138,5 +126,50 @@ const getMattchTeams = async (req: any, res: any) => {
     res.status(500).json({ message: 'Erro ao obter times da partida' });
   }
 }
+export const getTeamsAvailable = async (req: any, res: any) => {
+  try {
+    const Teams = await MatchTeams.findAll({
+      attributes:['teamId'],
+      raw: true,
+    });
+    const teamIds = Teams.map((team: any) => team.teamId);
+    const Avaiableteams = await Team.findAll({
+      where: {
+        id: {
+          [Sequelize.Op.notIn]: teamIds
+        },
+        isDeleted: false
+      }
+    });
+    res.status(200).json(Avaiableteams);   
+  }
+  catch (error) {
+    console.error('Erro ao obter times disponíveis:', error);
+    res.status(500).json({ message: 'Erro ao obter times disponíveis' });
+  }
+}  
+export const deleteTeamMatch= async (req: any, res: any) => {
+  try {
+    const { id,teamId } = req.params;
+    const match = await Match.findByPk(id);
+    if (!match) {
+      return res.status(404).json({ message: 'Partida não encontrada' });
+    }
+    const team = await Team.findByPk(teamId);
+    if (!team) {
+      return res.status(404).json({ message: 'Time não encontrado' });
+    }
+    await MatchTeams.destroy({
+      where: {
+        matchId:id,
+        teamId,
+      }
+    });
+    res.status(200).json({ message: 'Time removido da partida com sucesso' });
+  }
+  catch (error) {
+    console.error('Erro ao remover time da partida:', error);
+    res.status(500).json({ message: 'Erro ao remover time da partida' });
+  }
+}
 
-export {joinMatchByTeam, getMattchTeams}; 

@@ -2,12 +2,12 @@ import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
 
 
-interface MatchPlayerAttributes {
+interface MatchTeamsAttributes {
   matchId: number;
   teamId: number;
 }
 
-class MatchPlayer extends Model<MatchPlayerAttributes> implements MatchPlayerAttributes {
+class MatchTeams extends Model<MatchTeamsAttributes> implements MatchTeamsAttributes {
   public matchId!: number;
   public teamId!: number;
 
@@ -17,11 +17,11 @@ class MatchPlayer extends Model<MatchPlayerAttributes> implements MatchPlayerAtt
   }
 
   // Example static method to find all players for a specific match
-  public static async findByMatchId(matchId: number): Promise<MatchPlayer[]> {
-    return await MatchPlayer.findAll({ where: { matchId } });
+  public static async findByMatchId(matchId: number): Promise<MatchTeams[]> {
+    return await MatchTeams.findAll({ where: { matchId } });
   }
 }
-MatchPlayer.init({
+MatchTeams.init({
   matchId: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -46,9 +46,9 @@ MatchPlayer.init({
   }
 }, {
   sequelize,
-  tableName: 'match_players',
+  tableName: 'match_teams',
   timestamps: false,
   underscored: true
 });
 
-export default MatchPlayer; 
+export default MatchTeams; 
