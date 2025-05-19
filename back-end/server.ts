@@ -12,7 +12,7 @@ import UserModel from './models/UserModel';
 import MatchModel from './models/MatchModel';
 import TeamModel from './models/TeamModel';
 import UserTypeModel from './models/UserTypeModel';
-import MatchPlayer from './models/MatchPlayersModel';
+import MatchTeams from './models/MatchTeamsModel';
 import TeamPlayer from './models/TeamPlayerModel';
 import RulesModel from './models/RulesModel';
 import AttendanceModel from './models/AttendanceModel'; 
@@ -21,6 +21,7 @@ import authController from './controllers/authController';
 import { seedUserTypes } from './seeds/userTypes';
 import { associateModels } from './models/associations'; 
 import fs from 'fs';
+import { forEachChild } from 'typescript';
 // Importando as associações
 dotenv.config();
 
@@ -50,9 +51,6 @@ app.use('/api/teams',teamRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/rules', RulesRoutes);
 
-
-
-// Rota de teste
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API está funcionando!' });
 });
@@ -103,9 +101,6 @@ const startServer = async () => {
     console.log('Associações entre modelos definidas com sucesso.');
     // Sincronizar os modelos principais
     await sequelize.sync();
-   
-    console.log('Todos os modelos sincronizados usando alter: true');
-    
     await UserTypeModel.sync();
     console.log('Modelo UserType sincronizado.');
     
@@ -118,8 +113,8 @@ const startServer = async () => {
     await MatchModel.sync();
     console.log('Modelo Match sincronizado.');
     
-    await MatchPlayer.sync();
-    console.log('Modelo MatchPlayer sincronizado.');
+    await MatchTeams.sync(); 
+    console.log('Modelo MatchTeams sincronizado.');
     
     await TeamPlayer.sync();
     console.log('Modelo TeamPlayer sincronizado.');
