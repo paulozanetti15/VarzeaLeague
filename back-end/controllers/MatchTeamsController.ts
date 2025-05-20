@@ -57,39 +57,19 @@ export const joinMatchByTeam = async (req: any, res: any) => {
       res.status(404).json({ message: 'Time não encontrado ou foi removido' });
       return;
     }
-    const playerCount = await TeamPlayer.count({
-      where: { teamId: teamId }
-    });
   
-    const teamResult = {
-      id: team.id,
-      name: team.name,
-      captainId: team.captainId,
-      playerCount: playerCount
-    };
-    const existingEntry = await MatchTeams.findOne({
-       where: {
-       matchId,
-       teamId: parseInt(userId, 10),
-    }
-   });
-   if (existingEntry) {
-     res.status(400).json({ message: 'Este time já está inscrito nesta partida' });
-     return;
-   }
-   
-  await MatchTeams.create({
-    matchId: matchId,
-    teamId: teamId,
-  });
-  res.json({ 
-    message: 'Time inscrito na partida com sucesso',
-    details: {
-       matchId,
-       teamId,
-       teamName: team.name,
-      }
+    await MatchTeams.create({
+      matchId: matchId,
+      teamId: teamId,
     });
+    res.json({ 
+      message: 'Time inscrito na partida com sucesso',
+      details: {
+        matchId,
+        teamId,
+        teamName: team.name,
+        }
+      });
   } catch (error) {
     console.error('Erro ao entrar na partida com o time:', error);
     res.status(500).json({ message: 'Erro ao entrar na partida com o time' });
@@ -130,9 +110,13 @@ export const getTeamsAvailable = async (req: any, res: any) => {
   try {
     const Teams = await MatchTeams.findAll({
       attributes:['teamId'],
+      where: {
+        matchId: req.params.id
+      },
       raw: true,
     });
     const teamIds = Teams.map((team: any) => team.teamId);
+    console.log('teamIds', teamIds)
     const Avaiableteams = await Team.findAll({
       where: {
         id: {
@@ -141,6 +125,7 @@ export const getTeamsAvailable = async (req: any, res: any) => {
         isDeleted: false
       }
     });
+    console.log('Avaiableteams', Avaiableteams)
     res.status(200).json(Avaiableteams);   
   }
   catch (error) {
