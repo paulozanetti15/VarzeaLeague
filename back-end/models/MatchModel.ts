@@ -72,7 +72,6 @@ Match.init({
     allowNull: false,
     validate: {
       notEmpty: true,
-      len: [8, 8]
     }
   },
   Uf : {

@@ -87,12 +87,6 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
           as: 'organizer',
           attributes: ['id', 'name', 'email']
         },
-        {
-          model: UserModel,
-          as: 'players',
-          attributes: ['id', 'name', 'email'],
-          through: { attributes: [] }
-        }
       ],
       attributes: [
         'id',

@@ -1,14 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { IconButton, Typography, TextField, Button, Box, Divider, FormControl, InputLabel, Select, MenuItem, Autocomplete } from '@mui/material';
-import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import GroupIcon from '@mui/icons-material/Group';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import { api } from '../../services/api';
 import './CreateMatch.css';
 import { toast } from 'react-hot-toast';
 import RegrasFormRegisterModal from '../../components/Modals/Regras/RegrasFormRegisterModal';
@@ -90,6 +82,22 @@ const CreateMatch: React.FC = () => {
       [name]: value
     }));
   };
+
+  const clearCep = () => {
+    if(formData.cep.length < 8 ){
+      setFormData(prev => ({
+        ...prev,
+        location: '',
+        city: '',
+        UF: ''
+      }));
+  }
+
+  };
+
+  useEffect(() => {
+    clearCep();
+  },[formData.cep]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,6 +240,8 @@ const CreateMatch: React.FC = () => {
             <input type="text"
               id="cep"
               name="cep"
+              pattern='[0-9]{5}-?[0-9]{3}'
+              maxLength={9}
               value={formData.cep}
               onChange={handleInputChange}
               ></input>

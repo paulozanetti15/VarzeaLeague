@@ -67,7 +67,7 @@ export default function InfoRulesModal({idpartida, show, onHide}: AthleteFormMod
                         <div className="rules-grid">  
                             <div className="rule-item">
                                 <h6 className="rule-title">Categoria</h6>
-                                <p className="rule-value">{categoria} times</p>
+                                <p className="rule-value">{categoria} </p>
                             </div>
                             <div className="rule-item">
                                 <h6 className="rule-title">Gênero</h6>

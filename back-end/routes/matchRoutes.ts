@@ -4,7 +4,7 @@ import {joinMatchByTeam,getMatchTeams, deleteTeamMatch,getTeamsAvailable} from '
 import { createMatch, listMatches, getMatch } from '../controllers/matchController';
 
 const router = express.Router();
-router.get('/available', getTeamsAvailable, authenticateToken); // <-- Coloque antes das rotas com :id
+router.get('/:id/available', getTeamsAvailable, authenticateToken); // <-- Coloque antes das rotas com :id
 router.post('/', createMatch, authenticateToken);
 router.get('/', listMatches, authenticateToken);
 router.get('/:id', getMatch, authenticateToken);

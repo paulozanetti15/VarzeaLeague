@@ -105,14 +105,17 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
 
     const verificarDataLimite = (dataLimite: Date,dataPartida:Date) => {
         const dataAtual = new Date();
+        dataAtual.setHours(0, 0, 0, 0);
         const dataLimiteFormatada = new Date(dataLimite);
-        const verificandoData=dataLimiteFormatada >= dataAtual
-        console.log("Data atual:", verificandoData);  
+        dataLimiteFormatada.setHours(0, 0, 0, 0);
+        const dataPartidaFormatada = new Date(dataPartida);
+        dataPartidaFormatada.setHours(0, 0, 0, 0);
+        const verificandoData=dataLimite >= dataAtual
         if(!verificandoData) {
             setError("Data limite deve ser maior ou igual que a data atual")
             return false;
-        };
-        if(dataLimite > dataPartida) {
+        }    
+        if(dataLimiteFormatada > dataPartidaFormatada) {
             setError("Data limite não deve ser maior que a data da partida")
             return false;
         }

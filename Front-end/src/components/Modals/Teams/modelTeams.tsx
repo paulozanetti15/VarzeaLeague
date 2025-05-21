@@ -1,22 +1,20 @@
-import React, { useState } from "react";
+import { useState,useEffect } from "react";
 import axios from "axios";
 import { Card, Button } from "react-bootstrap";
 import toast from 'react-hot-toast';
 import Modal from "react-bootstrap/Modal";
 interface ModelTeamsProps {
-    match: {
-        id: number;
-    };
+    matchid: number;
     onHide: () => void;
     show: boolean;
 }
-const modelTeams = ({ match,onHide,show }: ModelTeamsProps) => {
+const modelTeams = ({ matchid,onHide,show }: ModelTeamsProps) => {
     const [teams, setTeams] = useState<any[]>([]);
  
     const handleJoinWithTeam = async (teamId: number) => {
         const response=await axios.post(`http://localhost:3001/api/matches/${teamId}/join-team`, {
             teamId: teamId,
-            matchId: match
+            matchId: matchid
         }, {
         headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -31,9 +29,9 @@ const modelTeams = ({ match,onHide,show }: ModelTeamsProps) => {
             toast.error('Erro ao inscrever time na partida. Tente novamente.');
         }  
     };
-    const getAvaiableTimes = async () => {
+    const getAvaiableTimes = async (idmatch:number) => {
         try {
-            const response = await axios.get('http://localhost:3001/api/matches/available', {
+            const response = await axios.get(`http://localhost:3001/api/matches/${idmatch}/available`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
@@ -48,8 +46,8 @@ const modelTeams = ({ match,onHide,show }: ModelTeamsProps) => {
         onHide();
     };
 
-    React.useEffect(() => {
-        getAvaiableTimes();
+    useEffect(() => {
+        getAvaiableTimes(matchid);
     }, []);
     return (
         <>  
