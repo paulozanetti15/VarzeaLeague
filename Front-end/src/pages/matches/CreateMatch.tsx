@@ -78,6 +78,7 @@ const CreateMatch: React.FC = () => {
       btnContainerRef.current.style.width = `${titleWidth}px`;
     }
   }, []);
+
   const isValidCep = (cep: string) => {
     const cepRegex = /^[0-9]{5}-?[0-9]{3}$/;
     return cepRegex.test(cep) ? true : false;
@@ -90,6 +91,22 @@ const CreateMatch: React.FC = () => {
       [name]: value
     }));
   };
+
+  const clearCep = () => {
+    if(formData.cep.length < 8 ){
+      setFormData(prev => ({
+        ...prev,
+        location: '',
+        city: '',
+        UF: ''
+      }));
+  }
+
+  };
+
+  useEffect(() => {
+    clearCep();
+  },[formData.cep]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,6 +249,8 @@ const CreateMatch: React.FC = () => {
             <input type="text"
               id="cep"
               name="cep"
+              pattern='[0-9]{5}-?[0-9]{3}'
+              maxLength={9}
               value={formData.cep}
               onChange={handleInputChange}
               ></input>
