@@ -116,7 +116,6 @@ export const getTeamsAvailable = async (req: any, res: any) => {
       raw: true,
     });
     const teamIds = Teams.map((team: any) => team.teamId);
-    console.log('teamIds', teamIds)
     const Avaiableteams = await Team.findAll({
       where: {
         id: {
@@ -125,7 +124,6 @@ export const getTeamsAvailable = async (req: any, res: any) => {
         isDeleted: false
       }
     });
-    console.log('Avaiableteams', Avaiableteams)
     res.status(200).json(Avaiableteams);   
   }
   catch (error) {

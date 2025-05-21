@@ -1,14 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { IconButton, Typography, TextField, Button, Box, Divider, FormControl, InputLabel, Select, MenuItem, Autocomplete } from '@mui/material';
-import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import GroupIcon from '@mui/icons-material/Group';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import { api } from '../../services/api';
 import './CreateMatch.css';
 import { toast } from 'react-hot-toast';
 import RegrasFormRegisterModal from '../../components/Modals/Regras/RegrasFormRegisterModal';
@@ -78,7 +70,6 @@ const CreateMatch: React.FC = () => {
       btnContainerRef.current.style.width = `${titleWidth}px`;
     }
   }, []);
-
   const isValidCep = (cep: string) => {
     const cepRegex = /^[0-9]{5}-?[0-9]{3}$/;
     return cepRegex.test(cep) ? true : false;

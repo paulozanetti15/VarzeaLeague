@@ -21,7 +21,6 @@ const MatchDetail: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [modal, setModal] = useState(false);
-
   const getTimeInscrito = async (matchId: string) => {
     try {
       const response = await axios.get(`http://localhost:3001/api/matches/${matchId}/join-team`, {
@@ -49,7 +48,6 @@ const MatchDetail: React.FC = () => {
     const fetchMatchDetailsInit = async () => {
       try {
         setLoading(true);
-        console.log('Fetching match details for ID:', id);
         const response = await axios.get(`http://localhost:3001/api/matches/${id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -147,7 +145,6 @@ const MatchDetail: React.FC = () => {
   if (!match) {
     return <div className="match-detail-container error">Partida não encontrada.</div>;
   }
-
   return (
     <div className="match-detail-container">
       <button className="back-button" onClick={() => navigate(-1)}>
@@ -165,7 +162,7 @@ const MatchDetail: React.FC = () => {
         <div className="match-header">
           <h1>{match.title}</h1>
           <div className="match-organizer">
-            <SportsSoccerIcon /> Organizado por: {match.organizer?.name || 'Desconhecido'}
+            <SportsSoccerIcon /> Organizado por: {match.organizer.name || 'Desconhecido'}
           </div>
         </div>
         
