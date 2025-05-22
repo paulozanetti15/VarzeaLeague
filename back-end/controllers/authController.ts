@@ -2,6 +2,7 @@ import { Request, Response, RequestHandler } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import UserModel from '../models/UserModel';
+import { USER_ROLES } from '../utils/roleUtils';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'varzealeague_secret';
 
@@ -15,7 +16,15 @@ interface UserAttributes {
 
 export const register: RequestHandler = async (req, res) => {
   try {
-    const { name, cpf, phone, email, password, sexo } = req.body;
+    const { name, cpf, phone, email, password, sexo, userTypeId } = req.body;
+
+    // Validar o userTypeId
+    const allowedRoles = [USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM];
+    if (!allowedRoles.includes(userTypeId)) {
+      res.status(400).json({ message: 'Tipo de usuário inválido' });
+      return;
+    }
+
     const existingUser = await UserModel.findOne({ where: { email } });
     if (existingUser) {
       res.status(400).json({ message: 'E-mail já cadastrado' });
@@ -38,7 +47,7 @@ export const register: RequestHandler = async (req, res) => {
       email,
       password: hashedPassword,
       sexo,
-      userTypeId: 4, // Definindo o tipo de usuário como "comum"
+      userTypeId: userTypeId || USER_ROLES.USUARIO_COMUM, // Se não for especificado, usa USUARIO_COMUM
     });
 
     const userJson = user.toJSON() as UserAttributes;
@@ -55,6 +64,7 @@ export const register: RequestHandler = async (req, res) => {
         id: userJson.id,
         name: userJson.name,
         email: userJson.email,
+        userTypeId: userJson.userTypeId,
       },
     });
   } catch (error) {

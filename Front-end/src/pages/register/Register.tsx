@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Register.css';
+import { USER_ROLES } from '../../utils/roleUtils';
 
 interface FormData {
   name: string;
@@ -10,6 +11,7 @@ interface FormData {
   sexo: string;
   password: string;
   confirmPassword: string;
+  userTypeId: number;
 }
 
 interface FormErrors {
@@ -20,6 +22,7 @@ interface FormErrors {
   sexo?: string;
   password?: string;
   confirmPassword?: string;
+  userTypeId?: string;
   general?: string;
 }
 
@@ -35,7 +38,8 @@ const Register: React.FC = () => {
     phone: '',
     sexo: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    userTypeId: USER_ROLES.USUARIO_COMUM
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -194,6 +198,24 @@ const Register: React.FC = () => {
                   disabled={isLoading}
                 />
                 {errors.email && <span className="register-error-message">{errors.email}</span>}
+              </div>
+            </div>
+            <div className="register-row">
+              <div className="register-form-group" style={{ flex: 2 }}>
+                <label htmlFor="userTypeId" className="register-label">Tipo de Usuário</label>
+                <select
+                  id="userTypeId"
+                  name="userTypeId"
+                  value={formData.userTypeId}
+                  onChange={handleChange}
+                  className={`register-input${errors.userTypeId ? ' register-input-error' : ''}`}
+                  disabled={isLoading}
+                >
+                  <option value={USER_ROLES.USUARIO_COMUM}>Usuário Comum</option>
+                  <option value={USER_ROLES.ADMIN_EVENTOS}>Administrador de Eventos</option>
+                  <option value={USER_ROLES.ADMIN_TIMES}>Administrador de Times</option>
+                </select>
+                {errors.userTypeId && <span className="register-error-message">{errors.userTypeId}</span>}
               </div>
             </div>
             <div className="register-row">
