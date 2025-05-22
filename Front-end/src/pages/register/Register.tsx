@@ -39,7 +39,7 @@ const Register: React.FC = () => {
     sexo: '',
     password: '',
     confirmPassword: '',
-    userTypeId: USER_ROLES.USUARIO_COMUM
+    userTypeId: 2
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -64,7 +64,8 @@ const Register: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    let newValue = value;
+    let newValue: any = value;
+
     if (name === 'name') {
       newValue = value.replace(/[^A-Za-zÀ-ÿ\s]/g, '');
     }
@@ -80,6 +81,10 @@ const Register: React.FC = () => {
       else if (newValue.length > 6) newValue = newValue.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
       else if (newValue.length > 2) newValue = newValue.replace(/(\d{2})(\d{0,5})/, '($1) $2');
     }
+    if (name === 'userTypeId') {
+      newValue = parseInt(value, 10);
+    }
+    
     setFormData(prev => ({ ...prev, [name]: newValue }));
     if (errors[name as keyof FormErrors]) setErrors(prev => ({ ...prev, [name]: undefined }));
   };
@@ -211,9 +216,8 @@ const Register: React.FC = () => {
                   className={`register-input${errors.userTypeId ? ' register-input-error' : ''}`}
                   disabled={isLoading}
                 >
-                  <option value={USER_ROLES.USUARIO_COMUM}>Usuário Comum</option>
-                  <option value={USER_ROLES.ADMIN_EVENTOS}>Administrador de Eventos</option>
-                  <option value={USER_ROLES.ADMIN_TIMES}>Administrador de Times</option>
+                  <option value="2">Administrador de Eventos</option>
+                  <option value="3">Administrador de Times</option>
                 </select>
                 {errors.userTypeId && <span className="register-error-message">{errors.userTypeId}</span>}
               </div>

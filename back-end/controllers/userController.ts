@@ -10,7 +10,11 @@ const returnUser = async (req: any, res: any) => {
     if (!userId) {
         return res.status(400).json({ error: 'User ID is required' });
     }
-    const user = await userModel.findOne({ where: { id: userId } });
+    const user = await userModel.findOne({ 
+        where: { id: userId },
+        attributes: ['id', 'name', 'email', 'cpf', 'phone', 'sexo', 'userTypeId']
+    });
+    
     if(!user){
         return res.status(404).json({error:'User not found'})
     }

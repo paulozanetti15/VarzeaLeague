@@ -6,12 +6,14 @@ import { USER_ROLES } from '../utils/roleUtils';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'varzealeague_secret';
 
+type ValidUserType = 2 | 3; // Define tipos válidos como literal types
+
 interface UserAttributes {
   id: number;
   name: string;
   email: string;
   password: string;
-  userTypeId: number;
+  userTypeId: ValidUserType;
 }
 
 export const register: RequestHandler = async (req, res) => {
@@ -19,9 +21,11 @@ export const register: RequestHandler = async (req, res) => {
     const { name, cpf, phone, email, password, sexo, userTypeId } = req.body;
 
     // Validar o userTypeId
-    const allowedRoles = [USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM];
-    if (!allowedRoles.includes(userTypeId)) {
-      res.status(400).json({ message: 'Tipo de usuário inválido' });
+    const userTypeIdNumber = Number(userTypeId);
+    const allowedRoles: ValidUserType[] = [USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES];
+    
+    if (isNaN(userTypeIdNumber) || !allowedRoles.includes(userTypeIdNumber as ValidUserType)) {
+      res.status(400).json({ message: 'Tipo de usuário inválido. Deve ser Administrador de Eventos ou Administrador de Times.' });
       return;
     }
 
@@ -47,7 +51,7 @@ export const register: RequestHandler = async (req, res) => {
       email,
       password: hashedPassword,
       sexo,
-      userTypeId: userTypeId || USER_ROLES.USUARIO_COMUM, // Se não for especificado, usa USUARIO_COMUM
+      userTypeId: userTypeIdNumber as ValidUserType,
     });
 
     const userJson = user.toJSON() as UserAttributes;

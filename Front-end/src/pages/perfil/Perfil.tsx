@@ -8,6 +8,7 @@ import './Perfil.css';
 import { IoChevronBackOutline, IoWarningOutline } from 'react-icons/io5';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
+import { getRoleName } from '../../utils/roleUtils';
 
 interface User {
   id: number;
@@ -16,6 +17,7 @@ interface User {
   cpf: string;
   phone: string;
   sexo: string;
+  userTypeId: number;
 }
 
 interface PerfilProps {
@@ -390,6 +392,17 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
                   </h3>
                   <p style={{ color: '#6b7280', margin: '0.25rem 0 0' }}>
                     {usuario.email}
+                  </p>
+                  <p style={{ 
+                    color: '#1e88e5', 
+                    margin: '0.5rem 0 0',
+                    padding: '0.25rem 0.75rem',
+                    background: '#e3f2fd',
+                    borderRadius: '1rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 500
+                  }}>
+                    {getRoleName(usuario.userTypeId)}
                   </p>
                 </div>
                 
