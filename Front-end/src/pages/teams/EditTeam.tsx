@@ -260,6 +260,15 @@ export default function EditTeam() {
       } else {
         setError('Erro ao atualizar time. Tente novamente.');
       }
+      
+      // Better error handling
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.message) {
+        setError(`Erro de conexão: ${err.message}`);
+      } else {
+        setError('Erro ao atualizar time. Tente novamente.');
+      }
     }
   };
   const bannerStyle = {
