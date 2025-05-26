@@ -37,17 +37,8 @@ export function associateModels() {
     through: TeamPlayer,
     as: 'players',
     foreignKey: 'teamId',
-    otherKey: 'userId'
   });
 
-  User.belongsToMany(Team, {
-    through: TeamPlayer,
-    as: 'teams',
-    foreignKey: 'userId',
-    otherKey: 'teamId'
-  });
-
-  // Match Reports
   MatchReport.belongsTo(User, { foreignKey: 'createdBy' });
   MatchReport.belongsTo(Match, { foreignKey: 'matchId' });
   User.hasMany(MatchReport, { foreignKey: 'createdBy' });

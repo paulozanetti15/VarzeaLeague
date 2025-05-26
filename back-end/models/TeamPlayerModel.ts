@@ -1,7 +1,5 @@
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes } from 'sequelize';
 import sequelize from '../config/database';
-
- 
 
 const TeamPlayer = sequelize.define('TeamPlayer', {
   id: {
@@ -19,21 +17,26 @@ const TeamPlayer = sequelize.define('TeamPlayer', {
     onUpdate: 'CASCADE',
     onDelete: 'CASCADE'
   },
-  userId: {
-    type: DataTypes.INTEGER,
+  Playername: {
+    type: DataTypes.STRING,
     allowNull: false,
-    references: {
-      model: 'users',
-      key: 'id'
-    },
-    onUpdate: 'CASCADE',
-    onDelete: 'CASCADE'
-  }
+  },
+  Playerdatebirth: {
+    type: DataTypes.DATE,
+    allowNull: false, 
+  },
+  PlayerGender: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  Playerposition: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
 }, {
   tableName: 'team_players',
   timestamps: true,
   underscored: true,
-  modelName: 'TeamPlayer',
   freezeTableName: true
 });
 

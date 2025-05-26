@@ -2,11 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import './CreateMatch.css';
-import { toast } from 'react-hot-toast';
 import RegrasFormRegisterModal from '../../components/Modals/Regras/RegrasFormRegisterModal';
-import { ca } from 'date-fns/locale';
 import axios from 'axios';
-import { u } from 'framer-motion/dist/types.d-B50aGbjN';
+
 
 interface MatchFormData {
   title: string;

@@ -14,15 +14,7 @@ dotenv.config();
 export class TeamController {
   static async create(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { name, description, sexo, idademinima, idademaxima, maxPlayers, primaryColor, secondaryColor, estado, cidade } = req.body;
-      let jogadores = req.body.jogadores;
-      if (typeof jogadores === 'string') {
-        try {
-          jogadores = JSON.parse(jogadores);
-        } catch (e) {
-          jogadores = [];
-        }
-      }
+      const { name, description, sexo, primaryColor, secondaryColor, estado, cidade,cep } = req.body;
       let bannerFilename = null;
       if (req.file) {
         bannerFilename = req.file.filename;
@@ -65,11 +57,8 @@ export class TeamController {
             updatedAt: agora,
             estado,
             cidade,
-            jogadores,
             sexo,
-            idademinima,
-            idademaxima,
-            maxparticipantes: maxPlayers,
+            cep,
             primaryColor,
             secondaryColor,
             banner: bannerFilename
@@ -90,6 +79,7 @@ export class TeamController {
         isDeleted: false,
         banner: bannerFilename,
         estado,
+        cep,
         cidade
       });
       if (!team) {
@@ -97,7 +87,7 @@ export class TeamController {
         return;
       }
       const plainTeam = team.get({ plain: true });
-      res.status(201).json(plainTeam);
+      res.status(201).json({plainTeam});
     } catch (error) {
       res.status(500).json({ error: 'Erro ao criar time' });
     }
@@ -132,19 +122,14 @@ export class TeamController {
         if (team.captainId === userId) {
           return true;
         }
-        const isPlayer = team.players.some(player => player.id === userId);
-        return isPlayer;
       });
       const formattedTeams = visibleTeams.map(team => {
         const plainTeam = team.get({ plain: true });
         const isCaptain = team.captainId === userId;
-        const isPlayer = team.players.some(player => player.id === userId);
-        
         return {
           ...plainTeam,
           banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
           isCurrentUserCaptain: isCaptain,
-          isCurrentUserPlayer: isPlayer
         };
       });
       res.json(formattedTeams);
@@ -188,22 +173,16 @@ export class TeamController {
         return;
       }
       const isCaptain = team.captainId === userId;
-      const isPlayer = team.players.some(player => player.id === userId);
-      if (!isCaptain && !isPlayer) {
+      if (!isCaptain) {
         res.status(403).json({ error: 'Você não tem permissão para ver este time' });
         return;
       }
       const plainTeam = team.get({ plain: true });
-      if (plainTeam.players && Array.isArray(plainTeam.players)) {
-         
-      } else {
-        plainTeam.players = [];
-      }
+       
       const formattedTeam = {
         ...plainTeam,
         banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
-        isCurrentUserCaptain: isCaptain,
-        isCurrentUserPlayer: isPlayer
+        isCurrentUserCaptain: isCaptain
       };
       res.json(formattedTeam);
     } catch (error) {
@@ -213,13 +192,9 @@ export class TeamController {
   }
 
   static async updateTeam(req: AuthRequest, res: Response): Promise<void> {
-    console.log('REQ.BODY:', req.body);
-    console.log('REQ.FILE:', req.file);
     try {
       const { id } = req.params;
       const userId = req.user?.id;
-      
-      // Buscar o time atual para preservar o banner se não houver um novo
       const team = await Team.findOne({
         where: { id, isDeleted: false }
       });
@@ -228,13 +203,10 @@ export class TeamController {
         res.status(404).json({ error: 'Time não encontrado' });
         return;
       }
-
       if (team.captainId !== userId) {
         res.status(403).json({ error: 'Apenas o capitão pode atualizar o time' });
         return;
       }
-
-      // Verificar se o nome já existe em outro time
       if (req.body.name) {
         const existingTeam = await Team.findOne({
           where: { 
@@ -248,56 +220,18 @@ export class TeamController {
           return;
         }
       }
-      
       const agora = new Date();
-      agora.setHours(agora.getHours() - 3);
-      
-      // Processar jogadores do FormData
-      let jogadoresUpdate = [];
-      if (req.body.jogadores) {
-        try {
-          jogadoresUpdate = JSON.parse(req.body.jogadores);
-          
-          // Validar idade dos jogadores
-          for (const jogador of jogadoresUpdate) {
-            const idade = parseInt(jogador.idade);
-            if (isNaN(idade) || idade < 0 || idade > 120) {
-              res.status(400).json({ error: 'Idade do jogador deve ser um número entre 0 e 120.' });
-              return;
-            }
-          }
-        } catch (e) {
-          console.error('Erro ao processar jogadores:', e);
-          jogadoresUpdate = [];
-        }
-      }
-
-      // Preservar o banner atual se não houver um novo arquivo
+      agora.setHours(agora.getHours() - 3); 
       let bannerFilename = team.banner;
-      console.log('Banner atual:', bannerFilename);
-      
-      // Só atualizar o banner se um novo arquivo for enviado
       if (req.file) {
-        console.log('Novo arquivo recebido:', req.file.filename);
-        // Deletar o arquivo antigo se existir
         if (team.banner !== null) {
           const oldBannerPath = path.join(__dirname, '..', 'uploads', 'teams', team.banner);
-          console.log('Caminho do arquivo antigo:', oldBannerPath);
           if (fs.existsSync(oldBannerPath)) {
             fs.unlinkSync(oldBannerPath);
-            console.log('Arquivo antigo deletado');
-          } else {
-            console.log('Arquivo antigo não encontrado');
-          }
+          } 
         }
-        // Usar o novo arquivo
         bannerFilename = req.file.filename;
-        console.log('Novo banner definido:', bannerFilename);
-      } else {
-        console.log('Nenhum novo arquivo recebido, mantendo o banner atual');
-      }
-
-      // Preparar os dados para atualização
+      } 
       const updateData: any = {
         name: req.body.name?.trim(),
         description: req.body.description,
@@ -305,7 +239,7 @@ export class TeamController {
         secondaryColor: req.body.secondaryColor,
         estado: req.body.estado,
         cidade: req.body.cidade,
-        jogadores: jogadoresUpdate,
+        cep: req.body.cep,
         updatedAt: agora
       };
 
@@ -316,13 +250,7 @@ export class TeamController {
       } else {
         console.log('Nenhum banner incluído nos dados de atualização');
       }
-
-      console.log('Dados de atualização:', updateData);
-      
-      // Atualizar o time com os novos dados
       await team.update(updateData);
-      console.log('Time atualizado com sucesso');
-      
       const updatedTeam = await Team.findOne({
         where: { id: id, isDeleted: false }
       });

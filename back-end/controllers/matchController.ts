@@ -3,10 +3,11 @@ import { AuthRequest } from '../middleware/auth';
 import MatchModel from '../models/MatchModel';
 import UserModel from '../models/UserModel';
 import jwt from 'jsonwebtoken';
+import MatchTeamsModel from '../models/MatchTeamsModel';
 import { where } from 'sequelize';
+import Rules from '../models/RulesModel';
 require('dotenv').config(); 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
-// Criar uma nova partida
 export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
    try {
       const { title, description, date, location, complement,price,Uf,Cep } = req.body;
@@ -23,8 +24,7 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
       }
       const token = req.headers.authorization?.replace('Bearer ', '');
       try {
-        const decodedPayload = jwt.decode(token);
-        console.log('Estrutura do token (sem verificação):', decodedPayload);
+        jwt.decode(token);
       } catch (decodeErr) {
         console.error('Erro ao decodificar token:', decodeErr);
       }
@@ -43,8 +43,6 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
           Uf: Uf,
           Cep: Cep
         });
-
-        // Atualizar tipo do usuário para organizador
         await UserModel.update(
           { userTypeId: 2 }, 
           { 
@@ -101,42 +99,15 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
       order: [['date', 'ASC']]
     });
     matches.map(async (match: any) => {
-        // Formatar o objeto organizer antes de trabalhar com jogadores
-        const organizer = {
-          id: match.organizerId,
-          name: match.organizerName || 'Organizador desconhecido',
-          email: match.organizerEmail || ''
-        };
-        
-        // Remover campos extras
-        delete match.organizerName;
-        delete match.organizerEmail;
-        
-        // Verificar se a partida tem jogadores com a contagem que já foi feita na consulta
-        const actualPlayerCount = parseInt(match.playerCount || '0', 10);
-        delete match.playerCount; // Remover do objeto final
-        
-        console.log(`Partida ${match.id} (${match.title}): ${actualPlayerCount} jogadores registrados diretamente`);
-        
-        // Se não há jogadores no banco, pular as consultas detalhadas
-        if (actualPlayerCount === 0) {
-          console.log(`Partida ${match.id} não possui jogadores, pulando consultas detalhadas`);
-          return {
-            ...match,
-            organizer,
-            players: [],
-            playerStats: {
-              totalIndividualPlayers: 0,
-              totalTeams: 0,
-              totalTeamPlayers: 0,
-              totalPlayers: 0,
-              isEmpty: true
-            }
-          };
-        }
-      }	
-    );
-    console.log('Partidas:', matches);
+      const organizer = {
+        id: match.organizerId,
+        name: match.organizerName
+      };
+      return {
+        ...match,
+        organizer,
+      };
+    });
     res.json(matches);
   } catch (error) {
     console.error('Erro ao listar partidas:', error);
@@ -155,18 +126,32 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
         }
       ]
     });
+    const countTeams = await MatchTeamsModel.count({
+      where: {
+        matchId: req.params.id
+      }
+    })
     if (!match) {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }
-    res.status(200).json(match);
+    const MaxTeams= await Rules.findOne({
+      where: {
+        partidaId: req.params.id
+      }
+    })
+    const dados={
+       ...match.toJSON(),
+      countTeams: countTeams,
+      maxTeams: MaxTeams.dataValues.quantidade_times
+    }
+    res.status(200).json(dados);
   } catch (error) {
     console.error('Erro ao obter partida:', error);
     res.status(500).json({ message: 'Erro ao obter partida' });
   }
 };
 
-// Atualizar uma partida
 export const updateMatch = async (req: Request, res: Response): Promise<void> => {
   try {
     const match = await MatchModel.findByPk(req.params.id);

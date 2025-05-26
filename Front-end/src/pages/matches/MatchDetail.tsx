@@ -4,7 +4,6 @@ import { format, set } from 'date-fns';
 import { ptBR, tr } from 'date-fns/locale';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { api } from '../../services/api';
 import './MatchDetail.css';
 import toast from 'react-hot-toast';
 import RegrasFormInfoModal from '../../components/Modals/Regras/RegrasFormInfoModal';
@@ -53,7 +52,6 @@ const MatchDetail: React.FC = () => {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         })
-        console.log('Match details:', response.data);
         setMatch(response.data);
       }catch (err) {
         setError('Não foi possível carregar os detalhes da partida. Tente novamente mais tarde.');
@@ -73,6 +71,7 @@ const MatchDetail: React.FC = () => {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
     })
+    console.log('Response:', response);
     if (response.status === 200) {
       toast.success('Time removido da partida com sucesso!');
       setTimeout(() => {
@@ -189,6 +188,12 @@ const MatchDetail: React.FC = () => {
               {formatPrice(match.price)}
             </div>
           </div>
+          <div className="info-row">
+            <div className="info-label">Vagas de times:</div>
+            <div className="info-value">
+              {match.countTeams}/{match.maxTeams}  
+            </div>
+          </div>
         </div>
         {match.description && (
           <div className="match-description">
@@ -241,13 +246,15 @@ const MatchDetail: React.FC = () => {
             </div>
           )}
           <div className="d-flex justify-content-center w-100">
-            <Button 
-              variant="primary"
-              className="mt-5"
-              onClick={() =>handleModalShow()} // Exemplo: usar o primeiro time da lista
-            >
-              Cadastrar time
-            </Button>
+            {(match.countTeams < match.maxTeams) && 
+              <Button 
+                variant="primary"
+                className="mt-5"
+                onClick={() =>handleModalShow()} // Exemplo: usar o primeiro time da lista
+              >
+                Cadastrar time
+              </Button>
+            }
             {modal && (
               <ModalTeams 
                 show={modal} 
