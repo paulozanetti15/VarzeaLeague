@@ -10,12 +10,13 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
 import WarningIcon from '@mui/icons-material/Warning';
+import toast from 'react-hot-toast';
 
 interface PlayerData {
-  nome: string;
-  sexo: string;
-  idade: string;
-  posicao: string;
+  Playername: string;
+  PlayerGender: string;
+  Playerdatebirth: string;
+  Playerposition: string;
 }
 
 interface TeamFormData {
@@ -27,6 +28,7 @@ interface TeamFormData {
   cidade: string;
   logo?: File | null;
   jogadores: PlayerData[];
+  cep: string;
 }
 
 export default function EditTeam() {
@@ -44,21 +46,10 @@ export default function EditTeam() {
     secondaryColor: '#0d47a1',
     estado: '',
     cidade: '',
+    cep: '',
     logo: null,
-    jogadores: [{ nome: '', sexo: '', idade: '', posicao: '' }],
+    jogadores: [{ Playername: '', PlayerGender: '', Playerdatebirth:'', Playerposition: '' }],
   });
-  const [cidadesDisponiveis, setCidadesDisponiveis] = useState<string[]>([]);
-  const estadosCidades = {
-    'MG': ['Belo Horizonte', 'Ouro Preto', 'Uberlândia'],
-    'PR': [
-      'Cascavel', 'Colombo', 'Curitiba', 'Foz do Iguaçu', 'Guarapuava',
-      'Londrina', 'Maringá', 'Paranaguá', 'Ponta Grossa', 'São José dos Pinhais', 'União da Vitória'
-    ],
-    'RJ': ['Niterói', 'Petrópolis', 'Rio de Janeiro'],
-    'SP': ['Campinas', 'Santos', 'São Paulo'],
-  };
-  const estadosOrdem = Object.keys(estadosCidades).sort();
-
   useEffect(() => {
     if (!id) return;
     const fetchTeam = async () => {
@@ -71,7 +62,13 @@ export default function EditTeam() {
         const response = await axios.get(`http://localhost:3001/api/teams/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+         const responsePlayer = await axios.get(`http://localhost:3001/api/teamplayers/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log(responsePlayer.data);
         const teamData = response.data;
+        const teamPlayerData = responsePlayer.data;
+        
         setFormData({
           name: teamData.name || '',
           description: teamData.description || '',
@@ -79,16 +76,12 @@ export default function EditTeam() {
           secondaryColor: teamData.secondaryColor || '#0d47a1',
           estado: teamData.estado || '',
           cidade: teamData.cidade || '',
+          cep: teamData.cep || '',
           logo: null,
-          jogadores: Array.isArray(teamData.jogadores) && teamData.jogadores.length > 0
-            ? teamData.jogadores
-            : [{ nome: '', sexo: '', idade: '', posicao: '' }],
+          jogadores:teamPlayerData
         });
         if (teamData.banner) {
           setLogoPreview(`http://localhost:3001${teamData.banner}`);
-        }
-        if (teamData.estado) {
-          setCidadesDisponiveis(estadosCidades[teamData.estado] || []);
         }
       } catch (err: any) {
         setError('Erro ao carregar o time.');
@@ -97,14 +90,6 @@ export default function EditTeam() {
     fetchTeam();
   }, [id]);
 
-  useEffect(() => {
-    if (formData.estado) {
-      setCidadesDisponiveis(estadosCidades[formData.estado] || []);
-    } else {
-      setCidadesDisponiveis([]);
-    }
-  }, [formData.estado]);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -112,16 +97,8 @@ export default function EditTeam() {
 
   const handlePlayerChange = (index: number, field: keyof PlayerData, value: string) => {
     const updated = [...formData.jogadores];
-    
-    // Validação especial para o campo idade
-    if (field === 'idade') {
-      const idadeNum = parseInt(value);
-      if (idadeNum < 0) {
-        return; // Não permite idade negativa
-      }
-      if (idadeNum > 120) {
-        return; // Limite máximo razoável de idade
-      }
+    if (!updated[index]) {
+      updated[index] = { Playername: '', PlayerGender: '', Playerdatebirth:'', Playerposition: '' };
     }
     
     updated[index][field] = value;
@@ -131,7 +108,7 @@ export default function EditTeam() {
   const addPlayer = () => {
     setFormData({
       ...formData,
-      jogadores: [...formData.jogadores, { nome: '', sexo: '', idade: '', posicao: '' }],
+      jogadores: [...formData.jogadores, { Playername: '', PlayerGender: '', Playerdatebirth:'', Playerposition: '' }],
     });
   };
 
@@ -178,20 +155,20 @@ export default function EditTeam() {
       return false;
     }
     for (const jogador of formData.jogadores) {
-      if (!jogador.nome.trim()) {
+      if (!jogador.Playername.trim()) {
         setError('Nome do jogador é obrigatório.');
         return false;
       }
-      if (!jogador.sexo) {
+      if (!jogador.PlayerGender) {
         setError('Sexo do jogador é obrigatório.');
         return false;
       }
-      const idadeNum = parseInt(jogador.idade);
-      if (!jogador.idade || isNaN(idadeNum) || idadeNum < 0 || idadeNum > 120) {
-        setError('Idade do jogador é obrigatória e deve ser um número entre 0 e 120.');
+      
+      if (!jogador.Playerdatebirth) {
+        setError('Data nascimento do jogador é obrigatória e deve ser um número entre 0 e 120.');
         return false;
       }
-      if (!jogador.posicao) {
+      if (!jogador.Playerposition) {
         setError('Posição do jogador é obrigatória.');
         return false;
       }
@@ -203,11 +180,14 @@ export default function EditTeam() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    
     if (!validateFields()) {
       setLoading(false);
       return;
     }
+
     try {
+      // Execute both API calls in parallel instead of sequentially
       const submitFormData = new FormData();
       submitFormData.append('name', formData.name);
       submitFormData.append('description', formData.description);
@@ -215,51 +195,61 @@ export default function EditTeam() {
       submitFormData.append('secondaryColor', formData.secondaryColor);
       submitFormData.append('estado', formData.estado);
       submitFormData.append('cidade', formData.cidade);
-      submitFormData.append('jogadores', JSON.stringify(formData.jogadores));
+      submitFormData.append('cep', formData.cep);
       
       if (formData.logo) {
         submitFormData.append('banner', formData.logo);
       }
-      
-      console.log('Enviando dados para atualização:', {
-        name: formData.name,
-        description: formData.description,
-        logo: formData.logo ? 'Nova imagem selecionada' : 'Nenhuma nova imagem'
-      });
-      
-      const response = await axios.put(`http://localhost:3001/api/teams/${id}`,
-        submitFormData,
-        {
+
+      // Fix date format for players before sending
+      const playersWithFixedDates = formData.jogadores.map(jogador => ({
+        ...jogador,
+        Playerdatebirth: jogador.Playerdatebirth ? 
+          new Date(jogador.Playerdatebirth).toISOString().split('T')[0] : 
+          jogador.Playerdatebirth
+      }));
+
+      // Execute both requests in parallel using Promise.all
+      const [teamResponse, playersResponse] = await Promise.all([
+        axios.put(`http://localhost:3001/api/teams/${id}`, submitFormData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
-        }
-      );
-      
-      console.log('Resposta da atualização:', response.data);
-      
-      if (response.data.banner) {
-        setLogoPreview(`http://localhost:3001${response.data.banner}`);
+        }),
+        axios.put(`http://localhost:3001/api/teamplayers/${id}`, playersWithFixedDates, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        })
+      ]);
+
+      // Update logo preview if banner was updated
+      if (teamResponse.data.banner) {
+        setLogoPreview(`http://localhost:3001${teamResponse.data.banner}`);
       }
+
+      toast.success('Time atualizado com sucesso!');
+      setLoading(false);
       
-      setLoading(false);
-      setTimeout(() => {
-        navigate('/teams');
-      }, 1200);
     } catch (err: any) {
-      setLoading(false);
+      setLoading(true);
       console.error('Erro ao atualizar time:', err);
-      const errorMsg = err.response?.data?.message || 'Erro ao atualizar time. Tente novamente.';
-      setError(errorMsg);
+      
+      // Better error handling
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.message) {
+        setError(`Erro de conexão: ${err.message}`);
+      } else {
+        setError('Erro ao atualizar time. Tente novamente.');
+      }
     }
   };
-
   const bannerStyle = {
     background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`,
   };
-
-  const cidadesDisponiveisOrdenadas = [...cidadesDisponiveis].sort();
 
   return (
     <div className="create-team-container">
@@ -349,20 +339,29 @@ export default function EditTeam() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
           >
+            <label className="form-label" htmlFor="estado">cep</label>
+            <input
+              id="cep"
+              name="cep"
+              className="form-control"
+              value={formData.cep}
+              disabled
+            />
+          </motion.div>
+          <motion.div 
+            className="form-group"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+          >
             <label className="form-label" htmlFor="estado">Estado</label>
-            <select
+            <input
               id="estado"
               name="estado"
               className="form-control"
               value={formData.estado}
-              onChange={handleInputChange}
-              required
-            >
-              <option value="">Selecione o estado</option>
-              {estadosOrdem.map(uf => (
-                <option key={uf} value={uf}>{uf}</option>
-              ))}
-            </select>
+              disabled
+            />
           </motion.div>
           <motion.div 
             className="form-group"
@@ -371,20 +370,15 @@ export default function EditTeam() {
             transition={{ delay: 0.1 }}
           >
             <label className="form-label" htmlFor="cidade">Cidade</label>
-            <select
+            <input
               id="cidade"
               name="cidade"
               className="form-control"
               value={formData.cidade}
               onChange={handleInputChange}
               required
-              disabled={!formData.estado}
-            >
-              <option value="">Selecione a cidade</option>
-              {cidadesDisponiveisOrdenadas.map(cidade => (
-                <option key={cidade} value={cidade}>{cidade}</option>
-              ))}
-            </select>
+              disabled
+            />
           </motion.div>
           <motion.div 
             className="colors-section"
@@ -443,15 +437,15 @@ export default function EditTeam() {
                   <input
                     type="text"
                     placeholder="Nome do jogador"
-                    value={jogador.nome}
-                    onChange={e => handlePlayerChange(index, 'nome', e.target.value)}
+                    value={jogador.Playername}
+                    onChange={e => handlePlayerChange(index, 'Playername', e.target.value)}
                     className="form-control nome-jogador"
                     required
                   />
                   <select
-                    value={jogador.sexo}
-                    onChange={e => handlePlayerChange(index, 'sexo', e.target.value)}
-                    className="form-control"
+                    value={jogador.PlayerGender}
+                    onChange={e => handlePlayerChange(index, 'PlayerGender', e.target.value)}
+                    className="form-control nome-jogador"
                     required
                   >
                     <option value="">Sexo</option>
@@ -459,17 +453,17 @@ export default function EditTeam() {
                     <option value="Feminino">Feminino</option>
                   </select>
                   <input
-                    type="number"
-                    placeholder="Idade"
-                    value={jogador.idade}
-                    onChange={e => handlePlayerChange(index, 'idade', e.target.value)}
-                    className="form-control"
+                    type="date"
+                    placeholder="Data de Nascimento"
+                    value={jogador.Playerdatebirth ? jogador.Playerdatebirth.slice(0, 10) : ''} // Format date to YYYY-MM-DD
+                    onChange={e => handlePlayerChange(index, 'Playerdatebirth', e.target.value)}
+                    className="form-control nome-jogador"
                     required
                   />
                   <select
-                    value={jogador.posicao}
-                    onChange={e => handlePlayerChange(index, 'posicao', e.target.value)}
-                    className="form-control"
+                    value={jogador.Playerposition}  
+                    onChange={e => handlePlayerChange(index, 'Playerposition', e.target.value)}
+                    className="form-control nome-jogador"
                     required
                   >
                     <option value="">Posição</option>

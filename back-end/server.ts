@@ -17,12 +17,10 @@ import TeamPlayer from './models/TeamPlayerModel';
 import RulesModel from './models/RulesModel';
 import AttendanceModel from './models/AttendanceModel'; 
 import RulesRoutes from './routes/RulesRoutes'; 
-import authController from './controllers/authController';
+import TeamPlayerRoutes from './routes/teamPlayerRoutes';
 import { seedUserTypes } from './seeds/userTypes';
 import { associateModels } from './models/associations'; 
 import fs from 'fs';
-import { forEachChild } from 'typescript';
-// Importando as associações
 dotenv.config();
 
 const app = express();
@@ -43,10 +41,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rotas
 app.use('/api/auth', authRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
+app.use('/api/teamplayers', TeamPlayerRoutes);
 app.use('/api/teams',teamRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/rules', RulesRoutes);
@@ -90,16 +88,12 @@ app.get('/api/health', (req, res) => {
   }
 });
 
-// Conexão com o banco de dados
-const PORT = process.env.PORT || 3001;
-
 const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log('Conexão com o banco de dados estabelecida com sucesso!');
     associateModels(); // Execute a função de associação aqui
     console.log('Associações entre modelos definidas com sucesso.');
-    // Sincronizar os modelos principais
     await sequelize.sync();
     await UserTypeModel.sync();
     console.log('Modelo UserType sincronizado.');
@@ -107,9 +101,9 @@ const startServer = async () => {
     await UserModel.sync();
     console.log('Modelo User sincronizado.');
     
-    await TeamModel.sync();
+    await TeamModel.sync({alter: true});
+  
     console.log('Modelo Team sincronizado.');
-    
     await MatchModel.sync();
     console.log('Modelo Match sincronizado.');
     
@@ -148,6 +142,7 @@ const startServer = async () => {
     
     // Inserir os tipos de usuário
     await seedUserTypes();
+
     
     const port = process.env.PORT || 3001;
     app.listen(port, () => {
