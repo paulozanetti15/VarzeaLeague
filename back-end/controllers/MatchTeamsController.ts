@@ -57,25 +57,111 @@ export const joinMatchByTeam = async (req: any, res: any) => {
       res.status(404).json({ message: 'Time não encontrado ou foi removido' });
       return;
     }
-  
-    await MatchTeams.create({
-      matchId: matchId,
-      teamId: teamId,
-    });
-    res.json({ 
-      message: 'Time inscrito na partida com sucesso',
-      details: {
-        matchId,
-        teamId,
-        teamName: team.name,
+    const regras = await RulesModel.findOne({where : { partidaid: matchId }});
+    const teamIsAlreadyInMatch = await MatchTeams.findOne({ where: { matchId, teamId } });
+    if(teamIsAlreadyInMatch){
+      return res.status(400).json({ message: 'Time já está inscrito nesta partida' });
+    }
+    else
+    {
+      if(regras.dataValues.sexo!=="ambas"){
+        const playersWithDifferentGender = await TeamPlayer.findOne({
+          where: {
+            teamId: teamId,
+            PlayerGender: {
+              [Sequelize.Op.ne]: regras.dataValues.sexo // Busca jogadores com sexo diferente das regras
+            }
+          },
+          attributes: ['id', 'Playername', 'PlayerGender']
+        });
+        if (playersWithDifferentGender) {
+          return res.status(403).json({ message: `Time não se qualifica nas regras de genero da partida` });
         }
-      });
+      }
+    }  
+
   } catch (error) {
     console.error('Erro ao entrar na partida com o time:', error);
     res.status(500).json({ message: 'Erro ao entrar na partida com o time' });
   }
 }
+const isTimePossuiCategoriaValido=async(teamId:number)=>{
+  const idades=[];
+  const regras = await RulesModel.findAll({
+    attributes: ['categoria']
+  });
+  const idadesJogadores = await TeamPlayer.findAll({
+    attributes: ['Playerdatebirth'],
+    where: {
+      teamId: teamId
+    }
+  })
+  idades.push(idadesJogadores.map((idade: any) => {
+      const ano = new Date(idade.Playerdatebirth).getFullYear();
+      const anoAtual = new Date().getFullYear();
+      return anoAtual - ano;
+  }));
+  switch (regras[0].dataValues.categoria) {
+    case 'Sub-7':
+      for (const idade of idades) {
+        if (idade > 7 && idade < 6) {
+          return false; // Se qualquer idade for maior que 7, retorna falso
+        }
+      }
+    case 'Sub-8':
+      for (const idade of idades) {
+        if (idade > 8 && idade < 8) {
+          return false; // Se qualquer idade for maior que 8, retorna falso
+        }
+      }
+    case 'Sub-9':
+      for (const idade of idades) {
+        if (idade > 9 && idade < 8) {
+          return false; // Se qualquer idade for maior que 9, retorna falso
+        }
+      }
+    case 'Sub-11':
+      for (const idade of idades) {
+        if (idade > 11 && idade < 10) {
+          return false; // Se qualquer idade for maior que 11, retorna falso
+        }
+      }
+    case 'Sub-13':
+      for (const idade of idades) {
+        if (idade > 13 && idade < 12) {
+          return false; // Se qualquer idade for maior que 13, retorna falso
+        }
+      }
+    case 'Sub-15':
+      for (const idade of idades) {
+        if (idade > 15 && idade < 14) {
+          return false; // Se qualquer idade for maior que 15, retorna falso
+        }
+      }
+    case 'Sub-17':
+      for (const idade of idades) {
+        if (idade > 17 && idade < 16) {
+          return false; // Se qualquer idade for maior que 17, retorna falso
+        }
+      }
+    case 'Sub-20':
+      for (const idade of idades) {
+        if (idade > 20 && idade < 18) {
+          return false; // Se qualquer idade for maior que 20, retorna falso
+        }
+      }
+    case 'Adulto':
+      for (const idade of idades) {
+        if (idade <  20) {
+          return false; // Se qualquer idade for maior que 20, retorna falso
+        }
+      }
+    default:
+      return true; // Se nenhuma condição for atendida, retorna verdadeiro  
+    
+  }
 
+}
 export const getMatchTeams = async (req: any, res: any) => {
   try {
     const matchId = parseInt(req.params.id, 10);

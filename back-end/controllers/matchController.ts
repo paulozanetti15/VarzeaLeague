@@ -4,7 +4,6 @@ import MatchModel from '../models/MatchModel';
 import UserModel from '../models/UserModel';
 import jwt from 'jsonwebtoken';
 import MatchTeamsModel from '../models/MatchTeamsModel';
-import { where } from 'sequelize';
 import Rules from '../models/RulesModel';
 require('dotenv').config(); 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
@@ -15,8 +14,6 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
         res.status(400).json({ message: 'Campos obrigatórios faltando' });
         return;
       }
-
-      // Validar data futura
       const matchDate = new Date(date);
       if (matchDate <= new Date()) {
         res.status(400).json({ message: 'A data da partida deve ser futura' });
