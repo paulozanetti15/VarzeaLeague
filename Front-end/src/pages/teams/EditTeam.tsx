@@ -94,7 +94,26 @@ export default function EditTeam() {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
+  const handleCidadesChange =  async(cep:String) => {
+    const response=await axios.get(`http://viacep.com.br/ws/${cep}/json/`);
+    setFormData({
+      ...formData,
+      estado: response.data.uf,
+      cidade: response.data.localidade,
+    });
+  }
+  useEffect(() => {
+     if (/^[0-9]{8}$/.test(formData.cep) || /^[0-9]{5}-?[0-9]{3}$/.test(formData.cep)) {
+      handleCidadesChange(formData.cep.replace('-', ''));
+     } else{
+      setFormData({
+        ...formData,
+        estado: '',
+        cidade: '',
+      });
+     }    
+  },[formData.cep]);
+    
   const handlePlayerChange = (index: number, field: keyof PlayerData, value: string) => {
     const updated = [...formData.jogadores];
     if (!updated[index]) {
@@ -208,34 +227,39 @@ export default function EditTeam() {
           new Date(jogador.Playerdatebirth).toISOString().split('T')[0] : 
           jogador.Playerdatebirth
       }));
-
-      // Execute both requests in parallel using Promise.all
-      const [teamResponse, playersResponse] = await Promise.all([
-        axios.put(`http://localhost:3001/api/teams/${id}`, submitFormData, {
+      const teamResponse= await axios.put(`http://localhost:3001/api/teams/${id}`, submitFormData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
-        }),
+      });
+       
+      if (teamResponse.data.banner) {
+        setLogoPreview(`http://localhost:3001${teamResponse.data.banner}`);
+      }
+      if(teamResponse.status === 200){
         axios.put(`http://localhost:3001/api/teamplayers/${id}`, playersWithFixedDates, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         })
-      ]);
-
-      // Update logo preview if banner was updated
-      if (teamResponse.data.banner) {
-        setLogoPreview(`http://localhost:3001${teamResponse.data.banner}`);
       }
-
       toast.success('Time atualizado com sucesso!');
       setLoading(false);
       
     } catch (err: any) {
       setLoading(true);
       console.error('Erro ao atualizar time:', err);
+      
+      // Better error handling
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.message) {
+        setError(`Erro de conexão: ${err.message}`);
+      } else {
+        setError('Erro ao atualizar time. Tente novamente.');
+      }
       
       // Better error handling
       if (err.response?.data?.message) {
@@ -345,7 +369,8 @@ export default function EditTeam() {
               name="cep"
               className="form-control"
               value={formData.cep}
-              disabled
+              onChange={handleInputChange}
+              placeholder="Digite o CEP do time"
             />
           </motion.div>
           <motion.div 
