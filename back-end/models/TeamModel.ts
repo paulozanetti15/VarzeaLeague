@@ -2,6 +2,7 @@ import { Model, DataTypes, BelongsToManyAddAssociationMixin, BelongsToManyGetAss
 import sequelize from '../config/database';
 
 import User from './UserModel';
+import Player from './PlayerModel';
 
 interface TeamAttributes {
   id: number;
@@ -17,10 +18,10 @@ interface TeamAttributes {
   secondaryColor?: string;
   sexo?: string;
   captain?: User;
-  players?: User[];
+  players?: Player[];
+  users?: User[];
   estado?: string;
   cidade?: string;
-  jogadores?: any[];
 }
 
 interface TeamCreationAttributes extends Omit<TeamAttributes, 'id'> {
@@ -42,17 +43,21 @@ class Team extends Model<TeamAttributes, TeamCreationAttributes> {
   public readonly updatedAt!: Date;
   public estado!: string | null;
   public cidade!: string | null;
-  public jogadores!: any[] | null;
 
   // Métodos de associação
-  public addPlayer!: BelongsToManyAddAssociationMixin<User, number>;
-  public getPlayers!: BelongsToManyGetAssociationsMixin<User>;
-  public setPlayers!: BelongsToManySetAssociationsMixin<User, number>;
+  public addPlayer!: BelongsToManyAddAssociationMixin<Player, number>;
+  public getPlayers!: BelongsToManyGetAssociationsMixin<Player>;
+  public setPlayers!: BelongsToManySetAssociationsMixin<Player, number>;
   public countPlayers!: () => Promise<number>;
+
+  public addUser!: BelongsToManyAddAssociationMixin<User, number>;
+  public getUsers!: BelongsToManyGetAssociationsMixin<User>;
+  public setUsers!: BelongsToManySetAssociationsMixin<User, number>;
 
   // Associações
   public captain!: User;
-  public players!: User[];
+  public players!: Player[];
+  public users!: User[];
 }
 
 Team.init(
@@ -111,11 +116,7 @@ Team.init(
     cidade: {
       type: DataTypes.STRING,
       allowNull: true,
-    },
-    jogadores: {
-      type: DataTypes.JSON,
-      allowNull: true,
-    },
+    }
   },
   {
     sequelize,

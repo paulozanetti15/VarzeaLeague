@@ -9,9 +9,12 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import ImageIcon from '@mui/icons-material/Image';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import EditIcon from '@mui/icons-material/Edit';
 import ToastComponent from '../../components/Toast/ToastComponent';
+import PlayerModal from '../../components/teams/PlayerModal';
 
 interface PlayerData {
+  id?: number;
   nome: string;
   sexo: string;
   ano: string;
@@ -38,6 +41,9 @@ export default function CreateTeam() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastBg, setToastBg] = useState('');
   const [valido, setValido] = useState(false);
+  const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState<PlayerData | null>(null);
+  const [editingPlayerIndex, setEditingPlayerIndex] = useState<number | null>(null);
 
   const [formData, setFormData] = useState<TeamFormData>({
     name: '',
@@ -47,7 +53,7 @@ export default function CreateTeam() {
     estado: '',
     cidade: '',
     logo: null,
-    jogadores: [{ nome: '', sexo: '', ano: '', posicao: '' }],
+    jogadores: [],
   });
   
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -58,46 +64,6 @@ export default function CreateTeam() {
       ...formData,
       [name]: value
     });
-  };
-
-  const handlePlayerChange = (index: number, field: keyof PlayerData, value: string) => {
-    const updated = [...formData.jogadores];
-    
-    if (field === 'ano') {
-      // Remove qualquer caractere não numérico
-      const numericValue = value.replace(/\D/g, '');
-      
-      // Atualiza o valor mesmo que esteja vazio ou incompleto
-      updated[index][field] = numericValue;
-      
-      // Validação opcional do ano completo
-      if (numericValue.length === 4) {
-        const ano = parseInt(numericValue);
-        
-        if (ano < 1925 || ano > 2019) {
-          // Aqui você pode adicionar alguma lógica de validação/feedback
-          // mas não impede a digitação
-        }
-      }
-    } else {
-      updated[index][field] = value;
-    }
-    setFormData({ ...formData, jogadores: updated });
-  };
-
-  const addPlayer = () => {
-    setFormData({
-      ...formData,
-      jogadores: [...formData.jogadores, { nome: '', sexo: '', ano: '', posicao: '' }],
-    });
-  };
-
-  const removePlayer = (index: number) => {
-    if (formData.jogadores.length > 1) {
-      const updated = [...formData.jogadores];
-      updated.splice(index, 1);
-      setFormData({ ...formData, jogadores: updated });
-    }
   };
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,6 +100,40 @@ export default function CreateTeam() {
       reader.readAsDataURL(file);
     }
   };
+
+  const openPlayerModal = () => {
+    setEditingPlayer(null);
+    setEditingPlayerIndex(null);
+    setIsPlayerModalOpen(true);
+  };
+
+  const editPlayer = (player: PlayerData, index: number) => {
+    setEditingPlayer(player);
+    setEditingPlayerIndex(index);
+    setIsPlayerModalOpen(true);
+  };
+
+  const handleSavePlayer = (player: PlayerData) => {
+    if (editingPlayerIndex !== null) {
+      // Atualizar um jogador existente
+      const updatedPlayers = [...formData.jogadores];
+      updatedPlayers[editingPlayerIndex] = player;
+      setFormData({ ...formData, jogadores: updatedPlayers });
+    } else {
+      // Adicionar um novo jogador
+      setFormData({
+        ...formData,
+        jogadores: [...formData.jogadores, player]
+      });
+    }
+  };
+
+  const removePlayer = (index: number) => {
+    const updatedPlayers = [...formData.jogadores];
+    updatedPlayers.splice(index, 1);
+    setFormData({ ...formData, jogadores: updatedPlayers });
+  };
+
   const valdacaoCampos=()=>{
     if (formData.name.trim() === '') {
       setError('Nome do time é obrigatório.');
@@ -144,29 +144,11 @@ export default function CreateTeam() {
       return false;
     }
     
-    for (const jogador of formData.jogadores) {
-      if (!jogador.nome.trim()) {
-        setError('Nome do jogador é obrigatório.');
-        return false;
-      }
-      if (!jogador.sexo) {
-        setError('Sexo do jogador é obrigatório.');
-        return false;
-      }
-      if (!jogador.ano) {
-        setError('Ano de nascimento do jogador é obrigatório.');
-        return false;
-      }
-      const anoNascimento = parseInt(jogador.ano);
-      if (isNaN(anoNascimento) || anoNascimento < 1925 || anoNascimento > 2019) {
-        setError(`Ano de nascimento inválido. Deve ser entre 1925 e ${2019}.`);
-        return false;
-      }
-      if (!jogador.posicao) {
-        setError('Posição do jogador é obrigatória.');
-        return false;
-      }
+    if (formData.jogadores.length === 0) {
+      setError('Adicione pelo menos um jogador ao time.');
+      return false;
     }
+    
     setValido(true);
     return true;
   }
@@ -266,6 +248,13 @@ export default function CreateTeam() {
           onClose={() => setShowToast(false)}
         />
       )}
+      
+      <PlayerModal 
+        isOpen={isPlayerModalOpen}
+        onClose={() => setIsPlayerModalOpen(false)}
+        onSave={handleSavePlayer}
+        editingPlayer={editingPlayer}
+      />
       
       <div className="top-navigation">
         <button 
@@ -443,73 +432,70 @@ export default function CreateTeam() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <label className="form-label">Gerenciar Jogadores ({formData.jogadores.length})</label>
+            <div className="players-header">
+              <label className="form-label">Cadastrar Jogadores</label>
+              <button 
+                type="button" 
+                className="add-player-btn"
+                onClick={openPlayerModal}
+              >
+                <AddIcon style={{ marginRight: '5px' }} /> Adicionar Jogador
+              </button>
+            </div>
+            
             <AnimatePresence>
-              {formData.jogadores.map((jogador, index) => (
+              {formData.jogadores.length === 0 ? (
                 <motion.div 
-                  key={index} 
-                  className="player-email"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2 }}
+                  className="no-players"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                 >
-                  <input
-                    type="text"
-                    placeholder="Nome do jogador"
-                    value={jogador.nome}
-                    onChange={e => handlePlayerChange(index, 'nome', e.target.value)}
-                    className="form-control nome-jogador"
-                    required
-                  />
-                  <select
-                    value={jogador.sexo}
-                    onChange={e => handlePlayerChange(index, 'sexo', e.target.value)}
-                    className="form-control"
-                    required
-                  >
-                    <option value="">Sexo</option>
-                    <option value="Masculino">Masculino</option>
-                    <option value="Feminino">Feminino</option>
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Ano"
-                    value={jogador.ano}
-                    onChange={e => handlePlayerChange(index, 'ano', e.target.value)}
-                    className="form-control"
-                    maxLength={4}
-                    required
-                  />
-                  <select
-                    value={jogador.posicao}
-                    onChange={e => handlePlayerChange(index, 'posicao', e.target.value)}
-                    className="form-control"
-                    required
-                  >
-                    <option value="">Posição</option>
-                    <option value="Goleiro">Goleiro</option>
-                    <option value="Defensor">Defensor</option>
-                    <option value="Meio Campo">Meio Campo</option>
-                    <option value="Atacante">Atacante</option>
-                  </select>
-                  <button 
-                    type="button" 
-                    className="remove-player-btn"
-                    onClick={() => removePlayer(index)}
-                  >
-                    <RemoveIcon />
-                  </button>
+                  <p>Nenhum jogador adicionado. Clique no botão acima para adicionar jogadores ao seu time.</p>
                 </motion.div>
-              ))}
+              ) : (
+                <div className="players-list">
+                  {formData.jogadores.map((jogador, index) => (
+                    <motion.div 
+                      key={index} 
+                      className="player-card"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2 }}
+                      style={{
+                        background: `linear-gradient(135deg, ${formData.primaryColor}20 0%, ${formData.secondaryColor}20 100%)`
+                      }}
+                    >
+                      <div className="player-info">
+                        <div className="player-name">{jogador.nome}</div>
+                        <div className="player-details">
+                          <span className="player-position">{jogador.posicao}</span>
+                          <span className="player-year">Ano: {jogador.ano}</span>
+                          <span className="player-gender">{jogador.sexo}</span>
+                        </div>
+                      </div>
+                      <div className="player-actions">
+                        <button 
+                          type="button" 
+                          className="edit-player-btn"
+                          onClick={() => editPlayer(jogador, index)}
+                        >
+                          <EditIcon />
+                        </button>
+                        <button 
+                          type="button" 
+                          className="remove-player-btn"
+                          onClick={() => removePlayer(index)}
+                        >
+                          <RemoveIcon />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </AnimatePresence>
-            <button 
-              type="button" 
-              className="add-player-btn"
-              onClick={addPlayer}
-            >
-              <AddIcon style={{ marginRight: '5px' }} /> Adicionar Jogador
-            </button>
           </motion.div>
 
           <div className="form-actions">
@@ -534,4 +520,4 @@ export default function CreateTeam() {
       </motion.div>
     </div>
   );
-} 
+}

@@ -7,7 +7,18 @@ import GroupIcon from '@mui/icons-material/Group';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
+import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import './TeamList.css';
+
+interface Player {
+  id: string;
+  nome: string;
+  sexo: string;
+  ano: string;
+  posicao: string;
+}
 
 interface Team {
   id: string;
@@ -19,7 +30,7 @@ interface Team {
   isCurrentUserCaptain?: boolean;
   banner?: string;
   createdAt?: string;
-  players?: any[];
+  players?: Player[];
   primaryColor?: string;
   secondaryColor?: string;
   estado?: string;
@@ -30,6 +41,7 @@ const TeamList = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -65,6 +77,11 @@ const TeamList = () => {
 
   const handleBack = () => {
     navigate('/');
+  };
+
+  const togglePlayersList = (e: React.MouseEvent, teamId: string) => {
+    e.stopPropagation();
+    setExpandedTeam(expandedTeam === teamId ? null : teamId);
   };
 
   const teamCardVariants = {
@@ -148,7 +165,6 @@ const TeamList = () => {
                 <div
                   key={team.id}
                   className="team-card team-detail-card"
-                  onClick={() => handleTeamClick(team.id)}
                 >
                   <div className="team-banner" style={{ background: team.primaryColor && team.secondaryColor ? `linear-gradient(135deg, ${team.primaryColor} 0%, ${team.secondaryColor} 100%)` : undefined }}>
                     {team.banner ? (
@@ -180,19 +196,68 @@ const TeamList = () => {
                     <div className="team-stats">
                       <div className="stat">
                         <GroupIcon sx={{ fontSize: 20, color: '#2196F3' }} />
-                        <span>{Array.isArray(team.jogadores) ? team.jogadores.length : 0} Jogadores</span>
+                        <span>{team.players?.length || 0} Jogadores</span>
                       </div>
                       <div className="stat">
                         <EmojiEventsIcon sx={{ fontSize: 20, color: '#FFD700' }} />
                         <span>{team.matchCount || 0} Partidas</span>
                       </div>
                     </div>
+                    
+                    {/* Botão para expandir/recolher lista de jogadores */}
+                    <button 
+                      className="players-toggle-btn" 
+                      onClick={(e) => togglePlayersList(e, team.id)}
+                    >
+                      {expandedTeam === team.id ? (
+                        <>
+                          <ExpandLessIcon sx={{ mr: 1 }} />
+                          Ocultar Jogadores
+                        </>
+                      ) : (
+                        <>
+                          <ExpandMoreIcon sx={{ mr: 1 }} />
+                          Ver Jogadores
+                        </>
+                      )}
+                    </button>
+                    
+                    {/* Lista de jogadores (expandível) */}
+                    {expandedTeam === team.id && team.players && team.players.length > 0 && (
+                      <div className="players-list-container">
+                        <h3 className="players-list-title">Jogadores do Time</h3>
+                        <div className="players-list">
+                          {team.players.map((player) => (
+                            <div key={player.id} className="player-card">
+                              <div className="player-icon">
+                                <SportsSoccerIcon style={{ 
+                                  color: team.primaryColor || '#2196F3',
+                                  fontSize: 22
+                                }} />
+                              </div>
+                              <div className="player-info">
+                                <span className="player-name">{player.nome}</span>
+                                <div className="player-details">
+                                  <span className="player-position">{player.posicao}</span>
+                                  <span className="player-birth-year">{player.ano}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Mensagem quando não há jogadores */}
+                    {expandedTeam === team.id && (!team.players || team.players.length === 0) && (
+                      <div className="no-players-message">
+                        Nenhum jogador cadastrado neste time.
+                      </div>
+                    )}
+
                     <button
                       className="edit-team-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/teams/edit/${team.id}`);
-                      }}
+                      onClick={() => navigate(`/teams/edit/${team.id}`)}
                     >
                       <EditIcon sx={{ mr: 1 }} />
                       Editar meu time

@@ -10,11 +10,26 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
 import WarningIcon from '@mui/icons-material/Warning';
+import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import EditIcon from '@mui/icons-material/Edit';
+import './EditTeam.css';
+import PlayerModal from '../../components/teams/PlayerModal';
 
 interface PlayerData {
+  id?: number;
   nome: string;
   sexo: string;
-  idade: string;
+  ano: string;
+  posicao: string;
+}
+
+interface ExistingPlayer {
+  id: number;
+  nome: string;
+  sexo: string;
+  ano: string;
   posicao: string;
 }
 
@@ -37,6 +52,12 @@ export default function EditTeam() {
   const [error, setError] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [showPlayersList, setShowPlayersList] = useState(false);
+  const [existingPlayers, setExistingPlayers] = useState<ExistingPlayer[]>([]);
+  const [teamId, setTeamId] = useState<string | null>(null);
+  const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState<PlayerData | null>(null);
+  const [editingPlayerIndex, setEditingPlayerIndex] = useState<number | null>(null);
   const [formData, setFormData] = useState<TeamFormData>({
     name: '',
     description: '',
@@ -45,10 +66,10 @@ export default function EditTeam() {
     estado: '',
     cidade: '',
     logo: null,
-    jogadores: [{ nome: '', sexo: '', idade: '', posicao: '' }],
+    jogadores: [],
   });
   const [cidadesDisponiveis, setCidadesDisponiveis] = useState<string[]>([]);
-  const estadosCidades = {
+  const estadosCidades: Record<string, string[]> = {
     'MG': ['Belo Horizonte', 'Ouro Preto', 'Uberlândia'],
     'PR': [
       'Cascavel', 'Colombo', 'Curitiba', 'Foz do Iguaçu', 'Guarapuava',
@@ -58,6 +79,21 @@ export default function EditTeam() {
     'SP': ['Campinas', 'Santos', 'São Paulo'],
   };
   const estadosOrdem = Object.keys(estadosCidades).sort();
+
+  // Função para mostrar mensagem de erro ou sucesso
+  const [messageType, setMessageType] = useState<'error' | 'success' | null>(null);
+  
+  const showMessage = (message: string, type: 'error' | 'success') => {
+    setError(message);
+    setMessageType(type);
+    
+    if (type === 'success') {
+      setTimeout(() => {
+        setError('');
+        setMessageType(null);
+      }, 3000);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -72,6 +108,21 @@ export default function EditTeam() {
           headers: { Authorization: `Bearer ${token}` },
         });
         const teamData = response.data;
+        setTeamId(id);
+        
+        // Formatar os jogadores para o formato esperado pelo componente
+        let formattedJogadores = [];
+        if (teamData.players && teamData.players.length > 0) {
+          formattedJogadores = teamData.players.map((player: any) => ({
+            id: player.id,
+            nome: player.nome,
+            sexo: player.sexo,
+            ano: player.ano,
+            posicao: player.posicao
+          }));
+          setExistingPlayers(teamData.players);
+        }
+        
         setFormData({
           name: teamData.name || '',
           description: teamData.description || '',
@@ -80,10 +131,9 @@ export default function EditTeam() {
           estado: teamData.estado || '',
           cidade: teamData.cidade || '',
           logo: null,
-          jogadores: Array.isArray(teamData.jogadores) && teamData.jogadores.length > 0
-            ? teamData.jogadores
-            : [{ nome: '', sexo: '', idade: '', posicao: '' }],
+          jogadores: formattedJogadores
         });
+        
         if (teamData.banner) {
           setLogoPreview(`http://localhost:3001${teamData.banner}`);
         }
@@ -113,33 +163,42 @@ export default function EditTeam() {
   const handlePlayerChange = (index: number, field: keyof PlayerData, value: string) => {
     const updated = [...formData.jogadores];
     
-    // Validação especial para o campo idade
-    if (field === 'idade') {
-      const idadeNum = parseInt(value);
-      if (idadeNum < 0) {
-        return; // Não permite idade negativa
+    // Validação especial para o campo ano
+    if (field === 'ano') {
+      const anoNum = parseInt(value);
+      if (anoNum < 0) {
+        return; // Não permite ano negativo
       }
-      if (idadeNum > 120) {
-        return; // Limite máximo razoável de idade
+      if (anoNum > 120) {
+        return; // Limite máximo razoável de ano
       }
     }
     
-    updated[index][field] = value;
+    updated[index] = {
+      ...updated[index],
+      [field]: value
+    };
     setFormData({ ...formData, jogadores: updated });
   };
 
   const addPlayer = () => {
     setFormData({
-      ...formData,
-      jogadores: [...formData.jogadores, { nome: '', sexo: '', idade: '', posicao: '' }],
+      ...formData,  
+      jogadores: [...formData.jogadores, { nome: '', sexo: '', ano: '', posicao: '' }],
     });
   };
 
   const removePlayer = (index: number) => {
-    if (formData.jogadores.length > 1) {
-      const updated = [...formData.jogadores];
-      updated.splice(index, 1);
-      setFormData({ ...formData, jogadores: updated });
+    const updatedPlayers = [...formData.jogadores];
+    
+    // Se o jogador tiver um ID, precisamos remover a associação com o time no backend
+    const player = updatedPlayers[index];
+    if (player.id) {
+      handleRemoveExistingPlayer(player.id);
+    } else {
+      // Se for um jogador novo, apenas remover localmente
+      updatedPlayers.splice(index, 1);
+      setFormData({ ...formData, jogadores: updatedPlayers });
     }
   };
 
@@ -177,32 +236,26 @@ export default function EditTeam() {
       setError('Descrição é obrigatória.');
       return false;
     }
-    for (const jogador of formData.jogadores) {
-      if (!jogador.nome.trim()) {
-        setError('Nome do jogador é obrigatório.');
-        return false;
-      }
-      if (!jogador.sexo) {
-        setError('Sexo do jogador é obrigatório.');
-        return false;
-      }
-      const idadeNum = parseInt(jogador.idade);
-      if (!jogador.idade || isNaN(idadeNum) || idadeNum < 0 || idadeNum > 120) {
-        setError('Idade do jogador é obrigatória e deve ser um número entre 0 e 120.');
-        return false;
-      }
-      if (!jogador.posicao) {
-        setError('Posição do jogador é obrigatória.');
-        return false;
-      }
-    }
     return true;
+  };
+
+  // Função para formatar os jogadores para o formato esperado pelo backend
+  const formatJogadoresForSubmit = (jogadores: PlayerData[]) => {
+    return jogadores.map(jogador => ({
+      id: jogador.id,
+      nome: jogador.nome,
+      sexo: jogador.sexo,
+      ano: jogador.ano,
+      posicao: jogador.posicao
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setMessageType(null);
+    
     if (!validateFields()) {
       setLoading(false);
       return;
@@ -215,7 +268,10 @@ export default function EditTeam() {
       submitFormData.append('secondaryColor', formData.secondaryColor);
       submitFormData.append('estado', formData.estado);
       submitFormData.append('cidade', formData.cidade);
-      submitFormData.append('jogadores', JSON.stringify(formData.jogadores));
+      
+      // Formatar e enviar todos os jogadores, incluindo os modificados
+      const formattedJogadores = formatJogadoresForSubmit(formData.jogadores);
+      submitFormData.append('jogadores', JSON.stringify(formattedJogadores));
       
       if (formData.logo) {
         submitFormData.append('banner', formData.logo);
@@ -224,7 +280,8 @@ export default function EditTeam() {
       console.log('Enviando dados para atualização:', {
         name: formData.name,
         description: formData.description,
-        logo: formData.logo ? 'Nova imagem selecionada' : 'Nenhuma nova imagem'
+        logo: formData.logo ? 'Nova imagem selecionada' : 'Nenhuma nova imagem',
+        jogadores: formData.jogadores.length
       });
       
       const response = await axios.put(`http://localhost:3001/api/teams/${id}`,
@@ -243,15 +300,32 @@ export default function EditTeam() {
         setLogoPreview(`http://localhost:3001${response.data.banner}`);
       }
       
+      // Atualizar a lista de jogadores existentes com os novos dados
+      if (response.data.players) {
+        setExistingPlayers(response.data.players);
+        setFormData({
+          ...formData,
+          jogadores: response.data.players.map((player: any) => ({
+            id: player.id,
+            nome: player.nome,
+            sexo: player.sexo,
+            ano: player.ano,
+            posicao: player.posicao
+          }))
+        });
+      }
+      
       setLoading(false);
+      // Exibir mensagem de sucesso
+      showMessage('Time atualizado com sucesso!', 'success');
       setTimeout(() => {
         navigate('/teams');
-      }, 1200);
+      }, 1500);
     } catch (err: any) {
       setLoading(false);
       console.error('Erro ao atualizar time:', err);
       const errorMsg = err.response?.data?.message || 'Erro ao atualizar time. Tente novamente.';
-      setError(errorMsg);
+      showMessage(errorMsg, 'error');
     }
   };
 
@@ -261,8 +335,88 @@ export default function EditTeam() {
 
   const cidadesDisponiveisOrdenadas = [...cidadesDisponiveis].sort();
 
+  const handleRemoveExistingPlayer = async (playerId: number) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      
+      // Verificar se o playerId é válido
+      if (!playerId) {
+        showMessage('ID do jogador inválido', 'error');
+        setLoading(false);
+        return;
+      }
+      
+      // Chamar o endpoint para remover o jogador do time (apenas a associação)
+      await axios.delete(`http://localhost:3001/api/teams/${teamId}/players/${playerId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      // Atualizar a lista de jogadores localmente
+      const updatedExistingPlayers = existingPlayers.filter(player => player.id !== playerId);
+      setExistingPlayers(updatedExistingPlayers);
+      
+      // Atualizar também a lista no formData
+      const updatedFormDataPlayers = formData.jogadores.filter(player => player.id !== playerId);
+      setFormData({ ...formData, jogadores: updatedFormDataPlayers });
+      
+      setLoading(false);
+      showMessage('Jogador removido com sucesso!', 'success');
+    } catch (err: any) {
+      setLoading(false);
+      console.error('Erro ao remover jogador:', err);
+      showMessage('Erro ao remover jogador do time.', 'error');
+    }
+  };
+  
+  const togglePlayersList = () => {
+    setShowPlayersList(!showPlayersList);
+  };
+
+  // Funções para gerenciar jogadores
+  const openPlayerModal = () => {
+    setEditingPlayer(null);
+    setEditingPlayerIndex(null);
+    setIsPlayerModalOpen(true);
+  };
+
+  const editPlayer = (player: PlayerData, index: number) => {
+    setEditingPlayer(player);
+    setEditingPlayerIndex(index);
+    setIsPlayerModalOpen(true);
+  };
+
+  const handleSavePlayer = (player: PlayerData) => {
+    if (editingPlayerIndex !== null) {
+      // Atualizar um jogador existente
+      const updatedPlayers = [...formData.jogadores];
+      updatedPlayers[editingPlayerIndex] = player;
+      setFormData({ ...formData, jogadores: updatedPlayers });
+    } else {
+      // Adicionar um novo jogador
+      setFormData({
+        ...formData,
+        jogadores: [...formData.jogadores, player]
+      });
+    }
+    
+    // Fechar o modal após salvar
+    setIsPlayerModalOpen(false);
+  };
+
   return (
     <div className="create-team-container">
+      <PlayerModal 
+        isOpen={isPlayerModalOpen}
+        onClose={() => setIsPlayerModalOpen(false)}
+        onSave={handleSavePlayer}
+        editingPlayer={editingPlayer}
+      />
+      
       <div className="top-navigation">
         <button 
           onClick={() => navigate('/teams')} 
@@ -284,7 +438,7 @@ export default function EditTeam() {
         transition={{ duration: 0.3 }}
       >
         {error && (
-          <div className="error-message">
+          <div className={`message-container ${messageType === 'success' ? 'success-message' : 'error-message'}`}>
             <p>{error}</p>
           </div>
         )}
@@ -406,7 +560,7 @@ export default function EditTeam() {
                   className="color-input"
                   value={formData.primaryColor}
                   onChange={handleColorChange}
-                />
+                /> 
                 <div className="color-text">{formData.primaryColor}</div>
               </div>
               <div className="color-picker">
@@ -423,79 +577,79 @@ export default function EditTeam() {
               </div>
             </div>
           </motion.div>
+
           <motion.div 
             className="form-group"
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <label className="form-label">Gerenciar Jogadores ({formData.jogadores.length})</label>
+            <div className="players-header">
+              <label className="form-label">Cadastrar Jogadores</label>
+              <button 
+                type="button" 
+                className="add-player-btn"
+                onClick={openPlayerModal}
+              >
+                <AddIcon style={{ marginRight: '5px' }} /> Adicionar Jogador
+              </button>
+            </div>
+            
             <AnimatePresence>
-              {formData.jogadores.map((jogador, index) => (
+              {formData.jogadores.length === 0 ? (
                 <motion.div 
-                  key={index} 
-                  className="player-email"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2 }}
+                  className="no-players"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                 >
-                  <input
-                    type="text"
-                    placeholder="Nome do jogador"
-                    value={jogador.nome}
-                    onChange={e => handlePlayerChange(index, 'nome', e.target.value)}
-                    className="form-control nome-jogador"
-                    required
-                  />
-                  <select
-                    value={jogador.sexo}
-                    onChange={e => handlePlayerChange(index, 'sexo', e.target.value)}
-                    className="form-control"
-                    required
-                  >
-                    <option value="">Sexo</option>
-                    <option value="Masculino">Masculino</option>
-                    <option value="Feminino">Feminino</option>
-                  </select>
-                  <input
-                    type="number"
-                    placeholder="Idade"
-                    value={jogador.idade}
-                    onChange={e => handlePlayerChange(index, 'idade', e.target.value)}
-                    className="form-control"
-                    required
-                  />
-                  <select
-                    value={jogador.posicao}
-                    onChange={e => handlePlayerChange(index, 'posicao', e.target.value)}
-                    className="form-control"
-                    required
-                  >
-                    <option value="">Posição</option>
-                    <option value="Goleiro">Goleiro</option>
-                    <option value="Defensor">Defensor</option>
-                    <option value="Meio Campo">Meio Campo</option>
-                    <option value="Atacante">Atacante</option>
-                  </select>
-                  <button 
-                    type="button" 
-                    className="remove-player-btn"
-                    onClick={() => removePlayer(index)}
-                  >
-                    <RemoveIcon />
-                  </button>
+                  <p>Nenhum jogador adicionado. Clique no botão acima para adicionar jogadores ao seu time.</p>
                 </motion.div>
-              ))}
+              ) : (
+                <div className="players-list">
+                  {formData.jogadores.map((jogador, index) => (
+                    <motion.div 
+                      key={index} 
+                      className="player-card"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2 }}
+                      style={{
+                        background: `linear-gradient(135deg, ${formData.primaryColor}20 0%, ${formData.secondaryColor}20 100%)`
+                      }}
+                    >
+                      <div className="player-info">
+                        <div className="player-name">{jogador.nome}</div>
+                        <div className="player-details">
+                          <span className="player-position">{jogador.posicao}</span>
+                          <span className="player-year">Ano: {jogador.ano}</span>
+                          <span className="player-gender">{jogador.sexo}</span>
+                        </div>
+                      </div>
+                      <div className="player-actions">
+                        <button 
+                          type="button"   
+                          className="edit-player-btn"
+                          onClick={() => editPlayer(jogador, index)}
+                        >
+                          <EditIcon />
+                        </button>
+                        <button 
+                          type="button" 
+                          className="remove-player-btn"
+                          onClick={() => removePlayer(index)}
+                        >
+                          <RemoveIcon />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </AnimatePresence>
-            <button 
-              type="button" 
-              className="add-player-btn"
-              onClick={addPlayer}
-            >
-              <AddIcon style={{ marginRight: '5px' }} /> Adicionar Jogador
-            </button>
           </motion.div>
+          
           <div className="form-actions">
             <motion.button 
               type="submit"
@@ -515,6 +669,7 @@ export default function EditTeam() {
             </motion.button>
           </div>
         </form>
+        
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -544,39 +699,13 @@ export default function EditTeam() {
           </div>
         </motion.div>
         {showDeleteConfirm && (
-          <div className="delete-modal" style={{
-            position: 'absolute',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            bottom: '2.5rem',
-            width: '100%',
-            background: 'rgba(0,0,0,0.18)',
-            zIndex: 99,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
+          <div className="delete-modal">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className="delete-modal-content"
-              style={{
-                background: 'rgba(20, 20, 40, 0.98)',
-                borderRadius: 18,
-                padding: '2.5rem 2rem 2rem 2rem',
-                boxShadow: '0 8px 32px rgba(220,53,69,0.18)',
-                minWidth: 340,
-                maxWidth: 420,
-                textAlign: 'center',
-                color: '#fff',
-                position: 'relative',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
             >
-              <div className="warning-icon-container" style={{ marginBottom: 16 }}>
+              <div className="warning-icon-container">
                 <WarningIcon className="large-warning-icon" style={{ fontSize: 48, color: '#dc3545' }} />
               </div>
               <h2 style={{ color: '#dc3545', fontWeight: 800, fontSize: '2rem', marginBottom: 8 }}>Confirmar exclusão de time</h2>
@@ -584,21 +713,9 @@ export default function EditTeam() {
                 Tem certeza que deseja excluir o time <strong style={{ color: '#ffc107' }}>{formData.name}</strong>?
               </p>
               <p className="warning-text" style={{ color: '#fff', opacity: 0.7, marginBottom: 24 }}>Esta ação não pode ser desfeita!</p>
-              <div className="delete-modal-actions" style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 16 }}>
+              <div className="delete-modal-actions">
                 <button 
                   className="confirm-delete-btn"
-                  style={{
-                    background: 'linear-gradient(90deg, #dc3545 60%, #ff6f61 100%)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 30,
-                    padding: '0.8rem 2.2rem',
-                    fontWeight: 700,
-                    fontSize: '1.1rem',
-                    boxShadow: '0 4px 15px rgba(220, 53, 69, 0.18)',
-                    cursor: 'pointer',
-                    transition: 'background 0.2s',
-                  }}
                   onClick={async () => {
                     setLoading(true);
                     try {
@@ -607,7 +724,10 @@ export default function EditTeam() {
                         navigate('/login');
                         return;
                       }
-                      await axios({
+                      
+                      console.log('Enviando solicitação para deletar time:', id);
+                      
+                      const response = await axios({
                         method: 'delete',
                         url: `http://localhost:3001/api/teams/${id}`,
                         headers: {
@@ -616,30 +736,29 @@ export default function EditTeam() {
                         },
                         data: { confirm: true }
                       });
-                      navigate('/teams');
+                      
+                      console.log('Resposta da exclusão:', response.data);
+                      
+                      // Mostrar mensagem de sucesso
+                      showMessage('Time excluído com sucesso!', 'success');
+                      
+                      // Aguardar um pouco antes de redirecionar para a lista de times
+                      setTimeout(() => {
+                        navigate('/teams');
+                      }, 1500);
                     } catch (err) {
-                      setError('Erro ao deletar time.');
+                      console.error('Erro ao deletar time:', err);
+                      setShowDeleteConfirm(false);
+                      showMessage('Erro ao deletar time. Tente novamente.', 'error');
                     } finally {
                       setLoading(false);
                     }
                   }}
                 >
-                  Sim, excluir time
+                  {loading ? 'Processando...' : 'Sim, excluir time'}
                 </button>
                 <button 
                   className="cancel-delete-btn"
-                  style={{
-                    background: 'linear-gradient(90deg, #444 60%, #666 100%)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 30,
-                    padding: '0.8rem 2.2rem',
-                    fontWeight: 700,
-                    fontSize: '1.1rem',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                    cursor: 'pointer',
-                    transition: 'background 0.2s',
-                  }}
                   onClick={() => setShowDeleteConfirm(false)}
                 >
                   Cancelar

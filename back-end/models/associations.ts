@@ -8,6 +8,7 @@ import MatchGoal from './MatchGoalModel';
 import MatchCard from './MatchCardModel';
 import MatchEvaluation from './MatchEvaluationModel';
 import Championship from './ChampionshipModel';
+import Player from './PlayerModel';
 
 // User <-> Match associations
 export function associateModels() {
@@ -49,7 +50,7 @@ export function associateModels() {
   // Team Players associations
   Team.belongsToMany(User, {
     through: TeamPlayer,
-    as: 'players',
+    as: 'users',
     foreignKey: 'teamId',
     otherKey: 'userId'
   });
@@ -58,6 +59,21 @@ export function associateModels() {
     through: TeamPlayer,
     as: 'teams',
     foreignKey: 'userId',
+    otherKey: 'teamId'
+  });
+
+  // Team <-> Player associations
+  Team.belongsToMany(Player, {
+    through: TeamPlayer,
+    as: 'players',
+    foreignKey: 'teamId',
+    otherKey: 'playerId'
+  });
+
+  Player.belongsToMany(Team, {
+    through: TeamPlayer,
+    as: 'teams',
+    foreignKey: 'playerId',
     otherKey: 'teamId'
   });
 
