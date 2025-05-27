@@ -37,10 +37,11 @@ export const getTeamsPlayers = async (req: Request, res: Response): Promise<void
 export const updateTeamPlayer = async (req: Request, res: Response): Promise<void> => {
     try {
         const playersData = req.body;
-        const { teamId } = req.params;
+         
         console.log(playersData)
         for (const jogador of playersData) {
-            const player = await TeamPlayer.findOne({ where: { teamId:jogador.teamId, playername:jogador.Playername,playerdatebirth:jogador.Playerdatebirth,PlayerGender:jogador.PlayerGender,playerposition:jogador.Playerposition } });
+            const { teamId } = req.params;
+            const player = await TeamPlayer.findOne({ where: { teamId:teamId, playername:jogador.Playername,playerdatebirth:jogador.Playerdatebirth,PlayerGender:jogador.PlayerGender,playerposition:jogador.Playerposition } });
             if (!player) {
                 await TeamPlayer.update(
                     {
