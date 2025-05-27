@@ -204,7 +204,6 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                                         <option value="sub-17">Sub-17</option>
                                         <option value="sub-20">Sub-20</option>
                                         <option value="adulto">Adulto</option>  
-                                        <option value="Veterano">Vetereno</option>
                                     </Form.Select>
                                 </Form.Group>
                             </div>
