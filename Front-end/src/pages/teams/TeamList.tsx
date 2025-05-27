@@ -49,8 +49,8 @@ const TeamList = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-
       setTeams(response.data);
+
     } catch (err) {
       console.error('Erro ao buscar times:', err);
       setError('Erro ao carregar o time.');
@@ -58,7 +58,7 @@ const TeamList = () => {
       setLoading(false);
     }
   };
-
+  
   const handleTeamClick = (teamId: string) => {
     navigate(`/teams/edit/${teamId}`);
   };
@@ -66,22 +66,7 @@ const TeamList = () => {
   const handleBack = () => {
     navigate('/');
   };
-
-  const teamCardVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: 0.05 * i,
-        duration: 0.3,
-        ease: "easeOut"
-      }
-    })
-  };
-
   const hasTeam = teams.length > 0;
-
   return (
     <div className="teams-container">
       <div className="top-navigation">
@@ -180,11 +165,11 @@ const TeamList = () => {
                     <div className="team-stats">
                       <div className="stat">
                         <GroupIcon sx={{ fontSize: 20, color: '#2196F3' }} />
-                        <span>{Array.isArray(team.jogadores) ? team.jogadores.length : 0} Jogadores</span>
+                        <span>{Number(team.playerCount)} Jogadores</span>
                       </div>
                       <div className="stat">
                         <EmojiEventsIcon sx={{ fontSize: 20, color: '#FFD700' }} />
-                        <span>{team.matchCount || 0} Partidas</span>
+                        <span>{Number(team.matchCount)} Partidas</span>
                       </div>
                     </div>
                     <button
