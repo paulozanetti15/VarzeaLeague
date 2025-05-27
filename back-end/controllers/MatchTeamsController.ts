@@ -16,11 +16,9 @@ export const joinMatchByTeam = async (req: any, res: any) => {
     const match = await Match.findByPk(matchId, {
       attributes: [ 'title', 'date', 'location', 'status', 'description', 'price', 'organizerId']
     })
-
     const token = req.headers.authorization?.replace('Bearer ', '');
     try {
       const decodedPayload = jwt.decode(token);
-      console.log('Estrutura do token (sem verificação):', decodedPayload);
     } catch (decodeErr) {
       console.error('Erro ao decodificar token:', decodeErr);
     }
@@ -40,7 +38,6 @@ export const joinMatchByTeam = async (req: any, res: any) => {
       res.status(400).json({ message: 'Esta partida não está aberta para inscrições' });
       return;
     }
-    // Verificar se o time existe e se o usuário é capitão
     const team = await Team.findOne({
       where: {
         id: teamId,
@@ -62,29 +59,50 @@ export const joinMatchByTeam = async (req: any, res: any) => {
     if(teamIsAlreadyInMatch){
       return res.status(400).json({ message: 'Time já está inscrito nesta partida' });
     }
-    else
-    {
-      if(regras.dataValues.sexo!=="ambas"){
-        const playersWithDifferentGender = await TeamPlayer.findOne({
-          where: {
-            teamId: teamId,
-            PlayerGender: {
-              [Sequelize.Op.ne]: regras.dataValues.sexo // Busca jogadores com sexo diferente das regras
-            }
-          },
-          attributes: ['id', 'Playername', 'PlayerGender']
-        });
-        if (playersWithDifferentGender) {
-          return res.status(403).json({ message: `Time não se qualifica nas regras de genero da partida` });
-        }
+    if(regras.dataValues.sexo!=="Ambos"){
+      const playersWithDifferentGender = await TeamPlayer.findOne({
+        where: {
+          teamId: teamId,
+          PlayerGender: {
+            [Sequelize.Op.ne]: regras.dataValues.sexo  
+          }
+        },
+        attributes: ['id', 'Playername', 'PlayerGender']
+      });
+      if (playersWithDifferentGender!==null) {
+        return res.status(403).json({ message: `Time não se qualifica nas regras de genero da partida` });
       }
-    }  
-
-  } catch (error) {
-    console.error('Erro ao entrar na partida com o time:', error);
-    res.status(500).json({ message: 'Erro ao entrar na partida com o time' });
+      if (!await isTimePossuiCategoriaValido(teamId)) {
+        return res.status(403).json({ message: `Time não se qualifica nas regras de categoria da partida` });
+      }
+      else{
+        await MatchTeams.create({
+          matchId: matchId,
+          teamId: teamId
+        });
+        res.status(201).json({ message: 'Time inscrito na partida com sucesso' });
+      }
+    }
+    else{
+      if (!await isTimePossuiCategoriaValido(teamId)) {
+        return res.status(403).json({ message: `Time não se qualifica nas regras de categoria da partida` });
+      }
+      else{
+        await MatchTeams.create({
+          matchId: matchId,
+          teamId: teamId
+        });
+        res.status(201).json({ message: 'Time inscrito na partida com sucesso' });
+      }  
+    }
   }
-}
+  catch (error) {
+    console.error('Erro ao inscrever time na partida:', error); 
+    res.status(500).json({ message: 'Erro ao inscrever time na partida' });
+  }
+} 
+  
+
 const isTimePossuiCategoriaValido=async(teamId:number)=>{
   const idades=[];
   const regras = await RulesModel.findAll({
@@ -102,63 +120,63 @@ const isTimePossuiCategoriaValido=async(teamId:number)=>{
       return anoAtual - ano;
   }));
   switch (regras[0].dataValues.categoria) {
-    case 'Sub-7':
+    case 'sub-7':
       for (const idade of idades) {
         if (idade > 7 && idade < 6) {
-          return false; // Se qualquer idade for maior que 7, retorna falso
+          console.log(idade, 'idade')
+          return false; 
         }
       }
-    case 'Sub-8':
+    case 'sub-8':
       for (const idade of idades) {
         if (idade > 8 && idade < 8) {
-          return false; // Se qualquer idade for maior que 8, retorna falso
+          return false; 
         }
       }
-    case 'Sub-9':
+    case 'sub-9':
       for (const idade of idades) {
         if (idade > 9 && idade < 8) {
-          return false; // Se qualquer idade for maior que 9, retorna falso
+          return false; 
         }
       }
-    case 'Sub-11':
+    case 'sub-11':
       for (const idade of idades) {
         if (idade > 11 && idade < 10) {
-          return false; // Se qualquer idade for maior que 11, retorna falso
+          return false; 
         }
       }
-    case 'Sub-13':
+    case 'sub-13':
       for (const idade of idades) {
         if (idade > 13 && idade < 12) {
-          return false; // Se qualquer idade for maior que 13, retorna falso
+          return false; 
         }
       }
-    case 'Sub-15':
+    case 'sub-15':
       for (const idade of idades) {
         if (idade > 15 && idade < 14) {
-          return false; // Se qualquer idade for maior que 15, retorna falso
+          return false; 
         }
       }
-    case 'Sub-17':
+    case 'sub-17':
       for (const idade of idades) {
         if (idade > 17 && idade < 16) {
-          return false; // Se qualquer idade for maior que 17, retorna falso
+          return false; 
         }
       }
-    case 'Sub-20':
+    case 'sub-20':
       for (const idade of idades) {
         if (idade > 20 && idade < 18) {
-          return false; // Se qualquer idade for maior que 20, retorna falso
+          return false; 
         }
       }
-    case 'Adulto':
+    case 'adulto':
       for (const idade of idades) {
         if (idade <  20) {
-          return false; // Se qualquer idade for maior que 20, retorna falso
+          return false; 
         }
       }
     default:
-      return true; // Se nenhuma condição for atendida, retorna verdadeiro  
-    
+      return true; // Se não houver categoria definida, assume-se que o time é válido
   }
 
 }
