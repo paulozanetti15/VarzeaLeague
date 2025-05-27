@@ -8,8 +8,8 @@ import fs from 'fs';
 import { AuthRequest } from '../middleware/auth';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv'
-const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
-import { processUpload } from '../services/uploadService';
+import TeamPlayer from '../models/TeamPlayerModel';
+import MatchTeams from '../models/MatchTeamsModel';
 dotenv.config();
 export class TeamController {
   static async create(req: AuthRequest, res: Response): Promise<void> {
@@ -69,25 +69,37 @@ export class TeamController {
           return;
         }
       }
-      const team = await Team.create({
-        name: name.trim(),
-        description,
-        captainId,
-        sexo,
-        primaryColor,
-        secondaryColor,
-        isDeleted: false,
-        banner: bannerFilename,
-        estado,
-        cep,
-        cidade
-      });
-      if (!team) {
-        res.status(500).json({ error: 'Erro ao criar time' });
+      const isCaptainAlreadyInTeam = await Team.findOne({
+        where: {
+          captainId
+        }
+      }); 
+      if (isCaptainAlreadyInTeam) {
+        console.log('Capitão já tem um time:', isCaptainAlreadyInTeam.name);
+        res.status(400).json({ error: 'Você já é capitão de um time. Não é possível criar outro.' });
         return;
       }
-      const plainTeam = team.get({ plain: true });
-      res.status(201).json({plainTeam});
+      else{
+        const team = await Team.create({
+          name: name.trim(),
+          description,
+          captainId,
+          sexo,
+          primaryColor,
+          secondaryColor,
+          isDeleted: false,
+          banner: bannerFilename,
+          estado,
+          cep,
+          cidade
+        });
+        if (!team) {
+          res.status(500).json({ error: 'Erro ao criar time' });
+          return;
+        }
+        const plainTeam = team.get({ plain: true });
+        res.status(201).json({plainTeam});
+      }
     } catch (error) {
       res.status(500).json({ error: 'Erro ao criar time' });
     }
@@ -109,13 +121,7 @@ export class TeamController {
             model: User,
             as: 'captain',
             attributes: ['id', 'name', 'email']
-          },
-          {
-            model: User,
-            as: 'players',
-            attributes: ['id', 'name', 'email'],
-            through: { attributes: [] } // Não selecionar atributos da tabela de junção
-          }
+          },  
         ]
       });
       const visibleTeams = allTeams.filter(team => {
@@ -123,16 +129,25 @@ export class TeamController {
           return true;
         }
       });
-      const formattedTeams = visibleTeams.map(team => {
-        const plainTeam = team.get({ plain: true });
-        const isCaptain = team.captainId === userId;
-        return {
-          ...plainTeam,
-          banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
-          isCurrentUserCaptain: isCaptain,
-        };
-      });
-      res.json(formattedTeams);
+      console.log('Times visíveis:', visibleTeams.length);
+      const formattedTeam = await Promise.all(
+        visibleTeams.map( async (team) => {
+          const plainTeam = team.get({ plain: true });
+          const isCaptain = team.captainId === userId;
+          const [countPlayers, countMatches] = await Promise.all([
+            TeamPlayer.count({ where: { teamId: team.id } }),
+            MatchTeams.count({ where: { teamId: team.id } })
+          ]);
+          return {
+            ...plainTeam,
+            banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
+            isCurrentUserCaptain: isCaptain,
+            playerCount: countPlayers,
+            matchCount: countMatches
+          };
+        })
+      );
+      res.json(formattedTeam);
     } catch (error) {
       console.error('Erro ao listar times:', error);
       res.status(500).json({ error: 'Erro ao listar times' });
