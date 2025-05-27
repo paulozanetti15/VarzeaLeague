@@ -20,6 +20,7 @@ const MatchDetail: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [modal, setModal] = useState(false);
+  const [DataLimite, setDataLimite] = useState<Date | null>(null);
   const getTimeInscrito = async (matchId: string) => {
     try {
       const response = await axios.get(`http://localhost:3001/api/matches/${matchId}/join-team`, {
@@ -71,7 +72,6 @@ const MatchDetail: React.FC = () => {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
     })
-    console.log('Response:', response);
     if (response.status === 200) {
       toast.success('Time removido da partida com sucesso!');
       setTimeout(() => {
@@ -133,6 +133,19 @@ const MatchDetail: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const fetchRegras = async () => {
+      const regras = await axios.get(`http://localhost:3001/api/rules/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      setDataLimite(regras.data.datalimiteinscricao.split(' ')[0]);   
+    };
+    fetchRegras();
+    
+  },[])
+
   if (loading) {
     return <div className="match-detail-container loading">Carregando detalhes da partida...</div>;
   }
@@ -143,6 +156,15 @@ const MatchDetail: React.FC = () => {
   
   if (!match) {
     return <div className="match-detail-container error">Partida não encontrada.</div>;
+  }
+  const isLimitedDateExpired = (dateString: Date | null): boolean => {
+    if (!dateString) return false; // or true, depending on your logic for null
+    const diaAtual = new Date().getDate();
+    const date = new Date(dateString).getDate();
+    if (date < diaAtual) {
+      return true;  
+    }
+    return false;
   }
   return (
     <div className="match-detail-container">
@@ -246,7 +268,7 @@ const MatchDetail: React.FC = () => {
             </div>
           )}
           <div className="d-flex justify-content-center w-100">
-            {(match.countTeams < match.maxTeams) && 
+            {(match.countTeams < match.maxTeams) && isLimitedDateExpired(DataLimite)==false &&
               <Button 
                 variant="primary"
                 className="mt-5"
