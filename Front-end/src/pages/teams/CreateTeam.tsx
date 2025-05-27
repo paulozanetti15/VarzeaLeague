@@ -199,9 +199,9 @@ export default function CreateTeam() {
       setShowToast(true);
     } catch (err: any) {
       setLoading(false);
-      const errorMsg = err.response?.data?.message || 'Erro ao criar time. Tente novamente.';
+      const errorMsg = err.response.data.error || 'Erro ao criar time. Tente novamente.';
+      console.error('Erro ao criar time:', errorMsg);
       setError(errorMsg);
-      setToastMessage(errorMsg);
       setToastBg('danger');
       setShowToast(true);
     }
