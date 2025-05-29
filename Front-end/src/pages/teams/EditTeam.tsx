@@ -16,6 +16,7 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import EditIcon from '@mui/icons-material/Edit';
 import './EditTeam.css';
 import PlayerModal from '../../components/teams/PlayerModal';
+import ToastComponent from '../../components/Toast/ToastComponent';
 
 interface PlayerData {
   id?: number;
@@ -23,6 +24,7 @@ interface PlayerData {
   sexo: string;
   ano: string;
   posicao: string;
+  datanascimento?: string;
 }
 
 interface ExistingPlayer {
@@ -42,6 +44,7 @@ interface TeamFormData {
   cidade: string;
   logo?: File | null;
   jogadores: PlayerData[];
+  cep: string;
 }
 
 export default function EditTeam() {
@@ -58,6 +61,9 @@ export default function EditTeam() {
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<PlayerData | null>(null);
   const [editingPlayerIndex, setEditingPlayerIndex] = useState<number | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastBg, setToastBg] = useState('');
   const [formData, setFormData] = useState<TeamFormData>({
     name: '',
     description: '',
@@ -65,6 +71,7 @@ export default function EditTeam() {
     secondaryColor: '#0d47a1',
     estado: '',
     cidade: '',
+    cep: '',
     logo: null,
     jogadores: [],
   });
@@ -80,21 +87,6 @@ export default function EditTeam() {
   };
   const estadosOrdem = Object.keys(estadosCidades).sort();
 
-  // Função para mostrar mensagem de erro ou sucesso
-  const [messageType, setMessageType] = useState<'error' | 'success' | null>(null);
-  
-  const showMessage = (message: string, type: 'error' | 'success') => {
-    setError(message);
-    setMessageType(type);
-    
-    if (type === 'success') {
-      setTimeout(() => {
-        setError('');
-        setMessageType(null);
-      }, 3000);
-    }
-  };
-
   useEffect(() => {
     if (!id) return;
     const fetchTeam = async () => {
@@ -107,6 +99,10 @@ export default function EditTeam() {
         const response = await axios.get(`http://localhost:3001/api/teams/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+         const responsePlayer = await axios.get(`http://localhost:3001/api/teamplayers/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log(responsePlayer.data);
         const teamData = response.data;
         setTeamId(id);
         
@@ -130,15 +126,13 @@ export default function EditTeam() {
           secondaryColor: teamData.secondaryColor || '#0d47a1',
           estado: teamData.estado || '',
           cidade: teamData.cidade || '',
+          cep: teamData.cep || '',
           logo: null,
           jogadores: formattedJogadores
         });
         
         if (teamData.banner) {
           setLogoPreview(`http://localhost:3001${teamData.banner}`);
-        }
-        if (teamData.estado) {
-          setCidadesDisponiveis(estadosCidades[teamData.estado] || []);
         }
       } catch (err: any) {
         setError('Erro ao carregar o time.');
@@ -147,19 +141,30 @@ export default function EditTeam() {
     fetchTeam();
   }, [id]);
 
-  useEffect(() => {
-    if (formData.estado) {
-      setCidadesDisponiveis(estadosCidades[formData.estado] || []);
-    } else {
-      setCidadesDisponiveis([]);
-    }
-  }, [formData.estado]);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
+  const handleCidadesChange =  async(cep:String) => {
+    const response=await axios.get(`http://viacep.com.br/ws/${cep}/json/`);
+    setFormData({
+      ...formData,
+      estado: response.data.uf,
+      cidade: response.data.localidade,
+    });
+  }
+  useEffect(() => {
+     if (/^[0-9]{8}$/.test(formData.cep) || /^[0-9]{5}-?[0-9]{3}$/.test(formData.cep)) {
+      handleCidadesChange(formData.cep.replace('-', ''));
+     } else{
+      setFormData({
+        ...formData,
+        estado: '',
+        cidade: '',
+      });
+     }    
+  },[formData.cep]);
+    
   const handlePlayerChange = (index: number, field: keyof PlayerData, value: string) => {
     const updated = [...formData.jogadores];
     
@@ -254,13 +259,14 @@ export default function EditTeam() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setMessageType(null);
     
     if (!validateFields()) {
       setLoading(false);
       return;
     }
+
     try {
+      // Execute both API calls in parallel instead of sequentially
       const submitFormData = new FormData();
       submitFormData.append('name', formData.name);
       submitFormData.append('description', formData.description);
@@ -268,6 +274,7 @@ export default function EditTeam() {
       submitFormData.append('secondaryColor', formData.secondaryColor);
       submitFormData.append('estado', formData.estado);
       submitFormData.append('cidade', formData.cidade);
+      submitFormData.append('cep', formData.cep);
       
       // Formatar e enviar todos os jogadores, incluindo os modificados
       const formattedJogadores = formatJogadoresForSubmit(formData.jogadores);
@@ -291,11 +298,8 @@ export default function EditTeam() {
             'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
-        }
-      );
-      
-      console.log('Resposta da atualização:', response.data);
-      
+      });
+       
       if (response.data.banner) {
         setLogoPreview(`http://localhost:3001${response.data.banner}`);
       }
@@ -317,7 +321,10 @@ export default function EditTeam() {
       
       setLoading(false);
       // Exibir mensagem de sucesso
-      showMessage('Time atualizado com sucesso!', 'success');
+      setToastMessage('Time atualizado com sucesso!');
+      setToastBg('success');
+      setShowToast(true);
+      
       setTimeout(() => {
         navigate('/teams');
       }, 1500);
@@ -325,10 +332,12 @@ export default function EditTeam() {
       setLoading(false);
       console.error('Erro ao atualizar time:', err);
       const errorMsg = err.response?.data?.message || 'Erro ao atualizar time. Tente novamente.';
-      showMessage(errorMsg, 'error');
+      setError(errorMsg);
+      setToastMessage(errorMsg);
+      setToastBg('danger');
+      setShowToast(true);
     }
   };
-
   const bannerStyle = {
     background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`,
   };
@@ -346,7 +355,10 @@ export default function EditTeam() {
       
       // Verificar se o playerId é válido
       if (!playerId) {
-        showMessage('ID do jogador inválido', 'error');
+        setError('ID do jogador inválido');
+        setToastMessage('ID do jogador inválido');
+        setToastBg('danger');
+        setShowToast(true);
         setLoading(false);
         return;
       }
@@ -365,11 +377,16 @@ export default function EditTeam() {
       setFormData({ ...formData, jogadores: updatedFormDataPlayers });
       
       setLoading(false);
-      showMessage('Jogador removido com sucesso!', 'success');
+      setToastMessage('Jogador removido com sucesso!');
+      setToastBg('success');
+      setShowToast(true);
     } catch (err: any) {
       setLoading(false);
       console.error('Erro ao remover jogador:', err);
-      showMessage('Erro ao remover jogador do time.', 'error');
+      setError('Erro ao remover jogador do time.');
+      setToastMessage('Erro ao remover jogador do time.');
+      setToastBg('danger');
+      setShowToast(true);
     }
   };
   
@@ -410,6 +427,14 @@ export default function EditTeam() {
 
   return (
     <div className="create-team-container">
+      {showToast && (
+        <ToastComponent
+          message={toastMessage}
+          bg={toastBg}
+          onClose={() => setShowToast(false)}
+        />
+      )}
+      
       <PlayerModal 
         isOpen={isPlayerModalOpen}
         onClose={() => setIsPlayerModalOpen(false)}
@@ -438,7 +463,7 @@ export default function EditTeam() {
         transition={{ duration: 0.3 }}
       >
         {error && (
-          <div className={`message-container ${messageType === 'success' ? 'success-message' : 'error-message'}`}>
+          <div className="error-message">
             <p>{error}</p>
           </div>
         )}
@@ -503,20 +528,30 @@ export default function EditTeam() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
           >
+            <label className="form-label" htmlFor="estado">cep</label>
+            <input
+              id="cep"
+              name="cep"
+              className="form-control"
+              value={formData.cep}
+              onChange={handleInputChange}
+              placeholder="Digite o CEP do time"
+            />
+          </motion.div>
+          <motion.div 
+            className="form-group"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+          >
             <label className="form-label" htmlFor="estado">Estado</label>
-            <select
+            <input
               id="estado"
               name="estado"
               className="form-control"
               value={formData.estado}
-              onChange={handleInputChange}
-              required
-            >
-              <option value="">Selecione o estado</option>
-              {estadosOrdem.map(uf => (
-                <option key={uf} value={uf}>{uf}</option>
-              ))}
-            </select>
+              disabled
+            />
           </motion.div>
           <motion.div 
             className="form-group"
@@ -525,20 +560,15 @@ export default function EditTeam() {
             transition={{ delay: 0.1 }}
           >
             <label className="form-label" htmlFor="cidade">Cidade</label>
-            <select
+            <input
               id="cidade"
               name="cidade"
               className="form-control"
               value={formData.cidade}
               onChange={handleInputChange}
               required
-              disabled={!formData.estado}
-            >
-              <option value="">Selecione a cidade</option>
-              {cidadesDisponiveisOrdenadas.map(cidade => (
-                <option key={cidade} value={cidade}>{cidade}</option>
-              ))}
-            </select>
+              disabled
+            />
           </motion.div>
           <motion.div 
             className="colors-section"
@@ -739,8 +769,10 @@ export default function EditTeam() {
                       
                       console.log('Resposta da exclusão:', response.data);
                       
-                      // Mostrar mensagem de sucesso
-                      showMessage('Time excluído com sucesso!', 'success');
+                      setShowDeleteConfirm(false);
+                      setToastMessage('Time excluído com sucesso!');
+                      setToastBg('success');
+                      setShowToast(true);
                       
                       // Aguardar um pouco antes de redirecionar para a lista de times
                       setTimeout(() => {
@@ -749,7 +781,9 @@ export default function EditTeam() {
                     } catch (err) {
                       console.error('Erro ao deletar time:', err);
                       setShowDeleteConfirm(false);
-                      showMessage('Erro ao deletar time. Tente novamente.', 'error');
+                      setToastMessage('Erro ao deletar time. Tente novamente.');
+                      setToastBg('danger');
+                      setShowToast(true);
                     } finally {
                       setLoading(false);
                     }

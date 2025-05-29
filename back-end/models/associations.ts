@@ -1,7 +1,7 @@
 import User from './UserModel';
 import Match from './MatchModel';
 import Team from './TeamModel';
-import MatchPlayer from './MatchPlayersModel';
+import MatchPlayer from './MatchTeamsModel';
 import TeamPlayer from './TeamPlayerModel';
 import MatchReport from './MatchReportModel';
 import MatchGoal from './MatchGoalModel';
@@ -21,21 +21,7 @@ export function associateModels() {
     foreignKey: 'organizerId',
     as: 'organizer'
   });
-
-  // User <-> MatchPlayer associations
-  User.belongsToMany(Match, {
-    through: MatchPlayer,
-    as: 'matches',
-    foreignKey: 'userId',
-    otherKey: 'matchId'
-  });
-
-  Match.belongsToMany(User, {
-    through: MatchPlayer,
-    as: 'players',
-    foreignKey: 'matchId',
-    otherKey: 'userId'
-  });
+ 
 
   Team.belongsTo(User, {
     foreignKey: 'captainId',
@@ -52,7 +38,6 @@ export function associateModels() {
     through: TeamPlayer,
     as: 'users',
     foreignKey: 'teamId',
-    otherKey: 'userId'
   });
 
   User.belongsToMany(Team, {

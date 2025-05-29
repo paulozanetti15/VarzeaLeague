@@ -2,7 +2,7 @@ import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
 
 import User from './UserModel';
-import MatchPlayer from './MatchPlayersModel';
+import MatchPlayer from './MatchTeamsModel';
 
 class Match extends Model {
   public id!: number;
@@ -10,11 +10,12 @@ class Match extends Model {
   public date!: Date;
   public location!: string;
   public complement!: string;
-  public maxPlayers!: number;
   public status!: 'open' | 'pending' | 'confirmed' | 'cancelled' | 'completed';
   public description?: string;
   public price?: number;
   public organizerId!: number;
+  public Uf!: string;
+  public Cep!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -66,6 +67,21 @@ Match.init({
       len: [5, 200]
     }
   },
+  Cep: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: true,
+    }
+  },
+  Uf : {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: true,
+      len: [2, 2]
+    }
+  },
   status: {
     type: DataTypes.ENUM('open', 'pending', 'confirmed', 'cancelled', 'completed'),
     defaultValue: 'open',
@@ -96,11 +112,6 @@ Match.init({
     },
     field: 'organizer_id',
   },
-  categories: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  } 
-  
   
 }, {
   sequelize,

@@ -8,6 +8,7 @@ import ToastSucessComponent from '../../Toast/ToastComponent';
 import { set } from 'date-fns';
 import { Category } from '@mui/icons-material';
 import './RegrasStyles.css';
+import { ca } from 'date-fns/locale';
 
 interface regrasModalProps {
     userId: number;
@@ -17,13 +18,12 @@ interface regrasModalProps {
 }
 
 export default function regrasModal({show, onHide,partidaDados}: regrasModalProps) {
-    const [idadeMinima, setIdadeMinima] = useState<number | null>(null);
-    const [idadeMaxima, setIdadeMaxima] = useState<number | null>(null);
-    const [minimaIntegrantes, setMinimaIntegrantes] = useState<number | null>(null);
-    const [maximoIntegrante, setMaximoIntegrante] = useState<number | null>(null);
+   
     const [limitestimes, setLimitestimes] = useState<number | null>(null);
     const [sexo, setSexo] = useState<string | null>(null);
     const [dataLimite, setDataLimite] = useState<Date | null>(null);
+    const [categoria, setCategoria] = useState<string | null>(null);
+    const [empate, setEmpate] = useState<string | null>(null);
     const [error,setError]=useState<string>("");
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
@@ -31,9 +31,9 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
     const navigate = useNavigate();
     
     const insertPartida = async () => {
-        if(dataLimite && verificarDataLimite(dataLimite) === true &&
-            idadeMinima !== null && idadeMaxima !== null && isValidaIdade(idadeMaxima, idadeMinima) === true && isValidTamanhoTime(minimaIntegrantes, maximoIntegrante) === true &&
-            minimaIntegrantes !== null && maximoIntegrante !== null  && limitestimes !== null && verificarDataLimite(dataLimite) === true) {
+        if(dataLimite && verificarDataLimite(dataLimite,partidaDados.date) === true 
+              && limitestimes !== null &&
+              isValidLimiteTime(limitestimes) === true){
             const insertPartida=await axios.post(
                 "http://localhost:3001/api/matches/",
                 {
@@ -41,11 +41,11 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                     description: partidaDados.description?.trim(),
                     date: partidaDados.date,
                     location: partidaDados.location,
-                    maxPlayers: partidaDados.maxPlayers,
                     price: partidaDados.price ? parseFloat(partidaDados.price) : null,
                     city: partidaDados.city.trim(),
                     complement: partidaDados.complement?.trim(),
-                    Category: partidaDados.category
+                    Uf: partidaDados.Uf,
+                    Cep: partidaDados.Cep
                 },
                 {
                     headers: {
@@ -59,30 +59,14 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
         }  
                
     };
-    
-    const isValidTamanhoTime = (tamanhoMinimo: number | null, tamanhoMaximo: number | null) => {
-        if (!tamanhoMinimo || !tamanhoMaximo) {
-            setError("Tamanho mínimo e máximo são obrigatórios");
-            return false;
-        }
-        
-        if (tamanhoMinimo >= tamanhoMaximo) {
-            setError("Tamanho mínimo deve ser menor que o tamanho máximo");
-            return false;
-        }    
-        return true;
-    };
-
     const insertRegras = async () => {
         try {
             const response = await axios.post(
                 "http://localhost:3001/api/rules/",
                 {
-                    idadeMinima: idadeMinima,
-                    idadeMaxima: idadeMaxima,
-                    minimaIntegrantes: minimaIntegrantes,
-                    maximoIntegrante: maximoIntegrante,
-                    limitestimes: limitestimes,
+                    limitestimes: limitestimes, 
+                    category: categoria,
+                    empate: empate, 
                     dataLimite: dataLimite,
                     sexo: sexo,
                 },
@@ -119,23 +103,32 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
         setDataLimite(dataLimite);
     }
 
-    const verificarDataLimite = (data: Date) => {
+    const verificarDataLimite = (dataLimite: Date,dataPartida:Date) => {
         const dataAtual = new Date();
-        const verificandoData=data >= dataAtual
+        dataAtual.setHours(0, 0, 0, 0);
+        const dataLimiteFormatada = new Date(dataLimite);
+        dataLimiteFormatada.setHours(0, 0, 0, 0);
+        const dataPartidaFormatada = new Date(dataPartida);
+        dataPartidaFormatada.setHours(0, 0, 0, 0);
+        const verificandoData=dataLimite >= dataAtual
         if(!verificandoData) {
             setError("Data limite deve ser maior ou igual que a data atual")
             return false;
-        };
+        }    
+        if(dataLimiteFormatada > dataPartidaFormatada) {
+            setError("Data limite não deve ser maior que a data da partida")
+            return false;
+        }
         return true;
     }
     
-    const isValidaIdade= (idademaxima: number  , idademenor: number ) => {
-        if (idademaxima < 0 || idademenor < 0) {
-            setError("Idade inválida");
+    const isValidLimiteTime= (limitetime:number) => {
+        if(!limitetime) {
+            setError("Limite de times é obrigatório");
             return false;
         }
-        if(idademaxima < idademenor) {
-            setError("Idade máxima deve ser maior que a idade mínima");
+        else if(limitetime < 2) {
+            setError("Limite de times deve ser maior que 2");
             return false;
         }
         return true;
@@ -157,57 +150,6 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                     <Form>
                         <div className="row">
                             <div className="col-md-6">
-                                <Form.Group className="mb-3" controlId="idadeMinima">
-                                    <Form.Label>Idade mínima permitida</Form.Label>
-                                    <Form.Control 
-                                        type="number"
-                                        placeholder="Idade mínima"
-                                        onChange={(e) => setIdadeMinima(parseFloat(e.target.value))}
-                                        className="border-primary"
-                                        autoFocus
-                                    />
-                                </Form.Group>
-                            </div>
-                            <div className="col-md-6">
-                                <Form.Group className="mb-3" controlId="idadeMaxima">
-                                    <Form.Label>Idade máxima permitida</Form.Label>
-                                    <Form.Control 
-                                        type="number"
-                                        placeholder="Idade máxima"
-                                        onChange={(e) => setIdadeMaxima(parseFloat(e.target.value))}
-                                        className="border-primary"
-                                    />
-                                </Form.Group>
-                            </div>
-                        </div>
-                        
-                        <div className="row">
-                            <div className="col-md-6">
-                                <Form.Group className="mb-3" controlId="minimoIntegrantes">
-                                    <Form.Label>Mínimo de integrantes</Form.Label>
-                                    <Form.Control 
-                                        type="number"
-                                        placeholder="Mínimo de integrantes"
-                                        onChange={(e) => setMinimaIntegrantes(parseFloat(e.target.value))}
-                                        className="border-primary"
-                                    />
-                                </Form.Group>
-                            </div>
-                            <div className="col-md-6">
-                                <Form.Group className="mb-3" controlId="maximoIntegrantes">
-                                    <Form.Label>Máximo de integrantes</Form.Label>
-                                    <Form.Control 
-                                        type="number"
-                                        placeholder="Máximo de integrantes"
-                                        onChange={(e) => setMaximoIntegrante(parseFloat(e.target.value) || null)}
-                                        className="border-primary"
-                                    />
-                                </Form.Group>
-                            </div>
-                        </div>
-                        
-                        <div className="row">
-                            <div className="col-md-6">
                                 <Form.Group className="mb-3" controlId="limitesTimes">
                                     <Form.Label>Limites de times</Form.Label>
                                     <Form.Control 
@@ -220,7 +162,7 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                             </div>
                             <div className="col-md-6">
                                 <Form.Group className="mb-3" controlId="sexo">
-                                    <Form.Label>Sexo permitido</Form.Label>
+                                    <Form.Label>Genero permitido</Form.Label>
                                     <Form.Select 
                                         onChange={(e) => setSexo(e.target.value)} 
                                         className="border-primary"
@@ -232,8 +174,41 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                                     </Form.Select>
                                 </Form.Group>
                             </div>
+                            <div className="col-md-12">
+                                <Form.Group className="mb-1" controlId="sexo">
+                                    <Form.Label>Possui Empate?</Form.Label>
+                                    <Form.Select 
+                                        onChange={(e) => setEmpate(e.target.value)} 
+                                        className="border-primary"
+                                        aria-label="Possui Empate">
+                                        <option value="">Selecione se possui empate</option>
+                                        <option value="Sim">Sim</option>
+                                        <option value="Não">Não</option>
+                                    </Form.Select>
+                                </Form.Group>
+                            </div>
+                            <div className="col-md-12">
+                                <Form.Group className="mb-1" controlId="sexo">
+                                    <Form.Label>Categoria</Form.Label>
+                                    <Form.Select 
+                                        onChange={(e) => setCategoria(e.target.value)} 
+                                        className="border-primary"
+                                        aria-label="Possui Empate">
+                                        <option value="">Selecione uma categoria</option>
+                                        <option value="sub-7">Sub-7</option>
+                                        <option value="sub-8">Sub-8</option>
+                                        <option value="sub-9">Sub-9</option>
+                                        <option value="sub-11">Sub-11</option>
+                                        <option value="sub-13">Sub-13</option>
+                                        <option value="sub-15">Sub-15</option>
+                                        <option value="sub-17">Sub-17</option>
+                                        <option value="sub-20">Sub-20</option>
+                                        <option value="adulto">Adulto</option>  
+                                        <option value="Veterano">Vetereno</option>
+                                    </Form.Select>
+                                </Form.Group>
+                            </div>
                         </div>
-                        
                         <Form.Group className="mb-3" controlId="dataLimite">
                             <Form.Label>Data limite para inscrição</Form.Label>
                             <Form.Control 

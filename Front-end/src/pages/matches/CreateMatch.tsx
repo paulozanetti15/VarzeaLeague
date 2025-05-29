@@ -1,18 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { IconButton, Typography, TextField, Button, Box, Divider, FormControl, InputLabel, Select, MenuItem, Autocomplete } from '@mui/material';
-import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import GroupIcon from '@mui/icons-material/Group';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import { api } from '../../services/api';
 import './CreateMatch.css';
-import { toast } from 'react-hot-toast';
-import RegrasFormRegisterModal from '../../components/Modals/Athlete/RegrasFormRegisterModal';
-import { ca } from 'date-fns/locale';
+import RegrasFormRegisterModal from '../../components/Modals/Regras/RegrasFormRegisterModal';
+import axios from 'axios';
+
 
 interface MatchFormData {
   title: string;
@@ -20,138 +12,13 @@ interface MatchFormData {
   location: string;
   date: string;
   time: string;
-  maxPlayers: number;
   price: string;
   complement: string;
+  cep: string;
+  UF: string;
   city: string;
   category: string; // Added category property
 }
-
-const cities = [
-  // Capitais
-  'São Paulo - SP',
-  'Rio de Janeiro - RJ',
-  'Brasília - DF',
-  'Salvador - BA',
-  'Fortaleza - CE',
-  'Belo Horizonte - MG',
-  'Manaus - AM',
-  'Curitiba - PR',
-  'Recife - PE',
-  'Porto Alegre - RS',
-  'Belém - PA',
-  'Goiânia - GO',
-  'Guarulhos - SP',
-  'Campinas - SP',
-  'São Luís - MA',
-  'São Gonçalo - RJ',
-  'Maceió - AL',
-  'Duque de Caxias - RJ',
-  'Natal - RN',
-  'Campo Grande - MS',
-  'Teresina - PI',
-  'São Bernardo do Campo - SP',
-  'Nova Iguaçu - RJ',
-  'João Pessoa - PB',
-  'Santo André - SP',
-  'Osasco - SP',
-  'Jaboatão dos Guararapes - PE',
-  'Ribeirão Preto - SP',
-  'Uberlândia - MG',
-  'Sorocaba - SP',
-  'Contagem - MG',
-  'Aracaju - SE',
-  'Feira de Santana - BA',
-  'Cuiabá - MT',
-  'Joinville - SC',
-  'Juiz de Fora - MG',
-  'Londrina - PR',
-  'Aparecida de Goiânia - GO',
-  'Ananindeua - PA',
-  'Niterói - RJ',
-  'Porto Velho - RO',
-  'Campos dos Goytacazes - RJ',
-  'Belford Roxo - RJ',
-  'Serra - ES',
-  'Caxias do Sul - RS',
-  'Vila Velha - ES',
-  'Florianópolis - SC',
-  'São José do Rio Preto - SP',
-  'Macapá - AP',
-  'Mauá - SP',
-  'São João de Meriti - RJ',
-  'Santos - SP',
-  'Mogi das Cruzes - SP',
-  'Betim - MG',
-  'Diadema - SP',
-  'Campina Grande - PB',
-  'Jundiaí - SP',
-  'Olinda - PE',
-  'Carapicuíba - SP',
-  'Piracicaba - SP',
-  'Montes Claros - MG',
-  'Maringá - PR',
-  'Cariacica - ES',
-  'Barueri - SP',
-  'Rio Branco - AC',
-  'Anápolis - GO',
-  'São Vicente - SP',
-  'Vitória - ES',
-  'Caucaia - CE',
-  'Itaquaquecetuba - SP',
-  'Pelotas - RS',
-  'Canoas - RS',
-  'Caruaru - PE',
-  'Vitória da Conquista - BA',
-  'Blumenau - SC',
-  'Franca - SP',
-  'Ponta Grossa - PR',
-  'Petrolina - PE',
-  'Boa Vista - RR',
-  'Paulista - PE',
-  'Uberaba - MG',
-  'Cascavel - PR',
-  'Guarujá - SP',
-  'Praia Grande - SP',
-  'Taubaté - SP',
-  'Petrópolis - RJ',
-  'Limeira - SP',
-  'Santarém - PA',
-  'Palmas - TO',
-  // Outras cidades importantes
-  'Londrina - PR',
-  'Juiz de Fora - MG',
-  'Foz do Iguaçu - PR',
-  'Bauru - SP',
-  'São José dos Campos - SP',
-  'Maringá - PR',
-  'Presidente Prudente - SP',
-  'Araçatuba - SP',
-  'Divinópolis - MG',
-  'Governador Valadares - MG',
-  'Volta Redonda - RJ',
-  'Ipatinga - MG',
-  'Santa Maria - RS',
-  'Rio Grande - RS',
-  'Criciúma - SC',
-  'Chapecó - SC',
-  'Itajaí - SC',
-  'Dourados - MS',
-  'Imperatriz - MA',
-  'Macaé - RJ',
-  'Ilhéus - BA',
-  'Juazeiro do Norte - CE',
-  'Mossoró - RN',
-  'Parnaíba - PI',
-  'Passo Fundo - RS',
-  'Marabá - PA',
-  'Araraquara - SP',
-  'São Carlos - SP',
-  'Rondonópolis - MT',
-  'Várzea Grande - MT',
-  'Palhoça - SC',
-  'São José - SC',
-];
 
 const CreateMatch: React.FC = () => {
   const navigate = useNavigate();
@@ -166,17 +33,33 @@ const CreateMatch: React.FC = () => {
     location: '',
     date: '',
     time: '',
-    maxPlayers: 10,
     price: '',
     complement: '',
     city: '',
-    category: ''
+    cep: '',
+    category: '',
+    UF: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-   
+  useEffect(() => {
+    const fetchCEPData = async ()=>{
+      try{
+        axios.get(`https://viacep.com.br/ws/${formData.cep}/json/`)
+        .then((response) => {
+           formData.city = response.data.localidade;
+           formData.location = response.data.logradouro;
+           formData.UF= response.data.uf;
 
-  // Ajustar largura do botão para combinar com o campo de título
+        })
+      }
+      catch (error) {
+        setError('Erro ao buscar dados do CEP. Verifique o número e tente novamente.');
+      }
+    }
+    fetchCEPData();
+  }, [formData.cep]);
+
   useEffect(() => {
     const user= JSON.parse(localStorage.getItem('user') || '{}');
     setUsuario(user);
@@ -185,6 +68,10 @@ const CreateMatch: React.FC = () => {
       btnContainerRef.current.style.width = `${titleWidth}px`;
     }
   }, []);
+  const isValidCep = (cep: string) => {
+    const cepRegex = /^[0-9]{5}-?[0-9]{3}$/;
+    return cepRegex.test(cep) ? true : false;
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -194,14 +81,22 @@ const CreateMatch: React.FC = () => {
     }));
   };
 
-  const handleSelectChange = (e: any) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const clearCep = () => {
+    if(formData.cep.length < 8 ){
+      setFormData(prev => ({
+        ...prev,
+        location: '',
+        city: '',
+        UF: ''
+      }));
+  }
+
   };
-  
+
+  useEffect(() => {
+    clearCep();
+  },[formData.cep]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -225,48 +120,31 @@ const CreateMatch: React.FC = () => {
         setError('A data da partida deve ser futura');
         return;
       }
-
-      // Validar número de jogadores
-      if (formData.maxPlayers < 2 || formData.maxPlayers > 50) {
-        setError('O número de jogadores deve estar entre 2 e 50');
-        return;
-      }
-
+    
       // Validar preço
       if (formData.price && parseFloat(formData.price) < 0) {
         setError('O preço não pode ser negativo');
         return;
       }
-
-      // Cria o endereço completo incluindo cidade, local e complemento
-      let fullLocation = formData.city;
-      
-      // Adiciona o endereço específico
-      if (formData.location) {
-        fullLocation += `, ${formData.location.trim()}`;
-      }
-      
-      // Adiciona o complemento se existir
-      if (formData.complement?.trim()) {
-        fullLocation += ` - ${formData.complement.trim()}`;
+      if (!formData.cep || !isValidCep(formData.cep)) {
+        setError('CEP inválido');
+        return;
       }
       const matchData = {
         title: formData.title.trim(),
         date: matchDateTime.toISOString(),
-        location: fullLocation,
-        maxPlayers: formData.maxPlayers,
+        location: formData.location.trim(),
         description: formData.description?.trim(),
         price: formData.price ? parseFloat(formData.price) : null,
         city: formData.city.trim(),
         complement: formData.complement?.trim(),
-        category: formData.category
+        Uf: formData.UF.trim(),
+        Cep: formData.cep.trim(),
       };
       setDadosPartida(matchData);
       setShowInfoAthleteModal(true);
     } catch (err: any) {
       console.error('Erro ao criar partida:', err);
-      
-      // Tratamento de erros específicos da API
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.message) {
@@ -325,9 +203,8 @@ const CreateMatch: React.FC = () => {
               placeholder="Descreva os detalhes da partida..."
             />
           </div>
-
-          <div className="form-row">
-            <div className="form-col">
+          <div className="form-col">
+            <div className='form-row'>
               <div className="form-group">
                 <label htmlFor="date">Data *</label>
                 <input
@@ -340,10 +217,9 @@ const CreateMatch: React.FC = () => {
                   className="form-control"
                 />
               </div>
-            </div>
             <div className="form-col">
               <div className="form-group">
-                <label htmlFor="time">Horário *</label>
+                <label htmlFor="time">Horário </label>
                 <input
                   type="time"
                   id="time"
@@ -355,125 +231,55 @@ const CreateMatch: React.FC = () => {
                 />
               </div>
             </div>
-          </div>
-
+          </div>  
+        </div>  
           <div className="form-group">
-            <label htmlFor="city">Cidade *</label>
-            <Autocomplete
-              id="city"
-              options={cities}
-              value={formData.city}
-              onChange={(event, newValue) => {
-                setFormData(prev => ({
-                  ...prev,
-                  city: newValue || ''
-                }));
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  required
-                  placeholder="Ex: Curitiba - PR, São Paulo - SP"
-                  error={!formData.city}
-                  helperText={!formData.city ? "Cidade é obrigatória" : ""}
-                  InputProps={{
-                    ...params.InputProps,
-                    startAdornment: (
-                      <LocationOnIcon sx={{ color: '#1e3c72', mr: 1 }} />
-                    ),
-                  }}
-                  fullWidth
-                />
-              )}
-              freeSolo
-              disableClearable
-              sx={{
-                width: '100%',
-                '& .MuiOutlinedInput-root': {
-                  background: 'white',
-                  borderRadius: '8px',
-                  padding: '4px 8px',
-                  border: '1px solid #ccc',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                  '&:hover': {
-                    border: '1px solid #2196F3',
-                    boxShadow: '0 1px 4px rgba(33,150,243,0.2)',
-                  },
-                  '&.Mui-focused': {
-                    border: '1px solid #2196F3',
-                    boxShadow: '0 0 0 2px rgba(33,150,243,0.2)',
-                  }
-                },
-                '& .MuiOutlinedInput-notchedOutline': {
-                  border: 'none'
-                },
-                '& .MuiAutocomplete-endAdornment': {
-                  right: '8px'
-                }
-              }}
-              className="form-control"
-              ListboxProps={{
-                style: { 
-                  maxHeight: '200px',
-                  padding: '4px 0'
-                }
-              }}
-              slotProps={{
-                popper: {
-                  sx: {
-                    '& .MuiAutocomplete-listbox': {
-                      '& .MuiAutocomplete-option': {
-                        padding: '8px 16px',
-                        borderBottom: '1px solid #f0f0f0',
-                        '&:last-child': {
-                          borderBottom: 'none'
-                        },
-                        '&:hover': {
-                          backgroundColor: 'rgba(33,150,243,0.1)'
-                        },
-                        '&.Mui-focused': {
-                          backgroundColor: 'rgba(33,150,243,0.2)'
-                        }
-                      }
-                    }
-                  }
-                }
-              }}
-            />
+            <label htmlFor="cep">CEP </label>
+            <input type="text"
+              id="cep"
+              name="cep"
+              pattern='[0-9]{5}-?[0-9]{3}'
+              maxLength={9}
+              value={formData.cep}
+              onChange={handleInputChange}
+              ></input>
           </div>
-
-          <div className="form-group">
-            <label htmlFor="location">Endereço *</label>
+           <div className="form-group">
+            <label htmlFor="location">Endereço </label>
             <input
               type="text"
               id="location"
               name="location"
               value={formData.location}
               onChange={handleInputChange}
-              required
+              disabled
               placeholder="Ex: Rua das Flores, 123"
               className="form-control"
             />
           </div>
           <div className="form-group">
-            <label htmlFor="location">Categoria *</label>
-            <select
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleSelectChange}
-              required
-              className="form-control"
-            >
-              <option value="">Selecione uma categoria</option>
-              <option value="sub-10">Sub-10</option>
-              <option value="sub-12">Sub-12</option>
-              <option value="sub-14">Sub-14</option>
-              <option value="sub-16">Sub-16</option>
-              <option value="sub-18">Sub-18</option>
-              <option value="adulto">Adulto</option>
-            </select> 
-          </div>  
+            <label htmlFor="city">Cidade </label>
+             <input type="text"
+              id="city"
+              name="city"
+              value={formData.city}
+              disabled></input>
+          </div>
+          <div className="form-col">
+              <div className="form-group">
+                <label htmlFor="UF"> UF</label>
+                <input
+                  type="text"
+                  id="UF"
+                  name="UF"
+                  value={formData.UF}
+                  onChange={handleInputChange}
+                  disabled
+                  className="form-control"
+                />
+              </div>
+            </div>
+          
           <div className="form-group">
             <label htmlFor="complement">Complemento (opcional)</label>
             <input
@@ -528,5 +334,5 @@ const CreateMatch: React.FC = () => {
     </div>
   );
 };
-
+ 
 export default CreateMatch; 

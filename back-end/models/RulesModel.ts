@@ -14,20 +14,8 @@ const Rules = sequelize.define('Rules', {
             key: 'id',
         },
     },
-    idademinima: {
-        type: DataTypes.INTEGER,    
-        allowNull: false,
-    },
-    idademaxima: {
-        type: DataTypes.INTEGER,    
-        allowNull: false,
-    },   
-    minparticipantes: {
-        type: DataTypes.INTEGER,    
-        allowNull: false,
-    },
-    maxparticipantes: {
-        type: DataTypes.INTEGER,    
+    categoria:{
+        type: DataTypes.STRING,
         allowNull: false,
     },
     quantidade_times: {
@@ -38,10 +26,14 @@ const Rules = sequelize.define('Rules', {
         type: DataTypes.DATE,    
         allowNull: false,
     },
-    sexo:{
+    empate:{
         type: DataTypes.STRING,    
         allowNull: false,
     },
+    sexo:{
+        type: DataTypes.STRING,    
+        allowNull: false,
+    }
 }, {
     modelName: 'Rules',
     tableName: 'rules',

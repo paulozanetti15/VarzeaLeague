@@ -22,6 +22,7 @@ interface TeamAttributes {
   users?: User[];
   estado?: string;
   cidade?: string;
+  cep?: string;
 }
 
 interface TeamCreationAttributes extends Omit<TeamAttributes, 'id'> {
@@ -43,6 +44,7 @@ class Team extends Model<TeamAttributes, TeamCreationAttributes> {
   public readonly updatedAt!: Date;
   public estado!: string | null;
   public cidade!: string | null;
+  public cep!: string | null;
 
   // Métodos de associação
   public addPlayer!: BelongsToManyAddAssociationMixin<Player, number>;
@@ -109,6 +111,10 @@ Team.init(
       allowNull: false,
       defaultValue: false
     },
+    cep:{
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     estado: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -127,19 +133,5 @@ Team.init(
   }
 );
 
-// Método para adicionar um jogador ao time
-Team.prototype.addPlayer = async function(userId: number): Promise<void> {
-  const user = await User.findByPk(userId);
-  if (!user) {
-    throw new Error('Usuário não encontrado');
-  }
-  await (this as any).addPlayer(user);
-};
-
-// Método para contar o número de jogadores no time
-Team.prototype.countPlayers = async function(): Promise<number> {
-  const players = await (this as any).getPlayers();
-  return players.length;
-};
 
 export default Team; 

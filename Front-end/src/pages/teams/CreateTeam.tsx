@@ -1,9 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './CreateTeam.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-// Icons
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PaletteIcon from '@mui/icons-material/Palette';
 import ImageIcon from '@mui/icons-material/Image';
@@ -19,6 +18,7 @@ interface PlayerData {
   sexo: string;
   ano: string;
   posicao: string;
+  datanascimento?: string;
 }
 
 interface TeamFormData {
@@ -30,6 +30,7 @@ interface TeamFormData {
   cidade: string;
   logo?: File | null;
   jogadores: PlayerData[];
+  cep: string;
 }
 
 export default function CreateTeam() {
@@ -52,11 +53,31 @@ export default function CreateTeam() {
     secondaryColor: '#0d47a1',
     estado: '',
     cidade: '',
+    cep: '',
     logo: null,
     jogadores: [],
   });
-  
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+  const handleCidadesChange =  async(cep:String) => {
+    const response=await axios.get(`http://viacep.com.br/ws/${cep}/json/`);
+    setFormData({
+      ...formData,
+      estado: response.data.uf,
+      cidade: response.data.localidade,
+    });
+    
+  }
+
+  const limparCamposRelacionadoCEP =()=>{
+    if (formData.cep.length < 8) {
+      setFormData({
+        ...formData,
+        estado: '',
+        cidade: '',
+      });
+    }
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -83,14 +104,11 @@ export default function CreateTeam() {
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      
-      // Armazenar o arquivo real, não apenas o nome
       setFormData({
         ...formData,
         logo: file
       });
       
-      // Criar URL para preview
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target && event.target.result) {
@@ -169,11 +187,12 @@ export default function CreateTeam() {
       submitFormData.append('secondaryColor', formData.secondaryColor);
       submitFormData.append('estado', formData.estado);
       submitFormData.append('cidade', formData.cidade);
-      submitFormData.append('jogadores', JSON.stringify(formData.jogadores));
+      submitFormData.append('cep', formData.cep);
+
       if (formData.logo) {
         submitFormData.append('banner', formData.logo);
       }
-      await axios.post('http://localhost:3001/api/teams/',
+      const resposta=await axios.post('http://localhost:3001/api/teams/',
         submitFormData,
         {
           headers: {
@@ -182,13 +201,11 @@ export default function CreateTeam() {
           },
         }
       );
+      handleSubmitPlayer(resposta.data.plainTeam.id);
       setLoading(false);
       setToastMessage('Time criado com sucesso!');
       setToastBg('success');
       setShowToast(true);
-      setTimeout(() => {
-        navigate('/teams');
-      }, 1500);
     } catch (err: any) {
       setLoading(false);
       const errorMsg = err.response?.data?.message || 'Erro ao criar time. Tente novamente.';
@@ -198,8 +215,34 @@ export default function CreateTeam() {
       setShowToast(true);
     }
   };
-  
-  // Generate banner style based on selected colors
+
+  const handleSubmitPlayer = async (id:number) => {
+    try {
+      const playersData = formData.jogadores.map(jogador => ({
+        Playername: jogador.nome,
+        PlayerGender: jogador.sexo,
+        Playerdatebirth: jogador.datanascimento, // Format as YYYY-MM-DD
+        Playerposition: jogador.posicao,
+        teamId: id
+      }));
+       await axios.post(`http://localhost:3001/api/teamplayers/${id}`,
+        playersData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        } 
+      );
+    } catch (err: any) {
+      setLoading(false);
+      const errorMsg = err.response?.data?.message || 'Erro adicionando jogadores. Tente novamente.'; 
+      setError(errorMsg);
+      setToastMessage(errorMsg);
+      setToastBg('danger');
+      setShowToast(true); 
+    }
+  }
   const bannerStyle = {
     background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`,
   };
@@ -342,6 +385,25 @@ export default function CreateTeam() {
               required
             />
           </motion.div>
+
+          <motion.div 
+            className="form-group"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+          >
+            <label className="form-label" htmlFor="name">CEP </label>
+            <input
+              type="text"
+              id="cep"
+              name="cep"
+              className="form-control"
+              value={formData.cep}
+              onChange={handleInputChange}
+              placeholder="Digite o cep"
+              required
+            />
+          </motion.div>
           <motion.div 
             className="form-group"
             initial={{ opacity: 0, y: 5 }}
@@ -349,19 +411,16 @@ export default function CreateTeam() {
             transition={{ delay: 0.05 }}
           >
             <label className="form-label" htmlFor="estado">Estado</label>
-            <select
+            <input
+              type="text"
               id="estado"
               name="estado"
               className="form-control"
               value={formData.estado}
-              onChange={handleEstadoChange}
-              required
-            >
-              <option value="">Selecione o estado</option>
-              {estadosOrdem.map(uf => (
-                <option key={uf} value={uf}>{uf}</option>
-              ))}
-            </select>
+              onChange={handleInputChange}
+              placeholder="Digite o estado"
+              disabled>
+            </input>
           </motion.div>
           <motion.div 
             className="form-group"
@@ -370,20 +429,15 @@ export default function CreateTeam() {
             transition={{ delay: 0.1 }}
           >
             <label className="form-label" htmlFor="cidade">Cidade</label>
-            <select
+            <input
+              type="text"
               id="cidade"
               name="cidade"
               className="form-control"
               value={formData.cidade}
-              onChange={handleCidadeChange}
-              required
-              disabled={!formData.estado}
-            >
-              <option value="">Selecione a cidade</option>
-              {cidadesDisponiveisOrdenadas.map(cidade => (
-                <option key={cidade} value={cidade}>{cidade}</option>
-              ))}
-            </select>
+              onChange={handleInputChange}
+              placeholder="Digite a cidade"
+              disabled></input>
           </motion.div>
         
           <motion.div 

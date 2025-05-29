@@ -11,11 +11,13 @@ interface AthleteFormModalProps{
     onHide: () => void;
 }
 export default function InfoRulesModal({idpartida, show, onHide}: AthleteFormModalProps) {
-    const [idadeMinima, setIdadeMinima] = useState<number | null>(null);
-    const [idadeMaxima, setIdadeMaxima] = useState<number | null>(null);
     const [minimaIntegrantes, setMinimaIntegrantes] = useState<number | null>(null);
     const [maximoIntegrante, setMaximoIntegrante] = useState<number | null>(null);
     const [limitestimes, setLimitestimes] = useState<number | null>(null);
+    const [categoria, setCategoria] = useState<String | null>(null);
+    const [possuiEmpate, setPossuiEmpate] = useState<String | null>(null);
+    const [quantidade_times, setQuantidadeTimes] = useState<String | null>(null);
+    const [sexo , setSexo] = useState<String | null>(null);
     const [datalimite, setDataLimite] = useState<String | null>(null);
     
     useEffect(() => {
@@ -28,12 +30,12 @@ export default function InfoRulesModal({idpartida, show, onHide}: AthleteFormMod
                 }
             );
             if(response.status === 200) {
-                setIdadeMinima(response.data.idademinima);
-                setIdadeMaxima(response.data.idademaxima);
-                setMinimaIntegrantes(response.data.minparticipantes);
-                setMaximoIntegrante(response.data.maxparticipantes);
                 setLimitestimes(response.data.quantidade_times);
                 converterDataLimite(response.data.datalimiteinscricao);
+                setCategoria(response.data.categoria);
+                setQuantidadeTimes(response.data.quantidade_times);
+                setPossuiEmpate(response.data.possuiEmpate);
+                setSexo(response.data.sexo);
             }   
         }
         fetchingDados();
@@ -62,27 +64,15 @@ export default function InfoRulesModal({idpartida, show, onHide}: AthleteFormMod
                 </Modal.Header>
                 <Modal.Body>
                     <div className="rules-info">
-                        <div className="rules-grid">
+                        <div className="rules-grid">  
                             <div className="rule-item">
-                                <h6 className="rule-title">Idade mínima</h6>
-                                <p className="rule-value">{idadeMinima} anos</p>
+                                <h6 className="rule-title">Categoria</h6>
+                                <p className="rule-value">{categoria} </p>
                             </div>
-                            
                             <div className="rule-item">
-                                <h6 className="rule-title">Idade máxima</h6>
-                                <p className="rule-value">{idadeMaxima} anos</p>
-                            </div>
-                            
-                            <div className="rule-item">
-                                <h6 className="rule-title">Mín. jogadores</h6>
-                                <p className="rule-value">{minimaIntegrantes} jogadores</p>
-                            </div>
-                            
-                            <div className="rule-item">
-                                <h6 className="rule-title">Máx. jogadores</h6>
-                                <p className="rule-value">{maximoIntegrante} jogadores</p>
-                            </div>
-                            
+                                <h6 className="rule-title">Gênero</h6>
+                                <p className="rule-value">{sexo}</p>
+                            </div>      
                             <div className="rule-item">
                                 <h6 className="rule-title">Limite times</h6>
                                 <p className="rule-value">{limitestimes} times</p>

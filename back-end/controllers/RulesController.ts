@@ -3,20 +3,19 @@ import Rules from "../models/RulesModel";
 import MatchModel from "../models/MatchModel";
 export const insertRules= async (req, res) => {
     try {
-        const {idadeMaxima,idadeMinima,minimaIntegrantes,maximoIntegrante,limitestimes,dataLimite,sexo } = req.body;
+        const {limitestimes,dataLimite,sexo,category,empate } = req.body;
         const idPartida = await MatchModel.findOne({
             order: [['id', 'DESC']]
         });
         await Rules.create({
-            idademaxima:idadeMaxima,
-            idademinima:idadeMinima,
-            minparticipantes:minimaIntegrantes,
-            maxparticipantes:maximoIntegrante,
+            categoria:category,
             quantidade_times:limitestimes,
             datalimiteinscricao:dataLimite,
             partidaid:idPartida.id,
+            empate:empate,
             sexo:sexo
         });   
+        console.log("Regra criada com sucesso!");
         res.status(201).json({ message: "Regra criada com sucesso!" });
     } catch (error) {
         res.status(500).json({ message: "Erro para criar regra", error });
@@ -36,12 +35,10 @@ export const deleteRules = async (req, res) => {
 export const updateRules = async (req, res) => {
     try {
         const { partidaId } = req.params;
-        const { idadeMaxima,idadeMinima,minimaIntegrantes,maximoIntegrante,limitestimes,dataLimite,idPartida   } = req.body;
+        const { categoria,sexo,limitestimes,dataLimite} = req.body;
         await Rules.update({ 
-            idademaxima:idadeMaxima,
-            idademinima:idadeMinima,
-            minIntegrantes:minimaIntegrantes,
-            maxIntegrantes:maximoIntegrante,
+            categoria:categoria,
+            sexo:sexo,
             quantidade_times:limitestimes,
             datalimiteinscricao:dataLimite,
          }, { where: { partidaid:partidaId } });

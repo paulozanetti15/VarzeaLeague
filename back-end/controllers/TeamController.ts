@@ -215,7 +215,6 @@ export class TeamController {
           ...plainTeam,
           banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
           isCurrentUserCaptain: isCaptain,
-          isCurrentUserPlayer: isPlayer
         };
       });
       res.json(formattedTeams);
@@ -276,8 +275,7 @@ export class TeamController {
       const formattedTeam = {
         ...plainTeam,
         banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
-        isCurrentUserCaptain: isCaptain,
-        isCurrentUserPlayer: isPlayer
+        isCurrentUserCaptain: isCaptain
       };
       res.json(formattedTeam);
     } catch (error) {
@@ -287,13 +285,9 @@ export class TeamController {
   }
 
   static async updateTeam(req: AuthRequest, res: Response): Promise<void> {
-    console.log('REQ.BODY:', req.body);
-    console.log('REQ.FILE:', req.file);
     try {
       const { id } = req.params;
       const userId = req.user?.id;
-      
-      // Buscar o time atual para preservar o banner se não houver um novo
       const team = await Team.findOne({
         where: { id, isDeleted: false }
       });
@@ -302,13 +296,10 @@ export class TeamController {
         res.status(404).json({ error: 'Time não encontrado' });
         return;
       }
-
       if (team.captainId !== userId) {
         res.status(403).json({ error: 'Apenas o capitão pode atualizar o time' });
         return;
       }
-
-      // Verificar se o nome já existe em outro time
       if (req.body.name) {
         const existingTeam = await Team.findOne({
           where: { 
@@ -322,7 +313,6 @@ export class TeamController {
           return;
         }
       }
-      
       const agora = new Date();
       agora.setHours(agora.getHours() - 3);
       
@@ -339,30 +329,15 @@ export class TeamController {
 
       // Preservar o banner atual se não houver um novo arquivo
       let bannerFilename = team.banner;
-      console.log('Banner atual:', bannerFilename);
-      
-      // Só atualizar o banner se um novo arquivo for enviado
       if (req.file) {
-        console.log('Novo arquivo recebido:', req.file.filename);
-        // Deletar o arquivo antigo se existir
         if (team.banner !== null) {
           const oldBannerPath = path.join(__dirname, '..', 'uploads', 'teams', team.banner);
-          console.log('Caminho do arquivo antigo:', oldBannerPath);
           if (fs.existsSync(oldBannerPath)) {
             fs.unlinkSync(oldBannerPath);
-            console.log('Arquivo antigo deletado');
-          } else {
-            console.log('Arquivo antigo não encontrado');
-          }
+          } 
         }
-        // Usar o novo arquivo
         bannerFilename = req.file.filename;
-        console.log('Novo banner definido:', bannerFilename);
-      } else {
-        console.log('Nenhum novo arquivo recebido, mantendo o banner atual');
-      }
-
-      // Preparar os dados para atualização
+      } 
       const updateData: any = {
         name: req.body.name?.trim(),
         description: req.body.description,
@@ -380,10 +355,6 @@ export class TeamController {
       } else {
         console.log('Nenhum banner incluído nos dados de atualização');
       }
-
-      console.log('Dados de atualização:', updateData);
-      
-      // Atualizar o time com os novos dados
       await team.update(updateData);
       console.log('Time atualizado com sucesso');
 
