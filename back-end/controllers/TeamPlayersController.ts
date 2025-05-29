@@ -1,76 +1,146 @@
 import TeamPlayer from "../models/TeamPlayerModel";
+import Player from "../models/PlayerModel";
 import { Request, Response } from "express";    
+import { Op } from "sequelize";
+
 export const createTeamPlayer = async (req: Request, res: Response): Promise<void> => {
     try {
         const playersData = req.body;
-        const ids = playersData.map((jogador: any) => jogador.id);
-        const playername = playersData.map((jogador: any) => jogador.playername)
-        const AlreadyExists = await TeamPlayer.findOne({ where: { teamId:ids, playername } });     
-        if(!AlreadyExists){
+        const teamId = req.params.id || playersData[0].teamId;
+        
+        // Criar cada associação de jogador com time
+        const createdPlayers = await Promise.all(
             playersData.map(async (jogador: any) => {
-                await TeamPlayer.create({
-                    teamId : jogador.teamId,
-                    Playername: jogador.Playername,
-                    Playerdatebirth: jogador.Playerdatebirth,
-                    PlayerGender: jogador.PlayerGender,
-                    Playerposition: jogador.Playerposition,
+                // Verificar se o jogador já está associado ao time
+                const existingPlayer = await TeamPlayer.findOne({
+                    where: {
+                        teamId: teamId,
+                        playerId: jogador.playerId
+                    }
                 });
+
+                if (!existingPlayer) {
+                    return await TeamPlayer.create({
+                        teamId: teamId,
+                        playerId: jogador.playerId
+                    });
+                }
+                return null;
+            })
+        );
+        
+        const addedPlayers = createdPlayers.filter(player => player !== null);
+        
+        if (addedPlayers.length > 0) {
+            res.status(201).json({ 
+                message: 'Jogadores adicionados com sucesso',
+                added: addedPlayers.length 
             });
-        }  
-        res.status(201).json({ message: 'Jogador criado com sucesso' });  
+        } else {
+            res.status(200).json({ 
+                message: 'Nenhum jogador novo adicionado' 
+            });
+        }
     } catch (error) {
-        console.error('Erro ao criar jogador no time:', error);
-        res.status(500).json({ message: 'Erro ao criar jogador no time', error });
+        console.error('Erro ao criar associação jogador-time:', error);
+        res.status(500).json({ message: 'Erro ao criar associação jogador-time', error });
     }
 }
+
 export const getTeamsPlayers = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        console.log(id)
-        const players = await TeamPlayer.findAll({ where: { teamId:id } });
+        console.log('Buscando jogadores para o time ID:', id);
+        
+        // Buscar jogadores associados ao time com suas informações completas
+        const teamPlayers = await TeamPlayer.findAll({ 
+            where: { teamId: id },
+            include: [{ 
+                model: Player,
+                as: 'player',
+                where: { isDeleted: false }
+            }]
+        });
+        
+        // Extrair apenas os dados dos jogadores da resposta
+        const players = teamPlayers.map(tp => tp.get('player'));
+        
         res.status(200).json(players);
     } catch (error) {
         console.error('Erro ao obter jogadores do time:', error);
         res.status(500).json({ message: 'Erro ao obter jogadores do time', error });
     }
 }
+
 export const updateTeamPlayer = async (req: Request, res: Response): Promise<void> => {
     try {
-        const playersData = req.body;
         const { teamId } = req.params;
-        console.log(playersData)
-        for (const jogador of playersData) {
-            const player = await TeamPlayer.findOne({ where: { teamId:jogador.teamId, playername:jogador.Playername,playerdatebirth:jogador.Playerdatebirth,PlayerGender:jogador.PlayerGender,playerposition:jogador.Playerposition } });
-            if (!player) {
-                await TeamPlayer.update(
-                    {
-                        Playerposition: jogador.Playerposition, 
-                    },
-                    { where: { teamId:jogador.teamId, playername:jogador.Playername } }
-                );
+        const playersToUpdate = req.body;
+        
+        // Para cada jogador no array, atualize ou crie a associação
+        for (const player of playersToUpdate) {
+            const existingAssociation = await TeamPlayer.findOne({
+                where: {
+                    teamId: teamId,
+                    playerId: player.playerId
+                }
+            });
+            
+            if (existingAssociation) {
+                // Se a associação já existe, você pode atualizá-la se necessário
+                // Neste caso simplificado, não há nada para atualizar além dos IDs
+                continue;
             } else {
-                res.status(400).json({ message: 'Jogador existente' });
-                return;
+                // Se não existe, crie uma nova associação
+                await TeamPlayer.create({
+                    teamId: parseInt(teamId),
+                    playerId: player.playerId
+                });
             }
         }
-       
+        
+        res.status(200).json({ message: 'Associações de jogadores atualizadas com sucesso' });
     } catch (error) {
-        console.error('Erro ao atualizar jogador do time:', error);
-        res.status(500).json({ message: 'Erro ao atualizar jogador do time', error });
+        console.error('Erro ao atualizar associações de jogadores:', error);
+        res.status(500).json({ message: 'Erro ao atualizar associações de jogadores', error });
     }
 }
+
 export const deleteTeamPlayer = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { teamId } = req.params;
-        const isExists = await TeamPlayer.findOne({ where: { teamId } });
-        if (isExists) {
-            await TeamPlayer.destroy({ where: { teamId } });
-            res.status(200).json({ message: 'Jogador excluído com sucesso' }); 
+        const { teamId, playerId } = req.params;
+        
+        if (playerId) {
+            // Se playerId for fornecido, exclua apenas essa associação específica
+            const deleted = await TeamPlayer.destroy({
+                where: {
+                    teamId: teamId,
+                    playerId: playerId
+                }
+            });
+            
+            if (deleted > 0) {
+                res.status(200).json({ message: 'Jogador removido do time com sucesso' });
+            } else {
+                res.status(404).json({ message: 'Associação jogador-time não encontrada' });
+            }
         } else {
-            res.status(404).json({ message: 'Jogador não encontrado' });
+            // Se apenas teamId for fornecido, exclua todas as associações desse time
+            const deleted = await TeamPlayer.destroy({
+                where: { teamId: teamId }
+            });
+            
+            if (deleted > 0) {
+                res.status(200).json({ 
+                    message: 'Todos os jogadores removidos do time com sucesso',
+                    count: deleted 
+                });
+            } else {
+                res.status(404).json({ message: 'Nenhuma associação encontrada para este time' });
+            }
         }
     } catch (error) {
-        console.error('Erro ao excluir jogador do time:', error);
-        res.status(500).json({ message: 'Erro ao excluir jogador do time', error });
+        console.error('Erro ao excluir associação jogador-time:', error);
+        res.status(500).json({ message: 'Erro ao excluir associação jogador-time', error });
     }
 }

@@ -45,8 +45,7 @@ export class PlayerController {
       if (teamId) {
         await TeamPlayer.create({
           teamId,
-          playerId: player.id,
-          userId: null // Pode ser nulo se o jogador não estiver associado a um usuário do sistema
+          playerId: player.id
         });
       }
 
@@ -104,8 +103,7 @@ export class PlayerController {
       // Adicionar o jogador ao time
       await TeamPlayer.create({
         teamId,
-        playerId,
-        userId: null // Pode ser nulo se o jogador não estiver associado a um usuário do sistema
+        playerId
       });
 
       res.status(201).json({ message: 'Jogador adicionado ao time com sucesso' });

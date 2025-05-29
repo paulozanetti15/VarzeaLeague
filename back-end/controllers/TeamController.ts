@@ -16,7 +16,7 @@ dotenv.config();
 export class TeamController {
   static async create(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { name, description, sexo, maxPlayers, primaryColor, secondaryColor, estado, cidade } = req.body;
+      const { name, description, primaryColor, secondaryColor, estado, cidade, cep } = req.body;
       let jogadores = req.body.jogadores;
       if (typeof jogadores === 'string') {
         try {
@@ -67,8 +67,7 @@ export class TeamController {
             updatedAt: agora,
             estado,
             cidade,
-            sexo,
-            maxparticipantes: maxPlayers,
+            cep,
             primaryColor,
             secondaryColor,
             banner: bannerFilename
@@ -89,11 +88,13 @@ export class TeamController {
               // Associar ao time
               await TeamPlayer.create({
                 teamId: existingDeletedTeam.id,
-                playerId: newPlayer.id,
-                userId: null
+                playerId: newPlayer.id
               });
             }
           }
+          
+          // Adicionar o usuário ao time (se já não for capitão)
+          await existingDeletedTeam.addUser(captainId);
           
           const teamWithAssociations = await Team.findByPk(existingDeletedTeam.id, {
             include: [
@@ -113,14 +114,13 @@ export class TeamController {
         name: name.trim(),
         description,
         captainId,
-        sexo,
-        maxparticipantes: maxPlayers,
         primaryColor,
         secondaryColor,
         isDeleted: false,
         banner: bannerFilename,
         estado,
-        cidade
+        cidade,
+        cep
       });
       
       // Adicionar jogadores
@@ -138,11 +138,13 @@ export class TeamController {
           // Associar ao time
           await TeamPlayer.create({
             teamId: team.id,
-            playerId: newPlayer.id,
-            userId: null
+            playerId: newPlayer.id
           });
         }
       }
+      
+      // Adicionar o usuário ao time (para estabelecer a relação entre usuário e time)
+      await team.addUser(captainId);
       
       const teamWithPlayers = await Team.findByPk(team.id, {
         include: [
@@ -174,9 +176,15 @@ export class TeamController {
         res.status(401).json({ error: 'Usuário não autenticado' });
         return;
       }
+      
+      // Buscar todos os times que não estão deletados
       const allTeams = await Team.findAll({
         where: {
-          isDeleted: false
+          isDeleted: false,
+          // Buscar times onde o usuário é capitão
+          [Op.or]: [
+            { captainId: userId }
+          ]
         },
         include: [
           {
@@ -199,17 +207,48 @@ export class TeamController {
           }
         ]
       });
-      const visibleTeams = allTeams.filter(team => {
-        if (team.captainId === userId) {
-          return true;
-        }
-        const isPlayer = team.users.some(player => player.id === userId);
-        return isPlayer;
+      
+      // Buscar times onde o usuário é um membro (através da tabela de associação)
+      const teamsWhereUserIsMember = await Team.findAll({
+        where: {
+          isDeleted: false,
+          captainId: { [Op.ne]: userId } // Excluir times onde o usuário já é capitão
+        },
+        include: [
+          {
+            model: User,
+            as: 'users',
+            where: { id: userId },
+            attributes: ['id', 'name', 'email'],
+            through: { attributes: [] }
+          },
+          {
+            model: User,
+            as: 'captain',
+            attributes: ['id', 'name', 'email']
+          },
+          {
+            model: Player,
+            as: 'players',
+            through: { attributes: [] },
+            where: { isDeleted: false },
+            required: false
+          }
+        ]
       });
-      const formattedTeams = visibleTeams.map(team => {
+      
+      // Combinar os resultados (sem duplicatas)
+      const combinedTeams = [...allTeams];
+      
+      teamsWhereUserIsMember.forEach(team => {
+        if (!combinedTeams.some(t => t.id === team.id)) {
+          combinedTeams.push(team);
+        }
+      });
+      
+      const formattedTeams = combinedTeams.map(team => {
         const plainTeam = team.get({ plain: true });
         const isCaptain = team.captainId === userId;
-        const isPlayer = team.users.some(player => player.id === userId);
         
         return {
           ...plainTeam,
@@ -217,6 +256,7 @@ export class TeamController {
           isCurrentUserCaptain: isCaptain,
         };
       });
+      
       res.json(formattedTeams);
     } catch (error) {
       console.error('Erro ao listar times:', error);
@@ -345,6 +385,7 @@ export class TeamController {
         secondaryColor: req.body.secondaryColor,
         estado: req.body.estado,
         cidade: req.body.cidade,
+        cep: req.body.cep,
         updatedAt: agora
       };
 
@@ -397,8 +438,7 @@ export class TeamController {
             
             await TeamPlayer.create({
               teamId: parseInt(id),
-              playerId: newPlayer.id,
-              userId: null
+              playerId: newPlayer.id
             });
           }
         }

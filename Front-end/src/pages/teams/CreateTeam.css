@@ -1090,6 +1090,7 @@ input[type="email"].form-control {
 .player-actions {
   display: flex;
   gap: 5px;
+  margin-left: 1rem;
 }
 
 .edit-player-btn,
@@ -1136,4 +1137,64 @@ input[type="email"].form-control {
 
 .add-player-btn:hover {
   background-color: #0d47a1;
+}
+
+/* Estilos para o campo de CEP */
+.cep-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cep-input-container input {
+  flex: 1;
+}
+
+.cep-loading, .cep-valid, .cep-invalid {
+  position: absolute;
+  right: 12px;
+  font-size: 14px;
+}
+
+.cep-loading {
+  color: #666;
+  animation: pulse 1.5s infinite;
+}
+
+.cep-valid {
+  color: #28a745;
+}
+
+.cep-invalid {
+  color: #dc3545;
+}
+
+.cep-input-container.valid input {
+  border-color: #28a745;
+}
+
+.cep-input-container.invalid input {
+  border-color: #dc3545;
+}
+
+.cep-error-message {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgba(220, 53, 69, 0.1);
+  border-radius: 4px;
+  border-left: 3px solid #dc3545;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
 } 

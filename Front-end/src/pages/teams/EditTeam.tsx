@@ -54,6 +54,12 @@ export default function EditTeam() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeletePlayerConfirm, setShowDeletePlayerConfirm] = useState<{show: boolean, playerId?: number, playerName?: string, index?: number}>({
+    show: false,
+    playerId: undefined,
+    playerName: undefined,
+    index: undefined
+  });
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [showPlayersList, setShowPlayersList] = useState(false);
   const [existingPlayers, setExistingPlayers] = useState<ExistingPlayer[]>([]);
@@ -76,6 +82,9 @@ export default function EditTeam() {
     jogadores: [],
   });
   const [cidadesDisponiveis, setCidadesDisponiveis] = useState<string[]>([]);
+  const [cepValido, setCepValido] = useState<boolean | null>(null);
+  const [buscandoCep, setBuscandoCep] = useState(false);
+  const [cepErrorMessage, setCepErrorMessage] = useState<string | null>(null);
   const estadosCidades: Record<string, string[]> = {
     'MG': ['Belo Horizonte', 'Ouro Preto', 'Uberlândia'],
     'PR': [
@@ -99,16 +108,31 @@ export default function EditTeam() {
         const response = await axios.get(`http://localhost:3001/api/teams/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-         const responsePlayer = await axios.get(`http://localhost:3001/api/teamplayers/${id}`, {
+        
+        // Buscar explicitamente os jogadores do time
+        const responsePlayer = await axios.get(`http://localhost:3001/api/teamplayers/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log(responsePlayer.data);
+        
+        console.log('Dados do time:', response.data);
+        console.log('Jogadores do time:', responsePlayer.data);
+        
         const teamData = response.data;
         setTeamId(id);
         
         // Formatar os jogadores para o formato esperado pelo componente
         let formattedJogadores = [];
-        if (teamData.players && teamData.players.length > 0) {
+        if (responsePlayer.data && responsePlayer.data.length > 0) {
+          formattedJogadores = responsePlayer.data.map((player: any) => ({
+            id: player.id,
+            nome: player.nome,
+            sexo: player.sexo,
+            ano: player.ano,
+            posicao: player.posicao
+          }));
+          setExistingPlayers(responsePlayer.data);
+        } else if (teamData.players && teamData.players.length > 0) {
+          // Fallback para usar jogadores da resposta do time se existirem
           formattedJogadores = teamData.players.map((player: any) => ({
             id: player.id,
             nome: player.nome,
@@ -131,40 +155,132 @@ export default function EditTeam() {
           jogadores: formattedJogadores
         });
         
+        // Definir o CEP como válido se já estiver preenchido
+        if (teamData.cep) {
+          setCepValido(true);
+        }
+        
         if (teamData.banner) {
           setLogoPreview(`http://localhost:3001${teamData.banner}`);
         }
       } catch (err: any) {
+        console.error('Erro ao carregar o time:', err);
         setError('Erro ao carregar o time.');
       }
     };
     fetchTeam();
   }, [id]);
 
+  // Função para aplicar máscara ao CEP
+  const formatarCep = (cep: string): string => {
+    // Remove qualquer caractere não numérico
+    cep = cep.replace(/\D/g, '');
+    
+    // Aplica a máscara 00000-000
+    if (cep.length > 5) {
+      return `${cep.substring(0, 5)}-${cep.substring(5, 8)}`;
+    }
+    
+    return cep;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-  const handleCidadesChange =  async(cep:String) => {
-    const response=await axios.get(`http://viacep.com.br/ws/${cep}/json/`);
-    setFormData({
-      ...formData,
-      estado: response.data.uf,
-      cidade: response.data.localidade,
-    });
-  }
-  useEffect(() => {
-     if (/^[0-9]{8}$/.test(formData.cep) || /^[0-9]{5}-?[0-9]{3}$/.test(formData.cep)) {
-      handleCidadesChange(formData.cep.replace('-', ''));
-     } else{
+    
+    // Caso especial para CEP - aplica máscara
+    if (name === 'cep') {
+      const cepNumerico = value.replace(/\D/g, '');
+      
+      // Aplica a máscara e atualiza o formData
+      const cepFormatado = formatarCep(cepNumerico);
       setFormData({
         ...formData,
-        estado: '',
-        cidade: '',
+        cep: cepFormatado
       });
-     }    
-  },[formData.cep]);
+      
+      // Limpa os campos se o CEP for apagado
+      if (cepNumerico.length < 8) {
+        setFormData(prev => ({
+          ...prev,
+          estado: '',
+          cidade: ''
+        }));
+        setCepValido(null);
+        setCepErrorMessage(null);
+      }
+      
+      // Busca CEP quando tiver 8 dígitos e for diferente do atual
+      if (cepNumerico.length === 8) {
+        buscarCep(cepNumerico);
+      }
+      
+      return;
+    }
     
+    // Para outros campos, atualiza normalmente
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
+  const buscarCep = async (cep: string) => {
+    // Se o CEP sendo verificado é igual ao CEP original e já temos estado e cidade preenchidos,
+    // não precisamos fazer a busca novamente
+    const cepOriginal = formData.cep.replace(/\D/g, '');
+    if (cep === cepOriginal && formData.estado && formData.cidade) {
+      setCepValido(true);
+      return;
+    }
+    
+    setBuscandoCep(true);
+    setCepValido(null);
+    setCepErrorMessage(null);
+    
+    try {
+      const response = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
+      
+      if (response.data.erro) {
+        setCepValido(false);
+        setFormData(prev => ({
+          ...prev,
+          estado: '',
+          cidade: ''
+        }));
+        setCepErrorMessage('CEP não encontrado na base de dados.');
+        setToastMessage('CEP não encontrado');
+        setToastBg('danger');
+        setShowToast(true);
+        return;
+      }
+      
+      setCepValido(true);
+      setFormData(prev => ({
+        ...prev,
+        estado: response.data.uf,
+        cidade: response.data.localidade
+      }));
+      
+      setToastMessage('CEP encontrado com sucesso!');
+      setToastBg('success');
+      setShowToast(true);
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      setCepValido(false);
+      setFormData(prev => ({
+        ...prev,
+        estado: '',
+        cidade: ''
+      }));
+      setCepErrorMessage('Erro na conexão com o serviço de CEP. Tente novamente.');
+      setToastMessage('Erro ao buscar CEP. Verifique sua conexão.');
+      setToastBg('danger');
+      setShowToast(true);
+    } finally {
+      setBuscandoCep(false);
+    }
+  };
+
   const handlePlayerChange = (index: number, field: keyof PlayerData, value: string) => {
     const updated = [...formData.jogadores];
     
@@ -199,12 +315,49 @@ export default function EditTeam() {
     // Se o jogador tiver um ID, precisamos remover a associação com o time no backend
     const player = updatedPlayers[index];
     if (player.id) {
-      handleRemoveExistingPlayer(player.id);
+      // Mostrar modal de confirmação antes de remover
+      setShowDeletePlayerConfirm({
+        show: true,
+        playerId: player.id,
+        playerName: player.nome,
+        index: index
+      });
     } else {
       // Se for um jogador novo, apenas remover localmente
       updatedPlayers.splice(index, 1);
       setFormData({ ...formData, jogadores: updatedPlayers });
     }
+  };
+
+  const confirmRemovePlayer = () => {
+    const { playerId, index } = showDeletePlayerConfirm;
+    
+    if (playerId && index !== undefined) {
+      handleRemoveExistingPlayer(playerId);
+    } else if (index !== undefined) {
+      // Remoção local de jogador novo
+      const updatedPlayers = [...formData.jogadores];
+      updatedPlayers.splice(index, 1);
+      setFormData({ ...formData, jogadores: updatedPlayers });
+    }
+    
+    // Fechar o modal
+    setShowDeletePlayerConfirm({
+      show: false,
+      playerId: undefined,
+      playerName: undefined,
+      index: undefined
+    });
+  };
+
+  const cancelRemovePlayer = () => {
+    // Apenas fechar o modal
+    setShowDeletePlayerConfirm({
+      show: false,
+      playerId: undefined,
+      playerName: undefined,
+      index: undefined
+    });
   };
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -241,6 +394,31 @@ export default function EditTeam() {
       setError('Descrição é obrigatória.');
       return false;
     }
+    
+    if (formData.cep.replace(/\D/g, '').length !== 8) {
+      setError('CEP inválido. Informe um CEP com 8 dígitos.');
+      return false;
+    }
+    
+    // Se estamos editando um time existente e o CEP não foi alterado, 
+    // consideramos válido independentemente do estado de cepValido
+    const isExistingTeam = !!id;
+    
+    // Se temos estado e cidade preenchidos, consideramos o CEP válido para edição
+    if (isExistingTeam && formData.estado && formData.cidade) {
+      // É válido, não precisamos fazer mais validações de CEP
+    }
+    // Caso contrário, verificamos se o CEP foi validado
+    else if (!cepValido && formData.cep !== '') {
+      setError('CEP não encontrado. Verifique se o CEP está correto.');
+      return false;
+    }
+    
+    if (formData.estado.trim() === '' || formData.cidade.trim() === '') {
+      setError('Estado e cidade são obrigatórios.');
+      return false;
+    }
+    
     return true;
   };
 
@@ -299,6 +477,8 @@ export default function EditTeam() {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
       });
+      
+      console.log('Resposta da API (atualização):', response.data);
        
       if (response.data.banner) {
         setLogoPreview(`http://localhost:3001${response.data.banner}`);
@@ -329,9 +509,19 @@ export default function EditTeam() {
         navigate('/teams');
       }, 1500);
     } catch (err: any) {
+      console.error('Erro completo na atualização:', err);
       setLoading(false);
-      console.error('Erro ao atualizar time:', err);
-      const errorMsg = err.response?.data?.message || 'Erro ao atualizar time. Tente novamente.';
+      
+      let errorMsg = 'Erro ao atualizar time. Tente novamente.';
+      
+      if (err.response && err.response.data) {
+        if (typeof err.response.data.error === 'string') {
+          errorMsg = err.response.data.error;
+        } else if (typeof err.response.data.message === 'string') {
+          errorMsg = err.response.data.message;
+        }
+      }
+      
       setError(errorMsg);
       setToastMessage(errorMsg);
       setToastBg('danger');
@@ -363,8 +553,8 @@ export default function EditTeam() {
         return;
       }
       
-      // Chamar o endpoint para remover o jogador do time (apenas a associação)
-      await axios.delete(`http://localhost:3001/api/teams/${teamId}/players/${playerId}`, {
+      // Chamar o endpoint para remover o jogador do time
+      await axios.delete(`http://localhost:3001/api/teamplayers/${teamId}/player/${playerId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -528,15 +718,26 @@ export default function EditTeam() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
           >
-            <label className="form-label" htmlFor="estado">cep</label>
-            <input
-              id="cep"
-              name="cep"
-              className="form-control"
-              value={formData.cep}
-              onChange={handleInputChange}
-              placeholder="Digite o CEP do time"
-            />
+            <label className="form-label" htmlFor="cep">CEP</label>
+            <div className={`cep-input-container ${cepValido === true ? 'valid' : cepValido === false ? 'invalid' : ''}`}>
+              <input
+                id="cep"
+                name="cep"
+                className="form-control"
+                value={formData.cep}
+                onChange={handleInputChange}
+                placeholder="00000-000"
+                maxLength={9}
+              />
+              {buscandoCep && <span className="cep-loading">Buscando...</span>}
+              {cepValido === true && <span className="cep-valid">✓</span>}
+              {cepValido === false && <span className="cep-invalid">✗</span>}
+            </div>
+            {cepErrorMessage && (
+              <div className="cep-error-message">
+                {cepErrorMessage}
+              </div>
+            )}
           </motion.div>
           <motion.div 
             className="form-group"
@@ -794,6 +995,40 @@ export default function EditTeam() {
                 <button 
                   className="cancel-delete-btn"
                   onClick={() => setShowDeleteConfirm(false)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+        
+        {/* Modal de confirmação para remoção de jogador */}
+        {showDeletePlayerConfirm.show && (
+          <div className="delete-modal">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="delete-modal-content"
+            >
+              <div className="warning-icon-container">
+                <WarningIcon className="large-warning-icon" style={{ fontSize: 48, color: '#dc3545' }} />
+              </div>
+              <h2 style={{ color: '#dc3545', fontWeight: 800, fontSize: '1.8rem', marginBottom: 8 }}>Confirmar exclusão de jogador</h2>
+              <p style={{ color: '#fff', fontSize: '1.1rem', marginBottom: 8 }}>
+                Tem certeza que deseja remover o jogador <strong style={{ color: '#ffc107' }}>{showDeletePlayerConfirm.playerName}</strong> do time?
+              </p>
+              <p className="warning-text" style={{ color: '#fff', opacity: 0.7, marginBottom: 24 }}>Esta ação não pode ser desfeita!</p>
+              <div className="delete-modal-actions">
+                <button 
+                  className="confirm-delete-btn"
+                  onClick={confirmRemovePlayer}
+                >
+                  {loading ? 'Processando...' : 'Sim, remover jogador'}
+                </button>
+                <button 
+                  className="cancel-delete-btn"
+                  onClick={cancelRemovePlayer}
                 >
                   Cancelar
                 </button>
