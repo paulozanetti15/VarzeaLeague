@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Register.css';
 
+interface RegisterProps {
+  onLoginClick?: () => void;
+}
+
 interface FormData {
   name: string;
   cpf: string;
@@ -23,7 +27,7 @@ interface FormErrors {
   general?: string;
 }
 
-const Register: React.FC = () => {
+const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -159,6 +163,11 @@ const Register: React.FC = () => {
                   className={`register-input${errors.name ? ' register-input-error' : ''}`}
                   placeholder="Digite seu nome completo"
                   disabled={isLoading}
+                  autoComplete="name"
+                  style={{
+                    backgroundColor: '#1a237e !important',
+                    color: 'white !important',
+                  }}
                 />
                 {errors.name && <span className="register-error-message">{errors.name}</span>}
               </div>
@@ -174,6 +183,11 @@ const Register: React.FC = () => {
                   placeholder="000.000.000-00"
                   disabled={isLoading}
                   maxLength={14}
+                  autoComplete="off"
+                  style={{
+                    backgroundColor: '#1a237e !important',
+                    color: 'white !important',
+                  }}
                 />
                 {errors.cpf && <span className="register-error-message">{errors.cpf}</span>}
               </div>
@@ -188,6 +202,12 @@ const Register: React.FC = () => {
                   onChange={handleChange as any}
                   className={`register-input${errors.sexo ? ' register-input-error' : ''}`}
                   disabled={isLoading}
+                  autoComplete="off"
+                  style={{
+                    backgroundColor: '#1a237e !important',
+                    color: 'white !important',
+                    appearance: 'auto'
+                  }}
                 >
                   <option value="">Selecione</option>
                   <option value="Masculino">Masculino</option>
@@ -208,6 +228,11 @@ const Register: React.FC = () => {
                   placeholder="(99) 99999-9999"
                   disabled={isLoading}
                   maxLength={15}
+                  autoComplete="tel"
+                  style={{
+                    backgroundColor: '#1a237e !important',
+                    color: 'white !important',
+                  }}
                 />
                 {errors.phone && <span className="register-error-message">{errors.phone}</span>}
               </div>
@@ -224,6 +249,11 @@ const Register: React.FC = () => {
                   className={`register-input${errors.email ? ' register-input-error' : ''}`}
                   placeholder="Digite seu e-mail"
                   disabled={isLoading}
+                  autoComplete="email"
+                  style={{
+                    backgroundColor: '#1a237e !important',
+                    color: 'white !important',
+                  }}
                 />
                 {errors.email && <span className="register-error-message">{errors.email}</span>}
               </div>
@@ -241,7 +271,12 @@ const Register: React.FC = () => {
                     className={`register-input${errors.password ? ' register-input-error' : ''}`}
                     placeholder="Digite sua senha"
                     disabled={isLoading}
-                    style={{ paddingRight: '3rem' }}
+                    autoComplete="new-password"
+                    style={{ 
+                      paddingRight: '3rem',
+                      backgroundColor: '#1a237e !important',
+                      color: 'white !important',
+                    }}
                   />
                   <button
                     type="button"
@@ -271,7 +306,12 @@ const Register: React.FC = () => {
                     className={`register-input${errors.confirmPassword ? ' register-input-error' : ''}`}
                     placeholder="Confirme sua senha"
                     disabled={isLoading}
-                    style={{ paddingRight: '3rem' }}
+                    autoComplete="new-password"
+                    style={{ 
+                      paddingRight: '3rem',
+                      backgroundColor: '#1a237e !important',
+                      color: 'white !important',
+                    }}
                   />
                   <button
                     type="button"
@@ -293,7 +333,14 @@ const Register: React.FC = () => {
             <button type="submit" className="register-btn" disabled={isLoading}>{isLoading ? 'Registrando...' : 'Criar Conta'}</button>
             <div className="register-login-link">
               Já tem uma conta?
-              <a href="/login" onClick={(e) => {e.preventDefault();navigate('/login');}}>Faça login</a>
+              <a href="/login" onClick={(e) => {
+                e.preventDefault();
+                if (onLoginClick) {
+                  onLoginClick();
+                } else {
+                  navigate('/login');
+                }
+              }}>Faça login</a>
             </div>
           </form>
         </div>

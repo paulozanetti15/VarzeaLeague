@@ -3,6 +3,8 @@ import axios from "axios";
 import { Card, Button } from "react-bootstrap";
 import toast from 'react-hot-toast';
 import Modal from "react-bootstrap/Modal";
+import './modelTeams.css';
+
 interface ModelTeamsProps {
     matchid: number;
     onHide: () => void;
@@ -55,35 +57,36 @@ const modelTeams = ({ matchid,onHide,show }: ModelTeamsProps) => {
                 show={show} 
                 onHide={handleClose} 
                 centered 
-                className="password-update-modal"
+                className="team-modal"
                 backdrop="static"
                 restoreFocus={false}
             >
-            <Modal.Header closeButton className="modal-header">
-                <Modal.Title> Selecione um time para se inscrever na time </Modal.Title>
+            <Modal.Header closeButton>
+                <Modal.Title>Selecione um time para se inscrever na partida</Modal.Title>
             </Modal.Header>
-            <Modal.Body className="modal-body">
+            <Modal.Body>
             <div className="d-flex justify-content-center flex-wrap gap-3">
                 {teams && teams.length > 0 ? (
                     teams.map((team: any) => (
-                        <Card style={{ width: '18rem' }} key={team.id}> 
+                        <Card className="team-card" key={team.id}> 
                             <Card.Body>
                                 {team.banner &&
                                     <Card.Img
                                         src={`http://localhost:3001/uploads/teams/${team.banner}`} 
                                         variant='top'
+                                        className="team-banner"
                                     />
                                 }
                                 <div className='d-flex flex-column align-items-center text-center mt-3'>
-                                    <Card.Title className='container'>{team.name}</Card.Title>
+                                    <Card.Title className='team-name'>{team.name}</Card.Title>
                                     <Button variant="primary" onClick={() => handleJoinWithTeam(team.id)}>Selecionar time</Button>
                                 </div>  
                             </Card.Body>
                         </Card>
                     ))
                 ) : (
-                    <div className="d-flex justify-content-center">
-                        <h5>Não há times disponíveis</h5>
+                    <div className="no-teams-message">
+                        <p>Não há times disponíveis</p>
                     </div>
                 )}
 

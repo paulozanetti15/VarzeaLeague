@@ -65,12 +65,12 @@ body {
 }
 
 .header {
-  background: linear-gradient(to right, var(--blue-600), var(--blue-800));
+  background: linear-gradient(to right, #0d47a1, #1a237e);
   padding: 1rem 0;
   position: relative;
   top: 0;
   z-index: 1000;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
   border-bottom: none;
   margin-top: 0 !important;
   padding-top: 1rem !important;
@@ -303,34 +303,30 @@ body::before {
 }
 
 .dropdown-menu {
-  border: none;
-  border-radius: 8px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-  padding: 0.75rem 0;
-  margin-top: 0.5rem;
-  animation: none !important; /* Previne animação que causa flash */
-  opacity: 1 !important; /* Garante que o dropdown seja sempre opaco */
-  transition: none !important; /* Remove todas as transições para evitar piscar */
-  transform-origin: top right;
-  transform: none !important; /* Garante que não haja transformações */
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.dropdown-item {
-  padding: 0.6rem 1.5rem;
-  font-weight: 500;
-  color: var(--gray-700);
-  transition: all 0.2s ease;
-  cursor: pointer;
+.dropdown-menu .dropdown-item {
+  color: rgba(255, 255, 255, 0.9) !important;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  padding: 0.6rem 1.2rem;
 }
 
-.dropdown-item:hover {
-  color: var(--blue-700);
-  background-color: var(--blue-50);
+.dropdown-menu .dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  transform: translateX(5px);
 }
 
 .dropdown-divider {
-  margin: 0.5rem 0;
-  border-color: var(--gray-200);
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  margin: 0.3rem 0;
 }
 
 .btn-link {
@@ -377,4 +373,27 @@ body::before {
     flex-direction: column;
     width: 100%;
   }
+}
+
+/* Botão dropdown para o nome do usuário */
+.btn-link.dropdown-toggle {
+  color: white !important;
+  text-decoration: none !important;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.btn-link.dropdown-toggle:hover,
+.btn-link.dropdown-toggle:focus {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  transform: translateY(-2px);
+}
+
+.dropdown-toggle::after {
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  color: rgba(255, 255, 255, 0.7);
 } 

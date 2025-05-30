@@ -378,3 +378,321 @@ body > *:first-child,
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
+
+/* Sobreposições para a tela MatchList */
+.match-list-container,
+.match-list-container * {
+  margin-top: 0;
+}
+
+.match-list-container .content-container {
+  background: rgba(255,255,255,0.1) !important;
+  color: #fff !important;
+}
+
+.match-list-container .MuiPaper-root {
+  background: transparent !important;
+}
+
+.match-list-container .MuiToggleButtonGroup-root {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.match-list-container .MuiToggleButton-root {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.match-list-container .MuiToggleButton-root.Mui-selected {
+  background: rgba(33, 150, 243, 0.8) !important;
+  color: white !important;
+}
+
+/* Corrigir problemas específicos de cor e fundo */
+.match-list-container h1,
+.match-list-container h2,
+.match-list-container h3,
+.match-list-container h4,
+.match-list-container h5,
+.match-list-container h6,
+.match-list-container p,
+.match-list-container span {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Remover qualquer fundo branco ou cor escura que possa estar vindo de outros estilos */
+.match-list-container div {
+  background-color: transparent;
+}
+
+/* Sobreposição específica para o contêiner de conteúdo */
+body .match-list-container .content-container {
+  background: rgba(255,255,255,0.1) !important;
+}
+
+/* Estilos específicos para resolver o problema da tela MatchList */
+body:has(.match-list-container) {
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%) !important;
+}
+
+.match-list-container,
+.match-list-container * {
+  color-scheme: dark !important;
+}
+
+/* Sobrescreve qualquer elemento de fundo branco dentro do container principal */
+.match-list-container .MuiPaper-root,
+.match-list-container [class*="Paper"],
+.match-list-container div[style*="background-color: white"],
+.match-list-container div[style*="background-color: #fff"],
+.match-list-container div[style*="background: white"],
+.match-list-container div[style*="background: #fff"] {
+  background-color: transparent !important;
+  background: rgba(255,255,255,0.1) !important;
+  color: white !important;
+}
+
+/* Classe para tema escuro */
+body.dark-theme {
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%) !important;
+  color: white !important;
+}
+
+body.dark-theme .MuiPaper-root {
+  background-color: rgba(255,255,255,0.1) !important;
+  color: white !important;
+}
+
+body.dark-theme * {
+  color-scheme: dark !important;
+}
+
+/* Aplicação do tema escuro para landing page */
+.landing-page {
+  color-scheme: dark !important;
+}
+
+.landing-page div {
+  background-color: transparent;
+}
+
+body:has(.landing-page) {
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%) !important;
+  color-scheme: dark !important;
+}
+
+.landing-page .MuiPaper-root,
+.landing-page [class*="Paper"],
+.landing-page div[style*="background-color: white"],
+.landing-page div[style*="background-color: #fff"],
+.landing-page div[style*="background: white"],
+.landing-page div[style*="background: #fff"] {
+  background-color: transparent !important;
+  background: rgba(255,255,255,0.1) !important;
+  color: white !important;
+}
+
+.landing-page h1,
+.landing-page h2,
+.landing-page h3,
+.landing-page h4,
+.landing-page h5,
+.landing-page h6,
+.landing-page p,
+.landing-page span {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Estilização global para todos os dropdowns do sistema */
+.dropdown-menu {
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  padding: 0.5rem 0 !important;
+}
+
+.dropdown-item {
+  color: rgba(255, 255, 255, 0.9) !important;
+  transition: all 0.3s ease !important;
+  padding: 0.6rem 1.2rem !important;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  transform: translateX(5px);
+}
+
+.dropdown-divider {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  margin: 0.3rem 0 !important;
+}
+
+/* Estilização para os selects nos modais */
+.form-select {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E") !important;
+}
+
+.form-select:focus {
+  box-shadow: 0 0 0 0.25rem rgba(33, 150, 243, 0.25) !important;
+  border-color: rgba(33, 150, 243, 0.5) !important;
+}
+
+.form-select option {
+  background-color: #1a237e !important;
+  color: white !important;
+}
+
+/* Estilização para selects comuns */
+select {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+select option {
+  background-color: #1a237e !important;
+  color: white !important;
+}
+
+/* Estilos específicos para inputs nas telas de login e registro */
+.login-input,
+.register-input,
+select.register-input,
+input.login-input,
+input.register-input {
+  background-color: #1a237e !important;
+  color: white !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  -webkit-appearance: none !important;
+  appearance: menulist !important;
+}
+
+.login-input:focus,
+.register-input:focus,
+select.register-input:focus,
+input.login-input:focus,
+input.register-input:focus {
+  background-color: #0d47a1 !important;
+  color: white !important;
+  border-color: rgba(33, 150, 243, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.25) !important;
+}
+
+.login-input:hover,
+.register-input:hover,
+select.register-input:hover,
+input.login-input:hover,
+input.register-input:hover {
+  background-color: #1565c0 !important;
+}
+
+.login-input::placeholder,
+.register-input::placeholder,
+input.login-input::placeholder,
+input.register-input::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Fix para select options */
+.register-input option,
+select.register-input option {
+  background-color: #1a237e !important;
+  color: white !important;
+}
+
+/* Regras com maior especificidade para sobrescrever qualquer estilo de terceiros */
+body .login-container .login-input,
+body .register-container .register-input,
+body .login-container input.login-input,
+body .register-container input.register-input,
+body .register-container select.register-input {
+  background-color: #1a237e !important;
+  color: white !important;
+  -webkit-text-fill-color: white !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  background: #1a237e !important;
+  background-image: none !important;
+}
+
+/* Regras específicas para browsers Webkit */
+input[type="text"].register-input,
+input[type="email"].register-input,
+input[type="password"].register-input,
+input[type="text"].login-input,
+input[type="email"].login-input,
+input[type="password"].login-input,
+select.register-input {
+  background: #1a237e !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: auto !important;
+}
+
+/* Regras para Firefox */
+@-moz-document url-prefix() {
+  .login-input,
+  .register-input,
+  select.register-input {
+    background-color: #1a237e !important;
+    color: white !important;
+    background-image: none !important;
+  }
+}
+
+/* Corrigindo problema de preenchimento automático do Chrome */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover,
+.login-input:-webkit-autofill:focus,
+.login-input:-webkit-autofill:active,
+.register-input:-webkit-autofill,
+.register-input:-webkit-autofill:hover,
+.register-input:-webkit-autofill:focus,
+.register-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1a237e inset !important;
+  -webkit-text-fill-color: white !important;
+  caret-color: white !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  background-color: #1a237e !important;
+  color: white !important;
+}
+
+/* Regra mais específica para os inputs de login e registro com autofill */
+body .login-container .login-input:-webkit-autofill,
+body .register-container .register-input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px #1a237e inset !important;
+  box-shadow: 0 0 0 30px #1a237e inset !important;
+  -webkit-text-fill-color: white !important;
+  caret-color: white !important;
+  background-color: #1a237e !important;
+  color: white !important;
+}
+
+/* Técnica alternativa para resolver o problema do autofill */
+@keyframes autofill {
+  to {
+    color: white;
+    background: #1a237e;
+  }
+}
+
+input:-webkit-autofill {
+  animation-name: autofill;
+  animation-fill-mode: both;
+}
+
+/* Seletor de alta especificidade para formulários de login e registro */
+#root .login-container form .login-input,
+#root .register-container form .register-input,
+html body .login-container form .login-input,
+html body .register-container form .register-input {
+  background-color: #1a237e !important;
+  color: white !important;
+}

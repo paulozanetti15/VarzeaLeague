@@ -143,10 +143,10 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                 dialogClassName="custom-modal-width"
                 contentClassName="small-modal-content"
             >
-                <Modal.Header closeButton className="bg-primary text-white">
+                <Modal.Header closeButton>
                     <Modal.Title>Cadastrar Regras</Modal.Title>
                 </Modal.Header>
-                <Modal.Body className="bg-white">
+                <Modal.Body>
                     <Form>
                         <div className="row">
                             <div className="col-md-6">
@@ -156,7 +156,6 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                                         type="number"
                                         placeholder="Número de times"
                                         onChange={(e) => setLimitestimes(parseFloat(e.target.value) || null)}
-                                        className="border-primary"
                                     />
                                 </Form.Group>
                             </div>
@@ -165,7 +164,6 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                                     <Form.Label>Genero permitido</Form.Label>
                                     <Form.Select 
                                         onChange={(e) => setSexo(e.target.value)} 
-                                        className="border-primary"
                                         aria-label="Sexo permitido">
                                         <option value="">Selecione o sexo</option>
                                         <option value="Masculino">Masculino</option>
@@ -179,7 +177,6 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                                     <Form.Label>Possui Empate?</Form.Label>
                                     <Form.Select 
                                         onChange={(e) => setEmpate(e.target.value)} 
-                                        className="border-primary"
                                         aria-label="Possui Empate">
                                         <option value="">Selecione se possui empate</option>
                                         <option value="Sim">Sim</option>
@@ -192,7 +189,6 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                                     <Form.Label>Categoria</Form.Label>
                                     <Form.Select 
                                         onChange={(e) => setCategoria(e.target.value)} 
-                                        className="border-primary"
                                         aria-label="Possui Empate">
                                         <option value="">Selecione uma categoria</option>
                                         <option value="sub-7">Sub-7</option>
@@ -203,45 +199,43 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                                         <option value="sub-15">Sub-15</option>
                                         <option value="sub-17">Sub-17</option>
                                         <option value="sub-20">Sub-20</option>
-                                        <option value="adulto">Adulto</option>  
-                                        <option value="Veterano">Vetereno</option>
+                                        <option value="Adulto">Adulto</option>
+                                        <option value="Veterano">Veterano</option>
                                     </Form.Select>
                                 </Form.Group>
                             </div>
+                            <div className="col-md-12">
+                                <Form.Group className="mb-3" controlId="dataLimite">
+                                    <Form.Label>Data limite</Form.Label>
+                                    <Form.Control 
+                                        type="date"
+                                        placeholder="Data limite"
+                                        onChange={(e) => convertendoDataLimite(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </div>
                         </div>
-                        <Form.Group className="mb-3" controlId="dataLimite">
-                            <Form.Label>Data limite para inscrição</Form.Label>
-                            <Form.Control 
-                                type="date"
-                                onChange={(e) => convertendoDataLimite(e.target.value)}
-                                className="border-primary"
-                            />
-                        </Form.Group>
+                        {error && (
+                            <div className="alert alert-danger mt-2">
+                                {error}
+                            </div>
+                        )}
                     </Form>
-                    
-                    {error && (
-                        <div className="alert alert-danger mt-3" role="alert">
-                            {error}
-                        </div>
-                    )}
                 </Modal.Body>
-                <Modal.Footer className="bg-white">
-                    <Button variant="outline-secondary" onClick={onHide}>
-                        Fechar
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={onHide}>
+                        Cancelar
                     </Button>
-                    <Button variant="primary" onClick={() => insertPartida()}>
-                        Cadastrar Partida
+                    <Button variant="primary" onClick={insertPartida}>
+                        Salvar
                     </Button>
                 </Modal.Footer>
             </Modal>
-            
-            {showToast && (
-                <ToastSucessComponent
-                    message={toastMessage}
-                    bg={toastBg}
-                    onClose={() => setShowToast(false)}
-                />
-            )}
+            <ToastSucessComponent 
+                message={toastMessage}
+                onClose={() => setShowToast(false)}
+                bg={toastBg}
+            />
         </>
     );
 }
