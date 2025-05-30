@@ -3,11 +3,13 @@ import Match from './MatchModel';
 import Team from './TeamModel';
 import MatchPlayer from './MatchTeamsModel';
 import TeamPlayer from './TeamPlayerModel';
+import TeamUser from './TeamUserModel';
 import MatchReport from './MatchReportModel';
 import MatchGoal from './MatchGoalModel';
 import MatchCard from './MatchCardModel';
 import MatchEvaluation from './MatchEvaluationModel';
 import Championship from './ChampionshipModel';
+import Player from './PlayerModel';
 
 // User <-> Match associations
 export function associateModels() {
@@ -34,11 +36,35 @@ export function associateModels() {
 
   // Team Players associations
   Team.belongsToMany(User, {
+    through: TeamUser,
+    as: 'users',
+    foreignKey: 'teamId',
+    otherKey: 'userId'
+  });
+
+  User.belongsToMany(Team, {
+    through: TeamUser,
+    as: 'teams',
+    foreignKey: 'userId',
+    otherKey: 'teamId'
+  });
+
+  // Team <-> Player associations
+  Team.belongsToMany(Player, {
     through: TeamPlayer,
     as: 'players',
     foreignKey: 'teamId',
+    otherKey: 'playerId'
   });
 
+  Player.belongsToMany(Team, {
+    through: TeamPlayer,
+    as: 'teams',
+    foreignKey: 'playerId',
+    otherKey: 'teamId'
+  });
+
+  // Match Reports
   MatchReport.belongsTo(User, { foreignKey: 'createdBy' });
   MatchReport.belongsTo(Match, { foreignKey: 'matchId' });
   User.hasMany(MatchReport, { foreignKey: 'createdBy' });

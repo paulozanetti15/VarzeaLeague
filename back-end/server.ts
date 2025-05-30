@@ -8,9 +8,11 @@ import matchRoutes from './routes/matchRoutes';
 import userRoutes from './routes/userRoutes';
 import passwordResetRoutes from './routes/passwordResetRoutes';
 import teamRoutes from './routes/teamRoutes';
+import playerRoutes from './routes/playerRoutes';
 import UserModel from './models/UserModel';
 import MatchModel from './models/MatchModel';
 import TeamModel from './models/TeamModel';
+import PlayerModel from './models/PlayerModel';
 import UserTypeModel from './models/UserTypeModel';
 import MatchTeams from './models/MatchTeamsModel';
 import TeamPlayer from './models/TeamPlayerModel';
@@ -47,6 +49,7 @@ app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/teamplayers', TeamPlayerRoutes);
 app.use('/api/teams',teamRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/players', playerRoutes);
 app.use('/api/rules', RulesRoutes);
 
 app.get('/api/test', (req, res) => {
@@ -104,6 +107,10 @@ const startServer = async () => {
     await TeamModel.sync({alter: true});
   
     console.log('Modelo Team sincronizado.');
+    
+    await PlayerModel.sync();
+    console.log('Modelo Player sincronizado.');
+    
     await MatchModel.sync();
     console.log('Modelo Match sincronizado.');
     
@@ -156,6 +163,9 @@ const startServer = async () => {
       console.log('- POST /api/teams');
       console.log('- PUT /api/teams/:id');
       console.log('- POST /api/teams/:id/banner');
+      console.log('- POST /api/players');
+      console.log('- GET /api/players/team/:teamId');
+      console.log('- POST /api/players/add-to-team');
     });
   } catch (error) {
     console.error('Erro ao iniciar o servidor:', error);

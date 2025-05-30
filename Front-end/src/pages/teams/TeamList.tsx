@@ -1,13 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import AddIcon from '@mui/icons-material/Add';
 import GroupIcon from '@mui/icons-material/Group';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
+import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
+import PersonIcon from '@mui/icons-material/Person';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import WcIcon from '@mui/icons-material/Wc';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import './TeamList.css';
+
+interface Player {
+  id: string;
+  nome: string;
+  sexo: string;
+  ano: string;
+  posicao: string;
+}
 
 interface Team {
   id: string;
@@ -19,7 +33,7 @@ interface Team {
   isCurrentUserCaptain?: boolean;
   banner?: string;
   createdAt?: string;
-  players?: any[];
+  players?: Player[];
   primaryColor?: string;
   secondaryColor?: string;
   estado?: string;
@@ -30,6 +44,9 @@ const TeamList = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
+  const [loadingPlayers, setLoadingPlayers] = useState<{ [key: string]: boolean }>({});
+  const [teamPlayers, setTeamPlayers] = useState<{ [key: string]: Player[] }>({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -58,7 +75,30 @@ const TeamList = () => {
       setLoading(false);
     }
   };
-  
+
+  const fetchTeamPlayers = async (teamId: string) => {
+    try {
+      setLoadingPlayers(prev => ({ ...prev, [teamId]: true }));
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.get(`http://localhost:3001/api/teamplayers/${teamId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setTeamPlayers(prev => ({ ...prev, [teamId]: response.data }));
+    } catch (err) {
+      console.error(`Erro ao buscar jogadores do time ${teamId}:`, err);
+    } finally {
+      setLoadingPlayers(prev => ({ ...prev, [teamId]: false }));
+    }
+  };
+
   const handleTeamClick = (teamId: string) => {
     navigate(`/teams/edit/${teamId}`);
   };
@@ -66,6 +106,31 @@ const TeamList = () => {
   const handleBack = () => {
     navigate('/');
   };
+
+  const togglePlayersList = (e: React.MouseEvent, teamId: string) => {
+    e.stopPropagation();
+    
+    // Se estamos expandindo o time e ainda não buscamos os jogadores, busque-os
+    if (expandedTeam !== teamId && !teamPlayers[teamId]) {
+      fetchTeamPlayers(teamId);
+    }
+    
+    setExpandedTeam(expandedTeam === teamId ? null : teamId);
+  };
+
+  const teamCardVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: 0.05 * i,
+        duration: 0.3,
+        ease: "easeOut"
+      }
+    })
+  };
+
   const hasTeam = teams.length > 0;
   return (
     <div className="teams-container">
@@ -133,7 +198,6 @@ const TeamList = () => {
                 <div
                   key={team.id}
                   className="team-card team-detail-card"
-                  onClick={() => handleTeamClick(team.id)}
                 >
                   <div className="team-banner" style={{ background: team.primaryColor && team.secondaryColor ? `linear-gradient(135deg, ${team.primaryColor} 0%, ${team.secondaryColor} 100%)` : undefined }}>
                     {team.banner ? (
@@ -165,19 +229,111 @@ const TeamList = () => {
                     <div className="team-stats">
                       <div className="stat">
                         <GroupIcon sx={{ fontSize: 20, color: '#2196F3' }} />
-                        <span>{Number(team.playerCount)} Jogadores</span>
+                        <span>{team.players?.length || 0} Jogadores</span>
                       </div>
                       <div className="stat">
                         <EmojiEventsIcon sx={{ fontSize: 20, color: '#FFD700' }} />
                         <span>{Number(team.matchCount)} Partidas</span>
                       </div>
                     </div>
+                    
+                    {/* Botão para expandir/recolher lista de jogadores */}
+                    <button 
+                      className="players-toggle-btn" 
+                      onClick={(e) => togglePlayersList(e, team.id)}
+                    >
+                      {expandedTeam === team.id ? (
+                        <>
+                          <ExpandLessIcon sx={{ mr: 1 }} />
+                          Ocultar Jogadores
+                        </>
+                      ) : (
+                        <>
+                          <ExpandMoreIcon sx={{ mr: 1 }} />
+                          Ver Jogadores
+                        </>
+                      )}
+                    </button>
+                    
+                    <AnimatePresence>
+                      {expandedTeam === team.id && (
+                        <motion.div 
+                          className="team-players-expanded"
+                          initial={{ opacity: 0, height: 0, overflow: "hidden" }}
+                          animate={{ opacity: 1, height: "auto", transition: { duration: 0.3 } }}
+                          exit={{ opacity: 0, height: 0, transition: { duration: 0.2 } }}
+                        >
+                          <h3 className="team-section-title">
+                            <SportsSoccerIcon style={{ marginRight: '8px', color: team.primaryColor || '#2196F3' }} />
+                            Jogadores do Time
+                          </h3>
+                          {loadingPlayers[team.id] ? (
+                            <div className="team-loading-players">
+                              <div className="loading-spinner-small"></div>
+                              <span>Carregando jogadores...</span>
+                            </div>
+                          ) : teamPlayers[team.id] && teamPlayers[team.id].length > 0 ? (
+                            <div className="team-players-grid">
+                              {teamPlayers[team.id].map((player, playerIndex) => (
+                                <motion.div 
+                                  key={player.id || playerIndex} 
+                                  className="team-player-item"
+                                  style={{
+                                    borderLeft: `4px solid ${team.primaryColor || '#2196F3'}`
+                                  }}
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ 
+                                    opacity: 1, 
+                                    y: 0,
+                                    transition: {
+                                      delay: Math.min(0.03 * playerIndex, 0.2),
+                                      duration: 0.2
+                                    }
+                                  }}
+                                >
+                                  <div className="player-name-position">
+                                    <div className="player-name-container">
+                                      <PersonIcon style={{ fontSize: '1.2rem', marginRight: '6px', color: team.primaryColor || '#2196F3', flexShrink: 0 }} />
+                                      <span className="player-name" title={player.nome}>{player.nome}</span>
+                                    </div>
+                                    <span 
+                                      className="player-position"
+                                      style={{
+                                        backgroundColor: `${team.primaryColor || '#2196F3'}20`,
+                                        color: team.primaryColor || '#64b5f6',
+                                        flexShrink: 0
+                                      }}
+                                    >
+                                      {player.posicao}
+                                    </span>
+                                  </div>
+                                  <div className="player-details">
+                                    <span className="player-year">
+                                      <CalendarTodayIcon style={{ fontSize: '0.9rem', marginRight: '4px', flexShrink: 0 }} />
+                                      {player.ano}
+                                    </span>
+                                    <span className="player-gender">
+                                      <WcIcon style={{ fontSize: '0.9rem', marginRight: '4px', flexShrink: 0 }} />
+                                      {player.sexo}
+                                    </span>
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="team-no-players">
+                              <SportsSoccerIcon style={{ fontSize: '2rem', opacity: 0.3, marginBottom: '8px' }} />
+                              <p>Nenhum jogador cadastrado neste time</p>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    
+
                     <button
                       className="edit-team-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/teams/edit/${team.id}`);
-                      }}
+                      onClick={() => navigate(`/teams/edit/${team.id}`)}
                     >
                       <EditIcon sx={{ mr: 1 }} />
                       Editar meu time

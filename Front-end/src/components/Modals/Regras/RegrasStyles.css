@@ -14,13 +14,21 @@
 .modal-content {
   width: 100% !important;
   max-width: 350px !important;
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  color: white !important;
 }
 
 .small-modal-content {
   width: 100%;
   max-width: 350px !important;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
 }
 
 .small-modal-content .form-control,
@@ -28,35 +36,82 @@
   padding-left: 8px;
   padding-right: 8px;
   font-size: 13px;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+}
+
+.small-modal-content .form-control::placeholder,
+.small-modal-content .form-select::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.small-modal-content .form-control:focus,
+.small-modal-content .form-select:focus {
+  box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25) !important;
+  border-color: rgba(33, 150, 243, 0.5) !important;
 }
 
 .small-modal-content .modal-title {
   font-size: 15px !important;
   font-weight: 600;
+  color: white !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .small-modal-content .modal-header {
   padding: 8px 12px;
+  background-color: rgba(33, 150, 243, 0.3) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px 12px 0 0 !important;
 }
 
 .small-modal-content .modal-footer {
   padding: 8px 12px;
   justify-content: space-between;
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0 0 12px 12px !important;
 }
 
 .small-modal-content .modal-body {
   padding: 10px;
+  background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
 .small-modal-content .form-label {
   margin-bottom: 4px;
   font-size: 13px;
   font-weight: 500;
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .small-modal-content .btn {
   font-size: 13px;
   padding: 4px 12px;
+}
+
+.small-modal-content .btn-primary {
+  background: linear-gradient(135deg, #2196F3, #1976D2) !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.small-modal-content .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3) !important;
+}
+
+.small-modal-content .btn-secondary {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+}
+
+.small-modal-content .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-2px);
 }
 
 /* Estilo para visualização de regras */
@@ -72,29 +127,74 @@
 }
 
 .rule-item {
-  background-color: rgba(33, 150, 243, 0.05);
-  border-radius: 6px;
+  background-color: rgba(33, 150, 243, 0.1);
+  border-radius: 8px;
   padding: 8px 10px;
   border-left: 3px solid #2196F3;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .rule-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  background-color: rgba(33, 150, 243, 0.08);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: rgba(33, 150, 243, 0.15);
 }
 
 .rule-title {
   margin-bottom: 2px;
-  color: #1976D2;
+  color: #64B5F6;
   font-size: 13px;
   font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .rule-value {
   margin-bottom: 0;
   font-size: 13px;
-  color: #424242;
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
+}
+
+/* Botão fechar do modal */
+.modal-header .btn-close {
+  color: white !important;
+  text-shadow: none !important;
+  opacity: 0.7 !important;
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3E%3Cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3E%3C/svg%3E") center/1em auto no-repeat !important;
+}
+
+.modal-header .btn-close:hover {
+  opacity: 1 !important;
+}
+
+.small-modal-content .form-select option {
+  background-color: #1a237e !important;
+  color: white !important;
+  padding: 10px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.small-modal-content .form-select option:hover,
+.small-modal-content .form-select option:focus,
+.small-modal-content .form-select option:checked {
+  background-color: rgba(33, 150, 243, 0.3) !important;
+  box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+}
+
+/* Ajuste para o select dropdown */
+.small-modal-content .form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 16px 12px !important;
+}
+
+/* Cores de alerta para erros */
+.alert-danger {
+  background-color: rgba(220, 53, 69, 0.2) !important;
+  color: #ff8a8a !important;
+  border-color: rgba(220, 53, 69, 0.3) !important;
+  border-radius: 8px;
 } 

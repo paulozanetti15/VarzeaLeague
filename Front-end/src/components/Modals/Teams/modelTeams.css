@@ -1,0 +1,103 @@
+.team-modal .modal-dialog {
+  max-width: 400px;
+}
+
+.team-modal .modal-content {
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+  border-radius: 12px;
+  overflow: hidden;
+  color: white;
+}
+
+.team-modal .modal-header {
+  background-color: rgba(33, 150, 243, 0.3) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 1.5rem;
+}
+
+.team-modal .modal-title {
+  color: white;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.team-modal .modal-body {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+}
+
+.team-modal .modal-footer {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 1.5rem;
+}
+
+.team-modal .form-label {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.team-modal .form-select {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 16px 12px !important;
+}
+
+.team-modal .form-select:focus {
+  box-shadow: 0 0 0 0.25rem rgba(33, 150, 243, 0.25) !important;
+  border-color: rgba(33, 150, 243, 0.5) !important;
+}
+
+.team-modal .form-select option {
+  background-color: #1a237e !important;
+  color: white !important;
+  padding: 10px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.team-modal .form-select option:hover,
+.team-modal .form-select option:focus,
+.team-modal .form-select option:checked {
+  background-color: rgba(33, 150, 243, 0.3) !important;
+  box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+}
+
+.team-modal .btn-primary {
+  background: linear-gradient(135deg, #2196F3, #1976D2) !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.3s ease;
+}
+
+.team-modal .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3) !important;
+}
+
+.team-modal .btn-secondary {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  transition: all 0.3s ease;
+}
+
+.team-modal .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-2px);
+}
+
+.team-modal .alert-danger {
+  background-color: rgba(220, 53, 69, 0.2) !important;
+  color: #ff8a8a !important;
+  border-color: rgba(220, 53, 69, 0.3) !important;
+  border-radius: 8px;
+} 

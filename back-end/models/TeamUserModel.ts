@@ -1,27 +1,27 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
-import Player from './PlayerModel';
+import User from './UserModel';
 import Team from './TeamModel';
 
-interface TeamPlayerAttributes {
+interface TeamUserAttributes {
   id: number;
   teamId: number;
-  playerId: number;
+  userId: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-interface TeamPlayerCreationAttributes extends Omit<TeamPlayerAttributes, 'id'> {}
+interface TeamUserCreationAttributes extends Omit<TeamUserAttributes, 'id'> {}
 
-class TeamPlayer extends Model<TeamPlayerAttributes, TeamPlayerCreationAttributes> {
+class TeamUser extends Model<TeamUserAttributes, TeamUserCreationAttributes> {
   public id!: number;
   public teamId!: number;
-  public playerId!: number;
+  public userId!: number;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 
-TeamPlayer.init(
+TeamUser.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -38,11 +38,11 @@ TeamPlayer.init(
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE'
     },
-    playerId: {
+    userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'players',
+        model: 'users',
         key: 'id'
       },
       onUpdate: 'CASCADE',
@@ -51,23 +51,23 @@ TeamPlayer.init(
   },
   {
     sequelize,
-    tableName: 'team_players',
+    tableName: 'team_users',
     timestamps: true,
     underscored: true,
-    modelName: 'TeamPlayer',
+    modelName: 'TeamUser',
     freezeTableName: true
   }
 );
 
 // Definir associações
-TeamPlayer.belongsTo(Player, { 
-  foreignKey: 'playerId',
-  as: 'player'
+TeamUser.belongsTo(User, { 
+  foreignKey: 'userId',
+  as: 'user'
 });
 
-TeamPlayer.belongsTo(Team, {
+TeamUser.belongsTo(Team, {
   foreignKey: 'teamId',
   as: 'team'
 });
 
-export default TeamPlayer; 
+export default TeamUser; 

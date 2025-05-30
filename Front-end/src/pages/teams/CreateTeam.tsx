@@ -8,13 +8,17 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import ImageIcon from '@mui/icons-material/Image';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import EditIcon from '@mui/icons-material/Edit';
 import ToastComponent from '../../components/Toast/ToastComponent';
+import PlayerModal from '../../components/teams/PlayerModal';
 
 interface PlayerData {
+  id?: number;
   nome: string;
   sexo: string;
-  datanascimento: string;
+  ano: string;
   posicao: string;
+  datanascimento?: string;
 }
 
 interface TeamFormData {
@@ -38,6 +42,10 @@ export default function CreateTeam() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastBg, setToastBg] = useState('');
   const [valido, setValido] = useState(false);
+  const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState<PlayerData | null>(null);
+  const [editingPlayerIndex, setEditingPlayerIndex] = useState<number | null>(null);
+
   const [formData, setFormData] = useState<TeamFormData>({
     name: '',
     description: '',
@@ -47,56 +55,104 @@ export default function CreateTeam() {
     cidade: '',
     cep: '',
     logo: null,
-    jogadores: [{ nome: '', sexo: '', datanascimento: '', posicao: '' }],
+    jogadores: [],
   });
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [cepValido, setCepValido] = useState<boolean | null>(null);
+  const [buscandoCep, setBuscandoCep] = useState(false);
+  const [cepErrorMessage, setCepErrorMessage] = useState<string | null>(null);
 
-  const handleCidadesChange =  async(cep:String) => {
-    const response=await axios.get(`http://viacep.com.br/ws/${cep}/json/`);
-    setFormData({
-      ...formData,
-      estado: response.data.uf,
-      cidade: response.data.localidade,
-    });
+  const formatarCep = (cep: string): string => {
+    cep = cep.replace(/\D/g, '');
     
-  }
-
-  const limparCamposRelacionadoCEP =()=>{
-    if (formData.cep.length < 8) {
-      setFormData({
-        ...formData,
-        estado: '',
-        cidade: '',
-      });
+    if (cep.length > 5) {
+      return `${cep.substring(0, 5)}-${cep.substring(5, 8)}`;
     }
-  }
+    
+    return cep;
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
+    if (name === 'cep') {
+      const cepNumerico = value.replace(/\D/g, '');
+      
+      const cepFormatado = formatarCep(cepNumerico);
+      setFormData({
+        ...formData,
+        cep: cepFormatado
+      });
+      
+      if (cepNumerico.length < 8) {
+        setFormData(prev => ({
+          ...prev,
+          estado: '',
+          cidade: ''
+        }));
+        setCepValido(null);
+        setCepErrorMessage(null);
+      }
+      
+      if (cepNumerico.length === 8) {
+        buscarCep(cepNumerico);
+      }
+      
+      return;
+    }
+    
     setFormData({
       ...formData,
       [name]: value
     });
   };
-
-  const handlePlayerChange = (index: number, field: keyof PlayerData, value: string) => {
-    const updated = [...formData.jogadores];
-    updated[index][field] = value;
-    setFormData({ ...formData, jogadores: updated });
-  };
-
-  const addPlayer = () => {
-    setFormData({
-      ...formData,
-      jogadores: [...formData.jogadores, { nome: '', sexo: '', datanascimento: '', posicao: '' }],
-    });
-  };
-
-  const removePlayer = (index: number) => {
-    if (formData.jogadores.length > 1) {
-      const updated = [...formData.jogadores];
-      updated.splice(index, 1);
-      setFormData({ ...formData, jogadores: updated });
+  
+  const buscarCep = async (cep: string) => {
+    setBuscandoCep(true);
+    setCepValido(null);
+    setCepErrorMessage(null);
+    
+    try {
+      const response = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
+      
+      if (response.data.erro) {
+        setCepValido(false);
+        setFormData(prev => ({
+          ...prev,
+          estado: '',
+          cidade: ''
+        }));
+        setCepErrorMessage('CEP não encontrado na base de dados.');
+        setToastMessage('CEP não encontrado');
+        setToastBg('danger');
+        setShowToast(true);
+        return;
+      }
+      
+      setCepValido(true);
+      setFormData(prev => ({
+        ...prev,
+        estado: response.data.uf,
+        cidade: response.data.localidade
+      }));
+      
+      setToastMessage('CEP encontrado com sucesso!');
+      setToastBg('success');
+      setShowToast(true);
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      setCepValido(false);
+      setFormData(prev => ({
+        ...prev,
+        estado: '',
+        cidade: ''
+      }));
+      setCepErrorMessage('Erro na conexão com o serviço de CEP. Tente novamente.');
+      setToastMessage('Erro ao buscar CEP. Verifique sua conexão.');
+      setToastBg('danger');
+      setShowToast(true);
+    } finally {
+      setBuscandoCep(false);
     }
   };
 
@@ -131,6 +187,38 @@ export default function CreateTeam() {
       reader.readAsDataURL(file);
     }
   };
+
+  const openPlayerModal = () => {
+    setEditingPlayer(null);
+    setEditingPlayerIndex(null);
+    setIsPlayerModalOpen(true);
+  };
+
+  const editPlayer = (player: PlayerData, index: number) => {
+    setEditingPlayer(player);
+    setEditingPlayerIndex(index);
+    setIsPlayerModalOpen(true);
+  };
+
+  const handleSavePlayer = (player: PlayerData) => {
+    if (editingPlayerIndex !== null) {
+      const updatedPlayers = [...formData.jogadores];
+      updatedPlayers[editingPlayerIndex] = player;
+      setFormData({ ...formData, jogadores: updatedPlayers });
+    } else {
+      setFormData({
+        ...formData,
+        jogadores: [...formData.jogadores, player]
+      });
+    }
+  };
+
+  const removePlayer = (index: number) => {
+    const updatedPlayers = [...formData.jogadores];
+    updatedPlayers.splice(index, 1);
+    setFormData({ ...formData, jogadores: updatedPlayers });
+  };
+
   const valdacaoCampos=()=>{
     if (formData.name.trim() === '') {
       setError('Nome do time é obrigatório.');
@@ -140,24 +228,27 @@ export default function CreateTeam() {
       setError('Descrição é obrigatória.');
       return false;
     }
-    for (const jogador of formData.jogadores) {
-      if (!jogador.nome.trim()) {
-        setError('Nome do jogador é obrigatório.');
-        return false;
-      }
-      if (!jogador.sexo) {
-        setError('Sexo do jogador é obrigatório.');
-        return false;
-      }
-      if (!jogador.datanascimento) {
-        setError('Idade do jogador é obrigatória');
-        return false;
-      }
-      if (!jogador.posicao) {
-        setError('Posição do jogador é obrigatória.');
-        return false;
-      }
+    
+    if (formData.cep.replace(/\D/g, '').length !== 8) {
+      setError('CEP inválido. Informe um CEP com 8 dígitos.');
+      return false;
     }
+    
+    if (!cepValido) {
+      setError('CEP não encontrado. Verifique se o CEP está correto.');
+      return false;
+    }
+    
+    if (formData.estado.trim() === '' || formData.cidade.trim() === '') {
+      setError('Estado e cidade são obrigatórios.');
+      return false;
+    }
+    
+    if (formData.jogadores.length === 0) {
+      setError('Adicione pelo menos um jogador ao time.');
+      return false;
+    }
+    
     setValido(true);
     return true;
   }
@@ -183,7 +274,9 @@ export default function CreateTeam() {
       if (formData.logo) {
         submitFormData.append('banner', formData.logo);
       }
-      const resposta=await axios.post('http://localhost:3001/api/teams/',
+      
+      const resposta = await axios.post(
+        'http://localhost:3001/api/teams/',
         submitFormData,
         {
           headers: {
@@ -192,12 +285,49 @@ export default function CreateTeam() {
           },
         }
       );
-      handleSubmitPlayer(resposta.data.plainTeam.id);
+      
+      console.log('Resposta da API:', resposta.data);
+      
+      // Verifica qual campo da resposta contém o ID do time
+      let teamId = null;
+      if (resposta.data.id) {
+        teamId = resposta.data.id;
+      } else if (resposta.data.plainTeam && resposta.data.plainTeam.id) {
+        teamId = resposta.data.plainTeam.id;
+      } else if (resposta.data.team && resposta.data.team.id) {
+        teamId = resposta.data.team.id;
+      }
+      
+      if (teamId) {
+        try {
+          await handleSubmitPlayer(teamId);
+          setToastMessage('Time criado com sucesso!');
+          setToastBg('success');
+          setShowToast(true);
+          
+          // Redireciona para a página de times após 1.5 segundos
+          setTimeout(() => {
+            navigate('/teams');
+          }, 1500);
+        } catch (playerErr) {
+          console.error('Erro ao adicionar jogadores:', playerErr);
+          // Mesmo se houver erro ao adicionar jogadores, consideramos que o time foi criado
+          setToastMessage('Time criado, mas houve um problema ao adicionar alguns jogadores.');
+          setToastBg('warning');
+          setShowToast(true);
+          
+          // Ainda redireciona
+          setTimeout(() => {
+            navigate('/teams');
+          }, 1500);
+        }
+      } else {
+        throw new Error('ID do time não encontrado na resposta');
+      }
+      
       setLoading(false);
-      setToastMessage('Time criado com sucesso!');
-      setToastBg('success');
-      setShowToast(true);
     } catch (err: any) {
+      console.error('Erro completo:', err);
       setLoading(false);
       const errorMsg = err.response.data.error || 'Erro ao criar time. Tente novamente.';
       console.error('Erro ao criar time:', errorMsg);
@@ -207,40 +337,93 @@ export default function CreateTeam() {
     }
   };
 
-  const handleSubmitPlayer = async (id:number) => {
-    try {
-      const playersData = formData.jogadores.map(jogador => ({
-        Playername: jogador.nome,
-        PlayerGender: jogador.sexo,
-        Playerdatebirth: jogador.datanascimento, // Format as YYYY-MM-DD
-        Playerposition: jogador.posicao,
-        teamId: id
-      }));
-       await axios.post(`http://localhost:3001/api/teamplayers/${id}`,
-        playersData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
-    } catch (err: any) {
-      setLoading(false);
-      const errorMsg = err.response?.data?.message || 'Erro adicionando jogadores. Tente novamente.'; 
-      setError(errorMsg);
-      setToastMessage(errorMsg);
-      setToastBg('danger');
-      setShowToast(true); 
-    }
-  }
+  const handleSubmitPlayer = async (id: number): Promise<void> => {
+    // Convertendo para uma função que retorna uma Promise para poder ser await
+    return new Promise(async (resolve, reject) => {
+      try {
+        const createPlayerPromises = formData.jogadores.map(async (jogador) => {
+          try {
+            const playerResponse = await axios.post(
+              'http://localhost:3001/api/players',
+              {
+                nome: jogador.nome,
+                sexo: jogador.sexo,
+                ano: jogador.ano,
+                posicao: jogador.posicao
+              },
+              {
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${localStorage.getItem('token')}`,
+                },
+              }
+            );
+            
+            if (playerResponse.data && playerResponse.data.id) {
+              return axios.post(
+                `http://localhost:3001/api/teamplayers/${id}`,
+                [{
+                  playerId: playerResponse.data.id,
+                  teamId: id
+                }],
+                {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                  },
+                }
+              );
+            }
+          } catch (err) {
+            console.error('Erro ao criar jogador:', err);
+            // Não rejeitamos a promise aqui para permitir que outros jogadores sejam processados
+          }
+        });
+        
+        await Promise.all(createPlayerPromises.filter(p => p !== undefined));
+        resolve();
+      } catch (err: any) {
+        console.error('Erro ao adicionar jogadores:', err);
+        reject(err);
+      }
+    });
+  };
+
   const bannerStyle = {
     background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`,
   };
 
-  useEffect(() => {
-    handleCidadesChange(formData.cep);
-  }, [formData.cep]);
+  const estadosCidades: {[key: string]: string[]} = {
+    'MG': ['Belo Horizonte', 'Ouro Preto', 'Uberlândia'],
+    'PR': [
+      'Cascavel',
+      'Colombo',
+      'Curitiba',
+      'Foz do Iguaçu',
+      'Guarapuava',
+      'Londrina',
+      'Maringá',
+      'Paranaguá',
+      'Ponta Grossa',
+      'São José dos Pinhais',
+      'União da Vitória'
+    ],
+    'RJ': ['Niterói', 'Petrópolis', 'Rio de Janeiro'],
+    'SP': ['Campinas', 'Santos', 'São Paulo'],
+  };
+  const [cidadesDisponiveis, setCidadesDisponiveis] = useState<string[]>([]);
+
+  const handleEstadoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const estado = e.target.value;
+    setFormData({ ...formData, estado, cidade: '' });
+    setCidadesDisponiveis(estadosCidades[estado] || []);
+  };
+  const handleCidadeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFormData({ ...formData, cidade: e.target.value });
+  };
+
+  const estadosOrdem = Object.keys(estadosCidades).sort();
+  const cidadesDisponiveisOrdenadas = [...cidadesDisponiveis].sort();
 
   return (
     <div className="create-team-container">
@@ -252,6 +435,12 @@ export default function CreateTeam() {
         />
       )}
       
+      <PlayerModal 
+        isOpen={isPlayerModalOpen}
+        onClose={() => setIsPlayerModalOpen(false)}
+        onSave={handleSavePlayer}
+        editingPlayer={editingPlayer}
+      />
       
       <div className="top-navigation">
         <button 
@@ -346,17 +535,28 @@ export default function CreateTeam() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
           >
-            <label className="form-label" htmlFor="name">CEP </label>
-            <input
-              type="text"
-              id="cep"
-              name="cep"
-              className="form-control"
-              value={formData.cep}
-              onChange={handleInputChange}
-              placeholder="Digite o cep"
-              required
-            />
+            <label className="form-label" htmlFor="cep">CEP</label>
+            <div className={`cep-input-container ${cepValido === true ? 'valid' : cepValido === false ? 'invalid' : ''}`}>
+              <input
+                type="text"
+                id="cep"
+                name="cep"
+                className="form-control"
+                value={formData.cep}
+                onChange={handleInputChange}
+                placeholder="00000-000"
+                maxLength={9}
+                required
+              />
+              {buscandoCep && <span className="cep-loading">Buscando...</span>}
+              {cepValido === true && <span className="cep-valid">✓</span>}
+              {cepValido === false && <span className="cep-invalid">✗</span>}
+            </div>
+            {cepErrorMessage && (
+              <div className="cep-error-message">
+                {cepErrorMessage}
+              </div>
+            )}
           </motion.div>
           <motion.div 
             className="form-group"
@@ -372,7 +572,7 @@ export default function CreateTeam() {
               className="form-control"
               value={formData.estado}
               onChange={handleInputChange}
-              placeholder="Digite o estado"
+              placeholder=""
               disabled>
             </input>
           </motion.div>
@@ -390,7 +590,7 @@ export default function CreateTeam() {
               className="form-control"
               value={formData.cidade}
               onChange={handleInputChange}
-              placeholder="Digite a cidade"
+              placeholder=""
               disabled></input>
           </motion.div>
         
@@ -440,72 +640,70 @@ export default function CreateTeam() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <label className="form-label">Gerenciar Jogadores ({formData.jogadores.length})</label>
+            <div className="players-header">
+              <label className="form-label">Cadastrar Jogadores</label>
+              <button 
+                type="button" 
+                className="add-player-btn"
+                onClick={openPlayerModal}
+              >
+                <AddIcon style={{ marginRight: '5px' }} /> Adicionar Jogador
+              </button>
+            </div>
+            
             <AnimatePresence>
-              {formData.jogadores.map((jogador, index) => (
+              {formData.jogadores.length === 0 ? (
                 <motion.div 
-                  key={index} 
-                  className="player-email"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2 }}
+                  className="no-players"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                 >
-                  <input
-                    type="text"
-                    placeholder="Nome do jogador"
-                    value={jogador.nome}
-                    onChange={e => handlePlayerChange(index, 'nome', e.target.value)}
-                    className="form-control nome-jogador"
-                    required
-                  />
-                  <select
-                    value={jogador.sexo}
-                    onChange={e => handlePlayerChange(index, 'sexo', e.target.value)}
-                    className="form-control"
-                    required
-                  >
-                    <option value="">Sexo</option>
-                    <option value="Masculino">Masculino</option>
-                    <option value="Feminino">Feminino</option>
-                  </select>
-                  <input
-                    type="date"
-                    placeholder="Data de Nascimento"
-                    value={jogador.datanascimento}
-                    onChange={e => handlePlayerChange(index, 'datanascimento', e.target.value)}
-                    className="form-control nome-jogador"
-                    required
-                  />
-                  <select
-                    value={jogador.posicao}
-                    onChange={e => handlePlayerChange(index, 'posicao', e.target.value)}
-                    className="form-control"
-                    required
-                  >
-                    <option value="">Posição</option>
-                    <option value="Goleiro">Goleiro</option>
-                    <option value="Defensor">Defensor</option>
-                    <option value="Meio Campo">Meio Campo</option>
-                    <option value="Atacante">Atacante</option>
-                  </select>
-                  <button 
-                    type="button" 
-                    className="remove-player-btn"
-                    onClick={() => removePlayer(index)}
-                  >
-                    <RemoveIcon />
-                  </button>
+                  <p>Nenhum jogador adicionado. Clique no botão acima para adicionar jogadores ao seu time.</p>
                 </motion.div>
-              ))}
+              ) : (
+                <div className="players-list">
+                  {formData.jogadores.map((jogador, index) => (
+                    <motion.div 
+                      key={index} 
+                      className="player-card"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.2 }}
+                      style={{
+                        background: `linear-gradient(135deg, ${formData.primaryColor}20 0%, ${formData.secondaryColor}20 100%)`
+                      }}
+                    >
+                      <div className="player-info">
+                        <div className="player-name">{jogador.nome}</div>
+                        <div className="player-details">
+                          <span className="player-position">{jogador.posicao}</span>
+                          <span className="player-year">Ano: {jogador.ano}</span>
+                          <span className="player-gender">{jogador.sexo}</span>
+                        </div>
+                      </div>
+                      <div className="player-actions">
+                        <button 
+                          type="button" 
+                          className="edit-player-btn"
+                          onClick={() => editPlayer(jogador, index)}
+                        >
+                          <EditIcon />
+                        </button>
+                        <button 
+                          type="button" 
+                          className="remove-player-btn"
+                          onClick={() => removePlayer(index)}
+                        >
+                          <RemoveIcon />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </AnimatePresence>
-            <button 
-              type="button" 
-              className="add-player-btn"
-              onClick={addPlayer}
-            >
-              <AddIcon style={{ marginRight: '5px' }} /> Adicionar Jogador
-            </button>
           </motion.div>
 
           <div className="form-actions">
@@ -530,4 +728,4 @@ export default function CreateTeam() {
       </motion.div>
     </div>
   );
-} 
+}

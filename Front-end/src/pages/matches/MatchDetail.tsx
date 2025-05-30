@@ -168,9 +168,14 @@ const MatchDetail: React.FC = () => {
   }
   return (
     <div className="match-detail-container">
-      <button className="back-button" onClick={() => navigate(-1)}>
-        <ArrowBackIcon />
-      </button>
+      <div className="top-navigation">
+        <button 
+          className="back-btn"
+          onClick={() => navigate('/matches')} 
+        >
+          <ArrowBackIcon /> Voltar
+        </button>
+      </div>
       
       {error && (
         <div className="error-message">
@@ -246,24 +251,31 @@ const MatchDetail: React.FC = () => {
           {timeCadastrados.length > 0 ? (
             <div className="teams-list d-flex flex-wrap justify-content-center" key={id}>
               {timeCadastrados.map((team: any) => (
-                <Card style={{ width: '18rem' }} key={team.id}> 
+                <Card className="team-card" key={team.id}> 
                   <Card.Body>
                     {team.banner &&
                       <Card.Img
                        src={`http://localhost:3001/uploads/teams/${team.banner}`} 
                        variant='top'
+                       className="team-banner"
                       />
                     }
                     <div className='d-flex flex-column align-items-center text-center mt-3'>
-                      <Card.Title className='container'>{team.name}</Card.Title>
-                      <Button variant="primary" onClick={() => handleLeaveMatch(id,team.id)}>Sair Partida</Button>
+                      <Card.Title className='team-name'>{team.name}</Card.Title>
+                      <Button 
+                        variant="outline-primary" 
+                        onClick={() => handleLeaveMatch(Number(id), team.id)}
+                        className="leave-match-btn"
+                      >
+                        Sair da Partida
+                      </Button>
                     </div>  
                   </Card.Body>
                 </Card>
               ))}
             </div>
           ) : (
-            <div>
+            <div className="no-teams-message">
               <p>Nenhum time inscrito ainda.</p>
             </div>
           )}

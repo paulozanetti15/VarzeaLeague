@@ -140,6 +140,18 @@ const MatchList: React.FC = () => {
     fetchMatches();
   }, []);
 
+  useEffect(() => {
+    // Adiciona estilo ao body para garantir o tema escuro
+    document.body.classList.add('dark-theme');
+    document.querySelectorAll('.match-list-container > div').forEach(el => {
+      (el as HTMLElement).style.backgroundColor = 'transparent';
+    });
+    
+    return () => {
+      document.body.classList.remove('dark-theme');
+    };
+  }, []);
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
@@ -239,11 +251,11 @@ const MatchList: React.FC = () => {
     if (!showAdvancedFilters) return null;
   
     return (
-      <div className="filters-modal-overlay">
-        <div className="filters-modal-content">
-          <div className="filters-modal-header">
-            <h3><FaFilter /> Filtros Avançados</h3>
-            <button className="close-modal" onClick={cancelFilters}>
+      <div className="filters-modal-overlay" style={{backdropFilter: 'blur(5px)'}}>
+        <div className="filters-modal-content" style={{background: 'linear-gradient(135deg, #1a237e 0%, #0d47a1 100%)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.1)'}}>
+          <div className="filters-modal-header" style={{borderBottom: '1px solid rgba(255, 255, 255, 0.1)'}}>
+            <h3 style={{color: 'white', textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'}}><FaFilter /> Filtros Avançados</h3>
+            <button className="close-modal" onClick={cancelFilters} style={{background: 'rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.8)'}}>
               <IoMdClose />
             </button>
           </div>
@@ -418,16 +430,16 @@ const MatchList: React.FC = () => {
             </div>
           </div>
           
-          <div className="filters-modal-footer">
-            <button className="clear-filters-btn" onClick={clearTempFilters}>
+          <div className="filters-modal-footer" style={{background: 'rgba(0, 0, 0, 0.2)', borderTop: '1px solid rgba(255, 255, 255, 0.1)'}}>
+            <button className="clear-filters-btn" onClick={clearTempFilters} style={{background: 'rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.8)', border: '1px solid rgba(255, 255, 255, 0.2)'}}>
               <ClearIcon fontSize="small" style={{ marginRight: '5px' }} />
               Limpar filtros
             </button>
             <div className="action-buttons">
-              <button className="cancel-button" onClick={cancelFilters}>
+              <button className="cancel-button" onClick={cancelFilters} style={{background: 'rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.8)', border: '1px solid rgba(255, 255, 255, 0.2)'}}>
                 Cancelar
               </button>
-              <button className="apply-button" onClick={applyFilters}>
+              <button className="apply-button" onClick={applyFilters} style={{background: 'linear-gradient(135deg, #2196F3, #1976D2)', color: 'white'}}>
                 Aplicar Filtros
               </button>
             </div>
@@ -553,13 +565,15 @@ const MatchList: React.FC = () => {
   };
 
   return (
-    <div className="match-list-container">
-      <button className="back-button" onClick={() => navigate(-1)}>
-        <ArrowBackIcon />
-      </button>
-      <div className="content-container">
+    <div className="match-list-container" style={{background: 'linear-gradient(135deg, #1a237e 0%, #0d47a1 100%)'}}>
+      <div className="top-navigation">
+        <button className="back-btn" onClick={() => navigate('/')}>
+          <ArrowBackIcon /> Voltar
+        </button>
+      </div>
+      <div className="content-container" style={{background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)'}}>
         <div className="header-container">
-          <h1 className="text-center">Partidas Disponíveis</h1>
+          <h1 className="text-center" style={{color: '#fff', textShadow: '0 2px 10px rgba(0, 0, 0, 0.3)'}}>Partidas Disponíveis</h1>
           
           <div className="search-controls">
             <div className="search-and-filter">
@@ -571,6 +585,7 @@ const MatchList: React.FC = () => {
                   value={searchQuery}
                   onChange={handleSearchChange}
                   className="search-input"
+                  style={{background: 'rgba(255, 255, 255, 0.1)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.2)'}}
                 />
                 {searchQuery && (
                   <button className="clear-search" onClick={clearSearch}>
@@ -590,30 +605,31 @@ const MatchList: React.FC = () => {
               </button>
             </div>
             <div className="filter-container">
-              <div className="filter-group-wrapper">
+              <div className="filter-group-wrapper" style={{background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)'}}>
                 <ToggleButtonGroup
                   value={filter}
                   exclusive
                   onChange={handleFilterChange}
                   aria-label="filtro de partidas"
+                  style={{background: 'rgba(255, 255, 255, 0.1)'}}
                 >
-                  <ToggleButton value="all" aria-label="todas as partidas">
+                  <ToggleButton value="all" aria-label="todas as partidas" style={{color: 'white'}}>
                     <AllInclusiveIcon fontSize="small" style={{ marginRight: '5px' }} />
                     Todas
                   </ToggleButton>
-                  <ToggleButton value="my" aria-label="minhas partidas">
+                  <ToggleButton value="my" aria-label="minhas partidas" style={{color: 'white'}}>
                     <PersonIcon fontSize="small" style={{ marginRight: '5px' }} />
                     Minhas
                   </ToggleButton>
                 </ToggleButtonGroup>
                 
-                <div className="update-info">
-                  <span>Atualizado há {formatLastUpdate(lastUpdate)}</span>
+                <div className="update-info" style={{background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.7)'}}>
                   <button 
                     className={`refresh-button ${isRefreshing ? 'refreshing' : ''} `} 
                     onClick={handleRefresh}
                     disabled={isRefreshing}
                     title="Atualizar lista de partidas"
+                    style={{color: 'rgba(255, 255, 255, 0.7)'}}
                   >
                     <RefreshIcon />
                   </button>
@@ -625,6 +641,7 @@ const MatchList: React.FC = () => {
           <button
             className="create-match-btn"
             onClick={() => navigate('/matches/create')}
+            style={{background: 'linear-gradient(135deg, #2196F3, #1976D2)', color: 'white', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.15)'}}
           >
             Criar Nova Partida
           </button>
