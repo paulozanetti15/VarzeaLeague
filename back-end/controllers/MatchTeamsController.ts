@@ -17,12 +17,6 @@ export const joinMatchByTeam = async (req: any, res: any) => {
       attributes: [ 'title', 'date', 'location', 'status', 'description', 'price', 'organizerId']
     })
     const token = req.headers.authorization?.replace('Bearer ', '');
-    try {
-      const decodedPayload = jwt.decode(token);
-    } catch (decodeErr) {
-      console.error('Erro ao decodificar token:', decodeErr);
-    }
-
     if (!match) {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
@@ -60,35 +54,9 @@ export const joinMatchByTeam = async (req: any, res: any) => {
       return res.status(400).json({ message: 'Time já está inscrito nesta partida' });
     }
     if(regras.dataValues.sexo!=="Ambos"){
-      const jogadoresDentroPartida = await MatchTeams.findAll({
-        where: { matchId },
-        attributes: ['teamId'],  
-      })
-      const teamsIds = jogadoresDentroPartida.map((team: any) => team.teamId);
-      const playersIdRows = await TeamPlayer.findAll({
-        where: {
-          teamId: {
-            [Sequelize.Op.in]: teamsIds
-          }
-        },
-        attributes: ['playerId'],
-        raw: true
-      });  
-      const playerIds = playersIdRows.map((row: any) => row.playerId);
-      const playersWithDifferentGender = await Playermodel.findAll({
-        where: {
-          id: {
-            [Sequelize.Op.in]: playerIds
-          },
-          sexo: {
-            [Sequelize.Op.ne]: regras.dataValues.sexo
-          }
-        },
-        attributes: ['sexo']
-      });
-      if (playersWithDifferentGender!==null) {
-        return res.status(403).json({ message: `Time não se qualifica nas regras de genero da partida` });
-      }
+      if(await verifyTeamsGenderRules(req, res,teamId,regras.dataValues.sexo)=== false){
+        return res.status(403).json({ message: `Time não se qualifica nas regras de gênero da partida` });
+      };
       if (!await isTimePossuiCategoriaValido(teamId,matchId)) {
         return res.status(403).json({ message: `Time não se qualifica nas regras de categoria da partida` });
       }
@@ -101,7 +69,7 @@ export const joinMatchByTeam = async (req: any, res: any) => {
       }
     }
     else{
-      if (!await isTimePossuiCategoriaValido(teamId,matchId)) {
+      if (await isTimePossuiCategoriaValido(teamId,matchId)=== false) {
         return res.status(403).json({ message: `Time não se qualifica nas regras de categoria da partida` });
       }
       else{
@@ -124,12 +92,11 @@ const isTimePossuiCategoriaValido=async(teamId:number,matchId:number)=>{
     where: { partidaid: matchId },
     attributes: ['categoria']
   });
-  const teamIdsRows = await MatchTeams.findAll({
-    where: { matchId: matchId },
-    attributes: ['teamId'],
-    raw: true
-  });
-  const teamIds = teamIdsRows.map((row: any) => row.teamId);
+  const jogadoresDentroPartida = await TeamPlayer.findAll({
+        where: { teamId: teamId },
+        attributes: ['playerId'],
+  })
+  const teamIds = jogadoresDentroPartida.map((row: any) => row.playerId);
   const idadesJogadores = await Playermodel.findAll({
     attributes: ['ano'],
     where: {
@@ -139,78 +106,100 @@ const isTimePossuiCategoriaValido=async(teamId:number,matchId:number)=>{
     }
   })
   idades.push(idadesJogadores.map((idade: any) => {
-      const ano = new Date(idade.ano).getFullYear();
+      const ano = idade.ano
       const anoAtual = new Date().getFullYear();
       return anoAtual - ano;
   }));
   switch (regras[0].dataValues.categoria) {
     case 'sub-7':
       for (const idade of idades) {
-        if (idade > 7 && idade < 6) {
+        if (idade[0] > 7 || idade[0] < 6) {
           console.log(idade, 'idade')
           return false; 
         }
       }
     case 'sub-8':
       for (const idade of idades) {
-        if (idade > 8 && idade < 8) {
+        if (idade[0] > 8 || idade[0] < 8) {
+          console.log(false, 'false')
           return false; 
         }
       }
     case 'sub-9':
       for (const idade of idades) {
-        if (idade > 9 && idade < 8) {
+        if (idade[0] > 9 || idade[0] < 8) {
           return false; 
         }
       }
     case 'sub-11':
       for (const idade of idades) {
-        if (idade > 11 && idade < 10) {
+        if (idade[0] > 11 || idade[0] < 10) {
           return false; 
         }
       }
     case 'sub-13':
       for (const idade of idades) {
-        if (idade > 13 && idade < 12) {
+        if (idade[0] > 13 || idade[0] < 12) {
           return false; 
         }
       }
     case 'sub-15':
       for (const idade of idades) {
-        if (idade > 15 && idade < 14) {
+        if (idade[0] > 15 || idade[0] < 14) {
           return false; 
         }
+        return true;
       }
     case 'sub-17':
       for (const idade of idades) {
-        if (idade > 17 && idade < 16) {
+        if (idade[0] > 17 || idade[0] < 16) {
           return false; 
         }
       }
     case 'sub-20':
       for (const idade of idades) {
-        if (idade > 20 && idade < 18) {
+        if (idade[0] > 20 || idade[0] < 18) {
           return false; 
         }
       }
     case 'adulto':
       for (const idade of idades) {
-        if (idade <  20) {
+        if (idade[0] <  20) {
           return false; 
         }
       }
-    default:
-      return true; // Se não houver categoria definida, assume-se que o time é válido
-  }
-
+    }
+  return true;  
 }
+export const verifyTeamsGenderRules = async (req: any, res: any,teamId:number,regraSexo:string) : Promise<boolean> => {
+  let isValid=true
+  const jogadoresDentroPartida = await TeamPlayer.findAll({
+    where: { teamId: teamId },
+    attributes: ['playerId'],
+  })
+  const PlayerIds = jogadoresDentroPartida.map((team: any) => team.playerId);
+  const playersWithDifferentGender = await Playermodel.findAll({
+    where: {
+      id: {
+        [Sequelize.Op.in]: PlayerIds
+      },
+      sexo: {
+        [Sequelize.Op.ne]: regraSexo
+      }
+    },
+    attributes: ['sexo']
+  });
+  if (playersWithDifferentGender.length > 0) {
+    return isValid=false;
+  }  
+  return isValid;
+} 
 export const getMatchTeams = async (req: any, res: any) => {
   try {
     const matchId = parseInt(req.params.id, 10);
     const match = await Match.findByPk(matchId, {
       attributes: [ 'title', 'date', 'location', 'status', 'description', 'price', 'organizerId']
     })
-    console.log('match', match)
     if (!match) {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
@@ -283,4 +272,29 @@ export const deleteTeamMatch= async (req: any, res: any) => {
     res.status(500).json({ message: 'Erro ao remover time da partida' });
   }
 }
+export const checkTeamsRuleCompliance  = async (req:any,res:any) => {
+  const { id } = req.params;
+    
+  const matchId = parseInt(id, 10);
+  const regras = await RulesModel.findOne({ where: { partidaid: id } });
+  const matchTeams = await MatchTeams.findAll({
+    where: { matchId: matchId },
+    attributes: ['teamId']
+  }); 
+  if (!regras) return;
+  for (const matchTeam of matchTeams) {
+    const teamId = matchTeam.teamId;
+    if (regras.dataValues.sexo !== "Ambos") {
+      if (await isTimePossuiCategoriaValido(teamId, id) === false || await verifyTeamsGenderRules(req, res, teamId, regras.dataValues.sexo) === false) {
+        await MatchTeams.destroy({
+          where: {
+            matchId: matchId,
+            teamId: teamId
+          }
+        });
+        res.status(403).json({message: `Time ${teamId} não se qualifica nas regras de categoria da partida`});
+      }
+    }
+  }
+};
 
