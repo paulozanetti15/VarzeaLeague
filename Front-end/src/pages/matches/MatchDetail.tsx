@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { format, set } from 'date-fns';
-import { ptBR, tr } from 'date-fns/locale';
+import { format, set,  startOfDay, isBefore, parseISO  } from 'date-fns';
+import { is, ptBR, te, tr } from 'date-fns/locale';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import './MatchDetail.css';
@@ -11,6 +11,8 @@ import { Button } from 'react-bootstrap';
 import axios from 'axios';
 import { Card } from 'react-bootstrap';
 import ModalTeams from '../../components/Modals/Teams/modelTeams';
+import { time } from 'console';
+
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -43,7 +45,29 @@ const MatchDetail: React.FC = () => {
     if (!token) {
       navigate('/login');
     }
-  }, []); // Add missing closing parenthesis for the first useEffect
+  }, []); 
+  useEffect(() => {
+    const fetchMatch = async () => {
+      try{
+        await axios.get(`http://localhost:3001/api/matches/${id}/check-teams-rule-compliance`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+      }
+      catch(error:any)
+      {
+        const errorMessage = error.response?.data?.message || 'Erro ao verificar regras dos times.';
+        toast.error(errorMessage);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200); 
+        return;
+      } 
+    };
+    fetchMatch();
+    
+  }, [id]); 
   useEffect(() => {
     const fetchMatchDetailsInit = async () => {
       try {
@@ -146,6 +170,7 @@ const MatchDetail: React.FC = () => {
     
   },[])
 
+
   if (loading) {
     return <div className="match-detail-container loading">Carregando detalhes da partida...</div>;
   }
@@ -157,14 +182,30 @@ const MatchDetail: React.FC = () => {
   if (!match) {
     return <div className="match-detail-container error">Partida não encontrada.</div>;
   }
-  const isLimitedDateExpired = (dateString: Date | null): boolean => {
-    if (!dateString) return false; // or true, depending on your logic for null
-    const diaAtual = new Date().getDate();
-    const date = new Date(dateString).getDate();
-    if (date < diaAtual) {
-      return true;  
+  const isDateToJoinExpired = (dateString: Date | string | null): boolean => {
+    if (!dateString) return false;
+    
+    try {
+      const today = startOfDay(new Date());
+      const targetDate = startOfDay(typeof dateString === 'string' ? parseISO(dateString) : dateString);
+      return isBefore(targetDate, today);
+    } catch (error) {
+      console.error('Error parsing date:', error)
     }
-    return false;
+    return true; // Se houver erro, considerar como expirado
+  };
+  const isTimeToJoinExpired = (timeString: string | null): boolean => {
+    if (!timeString) return false;
+    try {
+      const today = new Date();
+      String(timeString);
+      const [hours, minutes] = timeString.split(':').map(Number);
+      const targetTime = set(today, { hours, minutes, seconds: 0, milliseconds: 0 });
+      return isBefore(targetTime, today);
+    } catch (error) {
+      console.error('Error parsing time:', error);
+    } 
+    return true; 
   }
   return (
     <div className="match-detail-container">
@@ -280,7 +321,7 @@ const MatchDetail: React.FC = () => {
             </div>
           )}
           <div className="d-flex justify-content-center w-100">
-            {(match.countTeams < match.maxTeams) && isLimitedDateExpired(DataLimite)==false &&
+            {(match.countTeams < match.maxTeams) && isDateToJoinExpired(DataLimite)==false && isDateToJoinExpired(match.date) === false && isTimeToJoinExpired(match.date) === false &&
               <Button 
                 variant="primary"
                 className="mt-5"
