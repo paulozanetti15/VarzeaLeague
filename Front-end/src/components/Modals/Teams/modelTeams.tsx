@@ -14,22 +14,31 @@ const modelTeams = ({ matchid,onHide,show }: ModelTeamsProps) => {
     const [teams, setTeams] = useState<any[]>([]);
  
     const handleJoinWithTeam = async (teamId: number) => {
-        const response=await axios.post(`http://localhost:3001/api/matches/${teamId}/join-team`, {
-            teamId: teamId,
-            matchId: matchid
-        }, {
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+        try{
+            const response=await axios.post(`http://localhost:3001/api/matches/${teamId}/join-team`, 
+            {
+                teamId: teamId,
+                matchId: matchid
+            }, 
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            if (response.status === 201) {
+                toast.success('Time inscrito na partida com sucesso!');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            }
+            else if (response.status === 403) {
+                toast.error(response.data.message);
+            } 
         }
-        })
-        if (response.status === 200) {
-            toast.success('Time inscrito na partida com sucesso!');
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            toast.error('Erro ao inscrever time na partida. Tente novamente.');
-        }  
+        catch (error : any) {
+            toast.error(error.response.data.message);
+            return;
+        }
     };
     const getAvaiableTimes = async (idmatch:number) => {
         try {

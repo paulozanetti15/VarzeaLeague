@@ -28,7 +28,7 @@ interface Team {
   name: string;
   description: string;
   playerCount: number;
-  matchCount: number;
+  quantidadePartidas: number;
   ownerId?: number;
   isCurrentUserCaptain?: boolean;
   banner?: string;
@@ -66,7 +66,6 @@ const TeamList = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-
       setTeams(response.data);
     } catch (err) {
       console.error('Erro ao buscar times:', err);
@@ -132,7 +131,6 @@ const TeamList = () => {
   };
 
   const hasTeam = teams.length > 0;
-
   return (
     <div className="teams-container">
       <div className="top-navigation">
@@ -234,7 +232,7 @@ const TeamList = () => {
                       </div>
                       <div className="stat">
                         <EmojiEventsIcon sx={{ fontSize: 20, color: '#FFD700' }} />
-                        <span>{team.matchCount || 0} Partidas</span>
+                        <span>{Number(team.quantidadePartidas)} Partidas</span>
                       </div>
                     </div>
                     

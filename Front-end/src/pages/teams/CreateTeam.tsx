@@ -329,18 +329,9 @@ export default function CreateTeam() {
     } catch (err: any) {
       console.error('Erro completo:', err);
       setLoading(false);
-      let errorMsg = 'Erro ao criar time. Tente novamente.';
-      
-      if (err.response && err.response.data) {
-        if (typeof err.response.data.error === 'string') {
-          errorMsg = err.response.data.error;
-        } else if (typeof err.response.data.message === 'string') {
-          errorMsg = err.response.data.message;
-        }
-      }
-      
+      const errorMsg = err.response.data.error || 'Erro ao criar time. Tente novamente.';
+      console.error('Erro ao criar time:', errorMsg);
       setError(errorMsg);
-      setToastMessage(errorMsg);
       setToastBg('danger');
       setShowToast(true);
     }
