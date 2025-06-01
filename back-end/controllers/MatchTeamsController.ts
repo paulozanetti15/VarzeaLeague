@@ -1,11 +1,11 @@
 import MatchTeams from "../models/MatchTeamsModel";
 import Match from "../models/MatchModel";
-import User from "../models/UserModel";
 import Team from "../models/TeamModel";
 import Sequelize from "sequelize";
-import TeamPlayer from "../models/TeamPlayerModel";
 import RulesModel from "../models/RulesModel";
 import jwt from 'jsonwebtoken';
+import Playermodel from "../models/PlayerModel";
+import TeamPlayer from "../models/TeamPlayerModel";
 require('dotenv').config(); 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
 
@@ -60,19 +60,36 @@ export const joinMatchByTeam = async (req: any, res: any) => {
       return res.status(400).json({ message: 'Time já está inscrito nesta partida' });
     }
     if(regras.dataValues.sexo!=="Ambos"){
-      const playersWithDifferentGender = await TeamPlayer.findOne({
+      const jogadoresDentroPartida = await MatchTeams.findAll({
+        where: { matchId },
+        attributes: ['teamId'],  
+      })
+      const teamsIds = jogadoresDentroPartida.map((team: any) => team.teamId);
+      const playersIdRows = await TeamPlayer.findAll({
         where: {
-          teamId: teamId,
-          PlayerGender: {
-            [Sequelize.Op.ne]: regras.dataValues.sexo  
+          teamId: {
+            [Sequelize.Op.in]: teamsIds
           }
         },
-        attributes: ['id', 'Playername', 'PlayerGender']
+        attributes: ['playerId'],
+        raw: true
+      });  
+      const playerIds = playersIdRows.map((row: any) => row.playerId);
+      const playersWithDifferentGender = await Playermodel.findAll({
+        where: {
+          id: {
+            [Sequelize.Op.in]: playerIds
+          },
+          sexo: {
+            [Sequelize.Op.ne]: regras.dataValues.sexo
+          }
+        },
+        attributes: ['sexo']
       });
       if (playersWithDifferentGender!==null) {
         return res.status(403).json({ message: `Time não se qualifica nas regras de genero da partida` });
       }
-      if (!await isTimePossuiCategoriaValido(teamId)) {
+      if (!await isTimePossuiCategoriaValido(teamId,matchId)) {
         return res.status(403).json({ message: `Time não se qualifica nas regras de categoria da partida` });
       }
       else{
@@ -84,7 +101,7 @@ export const joinMatchByTeam = async (req: any, res: any) => {
       }
     }
     else{
-      if (!await isTimePossuiCategoriaValido(teamId)) {
+      if (!await isTimePossuiCategoriaValido(teamId,matchId)) {
         return res.status(403).json({ message: `Time não se qualifica nas regras de categoria da partida` });
       }
       else{
@@ -101,21 +118,28 @@ export const joinMatchByTeam = async (req: any, res: any) => {
     res.status(500).json({ message: 'Erro ao inscrever time na partida' });
   }
 } 
-  
-
-const isTimePossuiCategoriaValido=async(teamId:number)=>{
+const isTimePossuiCategoriaValido=async(teamId:number,matchId:number)=>{
   const idades=[];
   const regras = await RulesModel.findAll({
+    where: { partidaid: matchId },
     attributes: ['categoria']
   });
-  const idadesJogadores = await TeamPlayer.findAll({
-    attributes: ['Playerdatebirth'],
+  const teamIdsRows = await MatchTeams.findAll({
+    where: { matchId: matchId },
+    attributes: ['teamId'],
+    raw: true
+  });
+  const teamIds = teamIdsRows.map((row: any) => row.teamId);
+  const idadesJogadores = await Playermodel.findAll({
+    attributes: ['ano'],
     where: {
-      teamId: teamId
+      id: {
+        [Sequelize.Op.in]: teamIds
+      }
     }
   })
   idades.push(idadesJogadores.map((idade: any) => {
-      const ano = new Date(idade.Playerdatebirth).getFullYear();
+      const ano = new Date(idade.ano).getFullYear();
       const anoAtual = new Date().getFullYear();
       return anoAtual - ano;
   }));
