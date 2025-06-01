@@ -10,7 +10,6 @@ import fs from 'fs';
 import { AuthRequest } from '../middleware/auth';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv'
-import TeamPlayer from '../models/TeamPlayerModel';
 import MatchTeams from '../models/MatchTeamsModel';
 dotenv.config();
 export class TeamController {
@@ -245,17 +244,23 @@ export class TeamController {
           combinedTeams.push(team);
         }
       });
-      
-      const formattedTeams = combinedTeams.map(team => {
-        const plainTeam = team.get({ plain: true });
-        const isCaptain = team.captainId === userId;
-        
-        return {
-          ...plainTeam,
-          banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
-          isCurrentUserCaptain: isCaptain,
-        };
-      });
+      const formattedTeams = await Promise.all(
+        combinedTeams.map(async team => {
+          const plainTeam = team.get({ plain: true });
+          const isCaptain = team.captainId === userId;
+          const quantidadePartidas = await MatchTeams.count({
+            where: {
+              teamId: team.id 
+            }
+          });
+          return {
+            ...plainTeam,
+            banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
+            isCurrentUserCaptain: isCaptain,
+            quantidadePartidas: quantidadePartidas // This is now a number, not a Promise
+          };
+        })
+      );
       
       res.json(formattedTeams);
     } catch (error) {

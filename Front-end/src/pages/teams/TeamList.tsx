@@ -28,7 +28,7 @@ interface Team {
   name: string;
   description: string;
   playerCount: number;
-  matchCount: number;
+  quantidadePartidas: number;
   ownerId?: number;
   isCurrentUserCaptain?: boolean;
   banner?: string;
@@ -67,7 +67,6 @@ const TeamList = () => {
         },
       });
       setTeams(response.data);
-
     } catch (err) {
       console.error('Erro ao buscar times:', err);
       setError('Erro ao carregar o time.');
@@ -233,7 +232,7 @@ const TeamList = () => {
                       </div>
                       <div className="stat">
                         <EmojiEventsIcon sx={{ fontSize: 20, color: '#FFD700' }} />
-                        <span>{Number(team.matchCount)} Partidas</span>
+                        <span>{Number(team.quantidadePartidas)} Partidas</span>
                       </div>
                     </div>
                     
