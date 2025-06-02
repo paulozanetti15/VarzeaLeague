@@ -274,7 +274,6 @@ export const deleteTeamMatch= async (req: any, res: any) => {
 }
 export const checkTeamsRuleCompliance  = async (req:any,res:any) => {
   const { id } = req.params;
-    
   const matchId = parseInt(id, 10);
   const regras = await RulesModel.findOne({ where: { partidaid: id } });
   const matchTeams = await MatchTeams.findAll({
@@ -284,6 +283,9 @@ export const checkTeamsRuleCompliance  = async (req:any,res:any) => {
   if (!regras) return;
   for (const matchTeam of matchTeams) {
     const teamId = matchTeam.teamId;
+    const team= await Team.findByPk(teamId, {
+      attributes: ['name']})
+    const nome= team.dataValues.name;  
     if (regras.dataValues.sexo !== "Ambos") {
       if (await isTimePossuiCategoriaValido(teamId, id) === false || await verifyTeamsGenderRules(req, res, teamId, regras.dataValues.sexo) === false) {
         await MatchTeams.destroy({
@@ -292,7 +294,7 @@ export const checkTeamsRuleCompliance  = async (req:any,res:any) => {
             teamId: teamId
           }
         });
-        res.status(403).json({message: `Time ${teamId} não se qualifica nas regras de categoria da partida`});
+        res.status(403).json({message: `Time ${nome} não se qualifica nas regras de categoria da partida`});
       }
     }
   }

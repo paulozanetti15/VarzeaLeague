@@ -7,7 +7,7 @@ import axios from 'axios';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import CircularProgress from '@mui/material/CircularProgress';
-import Toast from '../../components/Toast/ToastComponent';
+import ToastComponent from '../../components/Toast/ToastComponent';
 
 interface MatchFormData {
   title: string;
@@ -233,7 +233,7 @@ const CreateMatch: React.FC = () => {
         date: matchDateTime.toISOString(),
         location: enderecoCompleto,
         description: formData.description?.trim(),
-        price: formData.price ? parseFloat(formData.price) : null,
+        price: formData.price ? parseFloat(formData.price) : 0.00,
         city: formData.city.trim(),
         complement: formData.complement?.trim(),
         Uf: formData.UF.trim(),
@@ -258,7 +258,7 @@ const CreateMatch: React.FC = () => {
   return (
     <div className="create-match-container">
       {showToast && (
-        <Toast
+        <ToastComponent
           message={toastMessage}
           bg={toastBg}
           onClose={() => setShowToast(false)}
@@ -489,4 +489,4 @@ const CreateMatch: React.FC = () => {
   );
 };
 
-export default CreateMatch; 
+export default CreateMatch;
