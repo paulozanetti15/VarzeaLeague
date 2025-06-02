@@ -159,6 +159,29 @@ interface UserType {
   name: string;
 }
 
+const SEXO_OPTIONS = [
+  { value: 'Masculino', label: 'Masculino' },
+  { value: 'Feminino', label: 'Feminino' },
+  { value: 'N/A', label: 'N/A' },
+];
+const sexoLabel = (val: string) => {
+  const found = SEXO_OPTIONS.find(opt => opt.value === val || opt.label === val);
+  return found ? found.label : val;
+};
+const sexoValue = (label: string) => {
+  const found = SEXO_OPTIONS.find(opt => opt.label === label || opt.value === label);
+  return found ? found.value : label;
+};
+const USER_TYPE_OPTIONS = [
+  { id: 1, name: 'Administrador' },
+  { id: 2, name: 'Gerenciador de Times' },
+  { id: 3, name: 'Gerenciador de Eventos' },
+];
+const userTypeLabel = (id: number|string) => {
+  const found = USER_TYPE_OPTIONS.find(opt => String(opt.id) === String(id));
+  return found ? found.name : 'Desconhecido';
+};
+
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [userTypes, setUserTypes] = useState<UserType[]>([]);
@@ -180,6 +203,7 @@ const UserManagement: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [formErrors, setFormErrors] = useState<any>({});
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -270,21 +294,69 @@ const UserManagement: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
     const { name, value } = e.target;
+    let newValue = value;
+    if (name === 'cpf') {
+      let v = String(value).replace(/\D/g, '').slice(0, 11);
+      if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+      else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1.$2.$3');
+      else if (v.length > 3) v = v.replace(/(\d{3})(\d{0,3})/, '$1.$2');
+      newValue = v;
+    }
+    if (name === 'phone') {
+      let v = String(value).replace(/\D/g, '').slice(0, 11);
+      if (v.length > 10) v = v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      else if (v.length > 6) v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+      else if (v.length > 2) v = v.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+      newValue = v;
+    }
+    if (name === 'sexo') {
+      newValue = value;
+    }
     setFormData(prev => ({
       ...prev,
-      [name as string]: value,
+      [name as string]: newValue,
     }));
+    setFormErrors((prev: any) => ({ ...prev, [name as string]: undefined }));
+  };
+
+  const validateForm = () => {
+    const errors: any = {};
+    if (!formData.name.trim()) errors.name = 'Nome é obrigatório';
+    if (!formData.cpf.trim()) {
+      errors.cpf = 'CPF é obrigatório';
+    } else {
+      const cpfLimpo = formData.cpf.replace(/\D/g, '');
+      if (!/^(\d{3}\.?){3}-?\d{2}$/.test(formData.cpf) || cpfLimpo.length !== 11) {
+        errors.cpf = 'CPF inválido';
+      }
+    }
+    if (!formData.email.trim()) errors.email = 'Email é obrigatório';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = 'Email inválido';
+    if (!formData.phone.trim()) errors.phone = 'Telefone é obrigatório';
+    else if (!/^\(\d{2}\) \d{4,5}-\d{4}$/.test(formData.phone)) errors.phone = 'Telefone inválido';
+    if (!formData.sexo) errors.sexo = 'Selecione o sexo';
+    if (!formData.userTypeId) errors.userTypeId = 'Selecione o tipo de usuário';
+    if (!selectedUser && !formData.password) errors.password = 'Senha é obrigatória';
+    else if (!selectedUser && formData.password.length < 6) errors.password = 'A senha deve ter pelo menos 6 caracteres';
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
     setLoading(true);
     try {
+      const dataToSend = {
+        ...formData,
+        sexo: sexoValue(formData.sexo),
+        userTypeId: formData.userTypeId,
+      };
       if (selectedUser) {
-        await api.put(`/user/${selectedUser.id}`, formData);
+        await api.put(`/user/${selectedUser.id}`, dataToSend);
         setSnackbar({open: true, message: 'Usuário atualizado com sucesso!', severity: 'success'});
       } else {
-        await api.post('/user', formData);
+        await api.post('/user', dataToSend);
         setSnackbar({open: true, message: 'Usuário criado com sucesso!', severity: 'success'});
       }
       fetchUsers();
@@ -292,7 +364,7 @@ const UserManagement: React.FC = () => {
     } catch (error: any) {
       setSnackbar({
         open: true,
-        message: error.message || 'Erro ao salvar usuário',
+        message: error.response?.data?.error || error.message || 'Erro ao salvar usuário',
         severity: 'error'
       });
     } finally {
@@ -310,7 +382,7 @@ const UserManagement: React.FC = () => {
       } catch (error: any) {
         setSnackbar({
           open: true,
-          message: error.message || 'Erro ao excluir usuário',
+          message: error.response?.data?.error === 'Usuário não encontrado' ? 'Usuário já foi removido.' : (error.message || 'Erro ao excluir usuário'),
           severity: 'error'
         });
       } finally {
@@ -373,13 +445,15 @@ const UserManagement: React.FC = () => {
             Novo Usuário
           </Button>
         </Box>
-        <TextField
+        <FancyTextField
           label="Buscar por nome ou email"
           variant="outlined"
           value={search}
           onChange={handleSearchChange}
           fullWidth
           className="user-management-search user-management-input"
+          InputLabelProps={{ shrink: false }}
+          placeholder="Buscar por nome ou email"
         />
         <div className="user-management-table-container">
           <Table className="user-management-table">
@@ -419,7 +493,7 @@ const UserManagement: React.FC = () => {
                     <TableCell className="user-cpf-cell">{user.cpf}</TableCell>
                     <TableCell className="user-phone-cell">{user.phone}</TableCell>
                     <TableCell>{user.sexo}</TableCell>
-                    <TableCell>{user.usertype?.name || 'Sem tipo'}</TableCell>
+                    <TableCell>{userTypeLabel(user.userTypeId)}</TableCell>
                     <TableCell className="user-actions-cell" align="right">
                       <Tooltip title="Ver detalhes" arrow>
                         <IconButton color="info" onClick={() => handleOpenDetail(user)}>
@@ -450,7 +524,9 @@ const UserManagement: React.FC = () => {
             page={page}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            sx={{ 
+            labelRowsPerPage="Linhas por página:"
+            labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count !== -1 ? count : `mais de ${to}`}`}
+            sx={{
               borderTop: `1px solid rgba(0,0,0,0.05)`,
               '.MuiTablePagination-select': {
                 borderRadius: '8px',
@@ -556,7 +632,7 @@ const UserManagement: React.FC = () => {
                 className="user-management-input"
                 InputLabelProps={{ shrink: true }}
               />
-              <FormControl fullWidth margin="normal" className="user-management-select">
+              <FormControl fullWidth margin="normal" className="user-management-select" error={!!formErrors.sexo}>
                 <InputLabel shrink>Sexo</InputLabel>
                 <Select
                   name="sexo"
@@ -565,12 +641,13 @@ const UserManagement: React.FC = () => {
                   required
                   label="Sexo"
                 >
-                  <MenuItem value="M">Masculino</MenuItem>
-                  <MenuItem value="F">Feminino</MenuItem>
-                  <MenuItem value="O">Outro</MenuItem>
+                  {SEXO_OPTIONS.map(opt => (
+                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                  ))}
                 </Select>
+                {formErrors.sexo && <Typography color="error" fontSize={13}>{formErrors.sexo}</Typography>}
               </FormControl>
-              <FormControl fullWidth margin="normal" className="user-management-select">
+              <FormControl fullWidth margin="normal" className="user-management-select" error={!!formErrors.userTypeId}>
                 <InputLabel shrink>Tipo de Usuário</InputLabel>
                 <Select
                   name="userTypeId"
@@ -579,12 +656,11 @@ const UserManagement: React.FC = () => {
                   required
                   label="Tipo de Usuário"
                 >
-                  {userTypes.map((type) => (
-                    <MenuItem key={type.id} value={type.id}>
-                      {type.name}
-                    </MenuItem>
+                  {USER_TYPE_OPTIONS.map(opt => (
+                    <MenuItem key={opt.id} value={opt.id}>{opt.name}</MenuItem>
                   ))}
                 </Select>
+                {formErrors.userTypeId && <Typography color="error" fontSize={13}>{formErrors.userTypeId}</Typography>}
               </FormControl>
               {!selectedUser && (
                 <TextField
