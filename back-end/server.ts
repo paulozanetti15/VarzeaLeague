@@ -23,6 +23,7 @@ import TeamPlayerRoutes from './routes/teamPlayerRoutes';
 import { seedUserTypes } from './seeds/userTypes';
 import { associateModels } from './models/associations'; 
 import fs from 'fs';
+import userTypeRoutes from './routes/userTypeRoutes';
 dotenv.config();
 
 const app = express();
@@ -51,6 +52,7 @@ app.use('/api/teams',teamRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/players', playerRoutes);
 app.use('/api/rules', RulesRoutes);
+app.use('/api/usertypes', userTypeRoutes);
 
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API está funcionando!' });

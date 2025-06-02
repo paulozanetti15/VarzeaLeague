@@ -74,15 +74,5 @@ User.init({
   modelName: 'User',
   freezeTableName: true
 });
-User.belongsTo(UserType, { 
-  foreignKey: 'userTypeId', 
-  as: 'usertype' 
-});
-
-UserType.hasMany(User, {
-  foreignKey: 'userTypeId',
-  as: 'users'
-});
-
 
 export default User;

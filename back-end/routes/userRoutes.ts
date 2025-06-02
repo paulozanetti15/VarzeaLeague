@@ -1,9 +1,22 @@
-import express from 'express';
-import UserController  from '../controllers/userController'; // Corrected path
-import { authenticateToken } from '../middleware/auth';
-const router= express.Router();
-router.get('/:id', authenticateToken, UserController.returnUser);
-router.put('/:id', authenticateToken, UserController.updateUser);
-router.delete('/:id', authenticateToken, UserController.deleteUser);
-router.put('/password/:id', authenticateToken, UserController.updateUserPassword);
+import express, { Request, Response } from 'express';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { index, store, update, remove, getById } from '../controllers/UserController';
+
+const router = express.Router();
+
+// Get all users
+router.get('/', index, authenticateToken);
+
+// Get user by ID
+router.get('/:id', getById, authenticateToken);
+
+// Create new user
+router.post('/', store, authenticateToken);
+
+// Update user
+router.put('/:id', update, authenticateToken);
+
+// Delete user
+router.delete('/:id', remove, authenticateToken);
+
 export default router;

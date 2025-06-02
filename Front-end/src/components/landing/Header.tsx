@@ -145,11 +145,14 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                     </button>
                     <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                       {(localStorage.getItem('Tipo_usuário:') === '1' || localStorage.getItem('Tipo_usuário:') === '3') && (
-                        <li><span className="dropdown-item" onClick={() => navigate('/teams')}>Meu time</span></li>
+                        <li><span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => navigate('/teams')}>Meu time</span></li>
                       )}
-                      <li><span className="dropdown-item" onClick={() => navigate('/perfil')}>Meu perfil</span></li>
+                      {localStorage.getItem('Tipo_usuário:') === '1' && (
+                        <li><span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => navigate('/users')}>Gestão de Usuários</span></li>
+                      )}
+                      <li><span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => navigate('/perfil')}>Meu perfil</span></li>
                       <li><hr className="dropdown-divider" /></li>
-                      <li><span className="dropdown-item" onClick={onLogout}>Sair</span></li>
+                      <li><span className="dropdown-item" style={{ cursor: 'pointer' }} onClick={onLogout}>Sair</span></li>
                     </ul>
                   </div>
                 </>
