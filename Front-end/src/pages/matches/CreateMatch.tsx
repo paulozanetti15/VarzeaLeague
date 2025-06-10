@@ -4,16 +4,12 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import './CreateMatch.css';
 import RegrasFormRegisterModal from '../../components/Modals/Regras/RegrasFormRegisterModal';
 import axios from 'axios';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import CircularProgress from '@mui/material/CircularProgress';
-import Toast from '../../components/Toast/ToastComponent';
+
 
 interface MatchFormData {
   title: string;
   description: string;
   location: string;
-  number: string;
   date: string;
   time: string;
   price: string;
@@ -21,7 +17,7 @@ interface MatchFormData {
   cep: string;
   UF: string;
   city: string;
-  category: string;
+  category: string; // Added category property
 }
 
 const CreateMatch: React.FC = () => {
@@ -35,7 +31,6 @@ const CreateMatch: React.FC = () => {
     title: '',
     description: '',
     location: '',
-    number: '',
     date: '',
     time: '',
     price: '',
@@ -47,12 +42,23 @@ const CreateMatch: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [cepValido, setCepValido] = useState<boolean | null>(null);
-  const [buscandoCep, setBuscandoCep] = useState(false);
-  const [cepErrorMessage, setCepErrorMessage] = useState<string | null>(null);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastBg, setToastBg] = useState('success');
+  useEffect(() => {
+    const fetchCEPData = async ()=>{
+      try{
+        axios.get(`https://viacep.com.br/ws/${formData.cep}/json/`)
+        .then((response) => {
+           formData.city = response.data.localidade;
+           formData.location = response.data.logradouro;
+           formData.UF= response.data.uf;
+
+        })
+      }
+      catch (error) {
+        setError('Erro ao buscar dados do CEP. Verifique o número e tente novamente.');
+      }
+    }
+    fetchCEPData();
+  }, [formData.cep]);
 
   useEffect(() => {
     const user= JSON.parse(localStorage.getItem('user') || '{}');
@@ -62,109 +68,34 @@ const CreateMatch: React.FC = () => {
       btnContainerRef.current.style.width = `${titleWidth}px`;
     }
   }, []);
-  
-  const formatarCep = (cep: string): string => {
-    cep = cep.replace(/\D/g, '');
-    
-    if (cep.length > 5) {
-      return `${cep.substring(0, 5)}-${cep.substring(5, 8)}`;
-    }
-    
-    return cep;
-  };
-
   const isValidCep = (cep: string) => {
     const cepRegex = /^[0-9]{5}-?[0-9]{3}$/;
-    return cepRegex.test(cep);
+    return cepRegex.test(cep) ? true : false;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
-    if (name === 'cep') {
-      const cepNumerico = value.replace(/\D/g, '');
-      
-      const cepFormatado = formatarCep(cepNumerico);
-      setFormData({
-        ...formData,
-        cep: cepFormatado
-      });
-      
-      if (cepNumerico.length < 8) {
-        setFormData(prev => ({
-          ...prev,
-          location: '',
-          city: '',
-          UF: ''
-        }));
-        setCepValido(null);
-        setCepErrorMessage(null);
-      }
-      
-      if (cepNumerico.length === 8) {
-        buscarCep(cepNumerico);
-      }
-      
-      return;
-    }
-    
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
   };
-  
-  const buscarCep = async (cep: string) => {
-    setBuscandoCep(true);
-    setCepValido(null);
-    setCepErrorMessage(null);
-    
-    try {
-      const response = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
-      
-      if (response.data.erro) {
-        setCepValido(false);
-        setFormData(prev => ({
-          ...prev,
-          location: '',
-          city: '',
-          UF: ''
-        }));
-        setCepErrorMessage('CEP não encontrado na base de dados.');
-        setToastMessage('CEP não encontrado');
-        setToastBg('danger');
-        setShowToast(true);
-        return;
-      }
-      
-      setCepValido(true);
-      setFormData(prev => ({
-        ...prev,
-        location: response.data.logradouro || '',
-        city: response.data.localidade || '',
-        UF: response.data.uf || ''
-      }));
-      
-      setToastMessage('CEP encontrado com sucesso!');
-      setToastBg('success');
-      setShowToast(true);
-    } catch (error) {
-      console.error('Erro ao buscar CEP:', error);
-      setCepValido(false);
+
+  const clearCep = () => {
+    if(formData.cep.length < 8 ){
       setFormData(prev => ({
         ...prev,
         location: '',
         city: '',
         UF: ''
       }));
-      setCepErrorMessage('Erro na conexão com o serviço de CEP. Tente novamente.');
-      setToastMessage('Erro ao buscar CEP. Verifique sua conexão.');
-      setToastBg('danger');
-      setShowToast(true);
-    } finally {
-      setBuscandoCep(false);
-    }
+  }
+
   };
+
+  useEffect(() => {
+    clearCep();
+  },[formData.cep]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,13 +106,11 @@ const CreateMatch: React.FC = () => {
       // Validações do formulário
       if (!formData.title?.trim()) {
         setError('O título da partida é obrigatório');
-        setLoading(false);
         return;
       }
 
       if (!formData.date || !formData.time) {
         setError('Data e hora são obrigatórios');
-        setLoading(false);
         return;
       }
 
@@ -189,49 +118,22 @@ const CreateMatch: React.FC = () => {
       const matchDateTime = new Date(`${formData.date}T${formData.time}`);
       if (matchDateTime <= new Date()) {
         setError('A data da partida deve ser futura');
-        setLoading(false);
         return;
       }
     
       // Validar preço
       if (formData.price && parseFloat(formData.price) < 0) {
         setError('O preço não pode ser negativo');
-        setLoading(false);
         return;
       }
-      
-      // Validar CEP
-      if (formData.cep.replace(/\D/g, '').length !== 8) {
-        setError('CEP inválido. Informe um CEP com 8 dígitos.');
-        setLoading(false);
+      if (!formData.cep || !isValidCep(formData.cep)) {
+        setError('CEP inválido');
         return;
       }
-      
-      if (!cepValido) {
-        setError('CEP não encontrado. Verifique se o CEP está correto.');
-        setLoading(false);
-        return;
-      }
-      
-      if (formData.UF.trim() === '' || formData.city.trim() === '') {
-        setError('Estado e cidade são obrigatórios.');
-        setLoading(false);
-        return;
-      }
-      
-      if (!formData.number.trim()) {
-        setError('O número do endereço é obrigatório.');
-        setLoading(false);
-        return;
-      }
-      
-      // Unir o endereço com o número antes de enviar ao backend
-      const enderecoCompleto = `${formData.location.trim()}, ${formData.number.trim()}`;
-      
       const matchData = {
         title: formData.title.trim(),
         date: matchDateTime.toISOString(),
-        location: enderecoCompleto,
+        location: formData.location.trim(),
         description: formData.description?.trim(),
         price: formData.price ? parseFloat(formData.price) : null,
         city: formData.city.trim(),
@@ -257,22 +159,12 @@ const CreateMatch: React.FC = () => {
 
   return (
     <div className="create-match-container">
-      {showToast && (
-        <Toast
-          message={toastMessage}
-          bg={toastBg}
-          onClose={() => setShowToast(false)}
-        />
-      )}
-      
-      <div className="top-navigation">
-        <button 
-          className="back-btn"
-          onClick={() => navigate('/matches')} 
-        >
-          <ArrowBackIcon /> Voltar
-        </button>
-      </div>
+      <button 
+        className="back-button"
+        onClick={() => navigate(-1)}
+      >
+        <ArrowBackIcon />
+      </button>
 
       <div className="form-container">
         <h1 className="form-title">
@@ -311,182 +203,136 @@ const CreateMatch: React.FC = () => {
               placeholder="Descreva os detalhes da partida..."
             />
           </div>
-          <div className="form-row">
-            <div className="form-group" style={{ flex: 1 }}>
-              <label htmlFor="date">Data *</label>
-              <input
-                type="date"
-                id="date"
-                name="date"
-                value={formData.date}
-                onChange={handleInputChange}
-                required
-                className="form-control"
-              />
-            </div>
-            <div className="form-group" style={{ flex: 1 }}>
-              <label htmlFor="time">Horário *</label>
-              <input
-                type="time"
-                id="time"
-                name="time"
-                value={formData.time}
-                onChange={handleInputChange}
-                required
-                className="form-control"
-              />
+          <div className="form-col">
+            <div className='form-row'>
+              <div className="form-group">
+                <label htmlFor="date">Data *</label>
+                <input
+                  type="date"
+                  id="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleInputChange}
+                  required
+                  className="form-control"
+                />
+              </div>
+            <div className="form-col">
+              <div className="form-group">
+                <label htmlFor="time">Horário </label>
+                <input
+                  type="time"
+                  id="time"
+                  name="time"
+                  value={formData.time}
+                  onChange={handleInputChange}
+                  required
+                  className="form-control"
+                />
+              </div>
             </div>
           </div>  
+        </div>  
           <div className="form-group">
-            <label htmlFor="cep">CEP *</label>
-            <div className={`cep-input-container ${cepValido === true ? 'valid' : cepValido === false ? 'invalid' : ''}`}>
-              <input 
-                type="text"
-                id="cep"
-                name="cep"
-                className="form-control"
-                maxLength={9}
-                value={formData.cep}
-                onChange={handleInputChange}
-                placeholder="00000-000"
-                required
-              />
-              {buscandoCep && (
-                <span className="cep-loading">
-                  <CircularProgress size={20} />
-                </span>
-              )}
-              {!buscandoCep && cepValido === true && (
-                <span className="cep-valid">
-                  <CheckCircleIcon style={{ fontSize: 20 }} />
-                </span>
-              )}
-              {!buscandoCep && cepValido === false && (
-                <span className="cep-invalid">
-                  <ErrorIcon style={{ fontSize: 20 }} />
-                </span>
-              )}
-            </div>
-            {cepErrorMessage && (
-              <div className="cep-error-message">
-                {cepErrorMessage}
+            <label htmlFor="cep">CEP </label>
+            <input type="text"
+              id="cep"
+              name="cep"
+              pattern='[0-9]{5}-?[0-9]{3}'
+              maxLength={9}
+              value={formData.cep}
+              onChange={handleInputChange}
+              ></input>
+          </div>
+           <div className="form-group">
+            <label htmlFor="location">Endereço </label>
+            <input
+              type="text"
+              id="location"
+              name="location"
+              value={formData.location}
+              onChange={handleInputChange}
+              disabled
+              placeholder="Ex: Rua das Flores, 123"
+              className="form-control"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="city">Cidade </label>
+             <input type="text"
+              id="city"
+              name="city"
+              value={formData.city}
+              disabled></input>
+          </div>
+          <div className="form-col">
+              <div className="form-group">
+                <label htmlFor="UF"> UF</label>
+                <input
+                  type="text"
+                  id="UF"
+                  name="UF"
+                  value={formData.UF}
+                  onChange={handleInputChange}
+                  disabled
+                  className="form-control"
+                />
               </div>
-            )}
-          </div>
-          
-          <div className="form-row">
-            <div className="form-group" style={{ flex: 3 }}>
-              <label htmlFor="location">Endereço *</label>
-              <input
-                type="text"
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                className="form-control"
-                required
-                placeholder="Rua, Avenida, etc."
-                disabled={true}
-              />
             </div>
-            
-            <div className="form-group" style={{ flex: 1 }}>
-              <label htmlFor="number">Número *</label>
-              <input
-                type="text"
-                id="number"
-                name="number"
-                value={formData.number}
-                onChange={handleInputChange}
-                className="form-control"
-                required
-                placeholder="Nº"
-              />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group" style={{ flex: 2 }}>
-              <label htmlFor="city">Cidade *</label>
-              <input
-                type="text"
-                id="city"
-                name="city"
-                value={formData.city}
-                onChange={handleInputChange}
-                className="form-control"
-                required
-                placeholder="Cidade"
-                disabled={true}
-              />
-            </div>
-
-            <div className="form-group" style={{ flex: 1 }}>
-              <label htmlFor="UF">Estado *</label>
-              <input
-                type="text"
-                id="UF"
-                name="UF"
-                value={formData.UF}
-                onChange={handleInputChange}
-                className="form-control"
-                required
-                placeholder="UF"
-                maxLength={2}
-                disabled={true}
-              />
-            </div>
-          </div>
           
           <div className="form-group">
-            <label htmlFor="complement">Complemento</label>
+            <label htmlFor="complement">Complemento (opcional)</label>
             <input
               type="text"
               id="complement"
               name="complement"
               value={formData.complement}
               onChange={handleInputChange}
+              placeholder="Ex: Quadra 2, Campo de futebol, Portão lateral"
               className="form-control"
-              placeholder="Complemento, referências, etc."
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="price">Preço por jogador (R$)</label>
-            <input
-              type="number"
-              id="price"
-              name="price"
-              value={formData.price}
-              onChange={handleInputChange}
-              className="form-control"
-              placeholder="0.00"
-              min="0"
-              step="0.01"
-            />
+          <div className="form-row">
+            <div className="form-col">
+              <div className="form-group">
+                <label className="form-label">Preço (opcional)</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  placeholder="R$"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
           </div>
-
-          <div className="form-buttons">
-            <button 
-              type="submit" 
+         <div className="btn-container" ref={btnContainerRef}>
+            <button
+              type="submit"
               className="submit-btn"
               disabled={loading}
             >
-              {loading ? 'Criando...' : 'Próximo'}
+               Continuar para criar partida
             </button>
           </div>
         </form>
-      </div>
-      {showInfoAthleteModal && (
-        <RegrasFormRegisterModal 
-          show={showInfoAthleteModal}
-          onHide={() => setShowInfoAthleteModal(false)}
-          partidaDados={dadosPartida}
-          userId={usuario?.id || 0}
+      </div> 
+      {usuario && (
+      <>
+        <RegrasFormRegisterModal
+            userId={usuario.id} 
+            show={showInfoAthleteModal}
+            partidaDados={dadosPartida}
+            onHide={() => setShowInfoAthleteModal(false)}
         />
-      )}
+      </>
+    )} 
     </div>
   );
 };
-
+ 
 export default CreateMatch; 

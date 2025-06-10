@@ -109,11 +109,6 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Seu email"
                 required
-                autoComplete="username"
-                style={{
-                  backgroundColor: '#1a237e !important',
-                  color: 'white !important'
-                }}
               />
             </div>
 
@@ -127,12 +122,7 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Sua senha"
                 required
-                autoComplete="current-password"
-                style={{ 
-                  paddingRight: '3rem',
-                  backgroundColor: '#1a237e !important',
-                  color: 'white !important'
-                }}
+                style={{ paddingRight: '3rem' }}
               />
               <button 
                 type="button" 

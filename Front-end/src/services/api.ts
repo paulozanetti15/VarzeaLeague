@@ -4,7 +4,6 @@ import { getMatchErrorStatus, clearMatchErrors } from './apiHelpers';
 const API_BASE_URL = 'http://localhost:3001/api';
 const token = localStorage.getItem('token');
 
-const getToken = () => localStorage.getItem('token');
 
 const handleResponse = async (response: Response) => {
   try {
@@ -228,52 +227,7 @@ const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout 
   throw lastError;
 };
 
-const api = {
-  get: async (url: string) => {
-    const token = getToken();
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json',
-      },
-    });
-    return handleResponse(response);
-  },
-  post: async (url: string, data: any) => {
-    const token = getToken();
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    return handleResponse(response);
-  },
-  put: async (url: string, data: any) => {
-    const token = getToken();
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    return handleResponse(response);
-  },
-  delete: async (url: string) => {
-    const token = getToken();
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json',
-      },
-    });
-    return handleResponse(response);
-  },
+export const api = {
   matches: {
     create: async (matchData: any) => {
       const token = localStorage.getItem('token');
@@ -655,6 +609,4 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   const distance = R * c;
   return distance;
-}
-
-export default api; 
+} 

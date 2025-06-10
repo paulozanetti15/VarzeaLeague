@@ -27,9 +27,6 @@ export function Landing({ isLoggedIn, user, onLoginClick, onRegisterClick, onLog
 
   // Handle scrolling to section based on URL parameters
   useEffect(() => {
-    // Adiciona estilo ao body para garantir o tema escuro
-    document.body.classList.add('dark-theme');
-    
     // Check if we have a section parameter or hash
     const params = new URLSearchParams(location.search);
     const sectionParam = params.get('section');
@@ -45,10 +42,6 @@ export function Landing({ isLoggedIn, user, onLoginClick, onRegisterClick, onLog
         }
       }, 500); // Give the page time to fully render
     }
-    
-    return () => {
-      document.body.classList.remove('dark-theme');
-    };
   }, [location]);
 
   const handleCreateMatch = () => {

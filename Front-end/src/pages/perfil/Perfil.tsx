@@ -46,34 +46,28 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'linear-gradient(135deg, #1a237e 0%, #0d47a1 100%)',
+    background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
     padding: '2rem 1rem',
     width: '100%',
     marginTop: '0', // Remove the margin-top that was causing white space
-    position: 'relative' as const,
-    zIndex: 2,
   };
 
   const cardStyle = {
     width: '100%',
     maxWidth: '550px',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    backdropFilter: 'blur(10px)',
-    borderRadius: '12px',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+    backgroundColor: '#ffffff',
+    borderRadius: '8px',
+    boxShadow: '0 8px 30px rgba(25, 118, 210, 0.15)',
     overflow: 'hidden' as const,
     position: 'relative' as const,
-    border: '1px solid rgba(255, 255, 255, 0.1)',
-    color: '#fff',
   };
 
   const headerStyle = {
-    backgroundColor: 'rgba(33, 150, 243, 0.3)',
+    backgroundColor: '#1e88e5',
     color: '#ffffff',
     padding: '2rem',
     textAlign: 'center' as const,
     position: 'relative' as const,
-    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
   };
 
   const titleStyle = {
@@ -81,7 +75,6 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
     fontWeight: 700,
     marginBottom: '0.5rem',
     color: '#ffffff',
-    textShadow: '0 2px 10px rgba(0, 0, 0, 0.3)',
   };
 
   const subtitleStyle = {
@@ -89,7 +82,6 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
     opacity: 0.9,
     color: '#ffffff',
     marginBottom: '1.5rem',
-    textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
   };
 
   const triangleStyle = {
@@ -100,14 +92,13 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
     transform: 'translateX(-50%)',
     width: '50px',
     height: '20px',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#ffffff',
     clipPath: 'polygon(0 0, 100% 0, 50% 100%)',
   };
 
   const bodyStyle = {
     padding: '2.5rem',
-    backgroundColor: 'transparent',
-    color: '#fff',
+    backgroundColor: '#ffffff',
   };
 
   const formGroupStyle = {
@@ -119,34 +110,31 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
     display: 'block',
     marginBottom: '0.5rem',
     fontWeight: 500,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: '#374151',
     fontSize: '0.95rem',
-    textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
   };
 
   const inputStyle = {
     width: '100%',
     padding: '0.875rem 1rem',
     fontSize: '1rem',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
+    border: '1px solid #d1d5db',
     borderRadius: '6px',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#f9fafb',
     transition: 'all 0.3s ease',
-    color: 'rgba(255, 255, 255, 0.9)',
   };
 
   const disabledInputStyle = {
     ...inputStyle,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    color: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: '#f3f4f6',
+    color: '#6b7280',
     cursor: 'not-allowed',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
   };
 
   const buttonPrimaryStyle = {
     width: '100%',
     padding: '0.75rem 1rem',
-    background: 'linear-gradient(135deg, #2196F3, #1976D2)',
+    backgroundColor: '#1e88e5',
     color: '#ffffff',
     border: 'none',
     borderRadius: '6px',
@@ -155,31 +143,27 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
     cursor: 'pointer',
     transition: 'all 0.3s ease',
     marginBottom: '1rem',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
   };
 
   const buttonSecondaryStyle = {
     ...buttonPrimaryStyle,
-    backgroundColor: 'transparent',
-    background: 'rgba(255, 255, 255, 0.1)',
-    color: '#ffffff',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#ffffff',
+    color: '#1e88e5',
+    border: '1px solid #1e88e5',
   };
 
   const buttonDangerStyle = {
     ...buttonPrimaryStyle,
     backgroundColor: '#ef4444',
-    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
     color: '#ffffff',
   };
 
   const linkStyle = {
-    color: '#64B5F6',
+    color: '#1e88e5',
     textDecoration: 'none',
     cursor: 'pointer',
     fontWeight: 500,
     fontSize: '0.875rem',
-    textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
   };
 
   const avatarContainerStyle = {
@@ -194,7 +178,7 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
     width: '100px',
     height: '100px',
     borderRadius: '50%',
-    backgroundColor: 'rgba(33, 150, 243, 0.3)',
+    backgroundColor: '#1e88e5',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -202,13 +186,11 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
     fontSize: '2.5rem',
     fontWeight: 700,
     marginBottom: '1rem',
-    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
   };
 
   const buttonGroupStyle = {
     display: 'flex',
-    flexWrap: 'wrap' as React.CSSProperties['flexWrap'],
+    flexWrap: 'wrap',
     gap: '1rem',
     marginTop: '1.5rem',
     justifyContent: 'center',
@@ -216,21 +198,20 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
 
   const backButtonStyle = {
     position: 'absolute' as const,
-    top: '1rem',
-    left: '1rem',
-    background: 'rgba(255, 255, 255, 0.1)',
+    top: '15px',
+    left: '15px',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     color: 'white',
     border: 'none',
-    borderRadius: '30px',
+    borderRadius: '6px',
+    padding: '8px 16px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: '0.5rem 1rem',
-    fontSize: '0.875rem',
+    gap: '8px',
     cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    backdropFilter: 'blur(4px)',
-    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+    fontSize: '0.95rem',
+    fontWeight: 500,
+    transition: 'all 0.2s ease'
   };
 
   // Function to handle section navigation from header
@@ -404,10 +385,10 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
                   <div style={avatarStyle}>
                     {getInitials(usuario.name)}
                   </div>
-                  <h3 style={{ fontWeight: 600, color: 'rgba(255, 255, 255, 0.95)', margin: 0, textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)' }}>
+                  <h3 style={{ fontWeight: 600, color: '#374151', margin: 0 }}>
                     {usuario.name}
                   </h3>
-                  <p style={{ color: 'rgba(255, 255, 255, 0.8)', margin: '0.25rem 0 0', fontSize: '0.95rem' }}>
+                  <p style={{ color: '#6b7280', margin: '0.25rem 0 0' }}>
                     {usuario.email}
                   </p>
                 </div>
@@ -533,24 +514,24 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
       
       {showDeleteModal && (
         <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered dialogClassName="delete-account-modal">
-          <Modal.Header closeButton>
-            <Modal.Title>
-              <IoWarningOutline size={32} /> Atenção
+          <Modal.Header closeButton style={{ background: '#fff8e1', borderBottom: 'none', justifyContent: 'center' }}>
+            <Modal.Title style={{ color: '#b45309', display: 'flex', alignItems: 'center', gap: 10, fontSize: '1.3rem', justifyContent: 'center', width: '100%' }}>
+              <IoWarningOutline size={32} style={{ color: '#f59e42', marginBottom: 2 }} /> Atenção
             </Modal.Title>
           </Modal.Header>
-          <Modal.Body>
-            <div style={{ fontWeight: 600, fontSize: '1.08rem', marginBottom: 10 }}>
+          <Modal.Body style={{ textAlign: 'center', background: '#fffde7', padding: '2rem 1.5rem 1.5rem 1.5rem' }}>
+            <div style={{ fontWeight: 600, color: '#b45309', fontSize: '1.08rem', marginBottom: 10 }}>
               Tem certeza que deseja excluir sua conta?
             </div>
-            <div style={{ fontSize: '0.97rem', marginBottom: 8 }}>
+            <div style={{ color: '#b45309', fontSize: '0.97rem', marginBottom: 8 }}>
               Esta ação <b>não pode ser desfeita</b> e todos os seus dados serão perdidos.
             </div>
           </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+          <Modal.Footer style={{ background: '#fffde7', borderTop: 'none', justifyContent: 'center', padding: '1rem 1.5rem 1.5rem 1.5rem' }}>
+            <Button variant="outline-secondary" onClick={() => setShowDeleteModal(false)} style={{ minWidth: 110, fontWeight: 500 }}>
               Cancelar
             </Button>
-            <Button variant="danger" onClick={confirmDeleteAccount}>
+            <Button variant="danger" onClick={confirmDeleteAccount} style={{ minWidth: 130, fontWeight: 600, marginLeft: 10 }}>
               Excluir conta
             </Button>
           </Modal.Footer>

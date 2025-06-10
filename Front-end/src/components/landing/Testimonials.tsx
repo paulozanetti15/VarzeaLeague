@@ -24,7 +24,7 @@ export function Testimonials({ id }: TestimonialsProps) {
     {
       name: 'Carlos Oliveira',
       role: 'Organizador de Partidas',
-      comment: 'Economizo muito tempo organizando partidas com a VarzeaLeague. A interface é intuitiva e os jogadores adoram a experiência!',
+      text: 'Economizo muito tempo organizando partidas com a VarzeaLeague. A interface é intuitiva e os jogadores adoram a experiência!',
       photo: 'https://placehold.co/100x100/6A55C5/ffffff?text=CO',
       rating: 4
     },
@@ -32,7 +32,7 @@ export function Testimonials({ id }: TestimonialsProps) {
       id: 3,
       name: 'Ana Pereira',
       role: 'Capitã de Time',
-      comment: 'Gerenciar meu time se tornou muito mais fácil. Consigo organizar as escalações e comunicar-me com todos os jogadores por aqui.',
+      text: 'Gerenciar meu time se tornou muito mais fácil. Consigo organizar as escalações e comunicar-me com todos os jogadores por aqui.',
       photo: 'https://placehold.co/100x100/6A55C5/ffffff?text=AP',
       rating: 5
     },
@@ -61,12 +61,12 @@ export function Testimonials({ id }: TestimonialsProps) {
           Veja como a Várzea League está ajudando organizadores e jogadores
         </p>
 
-        <div className="row g-4">
+        <div className="row g-4 justify-content-center">
           {testimonials.map((testimonial, index) => (
-            <div key={index} className="col-md-4">
-              <div className="testimonial-card">
+            <div key={index} className="col-12 col-md-6 col-lg-4 d-flex align-items-stretch">
+              <div className="testimonial-card w-100">
                 <div className="testimonial-content">
-                  <p className="testimonial-text">"{testimonial.comment}"</p>
+                  <p className="testimonial-text">{testimonial.text}</p>
                 </div>
                 <div className="testimonial-author">
                   <img 

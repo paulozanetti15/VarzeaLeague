@@ -51,19 +51,24 @@ export function Benefits({ isLoggedIn, onViewMatches, id }: BenefitsProps) {
 
   return (
     <section className="benefits-section" id={id || "beneficios"}>
+      <div className="section-separator">
+        <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          <path d="M0,60 C360,0 1080,120 1440,60 L1440,0 L0,0 Z" fill="#e3f2fd"/>
+        </svg>
+      </div>
       <div className="container">
         <h2 className="section-title text-center">
-          Por que escolher a Várzea League?
+          Por que escolher o Várzea League?
         </h2>
         <p className="section-subtitle text-center mb-5">
           Descubra como podemos ajudar você a organizar melhor seus jogos
         </p>
 
-        <div className="row g-4">
+        <div className="row g-4 justify-content-center">
           {benefits.map((benefit, index) => (
-            <div key={index} className="col-md-6 col-lg-3">
+            <div key={index} className="col-12 col-sm-6 col-lg-4 d-flex align-items-stretch">
               <div 
-                className="benefit-card" 
+                className="benefit-card w-100" 
                 onClick={benefit.onClick}
                 style={{ cursor: benefit.onClick ? 'pointer' : 'default' }}
               >
