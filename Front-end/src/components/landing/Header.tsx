@@ -6,6 +6,7 @@ interface User {
   id: number;
   name: string;
   email: string;
+  userTypeId?: number;
 }
 
 interface HeaderProps {
@@ -148,6 +149,9 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                         <li><span className="dropdown-item" onClick={() => navigate('/teams')}>Meu time</span></li>
                       )}
                       <li><span className="dropdown-item" onClick={() => navigate('/perfil')}>Meu perfil</span></li>
+                      {user?.userTypeId === 1 && (
+                        <li><span className="dropdown-item" onClick={() => navigate('/admin/users')}>Gerenciamento de Usuários</span></li>
+                      )}
                       <li><hr className="dropdown-divider" /></li>
                       <li><span className="dropdown-item" onClick={onLogout}>Sair</span></li>
                     </ul>

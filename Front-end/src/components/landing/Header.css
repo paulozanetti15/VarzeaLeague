@@ -103,6 +103,7 @@ body::before {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .navbar-brand:hover {
@@ -147,6 +148,7 @@ body::before {
   position: relative;
   transition: color 0.2s, background 0.2s;
   font-family: 'Inter', 'Montserrat', Arial, sans-serif;
+  cursor: pointer;
 }
 
 .navbar-dark .navbar-nav .nav-link::after {

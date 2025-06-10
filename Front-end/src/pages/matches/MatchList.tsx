@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ToggleButtonGroup, ToggleButton, Pagination } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonIcon from '@mui/icons-material/Person';
@@ -48,11 +48,12 @@ const formatLastUpdate=(timestamp: number): string => {
 
 const MatchList: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [matches, setMatches] = useState<Match[]>([]);
   const [filteredMatches, setFilteredMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState<String>('all'); // 'all', 'my' ou 'nearby'
+  const [filter, setFilter] = useState<String>((location.state as { filter?: string })?.filter || 'all'); // 'all', 'my' ou 'nearby'
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const matchesPerPage = 8;
@@ -138,7 +139,7 @@ const MatchList: React.FC = () => {
   
   useEffect(() => {
     fetchMatches();
-  }, []);
+  }, [filter]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);

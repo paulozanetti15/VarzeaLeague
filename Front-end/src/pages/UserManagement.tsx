@@ -30,57 +30,40 @@ import {
   Stack,
   useTheme,
   Fade,
-  Slide
+  Slide,
+  Grid
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon, VisibilityOff as VisibilityOffIcon, ErrorOutline as ErrorOutlineIcon } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
-import api from '../services/api';
+import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import './UserManagement.css';
 
-// Glassmorphism modal
-const GlassDialog = styled(Dialog)(({ theme }) => ({
+// Glassmorphism modal - REMOVENDO ESTILO GLASSMORFICO
+// Deixando apenas um Dialog padrão para ser estilizado pelo CSS
+const CustomDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiPaper-root': {
-    background: 'rgba(255,255,255,0.25)',
-    backdropFilter: 'blur(16px) saturate(180%)',
-    borderRadius: 24,
-    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.25)',
-    border: '1px solid rgba(255,255,255,0.18)',
+    borderRadius: 16,
+    boxShadow: '0 8px 30px 0 rgba(0, 0, 0, 0.1)',
     padding: theme.spacing(2, 2, 2, 2),
     minWidth: 340,
-    maxWidth: 480,
+    maxWidth: 'none',
+    width: 'fit-content',
     margin: 'auto',
   },
 }));
 
-// Gradient avatar
-const GradientAvatar = styled(Avatar)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #1976d2 0%, #21cbf3 100%)',
-  color: '#fff',
+// Avatar para o modal - REMOVENDO GRADIENTE FORTE
+const StyledAvatar = styled(Avatar)(({ theme }) => ({
+  background: theme.palette.grey[300], // Um cinza suave
+  color: theme.palette.grey[800], // Texto escuro
   width: 72,
   height: 72,
   fontSize: 36,
   fontWeight: 800,
-  boxShadow: '0 4px 24px 0 rgba(33,203,243,0.25)',
+  boxShadow: '0 4px 12px 0 rgba(0, 0, 0, 0.1)',
   border: `3px solid ${theme.palette.background.paper}`,
-}));
-
-// Beautiful button
-const FancyButton = styled(Button)(({ theme }) => ({
-  borderRadius: 32,
-  fontWeight: 700,
-  fontSize: 18,
-  padding: theme.spacing(1.2, 4),
-  background: 'linear-gradient(90deg, #1976d2 0%, #21cbf3 100%)',
-  color: '#fff',
-  boxShadow: '0 2px 8px 0 rgba(33,203,243,0.15)',
-  transition: 'all 0.2s',
-  '&:hover': {
-    background: 'linear-gradient(90deg, #21cbf3 0%, #1976d2 100%)',
-    boxShadow: '0 4px 16px 0 rgba(33,203,243,0.25)',
-    transform: 'translateY(-2px) scale(1.03)',
-  },
 }));
 
 // Input with focus effect
@@ -196,6 +179,7 @@ const UserManagement: React.FC = () => {
     sexo: '',
     userTypeId: '',
     password: '',
+    confirmPassword: '',
   });
   const [search, setSearch] = useState('');
   const [snackbar, setSnackbar] = useState<{open: boolean, message: string, severity: 'success'|'error'}>({open: false, message: '', severity: 'success'});
@@ -204,6 +188,10 @@ const UserManagement: React.FC = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [initialLoading, setInitialLoading] = useState(true);
   const [formErrors, setFormErrors] = useState<any>({});
+  const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const [userToDeleteId, setUserToDeleteId] = useState<number | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -258,9 +246,10 @@ const UserManagement: React.FC = () => {
         email: user.email,
         cpf: user.cpf,
         phone: user.phone,
-        sexo: user.sexo,
+        sexo: sexoValue(user.sexo),
         userTypeId: user.userTypeId.toString(),
         password: '',
+        confirmPassword: '',
       });
     } else {
       setSelectedUser(null);
@@ -272,14 +261,17 @@ const UserManagement: React.FC = () => {
         sexo: '',
         userTypeId: '',
         password: '',
+        confirmPassword: '',
       });
     }
+    setFormErrors({});
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedUser(null);
+    setFormErrors({});
   };
 
   const handleOpenDetail = (user: User) => {
@@ -320,31 +312,34 @@ const UserManagement: React.FC = () => {
   };
 
   const validateForm = () => {
-    const errors: any = {};
-    if (!formData.name.trim()) errors.name = 'Nome é obrigatório';
-    if (!formData.cpf.trim()) {
-      errors.cpf = 'CPF é obrigatório';
-    } else {
-      const cpfLimpo = formData.cpf.replace(/\D/g, '');
-      if (!/^(\d{3}\.?){3}-?\d{2}$/.test(formData.cpf) || cpfLimpo.length !== 11) {
-        errors.cpf = 'CPF inválido';
-      }
+    let tempErrors: any = {};
+    let isValid = true;
+
+    if (!formData.name) { tempErrors.name = "Nome é obrigatório"; isValid = false; }
+    if (!formData.email) { tempErrors.email = "Email é obrigatório"; isValid = false; }
+    else if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formData.email)) { tempErrors.email = "Email inválido"; isValid = false; }
+    if (!formData.cpf) { tempErrors.cpf = "CPF é obrigatório"; isValid = false; }
+    else if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf)) { tempErrors.cpf = "CPF inválido"; isValid = false; }
+    if (!formData.phone) { tempErrors.phone = "Telefone é obrigatório"; isValid = false; }
+    else if (!/^\(\d{2}\)\s\d{5}-\d{4}$/.test(formData.phone)) { tempErrors.phone = "Telefone inválido"; isValid = false; }
+    if (!formData.sexo) { tempErrors.sexo = "Gênero é obrigatório"; isValid = false; }
+    if (!formData.userTypeId) { tempErrors.userTypeId = "Tipo de usuário é obrigatório"; isValid = false; }
+
+    // Only validate password if creating a new user or if password field is not empty during edit
+    if (!selectedUser || (selectedUser && formData.password)) {
+      if (!formData.password) { tempErrors.password = "Senha é obrigatória"; isValid = false; }
+      if (formData.password !== formData.confirmPassword) { tempErrors.confirmPassword = "As senhas não coincidem"; isValid = false; }
     }
-    if (!formData.email.trim()) errors.email = 'Email é obrigatório';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = 'Email inválido';
-    if (!formData.phone.trim()) errors.phone = 'Telefone é obrigatório';
-    else if (!/^\(\d{2}\) \d{4,5}-\d{4}$/.test(formData.phone)) errors.phone = 'Telefone inválido';
-    if (!formData.sexo) errors.sexo = 'Selecione o sexo';
-    if (!formData.userTypeId) errors.userTypeId = 'Selecione o tipo de usuário';
-    if (!selectedUser && !formData.password) errors.password = 'Senha é obrigatória';
-    else if (!selectedUser && formData.password.length < 6) errors.password = 'A senha deve ter pelo menos 6 caracteres';
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+
+    setFormErrors(tempErrors);
+    return isValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
     setLoading(true);
     try {
       const dataToSend = {
@@ -373,22 +368,34 @@ const UserManagement: React.FC = () => {
   };
 
   const handleDelete = async (userId: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este usuário?')) {
-      setLoading(true);
-      try {
-        await api.delete(`/user/${userId}`);
-        setSnackbar({open: true, message: 'Usuário excluído com sucesso!', severity: 'success'});
-        fetchUsers();
-      } catch (error: any) {
-        setSnackbar({
-          open: true,
-          message: error.response?.data?.error === 'Usuário não encontrado' ? 'Usuário já foi removido.' : (error.message || 'Erro ao excluir usuário'),
-          severity: 'error'
-        });
-      } finally {
-        setLoading(false);
-      }
+    setUserToDeleteId(userId);
+    setOpenDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (userToDeleteId === null) return;
+
+    setLoading(true);
+    try {
+      await api.delete(`/user/${userToDeleteId}`);
+      setSnackbar({open: true, message: 'Usuário excluído com sucesso!', severity: 'success'});
+      fetchUsers();
+    } catch (error: any) {
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.error === 'Usuário não encontrado' ? 'Usuário já foi removido.' : (error.message || 'Erro ao excluir usuário'),
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+      setOpenDeleteConfirm(false);
+      setUserToDeleteId(null);
     }
+  };
+
+  const handleCloseDeleteConfirm = () => {
+    setOpenDeleteConfirm(false);
+    setUserToDeleteId(null);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -452,7 +459,6 @@ const UserManagement: React.FC = () => {
           onChange={handleSearchChange}
           fullWidth
           className="user-management-search user-management-input"
-          InputLabelProps={{ shrink: false }}
           placeholder="Buscar por nome ou email"
         />
         <div className="user-management-table-container">
@@ -569,124 +575,227 @@ const UserManagement: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        maxWidth="xs"
-        fullWidth
-        className="user-management-modal user-management-modal-edit"
-        TransitionComponent={Slide}
-        TransitionProps={{ direction: 'up' }}
-      >
-        <DialogTitle className="user-management-modal-title user-management-modal-edit user-management-modal-title">
-          {selectedUser ? 'Editar Usuário' : 'Novo Usuário'}
+      <CustomDialog open={openDialog} onClose={handleCloseDialog} TransitionComponent={Slide} transitionDuration={400} PaperProps={{ sx: { maxWidth: '650px', width: '90%' } }}>
+        <DialogTitle sx={{ textAlign: 'center', pb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 2 }}>
+            <StyledAvatar>
+              {selectedUser ? selectedUser.name[0] : <AddIcon fontSize="large" />}
+            </StyledAvatar>
+          </Box>
+          <Typography variant="h5" component="div" fontWeight={700} sx={{ color: theme.palette.text.primary }}>
+            {selectedUser ? 'Editar Usuário' : 'Novo Usuário'}
+          </Typography>
         </DialogTitle>
-        <form onSubmit={handleSubmit}>
-          <DialogContent>
-            <Stack spacing={1.2} alignItems="center" sx={{ mt: 0, mb: 0 }}>
-              <Avatar className="user-management-modal-avatar">
-                {selectedUser ? selectedUser.name[0] : (formData.name ? formData.name[0] : '?')}
-              </Avatar>
-              <TextField
+        <DialogContent sx={{ px: 4, py: 3, overflowY: 'visible' }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <FancyTextField
+                margin="dense"
+                label="Nome *"
+                type="text"
                 fullWidth
-                label="Nome"
+                variant="outlined"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                margin="normal"
-                required
-                className="user-management-input"
+                error={!!formErrors.name}
+                helperText={formErrors.name}
                 InputLabelProps={{ shrink: true }}
               />
-              <TextField
-                fullWidth
-                label="Email"
-                name="email"
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FancyTextField
+                margin="dense"
+                label="Email *"
                 type="email"
+                fullWidth
+                variant="outlined"
+                name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                margin="normal"
-                required
-                className="user-management-input"
+                error={!!formErrors.email}
+                helperText={formErrors.email}
                 InputLabelProps={{ shrink: true }}
               />
-              <TextField
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FancyTextField
+                margin="dense"
+                label="CPF *"
+                type="text"
                 fullWidth
-                label="CPF"
+                variant="outlined"
                 name="cpf"
                 value={formData.cpf}
                 onChange={handleInputChange}
-                margin="normal"
-                required
-                className="user-management-input"
+                error={!!formErrors.cpf}
+                helperText={formErrors.cpf}
                 InputLabelProps={{ shrink: true }}
               />
-              <TextField
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FancyTextField
+                margin="dense"
+                label="Telefone *"
+                type="text"
                 fullWidth
-                label="Telefone"
+                variant="outlined"
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                margin="normal"
-                required
-                className="user-management-input"
+                error={!!formErrors.phone}
+                helperText={formErrors.phone}
                 InputLabelProps={{ shrink: true }}
               />
-              <FormControl fullWidth margin="normal" className="user-management-select" error={!!formErrors.sexo}>
-                <InputLabel shrink>Sexo</InputLabel>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FancyFormControl fullWidth margin="dense" error={!!formErrors.sexo}>
+                <InputLabel id="sexo-label" shrink>Gênero *</InputLabel>
                 <Select
+                  labelId="sexo-label"
+                  id="sexo"
                   name="sexo"
                   value={formData.sexo}
+                  label="Gênero *"
                   onChange={handleInputChange}
-                  required
-                  label="Sexo"
                 >
-                  {SEXO_OPTIONS.map(opt => (
-                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                  {SEXO_OPTIONS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
                   ))}
                 </Select>
                 {formErrors.sexo && <Typography color="error" fontSize={13}>{formErrors.sexo}</Typography>}
-              </FormControl>
-              <FormControl fullWidth margin="normal" className="user-management-select" error={!!formErrors.userTypeId}>
-                <InputLabel shrink>Tipo de Usuário</InputLabel>
+              </FancyFormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FancyFormControl fullWidth margin="dense" error={!!formErrors.userTypeId}>
+                <InputLabel id="userTypeId-label" shrink>Tipo de Usuário *</InputLabel>
                 <Select
+                  labelId="userTypeId-label"
+                  id="userTypeId"
                   name="userTypeId"
                   value={formData.userTypeId}
+                  label="Tipo de Usuário *"
                   onChange={handleInputChange}
-                  required
-                  label="Tipo de Usuário"
                 >
-                  {USER_TYPE_OPTIONS.map(opt => (
-                    <MenuItem key={opt.id} value={opt.id}>{opt.name}</MenuItem>
+                  {USER_TYPE_OPTIONS.map((type) => (
+                    <MenuItem key={type.id} value={type.id}>
+                      {type.name}
+                    </MenuItem>
                   ))}
                 </Select>
                 {formErrors.userTypeId && <Typography color="error" fontSize={13}>{formErrors.userTypeId}</Typography>}
-              </FormControl>
-              {!selectedUser && (
-                <TextField
-                  fullWidth
-                  label="Senha"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  margin="normal"
-                  required
-                  className="user-management-input"
-                  InputLabelProps={{ shrink: true }}
-                />
-              )}
-            </Stack>
-          </DialogContent>
-          <DialogActions className="user-management-modal-actions">
-            <Button onClick={handleCloseDialog} variant="outlined" color="primary">
-              Cancelar
-            </Button>
-            <Button type="submit" variant="contained" color="primary">
-              {selectedUser ? 'Salvar' : 'Criar'}
-            </Button>
-          </DialogActions>
-        </form>
+              </FancyFormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FancyTextField
+                margin="dense"
+                label="Senha *"
+                type={showPassword ? 'text' : 'password'}
+                fullWidth
+                variant="outlined"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                error={!!formErrors.password}
+                helperText={formErrors.password}
+                InputLabelProps={{ shrink: true }}
+                InputProps={{
+                  endAdornment: (
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    </IconButton>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FancyTextField
+                margin="dense"
+                label="Confirmar Senha *"
+                type={showConfirmPassword ? 'text' : 'password'}
+                fullWidth
+                variant="outlined"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                error={!!formErrors.confirmPassword}
+                helperText={formErrors.confirmPassword}
+                InputLabelProps={{ shrink: true }}
+                InputProps={{
+                  endAdornment: (
+                    <IconButton
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      edge="end"
+                    >
+                      {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    </IconButton>
+                  ),
+                }}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', pt: 3, pb: 2 }}>
+          <Button onClick={handleCloseDialog} variant="outlined" color="secondary" sx={{ borderRadius: 8, px: 4, py: 1.2 }}>
+            CANCELAR
+          </Button>
+          <Button type="submit" onClick={handleSubmit} variant="contained" color="primary" sx={{ borderRadius: 8, px: 4, py: 1.2 }}>
+            SALVAR
+          </Button>
+        </DialogActions>
+      </CustomDialog>
+      <Dialog
+        open={openDeleteConfirm}
+        onClose={handleCloseDeleteConfirm}
+        maxWidth="xs"
+        className="user-management-modal"
+        TransitionComponent={Fade}
+        TransitionProps={{ timeout: 300 }}
+      >
+        <DialogTitle className="user-management-modal-title" sx={{ pb: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+          <ErrorOutlineIcon sx={{ fontSize: '2rem', color: theme.palette.error.main }} />Confirmar Exclusão
+        </DialogTitle>
+        <DialogContent sx={{ textAlign: 'center', pb: 2 }}>
+          <Typography className="user-management-modal-content" sx={{ mb: 2 }}>
+            Tem certeza que deseja excluir este usuário?
+          </Typography>
+          <Typography className="user-management-modal-content" sx={{ color: theme.palette.error.main, fontWeight: 700 }}>
+            Esta ação não pode ser desfeita.
+          </Typography>
+        </DialogContent>
+        <DialogActions className="user-management-modal-actions">
+          <Button 
+            onClick={handleCloseDeleteConfirm} 
+            variant="text" 
+            color="inherit" 
+            sx={{
+              color: theme.palette.text.secondary,
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+              }
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={confirmDelete} 
+            variant="contained" 
+            color="error"
+            sx={{
+              background: theme.palette.error.main, /* Usar a cor de erro padrão do tema */
+              '&:hover': {
+                background: theme.palette.error.dark, /* Escurecer no hover */
+              }
+            }}
+          >
+            Excluir
+          </Button>
+        </DialogActions>
       </Dialog>
       <Snackbar
         open={snackbar.open}

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import MatchModel from '../models/MatchModel';
-import UserModel from '../models/UserModel';
+import User from '../models/UserModel';
 import jwt from 'jsonwebtoken';
 import MatchTeamsModel from '../models/MatchTeamsModel';
 import Rules from '../models/RulesModel';
@@ -40,7 +40,9 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
           Uf: Uf,
           Cep: Cep
         });
-        await UserModel.update(
+
+        // Revertendo a lógica de atualização do userTypeId para o estado anterior
+        await User.update(
           { userTypeId: 2 }, 
           { 
             where: { id: userId },
@@ -78,7 +80,7 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
     const matches = await MatchModel.findAll({
       include: [
         {
-          model: UserModel,
+          model: User,
           as: 'organizer',
           attributes: ['id', 'name', 'email']
         },
@@ -117,7 +119,7 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
     const match = await MatchModel.findByPk(req.params.id,{
       include: [
         {
-          model: UserModel,
+          model: User,
           as: 'organizer',
           attributes: ['id', 'name']
         }
@@ -177,5 +179,35 @@ export const cancelMatch = async (req: Request, res: Response): Promise<void> =>
   } catch (error) {
     console.error('Erro ao cancelar partida:', error);
     res.status(500).json({ message: 'Erro ao cancelar partida' });
+  }
+};
+
+export const deleteMatch = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const matchId = req.params.id;
+    const match = await MatchModel.findByPk(matchId);
+
+    if (!match) {
+      res.status(404).json({ message: 'Partida não encontrada' });
+      return;
+    }
+
+    // Delete associated rules first
+    await Rules.destroy({
+      where: { partidaId: matchId }
+    });
+
+    // Delete associated team entries
+    await MatchTeamsModel.destroy({
+      where: { matchId: matchId }
+    });
+
+    // Finally, delete the match itself
+    await match.destroy();
+
+    res.status(200).json({ message: 'Partida excluída com sucesso' });
+  } catch (error) {
+    console.error('Erro ao excluir partida:', error);
+    res.status(500).json({ message: 'Erro ao excluir partida' });
   }
 }; 

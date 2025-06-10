@@ -4,6 +4,8 @@ import { format, set } from 'date-fns';
 import { ptBR, tr } from 'date-fns/locale';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import './MatchDetail.css';
 import toast from 'react-hot-toast';
 import RegrasFormInfoModal from '../../components/Modals/Regras/RegrasFormInfoModal';
@@ -11,6 +13,8 @@ import { Button } from 'react-bootstrap';
 import axios from 'axios';
 import { Card } from 'react-bootstrap';
 import ModalTeams from '../../components/Modals/Teams/modelTeams';
+import { useAuth } from '../../hooks/useAuth';
+
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -20,6 +24,18 @@ const MatchDetail: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [modal, setModal] = useState(false);
+  const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      setCurrentUser(user);
+    } else {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
   const getTimeInscrito = async (matchId: string) => {
     try {
       const response = await axios.get(`http://localhost:3001/api/matches/${matchId}/join-team`, {
@@ -113,6 +129,38 @@ const MatchDetail: React.FC = () => {
   const handleModalShow = () => {
     setModal(true);
   }  
+  const handleDeleteMatch = async () => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const response = await axios.delete(`http://localhost:3001/api/matches/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (response.status === 200) {
+        toast.success('Partida excluída com sucesso!');
+        navigate('/matches', { state: { filter: 'my' } }); // Redirect to my matches after deletion
+      } else {
+        toast.error('Erro ao excluir a partida. Tente novamente.');
+      }
+    } catch (err: any) {
+      console.error('Erro ao excluir partida:', err);
+      toast.error(err.response?.data?.message || 'Erro ao excluir partida. Tente novamente.');
+    } finally {
+      setLoading(false);
+      setOpenDeleteConfirm(false);
+    }
+  };
+
+  const handleOpenDeleteConfirm = () => {
+    setOpenDeleteConfirm(true);
+  };
+
+  const handleCloseDeleteConfirm = () => {
+    setOpenDeleteConfirm(false);
+  };
+
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
@@ -144,6 +192,9 @@ const MatchDetail: React.FC = () => {
   if (!match) {
     return <div className="match-detail-container error">Partida não encontrada.</div>;
   }
+
+  const isOrganizer = user && match.organizerId === user.id;
+
   return (
     <div className="match-detail-container">
       <button className="back-button" onClick={() => navigate(-1)}>
@@ -248,23 +299,54 @@ const MatchDetail: React.FC = () => {
           <div className="d-flex justify-content-center w-100">
             {(match.countTeams < match.maxTeams) && 
               <Button 
-                variant="primary"
-                className="mt-5"
-                onClick={() =>handleModalShow()} // Exemplo: usar o primeiro time da lista
+                variant="success" 
+                onClick={handleModalShow} 
+                className="join-match-btn mt-3"
               >
-                Cadastrar time
+                <i className="fas fa-plus-circle me-2"></i> Cadastrar Time
               </Button>
             }
-            {modal && (
-              <ModalTeams 
-                show={modal} 
-                onHide={handleModalClose} 
-                matchid={match.id}
-              />
+            {isOrganizer && (
+              <Button
+                variant="danger"
+                onClick={handleOpenDeleteConfirm}
+                className="delete-match-button mt-3 ms-2"
+              >
+                <DeleteIcon /> Excluir Partida
+              </Button>
             )}
           </div>
         </div>
+        {modal && (
+          <ModalTeams
+            show={modal}
+            onHide={handleModalClose}
+            idpartida={id}
+            getTimeInscrito={() => getTimeInscrito(id as string)}
+          />
+        )}
       </div>
+      <Dialog
+        open={openDeleteConfirm}
+        onClose={handleCloseDeleteConfirm}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Confirmar Exclusão"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Tem certeza de que deseja excluir esta partida? Esta ação é irreversível.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteConfirm} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={handleDeleteMatch} color="primary" autoFocus>
+            Excluir
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

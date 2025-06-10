@@ -128,7 +128,7 @@ export const remove = async (req: AuthRequest, res: Response): Promise<void> => 
 
     await user.destroy();
 
-    res.status(204).send();
+    res.status(200).json({ message: 'Usuário excluído com sucesso' });
   } catch (error) {
     console.error('Erro ao deletar usuário:', error);
     res.status(500).json({ error: 'Erro ao deletar usuário' });

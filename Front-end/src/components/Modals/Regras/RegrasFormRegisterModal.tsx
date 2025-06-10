@@ -82,7 +82,7 @@ export default function regrasModal({show, onHide,partidaDados}: regrasModalProp
                 setToastBg("success");
                 setShowToast(true);
                 setTimeout(() => {
-                    navigate("/matches");
+                    navigate("/matches", { state: { filter: 'my' } });
                 }, 2000);
                 
             } else {

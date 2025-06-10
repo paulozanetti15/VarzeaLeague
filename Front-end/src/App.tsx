@@ -22,6 +22,7 @@ import { useAuth } from './hooks/useAuth'
 import Profile from './pages/perfil/Perfil'
 import PageTransition from './components/PageTransition'
 import React, { lazy, Suspense } from 'react'
+import UserManagement from './pages/UserManagement'
 
 // Componente simples para loading
 const Loading = () => (
@@ -201,6 +202,21 @@ function AppContent() {
             >
               <PageTransition>
                 <EditTeam />
+              </PageTransition>
+            </RoleBasedRoute>
+          </PrivateRoute>
+        } />
+
+        {/* Rota para Gerenciamento de Usuários (Apenas Admin do Sistema) */}
+        <Route path="/admin/users" element={
+          <PrivateRoute isLoggedIn={isLoggedIn}>
+            <RoleBasedRoute 
+              isLoggedIn={isLoggedIn} 
+              userRole={user?.userTypeId} 
+              allowedRoles={[USER_ROLES.ADMIN_SISTEMA]}
+            >
+              <PageTransition>
+                <UserManagement />
               </PageTransition>
             </RoleBasedRoute>
           </PrivateRoute>

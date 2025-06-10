@@ -16,6 +16,7 @@ interface User {
   cpf: string;
   phone: string;
   sexo: string;
+  userTypeId: number;
 }
 
 interface PerfilProps {
