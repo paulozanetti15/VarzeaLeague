@@ -22,6 +22,10 @@ import { useAuth } from './hooks/useAuth'
 import Profile from './pages/perfil/Perfil'
 import PageTransition from './components/PageTransition'
 import React, { lazy, Suspense } from 'react'
+import ChampionshipList from './pages/championships/ChampionshipList'
+import ChampionshipForm from './pages/championships/ChampionshipForm'
+import ChampionshipDetail from './pages/championships/ChampionshipDetail'
+import ChampionshipEditForm from './pages/championships/ChampionshipEditForm'
 
 // Componente simples para loading
 const Loading = () => (
@@ -205,7 +209,63 @@ function AppContent() {
             </RoleBasedRoute>
           </PrivateRoute>
         } />
+
+        <Route path="/championships" element={
+          <PrivateRoute isLoggedIn={isLoggedIn}>
+            <RoleBasedRoute 
+              isLoggedIn={isLoggedIn} 
+              userRole={user?.userTypeId} 
+              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+            >
+              <PageTransition>
+                <ChampionshipList />
+              </PageTransition>
+            </RoleBasedRoute>
+          </PrivateRoute>
+        } />
+
+        <Route path="/championships/create" element={
+          <PrivateRoute isLoggedIn={isLoggedIn}>
+            <RoleBasedRoute 
+              isLoggedIn={isLoggedIn} 
+              userRole={user?.userTypeId} 
+              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+            >
+              <PageTransition>
+                <ChampionshipForm />
+              </PageTransition>
+            </RoleBasedRoute>
+          </PrivateRoute>
+        } />
         
+        <Route path="/championships/:id" element={
+          <PrivateRoute isLoggedIn={isLoggedIn}>
+            <RoleBasedRoute 
+              isLoggedIn={isLoggedIn} 
+              userRole={user?.userTypeId} 
+              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+            >
+              <PageTransition>
+                <ChampionshipDetail />
+              </PageTransition>
+            </RoleBasedRoute>
+          </PrivateRoute>
+        } />
+
+        <Route path="/championships/:id/edit" element={
+          <PrivateRoute isLoggedIn={isLoggedIn}>
+            <RoleBasedRoute 
+              isLoggedIn={isLoggedIn} 
+              userRole={user?.userTypeId} 
+              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+            >
+              <PageTransition>
+                <ChampionshipEditForm />
+              </PageTransition>
+            </RoleBasedRoute>
+          </PrivateRoute>
+        } />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       

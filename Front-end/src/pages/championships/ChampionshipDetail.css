@@ -1,0 +1,355 @@
+.championship-detail-container {
+  position: relative;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 40px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0A2351 0%, #0D47A1 100%);
+  color: #fff;
+  box-sizing: border-box;
+}
+
+.championship-detail-container::before {
+  content: none;
+}
+
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+  color: white;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.championship-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+  padding: 30px;
+  position: relative;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  z-index: 1;
+}
+
+.championship-header h1 {
+  font-size: 2.8rem;
+  margin: 20px 0;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+  font-weight: 700;
+}
+
+.championship-trophy-detail {
+  width: 100px;
+  height: 100px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.championship-info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.championship-info-section {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  z-index: 1;
+}
+
+.championship-info-section h3 {
+  color: #fff;
+  font-size: 1.6rem;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #daa520;
+  padding-bottom: 12px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  font-weight: 600;
+}
+
+.championship-info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.info-item {
+  margin-bottom: 15px;
+}
+
+.info-item strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #daa520;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.info-item p {
+  margin: 0;
+  color: #fff;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.championship-actions {
+  display: flex;
+  gap: 15px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+  justify-content: center;
+  z-index: 1;
+  position: relative;
+}
+
+.championship-actions button {
+  padding: 16px 32px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+  min-width: 220px;
+  position: relative;
+  overflow: hidden;
+}
+
+.edit-button {
+  background: linear-gradient(145deg, #daa520, #b8860b);
+  color: white;
+  box-shadow: 0 4px 10px rgba(184, 134, 11, 0.3);
+}
+
+.edit-button:hover {
+  background: linear-gradient(145deg, #b8860b, #a87c0a);
+  transform: translateY(-2px);
+}
+
+.delete-button {
+  background: linear-gradient(145deg, #f44336, #d32f2f);
+  color: white;
+  box-shadow: 0 4px 10px rgba(244, 67, 54, 0.3);
+}
+
+.delete-button:hover {
+  background: linear-gradient(145deg, #d32f2f, #c62828);
+  transform: translateY(-2px);
+}
+
+.join-button {
+  background: linear-gradient(145deg, #4caf50, #388e3c);
+  color: white;
+  box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+}
+
+.join-button:hover {
+  background: linear-gradient(145deg, #388e3c, #2e7d32);
+  transform: translateY(-2px);
+}
+
+.join-team-button {
+  background: linear-gradient(145deg, #9c27b0, #7b1fa2);
+  color: white;
+  box-shadow: 0 4px 10px rgba(156, 39, 176, 0.3);
+}
+
+.join-team-button:hover {
+  background: linear-gradient(145deg, #7b1fa2, #6a1b9a);
+  transform: translateY(-2px);
+}
+
+.championship-actions button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border-left-color: #ffc107;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.error-container {
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.error-container h2 {
+  color: #f44336;
+  margin-bottom: 20px;
+}
+
+.error-container button {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+  font-weight: 600;
+}
+
+.championship-teams-section {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1;
+  position: relative;
+}
+
+.championship-teams-section h3 {
+  color: #fff;
+  font-size: 1.4rem;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #daa520;
+  padding-bottom: 10px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.teams-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.team-item {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-weight: 500;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.team-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.teams-section-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.join-team-button-section {
+  background: linear-gradient(145deg, #9c27b0, #7b1fa2);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 16px 32px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+  min-width: 220px;
+  box-shadow: 0 4px 10px rgba(156, 39, 176, 0.3);
+}
+
+.join-team-button-section:hover:not(:disabled) {
+  background: linear-gradient(145deg, #7b1fa2, #6a1b9a);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(156, 39, 176, 0.4);
+}
+
+.join-team-button-section:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  .championship-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .championship-actions button {
+    width: 100%;
+  }
+  
+  .championship-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .championship-trophy-detail {
+    width: 60px;
+    height: 60px;
+  }
+}

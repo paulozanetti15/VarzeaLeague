@@ -22,6 +22,7 @@ import { seedUserTypes } from './seeds/userTypes';
 import { associateModels } from './models/associations'; 
 import fs from 'fs';
 import { forEachChild } from 'typescript';
+import championshipRoutes from './routes/championshipRoutes';
 // Importando as associações
 dotenv.config();
 
@@ -50,6 +51,7 @@ app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/teams',teamRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/rules', RulesRoutes);
+app.use('/api/championships', championshipRoutes);
 
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API está funcionando!' });

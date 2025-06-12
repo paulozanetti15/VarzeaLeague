@@ -554,12 +554,126 @@ export const api = {
       });
       return handleResponse(response); 
     },
-  }
+  },
+  championships: {
+    list: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/championships`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      return handleResponse(response);
+    },
+    create: async (champData: any) => {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/championships`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(champData)
+      });
+      return handleResponse(response);
+    },
+    getById: async (champId: number) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      console.log(`Buscando detalhes do campeonato ${champId}`);
+      const response = await fetch(`${API_BASE_URL}/championships/${champId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return handleResponse(response);
+    },
+    update: async (champId: number, champData: any) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      console.log(`Atualizando campeonato ${champId}`);
+      const response = await fetch(`${API_BASE_URL}/championships/${champId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(champData)
+      });
+      return handleResponse(response);
+    },
+    delete: async (champId: number) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      console.log(`Excluindo campeonato ${champId}`);
+      const response = await fetch(`${API_BASE_URL}/championships/${champId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return handleResponse(response);
+    },
+    join: async (champId: number) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      console.log(`Entrando no campeonato ${champId}`);
+      const response = await fetch(`${API_BASE_URL}/championships/${champId}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return handleResponse(response);
+    },
+    joinWithTeam: async (champId: number, teamId: number) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      console.log(`Entrando no campeonato ${champId} com o time ${teamId}`);
+      const response = await fetch(`${API_BASE_URL}/championships/${champId}/join-team`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ teamId })
+      });
+      return handleResponse(response);
+    },
+    leave: async (champId: number) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      console.log(`Saindo do campeonato ${champId}`);
+      const response = await fetch(`${API_BASE_URL}/championships/${champId}/leave`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return handleResponse(response);
+    }
+  },
 };
 
-// Função para calcular estatísticas de jogadores de uma partida
 function calculatePlayerStats(match: any) {
-  // Se já temos estatísticas de jogadores, usar elas
   if (match.playerStats && typeof match.playerStats === 'object') {
     console.log(`Usando estatísticas de jogadores existentes para partida ${match.id}`);
     return;
@@ -609,4 +723,4 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   const distance = R * c;
   return distance;
-} 
+}

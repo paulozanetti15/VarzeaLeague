@@ -45,7 +45,8 @@ export function Benefits({ isLoggedIn, onViewMatches, id }: BenefitsProps) {
     {
       icon: '🏆',
       title: 'Campeonatos',
-      description: 'Organize torneios e acompanhe classificação em tempo real.'
+      description: 'Organize torneios e acompanhe classificação em tempo real.',
+      onClick: () => handleNavigation('/championships')
     }
   ];
 
@@ -77,4 +78,4 @@ export function Benefits({ isLoggedIn, onViewMatches, id }: BenefitsProps) {
       </div>
     </section>
   );
-} 
+}
