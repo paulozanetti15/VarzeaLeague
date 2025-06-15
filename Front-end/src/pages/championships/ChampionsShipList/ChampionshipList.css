@@ -310,3 +310,33 @@
   60% { transform: scale(1.1) rotate(5deg); opacity: 1; }
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 0.85rem;
+  z-index: 10;
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-3px);
+}
+
+.back-btn svg {
+  font-size: 16px;
+}

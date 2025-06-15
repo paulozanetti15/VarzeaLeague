@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Register.css';
+import { api } from '../../services/api';
 
 interface RegisterProps {
   onLoginClick?: () => void;
@@ -27,6 +28,12 @@ interface FormErrors {
   general?: string;
 }
 
+interface PasswordRequirement {
+  regex: RegExp;
+  text: string;
+  met: boolean;
+}
+
 const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -44,6 +51,14 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
   const [errors, setErrors] = useState<FormErrors>({});
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
+  const [passwordRequirements, setPasswordRequirements] = useState<PasswordRequirement[]>([
+    { regex: /.{8,}/, text: 'Mínimo de 8 caracteres', met: false },
+    { regex: /[A-Z]/, text: 'Pelo menos uma letra maiúscula', met: false },
+    { regex: /[a-z]/, text: 'Pelo menos uma letra minúscula', met: false },
+    { regex: /[0-9]/, text: 'Pelo menos um número', met: false },
+    { regex: /[^A-Za-z0-9]/, text: 'Pelo menos um caractere especial', met: false }
+  ]);
 
   const validateCPF = (cpf: string): boolean => {
     cpf = cpf.replace(/[^\d]/g, '');
@@ -71,32 +86,52 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
     return true;
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
-    if (!formData.cpf.trim()) {
-      newErrors.cpf = 'CPF é obrigatório';
-    } else {
-      const cpfLimpo = formData.cpf.replace(/\D/g, '');
-      if (!validateCPF(cpfLimpo)) {
-        newErrors.cpf = 'CPF inválido';
-      }
-    }
-    if (!formData.email.trim()) newErrors.email = 'Email é obrigatório';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email inválido';
-    if (!formData.phone.trim()) newErrors.phone = 'Telefone é obrigatório';
-    else if (!/^\d{10,11}$/.test(formData.phone.replace(/\D/g, ''))) newErrors.phone = 'Telefone inválido';
-    if (!formData.sexo) newErrors.sexo = 'Selecione o sexo';
-    if (!formData.password) newErrors.password = 'Senha é obrigatória';
-    else if (formData.password.length < 6) newErrors.password = 'A senha deve ter pelo menos 6 caracteres';
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'As senhas não coincidem';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const checkPasswordStrength = (password: string) => {
+    const requirements = [
+      { regex: /.{8,}/, text: 'Mínimo de 8 caracteres' },
+      { regex: /[A-Z]/, text: 'Pelo menos uma letra maiúscula' },
+      { regex: /[a-z]/, text: 'Pelo menos uma letra minúscula' },
+      { regex: /[0-9]/, text: 'Pelo menos um número' },
+      { regex: /[^A-Za-z0-9]/, text: 'Pelo menos um caractere especial' }
+    ];
+
+    const metRequirements = requirements.map(req => ({
+      ...req,
+      met: req.regex.test(password)
+    }));
+
+    const metCount = metRequirements.filter(req => req.met).length;
+    const isStrong = metCount === requirements.length; // Só é forte se cumprir todos os requisitos
+    
+    return {
+      requirements: metRequirements,
+      strength: !password ? '' :
+                !isStrong ? 'weak' : 'very-strong',
+      label: !password ? '' :
+             !isStrong ? 'Fraca' : 'Muito Forte',
+      isStrong
+    };
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const passwordCheck = useMemo(() => {
+    return checkPasswordStrength(formData.password);
+  }, [formData.password]);
+
+  // Função para verificar CPF duplicado
+  const checkCPFExists = async (cpf: string): Promise<boolean> => {
+    try {
+      const { exists } = await api.auth.checkCPF(cpf);
+      return exists;
+    } catch (error) {
+      console.error('Erro ao verificar CPF:', error);
+      return false;
+    }
+  };
+
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     let newValue = value;
+    
     if (name === 'name') {
       newValue = value.replace(/[^A-Za-zÀ-ÿ\s]/g, '');
     }
@@ -105,6 +140,16 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
       if (newValue.length > 9) newValue = newValue.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
       else if (newValue.length > 6) newValue = newValue.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1.$2.$3');
       else if (newValue.length > 3) newValue = newValue.replace(/(\d{3})(\d{0,3})/, '$1.$2');
+
+      // Verifica CPF duplicado apenas quando o CPF estiver completo
+      if (newValue.replace(/\D/g, '').length === 11) {
+        if (validateCPF(newValue)) {
+          const cpfExists = await checkCPFExists(newValue);
+          if (cpfExists) {
+            setErrors(prev => ({ ...prev, cpf: 'CPF já cadastrado no sistema' }));
+          }
+        }
+      }
     }
     if (name === 'phone') {
       newValue = value.replace(/\D/g, '').slice(0, 11);
@@ -112,31 +157,80 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
       else if (newValue.length > 6) newValue = newValue.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
       else if (newValue.length > 2) newValue = newValue.replace(/(\d{2})(\d{0,5})/, '($1) $2');
     }
+    
     setFormData(prev => ({ ...prev, [name]: newValue }));
-    if (errors[name as keyof FormErrors]) setErrors(prev => ({ ...prev, [name]: undefined }));
+    
+    if (errors[name as keyof FormErrors]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    const isValid = await validateForm();
+    if (!isValid) return;
+    
     setIsLoading(true);
     setErrors({});
+    
     try {
-      const response = await fetch(`${apiUrl}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Erro ao registrar usuário');
+      const data = await api.auth.register(formData);
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       navigate('/dashboard');
     } catch (error) {
-      setErrors(prev => ({ ...prev, general: error instanceof Error ? error.message : 'Erro ao registrar usuário' }));
+      setErrors(prev => ({ 
+        ...prev, 
+        general: error instanceof Error ? error.message : 'Erro ao registrar usuário' 
+      }));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const validateForm = async (): Promise<boolean> => {
+    const newErrors: FormErrors = {};
+    
+    // Validações básicas
+    if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
+    if (!formData.email.trim()) newErrors.email = 'Email é obrigatório';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email inválido';
+    if (!formData.phone.trim()) newErrors.phone = 'Telefone é obrigatório';
+    else if (!/^\d{10,11}$/.test(formData.phone.replace(/\D/g, ''))) newErrors.phone = 'Telefone inválido';
+    if (!formData.sexo) newErrors.sexo = 'Selecione o sexo';
+    
+    // Validação de CPF
+    if (!formData.cpf.trim()) {
+      newErrors.cpf = 'CPF é obrigatório';
+    } else {
+      const cpfLimpo = formData.cpf.replace(/\D/g, '');
+      if (!validateCPF(cpfLimpo)) {
+        newErrors.cpf = 'CPF inválido';
+      } else {
+        // Verifica CPF duplicado
+        const cpfExists = await checkCPFExists(cpfLimpo);
+        if (cpfExists) {
+          newErrors.cpf = 'CPF já cadastrado no sistema';
+        }
+      }
+    }
+
+    // Validação de senha forte
+    if (!formData.password) {
+      newErrors.password = 'Senha é obrigatória';
+    } else {
+      const passwordCheck = checkPasswordStrength(formData.password);
+      if (!passwordCheck.isStrong) {
+        newErrors.password = 'A senha deve cumprir todos os requisitos de segurança';
+      }
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'As senhas não coincidem';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   return (
@@ -292,6 +386,33 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
                     )}
                   </button>
                 </div>
+                {formData.password && (
+                  <div className="password-strength-container">
+                    <div className="password-strength-title">
+                      <span>Força da Senha:</span>
+                      <div className={`password-strength-label ${passwordCheck.strength}`}>
+                        {passwordCheck.label}
+                      </div>
+                    </div>
+                    <div className="password-strength-meter">
+                      <div className={`password-strength-progress ${passwordCheck.strength}`}></div>
+                    </div>
+                    <div className="password-requirements">
+                      {passwordCheck.requirements.map((req, index) => (
+                        <div key={index} className={`requirement-item ${req.met ? 'met' : 'not-met'}`}>
+                          <span className={`requirement-icon ${req.met ? 'success' : 'pending'}`}>
+                            {req.met ? (
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}><polyline points="20 6 9 17 4 12"/></svg>
+                            ) : (
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}><circle cx="12" cy="12" r="10"/></svg>
+                            )}
+                          </span>
+                          {req.text}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {errors.password && <span className="register-error-message">{errors.password}</span>}
               </div>
               <div className="register-form-group">

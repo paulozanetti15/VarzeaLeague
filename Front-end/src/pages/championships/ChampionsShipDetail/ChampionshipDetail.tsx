@@ -18,7 +18,8 @@ interface Championship {
 
 const ChampionshipDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();  const [championship, setChampionship] = useState<Championship | null>(null);
+  const navigate = useNavigate();
+  const [championship, setChampionship] = useState<Championship | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOrganizer, setIsOrganizer] = useState(false);
@@ -135,7 +136,7 @@ const ChampionshipDetail: React.FC = () => {
           <h2>Erro ao carregar dados</h2>
           <p>{error}</p>
           <button onClick={() => navigate('/championships')} className="back-btn">
-            Voltar para Campeonatos
+            <ArrowBackIcon /> Voltar
           </button>
         </div>
       </div>
@@ -148,7 +149,7 @@ const ChampionshipDetail: React.FC = () => {
         <div className="error-container">
           <h2>Campeonato não encontrado</h2>
           <button onClick={() => navigate('/championships')} className="back-btn">
-            Voltar para Campeonatos
+            <ArrowBackIcon /> Voltar
           </button>
         </div>
       </div>
@@ -157,37 +158,37 @@ const ChampionshipDetail: React.FC = () => {
 
   return (
     <div className="championship-detail-container">
-      <button className="back-button" onClick={() => navigate(-1)}>
-        <ArrowBackIcon />
+      <button className="back-btn" onClick={() => navigate(-1)}>
+        <ArrowBackIcon /> Voltar
       </button>
 
-      <div className="championship-header">
-        <img src={trophy} alt="Troféu" className="championship-trophy-detail" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-        <h1>{championship.name}</h1>
-      </div>
+      <div className="detail-content">
+        <div className="championship-header">
+          <img 
+            src={trophy} 
+            alt="Troféu" 
+            className="championship-trophy-detail" 
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} 
+          />
+          <h1>{championship.name}</h1>
+        </div>
 
-      <div className="championship-info-container">
-        <div className="championship-info-section">
-          <h3>Informações do Campeonato</h3>
-          <div className="championship-info-content">
-            {championship.description && (
-              <div className="info-item">
-                <strong>Descrição:</strong>
-                <p>{championship.description}</p>
-              </div>
-            )}
-            <div className="info-item">
-              <strong>Data de Início:</strong>
-              <p>{formatDate(championship.start_date)}</p>
-            </div>
-            <div className="info-item">
-              <strong>Data de Término:</strong>
-              <p>{formatDate(championship.end_date)}</p>
-            </div>
-            <div className="info-item">
-              <strong>Organizador:</strong>
-              <p>ID: {championship.created_by}</p>
-            </div>
+        <div className="championship-info">
+          <div className="info-row">
+            <span className="info-label">Descrição:</span>
+            <span className="info-value">{championship.description || 'Sem descrição'}</span>
+          </div>
+          <div className="info-row">
+            <span className="info-label">Início:</span>
+            <span className="info-value">{formatDate(championship.start_date)}</span>
+          </div>
+          <div className="info-row">
+            <span className="info-label">Término:</span>
+            <span className="info-value">{formatDate(championship.end_date)}</span>
+          </div>
+          <div className="info-row">
+            <span className="info-label">Organizador:</span>
+            <span className="info-value">ID: {championship.created_by}</span>
           </div>
         </div>
 
@@ -225,30 +226,20 @@ const ChampionshipDetail: React.FC = () => {
               </button>
             </>
           )}
-        </div>        <div className="championship-teams-section">
+        </div>
+
+        <div className="championship-teams-section">
           <h3>Times Participantes</h3>
-          <div className="teams-list">
-            {teams && teams.length > 0 ? (
-              teams.map((team) => (
+          {teams && teams.length > 0 ? (
+            <div className="teams-list">
+              {teams.map((team) => (
                 <div key={team.id} className="team-item">
                   {team.name}
                 </div>
-              ))
-            ) : (
-              <p>Nenhum time inscrito neste campeonato ainda.</p>
-            )}
-          </div>
-          
-          {!isOrganizer && (
-            <div className="teams-section-actions">
-              <button
-                className="join-team-button-section"
-                onClick={() => setShowTeamSelectModal(true)}
-                disabled={isJoining || userTeams.length === 0}
-              >
-                {isJoining ? 'Entrando...' : userTeams.length === 0 ? 'Crie um time primeiro' : 'Entrar com um Time'}
-              </button>
+              ))}
             </div>
+          ) : (
+            <p>Nenhum time inscrito neste campeonato ainda.</p>
           )}
         </div>
       </div>

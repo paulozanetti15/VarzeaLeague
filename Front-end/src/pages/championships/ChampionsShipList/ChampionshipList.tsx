@@ -36,8 +36,8 @@ export default function ChampionshipList() {
 
   return (
     <div className="match-list-container">
-      <button className="back-button" onClick={() => navigate(-1)}>
-        <ArrowBackIcon />
+      <button className="back-btn" onClick={() => navigate(-1)}>
+        <ArrowBackIcon /> Voltar
       </button>
       <div className="content-container">
         <div className="header-container championship-header-visual">

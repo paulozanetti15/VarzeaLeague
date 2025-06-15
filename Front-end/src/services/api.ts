@@ -1,7 +1,7 @@
 import { loadPlayersForMatch } from './matchService';
 import { getMatchErrorStatus, clearMatchErrors } from './apiHelpers';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 const token = localStorage.getItem('token');
 
 
@@ -228,6 +228,42 @@ const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout 
 };
 
 export const api = {
+  auth: {
+    register: async (userData: any) => {
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao registrar usuário');
+      }
+      
+      return response.json();
+    },
+
+    checkCPF: async (cpf: string) => {
+      const response = await fetch(`${API_URL}/auth/check-cpf/${cpf.replace(/\D/g, '')}`);
+      return response.json();
+    },
+
+    login: async (credentials: { email: string; password: string }) => {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erro ao fazer login');
+      }
+      
+      return response.json();
+    },
+  },
   matches: {
     create: async (matchData: any) => {
       const token = localStorage.getItem('token');
@@ -238,12 +274,12 @@ export const api = {
       }
 
       console.log('Enviando requisição para criar partida:', {
-        url: `${API_BASE_URL}/matches`,
+        url: `${API_URL}/matches`,
         token: token ? 'Token presente' : 'Token ausente',
         data: matchData
       });
 
-      const response = await fetch(`${API_BASE_URL}/matches`, {
+      const response = await fetch(`${API_URL}/matches`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -275,7 +311,7 @@ export const api = {
         console.log(`Buscando lista de partidas${locationParam ? ' com localização' : ''}`);
         
         // Corrigir para usar fetch diretamente ou modificar como usamos fetchWithTimeout
-        const response = await fetch(`${API_BASE_URL}/matches${locationParam}`, {
+        const response = await fetch(`${API_URL}/matches${locationParam}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -349,7 +385,7 @@ export const api = {
         }
         
         const response = await fetchWithTimeout(
-          `${API_BASE_URL}/matches/${matchId}/join`,
+          `${API_URL}/matches/${matchId}/join`,
           {
             method: 'POST',
             headers: {
@@ -372,11 +408,11 @@ export const api = {
       }
 
       console.log(`Enviando requisição para entrar na partida ${matchId} com o time ${teamId}:`, {
-        url: `${API_BASE_URL}/matches/${matchId}/join-team`,
+        url: `${API_URL}/matches/${matchId}/join-team`,
         token: token ? 'Token presente' : 'Token ausente'
       });
 
-      const response = await fetch(`${API_BASE_URL}/matches/${matchId}/join-team`, {
+      const response = await fetch(`${API_URL}/matches/${matchId}/join-team`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -426,7 +462,7 @@ export const api = {
         try {
           // Solicitar explicitamente inclusão de jogadores e times
           const match = await fetchWithTimeout(
-            `${API_BASE_URL}/matches/${matchId}?includeAllPlayers=true&includeTotalCounts=true`,
+            `${API_URL}/matches/${matchId}?includeAllPlayers=true&includeTotalCounts=true`,
             { method: 'GET' },
             8000 // Timeout maior para garantir que temos tempo para buscar todos os detalhes
           );
@@ -436,7 +472,7 @@ export const api = {
             // Se não temos jogadores, tentar buscar apenas os jogadores
             try {
               const playersData = await fetchWithTimeout(
-                `${API_BASE_URL}/matches/${matchId}/players`,
+                `${API_URL}/matches/${matchId}/players`,
                 { method: 'GET' },
                 5000
               );
@@ -470,7 +506,7 @@ export const api = {
         throw new Error('Usuário não autenticado');
       }
 
-      const response = await fetch(`${API_BASE_URL}/matches/${matchId}/leave`, {
+      const response = await fetch(`${API_URL}/matches/${matchId}/leave`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -492,7 +528,7 @@ export const api = {
 
       try {
         // Usar diretamente a API de times e filtrar pelo usuário atual
-        const allTeamsResponse = await fetch(`${API_BASE_URL}/teams`, {
+        const allTeamsResponse = await fetch(`${API_URL}/teams`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -532,7 +568,7 @@ export const api = {
         throw new Error('Usuário não autenticado');
       }
 
-      const response = await fetch(`${API_BASE_URL}/teams`, {
+      const response = await fetch(`${API_URL}/teams`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -547,7 +583,7 @@ export const api = {
         throw new Error('Usuário não autenticado');
       }
 
-      const response = await fetch(`${API_BASE_URL}/teams/${teamId}`, {
+      const response = await fetch(`${API_URL}/teams/${teamId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -558,14 +594,14 @@ export const api = {
   championships: {
     list: async () => {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/championships`, {
+      const response = await fetch(`${API_URL}/championships`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       return handleResponse(response);
     },
     create: async (champData: any) => {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/championships`, {
+      const response = await fetch(`${API_URL}/championships`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -582,7 +618,7 @@ export const api = {
       }
 
       console.log(`Buscando detalhes do campeonato ${champId}`);
-      const response = await fetch(`${API_BASE_URL}/championships/${champId}`, {
+      const response = await fetch(`${API_URL}/championships/${champId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -596,7 +632,7 @@ export const api = {
       }
 
       console.log(`Atualizando campeonato ${champId}`);
-      const response = await fetch(`${API_BASE_URL}/championships/${champId}`, {
+      const response = await fetch(`${API_URL}/championships/${champId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -613,7 +649,7 @@ export const api = {
       }
 
       console.log(`Excluindo campeonato ${champId}`);
-      const response = await fetch(`${API_BASE_URL}/championships/${champId}`, {
+      const response = await fetch(`${API_URL}/championships/${champId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -628,7 +664,7 @@ export const api = {
       }
 
       console.log(`Entrando no campeonato ${champId}`);
-      const response = await fetch(`${API_BASE_URL}/championships/${champId}/join`, {
+      const response = await fetch(`${API_URL}/championships/${champId}/join`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -644,7 +680,7 @@ export const api = {
       }
 
       console.log(`Entrando no campeonato ${champId} com o time ${teamId}`);
-      const response = await fetch(`${API_BASE_URL}/championships/${champId}/join-team`, {
+      const response = await fetch(`${API_URL}/championships/${champId}/join-team`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -661,7 +697,7 @@ export const api = {
       }
 
       console.log(`Saindo do campeonato ${champId}`);
-      const response = await fetch(`${API_BASE_URL}/championships/${champId}/leave`, {
+      const response = await fetch(`${API_URL}/championships/${champId}/leave`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
