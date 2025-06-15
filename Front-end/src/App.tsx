@@ -23,6 +23,8 @@ import Profile from './pages/perfil/Perfil'
 import PageTransition from './components/PageTransition'
 import React, { lazy, Suspense } from 'react'
 import UserManagement from './pages/UserManagement'
+import Navbar from './components/Navbar'
+import { Box, CssBaseline } from '@mui/material'
 
 // Componente simples para loading
 const Loading = () => (
@@ -51,179 +53,199 @@ function AppContent() {
     return <Loading />;
   }
 
+  // Lista de rotas que não devem mostrar a Navbar
+  const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/reset-password'];
+
+  // Verifica se a rota atual é pública (apenas se for exatamente igual)
+  const isPublicRoute = publicRoutes.includes(location.pathname);
+
   return (
-    <>
-      <Routes>
-        <Route path="/" element={
-          <PageTransition>
-            <Landing 
-              isLoggedIn={isLoggedIn}
-              user={user}
-              onLoginClick={() => navigate('/login')}
-              onRegisterClick={() => navigate('/register')}
-              onLogout={handleLogout}
-            />
-          </PageTransition>
-        } />
-        
-        <Route path="/perfil" element={
-          isLoggedIn ? (
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <CssBaseline />
+      {!isPublicRoute && <Navbar />}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          pt: !isPublicRoute ? '64px' : 0,
+          backgroundColor: 'background.default',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        <Routes>
+          <Route path="/" element={
             <PageTransition>
-              <Profile
+              <Landing 
                 isLoggedIn={isLoggedIn}
+                user={user}
                 onLoginClick={() => navigate('/login')}
                 onRegisterClick={() => navigate('/register')}
                 onLogout={handleLogout}
               />
             </PageTransition>
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        } />
-        
-        <Route path="/login" element={
-          isLoggedIn ? (
-            <Navigate to="/" replace />
-          ) : (
+          } />
+          
+          <Route path="/perfil" element={
+            isLoggedIn ? (
+              <PageTransition>
+                <Profile
+                  isLoggedIn={isLoggedIn}
+                  onLoginClick={() => navigate('/login')}
+                  onRegisterClick={() => navigate('/register')}
+                  onLogout={handleLogout}
+                />
+              </PageTransition>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          } />
+          
+          <Route path="/login" element={
+            isLoggedIn ? (
+              <Navigate to="/" replace />
+            ) : (
+              <PageTransition>
+                <Login 
+                  onRegisterClick={() => navigate('/register')}
+                  onForgotPasswordClick={() => navigate('/forgot-password')}
+                  onLoginSuccess={handleLoginSuccess}
+                />
+              </PageTransition>
+            )
+          } />
+          
+          <Route path="/register" element={
+            isLoggedIn ? (
+              <Navigate to="/" replace />
+            ) : (
+              <PageTransition>
+                <Register 
+                  onLoginClick={() => navigate('/login')}
+                />
+              </PageTransition>
+            )
+          } />
+          
+          <Route path="/forgot-password" element={
             <PageTransition>
-              <Login 
-                onRegisterClick={() => navigate('/register')}
-                onForgotPasswordClick={() => navigate('/forgot-password')}
-                onLoginSuccess={handleLoginSuccess}
+              <ForgotPassword 
+                onBackToLogin={() => navigate('/login')}
               />
             </PageTransition>
-          )
-        } />
-        
-        <Route path="/register" element={
-          isLoggedIn ? (
-            <Navigate to="/" replace />
-          ) : (
+          } />
+
+          <Route path="/reset-password/:token" element={
             <PageTransition>
-              <Register 
-                onLoginClick={() => navigate('/login')}
+              <ResetPassword 
+                onBackToLogin={() => navigate('/login')}
               />
             </PageTransition>
-          )
-        } />
-        
-        <Route path="/forgot-password" element={
-          <PageTransition>
-            <ForgotPassword 
-              onBackToLogin={() => navigate('/login')}
-            />
-          </PageTransition>
-        } />
+          } />
+          
+          <Route path="/matches" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+              >
+                <PageTransition>
+                  <MatchList />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
+          
+          <Route path="/matches/create" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+              >
+                <PageTransition>
+                  <CreateMatch />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
 
-        <Route path="/reset-password/:token" element={
-          <PageTransition>
-            <ResetPassword 
-              onBackToLogin={() => navigate('/login')}
-            />
-          </PageTransition>
-        } />
-        
-        <Route path="/matches" element={
-          <PrivateRoute isLoggedIn={isLoggedIn}>
-            <RoleBasedRoute 
-              isLoggedIn={isLoggedIn} 
-              userRole={user?.userTypeId} 
-              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
-            >
-              <PageTransition>
-                <MatchList />
-              </PageTransition>
-            </RoleBasedRoute>
-          </PrivateRoute>
-        } />
-        
-        <Route path="/matches/create" element={
-          <PrivateRoute isLoggedIn={isLoggedIn}>
-            <RoleBasedRoute 
-              isLoggedIn={isLoggedIn} 
-              userRole={user?.userTypeId} 
-              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
-            >
-              <PageTransition>
-                <CreateMatch />
-              </PageTransition>
-            </RoleBasedRoute>
-          </PrivateRoute>
-        } />
+          <Route path="/matches/:id" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+              >
+                <PageTransition>
+                  <MatchDetail />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
+          
+          <Route path="/teams" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+              >
+                <PageTransition>
+                  <TeamList />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
+          
+          <Route path="/teams/create" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+              >
+                <PageTransition>
+                  <CreateTeam />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
+          
+          <Route path="/teams/edit/:id" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+              >
+                <PageTransition>
+                  <EditTeam />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
 
-        <Route path="/matches/:id" element={
-          <PrivateRoute isLoggedIn={isLoggedIn}>
-            <RoleBasedRoute 
-              isLoggedIn={isLoggedIn} 
-              userRole={user?.userTypeId} 
-              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
-            >
-              <PageTransition>
-                <MatchDetail />
-              </PageTransition>
-            </RoleBasedRoute>
-          </PrivateRoute>
-        } />
-        
-        <Route path="/teams" element={
-          <PrivateRoute isLoggedIn={isLoggedIn}>
-            <RoleBasedRoute 
-              isLoggedIn={isLoggedIn} 
-              userRole={user?.userTypeId} 
-              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
-            >
-              <PageTransition>
-                <TeamList />
-              </PageTransition>
-            </RoleBasedRoute>
-          </PrivateRoute>
-        } />
-        
-        <Route path="/teams/create" element={
-          <PrivateRoute isLoggedIn={isLoggedIn}>
-            <RoleBasedRoute 
-              isLoggedIn={isLoggedIn} 
-              userRole={user?.userTypeId} 
-              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
-            >
-              <PageTransition>
-                <CreateTeam />
-              </PageTransition>
-            </RoleBasedRoute>
-          </PrivateRoute>
-        } />
-        
-        <Route path="/teams/edit/:id" element={
-          <PrivateRoute isLoggedIn={isLoggedIn}>
-            <RoleBasedRoute 
-              isLoggedIn={isLoggedIn} 
-              userRole={user?.userTypeId} 
-              allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
-            >
-              <PageTransition>
-                <EditTeam />
-              </PageTransition>
-            </RoleBasedRoute>
-          </PrivateRoute>
-        } />
-
-        {/* Rota para Gerenciamento de Usuários (Apenas Admin do Sistema) */}
-        <Route path="/admin/users" element={
-          <PrivateRoute isLoggedIn={isLoggedIn}>
-            <RoleBasedRoute 
-              isLoggedIn={isLoggedIn} 
-              userRole={user?.userTypeId} 
-              allowedRoles={[USER_ROLES.ADMIN_SISTEMA]}
-            >
-              <PageTransition>
-                <UserManagement />
-              </PageTransition>
-            </RoleBasedRoute>
-          </PrivateRoute>
-        } />
-        
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Rota para Gerenciamento de Usuários (Apenas Admin do Sistema) */}
+          <Route path="/admin/users" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA]}
+              >
+                <PageTransition>
+                  <UserManagement />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
+          
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Box>
       
       <Toaster 
         position="top-right"
@@ -249,16 +271,14 @@ function AppContent() {
           },
         }}
       />
-    </>
+    </Box>
   );
 }
 
 function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<Loading />}>
-        <AppContent />
-      </Suspense>
+      <AppContent />
     </BrowserRouter>
   );
 }

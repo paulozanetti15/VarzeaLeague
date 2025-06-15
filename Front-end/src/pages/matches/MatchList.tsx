@@ -555,9 +555,6 @@ const MatchList: React.FC = () => {
 
   return (
     <div className="match-list-container">
-      <button className="back-button" onClick={() => navigate(-1)}>
-        <ArrowBackIcon />
-      </button>
       <div className="content-container">
         <div className="header-container">
           <h1 className="text-center">Partidas Disponíveis</h1>

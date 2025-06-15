@@ -14,6 +14,7 @@ import axios from 'axios';
 import { Card } from 'react-bootstrap';
 import ModalTeams from '../../components/Modals/Teams/modelTeams';
 import { useAuth } from '../../hooks/useAuth';
+import BackButton from '../../components/BackButton';
 
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -197,17 +198,7 @@ const MatchDetail: React.FC = () => {
 
   return (
     <div className="match-detail-container">
-      <button className="back-button" onClick={() => navigate(-1)}>
-        <ArrowBackIcon />
-      </button>
-      
-      {error && (
-        <div className="error-message">
-          {error}
-          <button className="dismiss-error" onClick={() => setError(null)}>×</button>
-        </div>
-      )}
-      
+      <BackButton />
       <div className="detail-content">
         <div className="match-header">
           <h1>{match.title}</h1>

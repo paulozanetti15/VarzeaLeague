@@ -146,7 +146,7 @@ body::before {
   padding: 0.5rem 1.2rem;
   border-radius: 8px;
   position: relative;
-  transition: color 0.2s, background 0.2s;
+  transition: all 0.3s;
   font-family: 'Inter', 'Montserrat', Arial, sans-serif;
   cursor: pointer;
 }
@@ -156,7 +156,7 @@ body::before {
   display: block;
   width: 0;
   height: 3px;
-  background: linear-gradient(90deg, #fff, #2196f3);
+  background: linear-gradient(90deg, #ffd600, #fff);
   transition: width 0.3s;
   border-radius: 2px;
   margin: 0 auto;
@@ -168,7 +168,7 @@ body::before {
 
 .navbar-dark .navbar-nav .nav-link:hover {
   color: #ffd600;
-  background: rgba(33,150,243,0.08);
+  background: rgba(255,255,255,0.08);
 }
 
 .navbar-dark .navbar-nav .nav-link::before {

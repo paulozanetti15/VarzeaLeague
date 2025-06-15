@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import Button from 'react-bootstrap/Button';
-import Form from 'react-bootstrap/Form';
-import Modal from 'react-bootstrap/Modal';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, IconButton, InputAdornment, Alert } from '@mui/material';
 import axios from 'axios';
 import ToastComponent from '../../Toast/ToastComponent';
 import LockIcon from '@mui/icons-material/Lock';
@@ -44,19 +42,6 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
         }
         handlingVerifyPassword();
     }, [senha, confirmarSenha]);
-
-    // Super simplified modal handling
-    useEffect(() => {
-        if (show) {
-            document.body.classList.add('modal-open');
-        } else {
-            document.body.classList.remove('modal-open');
-        }
-
-        return () => {
-            document.body.classList.remove('modal-open');
-        };
-    }, [show]);
 
     const updatePasswordRequest = async (userId: number) => {
         setCurrentPasswordError('');
@@ -123,84 +108,87 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
 
     return (
         <>
-            <Modal 
-                show={show} 
-                onHide={handleClose} 
-                centered 
-                className="password-update-modal"
-                backdrop="static"
-                restoreFocus={false}
-            >
-                <Modal.Header closeButton className="modal-header">
-                    <Modal.Title><LockIcon className="lock-icon" /> Alterar Senha</Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="modal-body">
-                    <Form className="password-form">
-                        <Form.Group className="mb-4" controlId="currentPassword">
-                            <Form.Label className="form-label-password">Senha atual</Form.Label>
-                            <div className="password-input-container">
-                                <Form.Control
-                                    type="password"
-                                    placeholder="Digite sua senha atual"
-                                    onChange={(e) => setSenhaAtual(e.target.value)}
-                                    autoFocus
-                                    className="password-input"
-                                />
-                            </div>
-                            {currentPasswordError && (
-                                <div className="password-error" style={{marginTop: 8}}>{currentPasswordError}</div>
-                            )}
-                        </Form.Group>
-                        <Form.Group className="mb-4" controlId="password">
-                            <Form.Label className="form-label-password">Nova senha</Form.Label>
-                            <div className="password-input-container">
-                                <Form.Control
-                                    type={showPassword ? "text" : "password"}
-                                    placeholder="Digite sua nova senha"
-                                    onChange={(e) => setSenha(e.target.value)}
-                                    className="password-input"
-                                />
-                                <button 
-                                    type="button" 
-                                    className="password-visibility-toggle"
-                                    onClick={togglePasswordVisibility}
-                                >
-                                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                                </button>
-                            </div>
-                        </Form.Group>
-                        <Form.Group className="mb-4" controlId="confirmPassword">
-                            <Form.Label className="form-label-password">Confirmar nova senha</Form.Label>
-                            <div className="password-input-container">
-                                <Form.Control 
-                                    type={showConfirmPassword ? "text" : "password"}
-                                    placeholder="Confirme sua nova senha"
-                                    onChange={(e) => setConfirmarSenha(e.target.value)}
-                                    className="password-input"
-                                />
-                                <button 
-                                    type="button" 
-                                    className="password-visibility-toggle"
-                                    onClick={toggleConfirmPasswordVisibility}
-                                >
-                                    {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                                </button>
-                            </div>
-                        </Form.Group>
+            <Dialog open={show} onClose={handleClose} disableScrollLock maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
+                <DialogTitle className="modal-header" sx={{ textAlign: 'center', fontWeight: 700, fontSize: 22, background: 'linear-gradient(to right, #007bff, #0056b3)', color: 'white', padding: '16px 16px 0 16px', textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}>
+                    <LockIcon className="lock-icon" /> Alterar Senha
+                </DialogTitle>
+                <DialogContent className="modal-body" sx={{ p: 3 }}>
+                    <form className="password-form">
+                        <TextField
+                            label="Senha atual"
+                            type="password"
+                            placeholder="Digite sua senha atual"
+                            onChange={(e) => setSenhaAtual(e.target.value)}
+                            autoFocus
+                            className="password-input"
+                            error={!!currentPasswordError}
+                            helperText={currentPasswordError}
+                            fullWidth
+                            margin='normal'
+                            variant='outlined'
+                            sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(25, 118, 210, 0.07)' }}
+                        />
+                        <TextField
+                            label="Nova senha"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="Digite sua nova senha"
+                            onChange={(e) => setSenha(e.target.value)}
+                            className="password-input"
+                            fullWidth
+                            margin='normal'
+                            variant='outlined'
+                            sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(25, 118, 210, 0.07)' }}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={togglePasswordVisibility}
+                                            edge="end"
+                                        >
+                                            {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                        <TextField
+                            label="Confirmar nova senha"
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Confirme sua nova senha"
+                            onChange={(e) => setConfirmarSenha(e.target.value)}
+                            className="password-input"
+                            fullWidth
+                            margin='normal'
+                            variant='outlined'
+                            sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(25, 118, 210, 0.07)' }}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={toggleConfirmPasswordVisibility}
+                                            edge="end"
+                                        >
+                                            {showConfirmPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
                         
                         {confirmPasswordTouched && passwordError && (
-                            <div className="password-error">
-                                {passwordError}
-                            </div>
+                            <Alert severity="error" sx={{ mt: 2 }}>{passwordError}</Alert>
                         )}
-                    </Form>
-                </Modal.Body>
-                <Modal.Footer className="modal-footer">
+                    </form>
+                </DialogContent>
+                <DialogActions className="modal-footer">
                     <Button 
                         variant="outline-secondary" 
                         onClick={handleClose} 
                         className="cancel-button"
                         disabled={isLoading}
+                        fullWidth
+                        size='large'
+                        sx={{ borderRadius: 2, fontWeight: 700, py: 1.2, fontSize: 17, mt: 2, boxShadow: '0 2px 8px rgba(25, 118, 210, 0.10)' }}
                     >
                         Cancelar
                     </Button>
@@ -209,11 +197,14 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
                         onClick={() => updatePasswordRequest(userId)}
                         className={`update-button ${isLoading ? 'loading' : ''}`}
                         disabled={!senha || !confirmarSenha || confirmPasswordTouched || isLoading}
+                        fullWidth
+                        size='large'
+                        sx={{ borderRadius: 2, fontWeight: 700, py: 1.2, fontSize: 17, mt: 2, boxShadow: '0 2px 8px rgba(25, 118, 210, 0.10)' }}
                     >
                         {isLoading ? 'Alterando...' : 'Salvar Senha'}
                     </Button>
-                </Modal.Footer>
-            </Modal>
+                </DialogActions>
+            </Dialog>
             
             {showToast && (
                 <ToastComponent

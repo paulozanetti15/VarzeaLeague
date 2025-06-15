@@ -17,6 +17,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import './EditTeam.css';
 import PlayerModal from '../../components/teams/PlayerModal';
 import ToastComponent from '../../components/Toast/ToastComponent';
+import BackButton from '../../components/BackButton';
 
 interface PlayerData {
   id?: number;
@@ -632,14 +633,6 @@ export default function EditTeam() {
         editingPlayer={editingPlayer}
       />
       
-      <div className="top-navigation">
-        <button 
-          onClick={() => navigate('/teams')} 
-          className="back-btn"
-        >
-          <ArrowBackIcon /> Voltar
-        </button>
-      </div>
       <div className="teams-header">
         <h1 className="teams-title">Editar meu time</h1>
         <p className="teams-subtitle">

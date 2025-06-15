@@ -11,6 +11,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import EditIcon from '@mui/icons-material/Edit';
 import ToastComponent from '../../components/Toast/ToastComponent';
 import PlayerModal from '../../components/teams/PlayerModal';
+import BackButton from '../../components/BackButton';
 
 interface PlayerData {
   id?: number;
@@ -436,6 +437,7 @@ export default function CreateTeam() {
 
   return (
     <div className="create-team-container">
+      <BackButton />
       {showToast && (
         <ToastComponent
           message={toastMessage}
@@ -450,15 +452,6 @@ export default function CreateTeam() {
         onSave={handleSavePlayer}
         editingPlayer={editingPlayer}
       />
-      
-      <div className="top-navigation">
-        <button 
-          onClick={() => navigate('/teams')} 
-          className="back-btn"
-        >
-          <ArrowBackIcon /> Voltar
-        </button>
-      </div>
       
       <div className="teams-header">
         <h1 className="teams-title">Criar meu time</h1>
