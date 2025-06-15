@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import './ChampionshipList.css';
 import { api } from '../../../services/api';
-import trophy from '../../assets/championship-trophy.svg';
+import trophy from "../../../assets/championship-trophy.svg";
 
 interface Championship {
   id: number;

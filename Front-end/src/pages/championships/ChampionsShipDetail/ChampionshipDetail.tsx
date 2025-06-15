@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { api } from '../../../services/api';
-import trophy from '../../assets/championship-trophy.svg';
+import trophy from '../../../assets/championship-trophy.svg';
 import './ChampionshipDetail.css';
 import toast from 'react-hot-toast';
 import { Button, Modal } from 'react-bootstrap';
