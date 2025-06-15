@@ -104,6 +104,9 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                   <li className="nav-item">
                     <span className="nav-link" onClick={() => navigate('/matches')}>Partidas</span>
                   </li>
+                  <li className="nav-item">
+                    <span className="nav-link" onClick={() => navigate('/championships')}>Campeonatos</span>
+                  </li>
                   {(localStorage.getItem('Tipo_usuário:') === '1'|| localStorage.getItem('Tipo_usuário:') === '4' || localStorage.getItem('Tipo_usuário:') === '3') && (
                     <li className="nav-item">
                       <span className="nav-link" onClick={() => navigate('/teams')}>Meu time</span>
@@ -175,4 +178,4 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
       </nav>
     </header>
   );
-} 
+}
