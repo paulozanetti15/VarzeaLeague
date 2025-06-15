@@ -22,9 +22,9 @@ import { useAuth } from './hooks/useAuth'
 import Profile from './pages/perfil/Perfil'
 import PageTransition from './components/PageTransition'
 import React, { lazy, Suspense } from 'react'
-import ChampionshipList from './pages/championships/ChampionshipList'
+import ChampionshipList from './pages/championships/ChampionsShipList/ChampionshipList'
 import ChampionshipForm from './pages/championships/ChampionshipForm'
-import ChampionshipDetail from './pages/championships/ChampionshipDetail'
+import ChampionshipDetail from './pages/championships/ChampionsShipDetail/ChampionshipDetail'
 import ChampionshipEditForm from './pages/championships/ChampionshipEditForm'
 
 // Componente simples para loading

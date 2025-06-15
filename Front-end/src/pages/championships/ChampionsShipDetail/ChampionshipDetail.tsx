@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { api } from '../../services/api';
+import { api } from '../../../services/api';
 import trophy from '../../assets/championship-trophy.svg';
 import './ChampionshipDetail.css';
 import toast from 'react-hot-toast';
@@ -103,7 +103,6 @@ const ChampionshipDetail: React.FC = () => {
       await api.championships.joinWithTeam(Number(id), selectedTeamId);
       toast.success('Seu time entrou no campeonato com sucesso!');
       setShowTeamSelectModal(false);
-      // Atualizar a lista de times participantes
       const updatedChampionship = await api.championships.getById(Number(id));
       setChampionship(updatedChampionship);
       setIsJoining(false);
@@ -271,7 +270,6 @@ const ChampionshipDetail: React.FC = () => {
         </Modal.Footer>
       </Modal>
 
-      {/* Modal para Seleção de Time */}
       <Modal show={showTeamSelectModal} onHide={() => setShowTeamSelectModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Selecione um Time</Modal.Title>
