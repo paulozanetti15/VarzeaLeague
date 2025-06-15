@@ -14,7 +14,6 @@ export const requestPasswordReset = async (req,res) => {
     // Gera um token aleatório
     const resetToken = crypto.randomBytes(32).toString('hex');
     const hash = await bcrypt.hash(resetToken, 10);
-    // Salva o token e a data de expiração
     const passwordToken=user.toJSON().resetPasswordToken = hash;
     const resetPasswordExpires=user.toJSON().resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hora
     await user.update({resetPasswordToken:passwordToken,resetPasswordExpires:resetPasswordExpires});
@@ -36,12 +35,11 @@ export const resetPassword = async (req,res) => {
       where: {
         resetPasswordExpires:
         {
-          [Op.gt]: new Date() // Token ainda não expirou
+          [Op.gt]: new Date() 
         }
       }
     }); 
     if (!user) {
-      console.log("Token inválido ou expirado");
       return res.status(400).json({ message: 'Token inválido ou expirado' });
     }
     const hashToken = await bcrypt.hash(token, 10);

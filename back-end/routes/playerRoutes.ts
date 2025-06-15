@@ -4,10 +4,7 @@ import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 
-// Aplicar middleware de autenticação em todas as rotas
 router.use(authenticateToken);
-
-// Rotas para jogadores
 router.post('/', PlayerController.create);
 router.get('/team/:teamId', PlayerController.getPlayersFromTeam);
 router.post('/add-to-team', PlayerController.addToTeam);
