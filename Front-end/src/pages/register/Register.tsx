@@ -15,6 +15,7 @@ interface FormData {
   sexo: string;
   password: string;
   confirmPassword: string;
+  userTypeId: number;
 }
 
 interface FormErrors {
@@ -25,6 +26,7 @@ interface FormErrors {
   sexo?: string;
   password?: string;
   confirmPassword?: string;
+  userTypeId?: string;
   general?: string;
 }
 
@@ -46,7 +48,8 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
     phone: '',
     sexo: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    userTypeId: 4 // Valor padrão como jogador
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -130,7 +133,7 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    let newValue = value;
+    let newValue: string | number = value;
     
     if (name === 'name') {
       newValue = value.replace(/[^A-Za-zÀ-ÿ\s]/g, '');
@@ -156,6 +159,9 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
       if (newValue.length > 10) newValue = newValue.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
       else if (newValue.length > 6) newValue = newValue.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
       else if (newValue.length > 2) newValue = newValue.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+    }
+    if (name === 'userTypeId') {
+      newValue = parseInt(value, 10);
     }
     
     setFormData(prev => ({ ...prev, [name]: newValue }));
@@ -198,6 +204,7 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
     if (!formData.phone.trim()) newErrors.phone = 'Telefone é obrigatório';
     else if (!/^\d{10,11}$/.test(formData.phone.replace(/\D/g, ''))) newErrors.phone = 'Telefone inválido';
     if (!formData.sexo) newErrors.sexo = 'Selecione o sexo';
+    if (!formData.userTypeId) newErrors.userTypeId = 'Selecione o tipo de perfil';
     
     // Validação de CPF
     if (!formData.cpf.trim()) {
@@ -276,6 +283,21 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
             </div>
             <div className="register-row">
               <div className="register-form-group">
+                <label className="register-label">Tipo de Perfil</label>
+                <select
+                  name="userTypeId"
+                  value={formData.userTypeId}
+                  onChange={handleChange}
+                  className={`register-input${errors.userTypeId ? ' register-input-error' : ''}`}
+                  disabled={isLoading}
+                >
+                  <option value={4}>Jogador</option>
+                  <option value={2}>Organizador de Campeonatos e Partidas</option>
+                  <option value={3}>Técnico/Organizador de Times</option>
+                </select>
+                {errors.userTypeId && <span className="register-error-message">{errors.userTypeId}</span>}
+              </div>
+              <div className="register-form-group">
                 <label className="register-label">Sexo</label>
                 <select
                   name="sexo"
@@ -291,6 +313,8 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
                 </select>
                 {errors.sexo && <span className="register-error-message">{errors.sexo}</span>}
               </div>
+            </div>
+            <div className="register-row">
               <div className="register-form-group">
                 <label className="register-label">Telefone</label>
                 <input

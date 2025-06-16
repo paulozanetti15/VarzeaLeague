@@ -1,8 +1,8 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import Login from '../pages/Login';
-import Home from '../pages/Home';
+import { Landing } from '../pages/landing/Landing';
+import { Login } from '../pages/login/Login';
 import UserManagement from '../pages/UserManagement';
 import Layout from '../components/Layout';
 
@@ -12,9 +12,9 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requiredUserType }) => {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  if (loading) {
+  if (isLoading) {
     return <div>Carregando...</div>;
   }
 
@@ -30,19 +30,31 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requiredUserType 
 };
 
 const AppRoutes: React.FC = () => {
+  const { user, logout } = useAuth();
+
+  // Se o usuário já estiver logado e tentar acessar /login, redireciona para /
+  if (user && window.location.pathname === '/login') {
+    return <Navigate to="/" />;
+  }
+
   return (
     <BrowserRouter>
       <Routes>
+        {/* Rota pública para login */}
         <Route path="/login" element={<Login />} />
         
+        {/* Rota pública para landing */}
         <Route path="/" element={
-          <PrivateRoute>
-            <Layout>
-              <Home />
-            </Layout>
-          </PrivateRoute>
+          <Landing 
+            isLoggedIn={!!user}
+            user={user}
+            onLoginClick={() => {}}
+            onRegisterClick={() => {}}
+            onLogout={logout}
+          />
         } />
 
+        {/* Rotas protegidas */}
         <Route path="/user-management" element={
           <PrivateRoute requiredUserType={1}>
             <Layout>

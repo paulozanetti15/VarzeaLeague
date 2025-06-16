@@ -5,8 +5,14 @@ import User from '../models/UserModel';
 import jwt from 'jsonwebtoken';
 import MatchTeamsModel from '../models/MatchTeamsModel';
 import Rules from '../models/RulesModel';
+
+interface UserWithType extends User {
+  userTypeId: number;
+}
+
 require('dotenv').config(); 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
+
 export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
    try {
       const { title, description, date, location, complement, price, Uf, Cep } = req.body;
@@ -31,7 +37,7 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
       const userId = req.user.id;
 
       // Verificar se o usuário existe
-      const user = await User.findByPk(userId);
+      const user = await User.findByPk(userId) as UserWithType | null;
       if (!user) {
         res.status(404).json({ message: 'Usuário não encontrado' });
         return;
@@ -50,15 +56,6 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
         Uf: Uf,
         Cep: Cep
       });
-
-      // Atualizar o tipo de usuário para organizador (userTypeId: 2)
-      await User.update(
-        { userTypeId: 2 }, 
-        { 
-          where: { id: userId },
-          silent: true
-        }
-      );
 
       res.status(201).json(match);
     } catch (error) {

@@ -15,7 +15,7 @@ interface UserAttributes {
 
 export const register: RequestHandler = async (req, res) => {
   try {
-    const { name, cpf, phone, email, password, sexo } = req.body;
+    const { name, cpf, phone, email, password, sexo, userTypeId } = req.body;
     const existingUser = await UserModel.findOne({ where: { email } });
     if (existingUser) {
       res.status(400).json({ message: 'E-mail já cadastrado' });
@@ -38,7 +38,7 @@ export const register: RequestHandler = async (req, res) => {
       email,
       password: hashedPassword,
       sexo,
-      userTypeId: 4, // Definindo o tipo de usuário como "comum"
+      userTypeId: userTypeId || 4, // Usa o userTypeId enviado ou 4 como padrão
     });
 
     const userJson = user.toJSON() as UserAttributes;
@@ -55,6 +55,7 @@ export const register: RequestHandler = async (req, res) => {
         id: userJson.id,
         name: userJson.name,
         email: userJson.email,
+        userTypeId: userJson.userTypeId
       },
     });
   } catch (error) {

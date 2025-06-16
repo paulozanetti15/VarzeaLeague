@@ -10,16 +10,17 @@ interface User {
 
 interface AuthContextData {
   user: User | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => void;
+  isLoading: boolean;
+  isLoggedIn: boolean;
+  login: (userData: { user: User; token: string }) => void;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('@VarzeaLeague:user');
@@ -30,25 +31,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(JSON.parse(storedUser));
     }
 
-    setLoading(false);
+    setIsLoading(false);
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      const response = await api.post('/auth/login', { email, password });
-      const { user: userData, token } = response;
+  const login = (userData: { user: User; token: string }) => {
+    localStorage.setItem('@VarzeaLeague:user', JSON.stringify(userData.user));
+    localStorage.setItem('@VarzeaLeague:token', userData.token);
 
-      localStorage.setItem('@VarzeaLeague:user', JSON.stringify(userData));
-      localStorage.setItem('@VarzeaLeague:token', token);
-
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(userData);
-    } catch (error: any) {
-      throw new Error(error.message || 'Erro ao fazer login');
-    }
+    api.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
+    setUser(userData.user);
   };
 
-  const signOut = () => {
+  const logout = () => {
     localStorage.removeItem('@VarzeaLeague:user');
     localStorage.removeItem('@VarzeaLeague:token');
     delete api.defaults.headers.common['Authorization'];
@@ -56,7 +50,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading, 
+      isLoggedIn: !!user,
+      login,
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );
