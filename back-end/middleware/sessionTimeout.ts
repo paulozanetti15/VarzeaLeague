@@ -15,7 +15,7 @@ interface SessionData {
 const activeSessions: Map<string, SessionData> = new Map();
 
 // Tempo limite de inatividade em milissegundos (30 minutos)
-const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
+const INACTIVITY_TIMEOUT = 60 * 1000;
 
 export const sessionTimeoutMiddleware = (
   req: AuthRequest,

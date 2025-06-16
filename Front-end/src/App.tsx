@@ -30,7 +30,7 @@ import UserManagement from './pages/UserManagement'
 import Navbar from './components/Navbar'
 import { Box, CssBaseline } from '@mui/material'
 import { useSessionTimeout } from './hooks/useSessionTimeout'
-import { SessionWarningModal } from './components/Modals/Sessão/modalSessao'; 
+import { SessionWarningModal } from './components/Modals/Sessão/SessionWarningModal'; 
 
 // Componente simples para loading
 const Loading = () => (
@@ -46,8 +46,8 @@ function AppContent() {
   const { isLoggedIn, isLoading, user, login, logout } = useAuth();
   const [showSessionWarning, setShowSessionWarning] = useState(false);
   const { resetTimeout } = useSessionTimeout({
-    timeout: 30 * 60 * 1000, // 30 minutos
-    warningTime: 5 * 60 * 1000, // avisar 5 minutos antes
+    timeout: 60 * 1000, // 30 minutos
+    warningTime: 10* 1000, // avisar 5 minutos antes
     onWarning: () => {
       if (isLoggedIn) {
         setShowSessionWarning(true);
@@ -71,7 +71,10 @@ function AppContent() {
     logout();
     navigate('/');
   };
-  
+  const performLogout = () => {
+    setShowSessionWarning(false); // Fecha o modal primeiro
+    logout(); // Depois faz logout
+  };
   if (isLoading) {
     return <Loading />;
   }
@@ -334,12 +337,12 @@ function AppContent() {
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-         <SessionWarningModal
-          show={showSessionWarning}
-          onExtend={handleExtendSession}
-          onLogout={handleLogout}
-          remainingTime={5 * 60} // 5 minutos em segundos
-        />
+          <SessionWarningModal
+            show={showSessionWarning}
+            onExtend={handleExtendSession}
+            onLogout={performLogout} 
+            remainingTime={30} // 10 segundos para o exemplo
+          />
       </Box>
       
       <Toaster 

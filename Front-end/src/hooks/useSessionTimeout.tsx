@@ -9,10 +9,10 @@ interface UseSessionTimeoutProps {
 }
 
 export const useSessionTimeout = ({
-  timeout = 30 * 60 * 1000, // 30 minutos
+  timeout,
   onTimeout,
-  warningTime = 5 * 60 * 1000, // 5 minutos antes de expirar
-  onWarning
+  warningTime, // 5 minutos antes de expirar
+  onWarning,
 }: UseSessionTimeoutProps = {}) => {
   const navigate = useNavigate();
   const timeoutRef = useRef<NodeJS.Timeout>();
