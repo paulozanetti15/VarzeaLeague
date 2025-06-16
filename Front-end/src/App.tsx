@@ -29,6 +29,8 @@ import ChampionshipEditForm from './pages/championships/ChampionshipEditForm'
 import UserManagement from './pages/UserManagement'
 import Navbar from './components/Navbar'
 import { Box, CssBaseline } from '@mui/material'
+import { useSessionTimeout } from './hooks/useSessionTimeout'
+import { SessionWarningModal } from './components/Modals/Sessão/modalSessao'; 
 
 // Componente simples para loading
 const Loading = () => (
@@ -42,7 +44,24 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isLoggedIn, isLoading, user, login, logout } = useAuth();
-  
+  const [showSessionWarning, setShowSessionWarning] = useState(false);
+  const { resetTimeout } = useSessionTimeout({
+    timeout: 30 * 60 * 1000, // 30 minutos
+    warningTime: 5 * 60 * 1000, // avisar 5 minutos antes
+    onWarning: () => {
+      if (isLoggedIn) {
+        setShowSessionWarning(true);
+      }
+    },
+    onTimeout: () => {
+      logout();
+      setShowSessionWarning(false);
+    }
+  });
+  const handleExtendSession = () => {
+    resetTimeout();
+    setShowSessionWarning(false);
+  };
   const handleLoginSuccess = (userData: { user: any; token: string }) => {
     login(userData);
     navigate('/');
@@ -77,7 +96,7 @@ function AppContent() {
           display: 'flex',
           flexDirection: 'column'
         }}
-      >
+      >  
         <Routes>
           <Route path="/" element={
             <PageTransition>
@@ -315,6 +334,12 @@ function AppContent() {
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+         <SessionWarningModal
+          show={showSessionWarning}
+          onExtend={handleExtendSession}
+          onLogout={handleLogout}
+          remainingTime={5 * 60} // 5 minutos em segundos
+        />
       </Box>
       
       <Toaster 

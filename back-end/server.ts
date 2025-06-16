@@ -25,8 +25,9 @@ import { associateModels } from './models/associations';
 import fs from 'fs';
 import { forEachChild } from 'typescript';
 import championshipRoutes from './routes/championshipRoutes';
-// Importando as associações
+
 import userTypeRoutes from './routes/userTypeRoutes';
+import { sessionTimeoutMiddleware } from './middleware/sessionTimeout';
 dotenv.config();
 
 const app = express();
@@ -46,7 +47,7 @@ app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
 });
-
+app.use('/api', sessionTimeoutMiddleware);
 app.use('/api/auth', authRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/password-reset', passwordResetRoutes);

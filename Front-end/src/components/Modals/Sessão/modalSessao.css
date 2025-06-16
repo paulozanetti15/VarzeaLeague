@@ -1,0 +1,45 @@
+.session-warning-modal .modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.session-warning-header {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  color: white;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  text-align: center;
+}
+
+.session-warning-header .modal-title {
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.session-warning-body {
+  text-align: center;
+  padding: 2rem;
+}
+
+.countdown-timer {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #ff6b35;
+  margin: 1rem 0;
+  font-family: 'Courier New', monospace;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.session-warning-footer {
+  border-top: none;
+  padding: 1rem 2rem 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.session-warning-footer .btn {
+  min-width: 120px;
+  font-weight: 600;
+}
