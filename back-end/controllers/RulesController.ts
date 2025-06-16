@@ -4,24 +4,24 @@ import MatchModel from "../models/MatchModel";
 
 export const insertRules = async (req, res) => {
     try {
-        const { idade_minima, idade_maxima, sexo } = req.body;
+        const { dataLimite, idadeMinima, idadeMaxima, genero } = req.body;
         
         // Validações
-        if (!idade_minima || !idade_maxima || !sexo) {
+        if (!dataLimite || !idadeMinima || !idadeMaxima || !genero) {
             return res.status(400).json({ message: "Todos os campos são obrigatórios" });
         }
 
         // Validação das idades
-        if (parseInt(idade_minima) < 0 || parseInt(idade_maxima) > 100) {
+        if (parseInt(idadeMinima) < 0 || parseInt(idadeMaxima) > 100) {
             return res.status(400).json({ message: "Idades devem estar entre 0 e 100 anos" });
         }
 
-        if (parseInt(idade_minima) > parseInt(idade_maxima)) {
+        if (parseInt(idadeMinima) > parseInt(idadeMaxima)) {
             return res.status(400).json({ message: "Idade mínima não pode ser maior que idade máxima" });
         }
 
         // Validação do gênero
-        if (!['Masculino', 'Feminino', 'Ambos'].includes(sexo)) {
+        if (!['Masculino', 'Feminino', 'Ambos'].includes(genero)) {
             return res.status(400).json({ message: "Gênero inválido" });
         }
 
@@ -31,9 +31,10 @@ export const insertRules = async (req, res) => {
 
         await Rules.create({
             partidaId: idPartida.id,
-            idade_minima: parseInt(idade_minima),
-            idade_maxima: parseInt(idade_maxima),
-            sexo: sexo
+            dataLimite: dataLimite,
+            idadeMinima: parseInt(idadeMinima),
+            idadeMaxima: parseInt(idadeMaxima),
+            genero: genero
         });   
 
         res.status(201).json({ message: "Regra criada com sucesso!" });
@@ -58,31 +59,32 @@ export const deleteRules = async (req, res) => {
 export const updateRules = async (req, res) => {
     try {
         const { partidaId } = req.params;
-        const { idade_minima, idade_maxima, sexo } = req.body;
+        const { idadeMinima, idadeMaxima, genero, dataLimite } = req.body;
 
         // Validações
-        if (!idade_minima || !idade_maxima || !sexo) {
+        if (!dataLimite || !idadeMinima || !idadeMaxima || !genero) {
             return res.status(400).json({ message: "Todos os campos são obrigatórios" });
         }
 
         // Validação das idades
-        if (parseInt(idade_minima) < 0 || parseInt(idade_maxima) > 100) {
+        if (parseInt(idadeMinima) < 0 || parseInt(idadeMaxima) > 100) {
             return res.status(400).json({ message: "Idades devem estar entre 0 e 100 anos" });
         }
 
-        if (parseInt(idade_minima) > parseInt(idade_maxima)) {
+        if (parseInt(idadeMinima) > parseInt(idadeMaxima)) {
             return res.status(400).json({ message: "Idade mínima não pode ser maior que idade máxima" });
         }
 
         // Validação do gênero
-        if (!['Masculino', 'Feminino', 'Ambos'].includes(sexo)) {
+        if (!['Masculino', 'Feminino', 'Ambos'].includes(genero)) {
             return res.status(400).json({ message: "Gênero inválido" });
         }
 
         await Rules.update({ 
-            idade_minima: parseInt(idade_minima),
-            idade_maxima: parseInt(idade_maxima),
-            sexo: sexo
+            dataLimite: dataLimite,
+            idadeMinima: parseInt(idadeMinima),
+            idadeMaxima: parseInt(idadeMaxima),
+            genero: genero
         }, { where: { partidaId: partidaId } });
 
         res.status(200).json({ message: "Regras atualizadas com sucesso!" });

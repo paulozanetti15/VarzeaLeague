@@ -40,18 +40,72 @@ export class TeamController {
         res.status(401).json({ error: 'Token inválido' });
         return;
       }
-      let userId = decodedPayload.id;
-      let captainId = userId;
-      if (!userId) {
+      let captainId = decodedPayload.id;
+      if (!captainId) {
         res.status(401).json({ error: 'Usuário não autenticado' });
         return;
       }
       if (name) {
-        const existingTeam = await Team.findOne({
-          where: { name: name.trim() }
+        const existingActiveTeam = await Team.findOne({
+          where: { name: name.trim(), isDeleted: false }
         });
-        if (existingTeam) {
+        if (existingActiveTeam) {
           res.status(400).json({ error: 'Este nome de time já está em uso. Escolha outro nome.' });
+          return;
+        }
+        const existingDeletedTeam = await Team.findOne({
+          where: { name: name.trim(), isDeleted: true }
+        });
+        if (existingDeletedTeam) {
+          const agora = new Date();
+          agora.setHours(agora.getHours() - 3);
+          await existingDeletedTeam.update({
+            description,
+            captainId,
+            isDeleted: false,
+            updatedAt: agora,
+            estado,
+            cidade,
+            cep,
+            primaryColor,
+            secondaryColor,
+            banner: bannerFilename
+          });
+          
+          // Adicionar jogadores
+          if (jogadores && jogadores.length > 0) {
+            for (const jogador of jogadores) {
+              // Criar o jogador
+              const newPlayer = await Player.create({
+                nome: jogador.nome,
+                sexo: jogador.sexo,
+                ano: jogador.ano,
+                posicao: jogador.posicao,
+                isDeleted: false
+              });
+              
+              // Associar ao time
+              await TeamPlayer.create({
+                teamId: existingDeletedTeam.id,
+                playerId: newPlayer.id
+              });
+            }
+          }
+          
+          // Adicionar o usuário ao time (se já não for capitão)
+          await existingDeletedTeam.addUser(captainId);
+          
+          const teamWithAssociations = await Team.findByPk(existingDeletedTeam.id, {
+            include: [
+              {
+                model: Player,
+                as: 'players',
+                through: { attributes: [] }
+              }
+            ]
+          });
+          const plainTeam = teamWithAssociations.get({ plain: true });
+          res.status(201).json(plainTeam);
           return;
         }
       }
@@ -59,9 +113,9 @@ export class TeamController {
         name: name.trim(),
         description,
         captainId,
-        userId,
         primaryColor,
         secondaryColor,
+        isDeleted: false,
         banner: bannerFilename,
         estado,
         cidade,
@@ -77,7 +131,7 @@ export class TeamController {
             sexo: jogador.sexo,
             ano: jogador.ano,
             posicao: jogador.posicao,
-            teamId: team.id
+            isDeleted: false
           });
           
           // Associar ao time
@@ -122,9 +176,10 @@ export class TeamController {
         return;
       }
       
-      // Buscar todos os times
+      // Buscar todos os times que não estão deletados
       const allTeams = await Team.findAll({
         where: {
+          isDeleted: false,
           // Buscar times onde o usuário é capitão
           [Op.or]: [
             { captainId: userId }
@@ -145,7 +200,9 @@ export class TeamController {
           {
             model: Player,
             as: 'players',
-            through: { attributes: [] }
+            through: { attributes: [] },
+            where: { isDeleted: false },
+            required: false
           }
         ]
       });
@@ -153,6 +210,7 @@ export class TeamController {
       // Buscar times onde o usuário é um membro (através da tabela de associação)
       const teamsWhereUserIsMember = await Team.findAll({
         where: {
+          isDeleted: false,
           captainId: { [Op.ne]: userId } // Excluir times onde o usuário já é capitão
         },
         include: [
@@ -171,7 +229,9 @@ export class TeamController {
           {
             model: Player,
             as: 'players',
-            through: { attributes: [] }
+            through: { attributes: [] },
+            where: { isDeleted: false },
+            required: false
           }
         ]
       });
@@ -197,7 +257,7 @@ export class TeamController {
             ...plainTeam,
             banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
             isCurrentUserCaptain: isCaptain,
-            quantidadePartidas: quantidadePartidas
+            quantidadePartidas: quantidadePartidas // This is now a number, not a Promise
           };
         })
       );
@@ -219,7 +279,10 @@ export class TeamController {
         return;
       }     
       const team = await Team.findOne({
-        where: { id },
+        where: {
+          id,
+          isDeleted: false
+        },
         include: [
           {
             model: User,
@@ -235,7 +298,9 @@ export class TeamController {
           {
             model: Player,
             as: 'players',
-            through: { attributes: [] }
+            through: { attributes: [] },
+            where: { isDeleted: false },
+            required: false
           }
         ]
       });
@@ -269,7 +334,7 @@ export class TeamController {
       const { id } = req.params;
       const userId = req.user?.id;
       const team = await Team.findOne({
-        where: { id }
+        where: { id, isDeleted: false }
       });
       
       if (!team) {
@@ -284,7 +349,8 @@ export class TeamController {
         const existingTeam = await Team.findOne({
           where: { 
             name: req.body.name.trim(), 
-            id: { [Op.ne]: id }
+            id: { [Op.ne]: id }, 
+            isDeleted: false 
           }
         });
         if (existingTeam) {
@@ -316,7 +382,7 @@ export class TeamController {
           } 
         }
         bannerFilename = req.file.filename;
-      }
+      } 
       const updateData: any = {
         name: req.body.name?.trim(),
         description: req.body.description,
@@ -372,7 +438,7 @@ export class TeamController {
               sexo: jogadorData.sexo,
               ano: jogadorData.ano,
               posicao: jogadorData.posicao,
-              teamId: parseInt(id)
+              isDeleted: false
             });
             
             await TeamPlayer.create({
@@ -401,7 +467,7 @@ export class TeamController {
       }
       
       const updatedTeam = await Team.findOne({
-        where: { id: id },
+        where: { id: id, isDeleted: false },
         include: [
           {
             model: Player,
@@ -444,7 +510,10 @@ export class TeamController {
       }
 
       const team = await Team.findOne({
-        where: { id }
+        where: {
+          id,
+          isDeleted: false
+        }
       });
       
       if (!team) {

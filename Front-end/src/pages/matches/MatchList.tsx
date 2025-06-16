@@ -20,7 +20,6 @@ import { fi } from 'date-fns/locale';
 import { set } from 'date-fns';
 import { m } from 'framer-motion';
 import { canCreateMatch } from '../../utils/roleUtils';
-import PlayerSelectionModal from '../../components/Modals/PlayerSelection/PlayerSelectionModal';
 
 interface Match {
   id: number;
@@ -37,11 +36,6 @@ interface Match {
     id: number;
     name: string;
   };
-  linkedTeams?: {
-    id: number;
-    name: string;
-    userId: number;
-  }[];
 }
 
 interface User {
@@ -89,9 +83,6 @@ const MatchList: React.FC = () => {
     
     return { id: 0, token: '', userTypeId: 4 };
   });
-  const [linkedMatches, setLinkedMatches] = useState<{[key: number]: boolean}>({});
-  const [showPlayerSelection, setShowPlayerSelection] = useState(false);
-  const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   
   const fetchMatches = async () => {
     try {
@@ -449,86 +440,6 @@ const MatchList: React.FC = () => {
     );
   };
 
-  // Função para verificar se o time do usuário está vinculado à partida
-  const checkTeamLink = async (matchId: number) => {
-    try {
-      const response = await axios.get(`http://localhost:3001/api/matches/${matchId}/teams`, {
-        headers: { 'Authorization': `Bearer ${currentUser.token}` }
-      });
-      
-      const teams = response.data;
-      const isLinked = teams.some((team: any) => team.Team.userId === currentUser.id);
-      setLinkedMatches(prev => ({...prev, [matchId]: isLinked}));
-      return isLinked;
-    } catch (error) {
-      console.error('Erro ao verificar vínculo do time:', error);
-      return false;
-    }
-  };
-
-  // Função para vincular time à partida
-  const linkTeamToMatch = async (matchId: number, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setSelectedMatchId(matchId);
-    setShowPlayerSelection(true);
-  };
-
-  // Nova função para confirmar a seleção de jogadores
-  const handlePlayerSelectionConfirm = async (selectedPlayers: number[]) => {
-    if (!selectedMatchId) return;
-
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Usuário não autenticado');
-        return;
-      }
-
-      await axios.post(
-        `http://localhost:3001/api/matches/${selectedMatchId}/teams`,
-        { playerIds: selectedPlayers },
-        {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }
-      );
-      
-      toast.success('Time e jogadores vinculados com sucesso!');
-      setLinkedMatches(prev => ({...prev, [selectedMatchId]: true}));
-      setShowPlayerSelection(false);
-      setSelectedMatchId(null);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Erro ao vincular time e jogadores');
-    }
-  };
-
-  // Função para desvincular time da partida
-  const unlinkTeamFromMatch = async (matchId: number, event: React.MouseEvent) => {
-    event.stopPropagation(); // Previne a navegação para a página de detalhes
-    try {
-      await axios.delete(`http://localhost:3001/api/matches/${matchId}/teams`, {
-        headers: { 'Authorization': `Bearer ${currentUser.token}` }
-      });
-      
-      toast.success('Time desvinculado com sucesso!');
-      setLinkedMatches(prev => ({...prev, [matchId]: false}));
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Erro ao desvincular time');
-    }
-  };
-
-  // Modificar useEffect para carregar os vínculos
-  useEffect(() => {
-    const loadTeamLinks = async () => {
-      if (matches.length > 0 && currentUser.userTypeId === 3) {
-        for (const match of matches) {
-          await checkTeamLink(match.id);
-        }
-      }
-    };
-    
-    loadTeamLinks();
-  }, [matches]);
-
   // Modificar a renderização da lista para usar paginação eficiente
   const renderMatchList = () => {
     if (loading && matches.length === 0) {
@@ -615,23 +526,7 @@ const MatchList: React.FC = () => {
                    (match.status === 'open' || match.status === 'full') && 
                    match.organizerId !== currentUser?.id && (
                     <div className="match-full-message">
-                      {currentUser.userTypeId === 3 && (
-                        linkedMatches[match.id] ? (
-                          <button
-                            className="unlink-team-btn"
-                            onClick={(e) => unlinkTeamFromMatch(match.id, e)}
-                          >
-                            Desvincular Time
-                          </button>
-                        ) : (
-                          <button
-                            className="link-team-btn"
-                            onClick={(e) => linkTeamToMatch(match.id, e)}
-                          >
-                            Vincular Time
-                          </button>
-                        )
-                      )}
+                      
                     </div>
                   )}
                   {match.organizerId === currentUser?.id && (
@@ -767,18 +662,6 @@ const MatchList: React.FC = () => {
         {renderMatchList()}
         
         <AdvancedFiltersModal />
-        
-        {showPlayerSelection && selectedMatchId && (
-          <PlayerSelectionModal
-            open={showPlayerSelection}
-            onClose={() => {
-              setShowPlayerSelection(false);
-              setSelectedMatchId(null);
-            }}
-            matchId={selectedMatchId}
-            onConfirm={handlePlayerSelectionConfirm}
-          />
-        )}
       </div>
     </div>
   );

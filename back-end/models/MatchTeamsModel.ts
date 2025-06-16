@@ -1,15 +1,13 @@
-import { Model, DataTypes } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
-import TeamModel from './TeamModel';
+
 
 interface MatchTeamsAttributes {
-  id: number;
   matchId: number;
   teamId: number;
 }
 
-class MatchTeamsModel extends Model<MatchTeamsAttributes> implements MatchTeamsAttributes {
-  public id!: number;
+class MatchTeams extends Model<MatchTeamsAttributes> implements MatchTeamsAttributes {
   public matchId!: number;
   public teamId!: number;
 
@@ -19,39 +17,38 @@ class MatchTeamsModel extends Model<MatchTeamsAttributes> implements MatchTeamsA
   }
 
   // Example static method to find all players for a specific match
-  public static async findByMatchId(matchId: number): Promise<MatchTeamsModel[]> {
-    return await MatchTeamsModel.findAll({ where: { matchId } });
+  public static async findByMatchId(matchId: number): Promise<MatchTeams[]> {
+    return await MatchTeams.findAll({ where: { matchId } });
   }
 }
-
-MatchTeamsModel.init(
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
+MatchTeams.init({
+  matchId: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    field: 'match_id',
+    references: {
+      model: 'matches',
+      key: 'id'
     },
-    matchId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    teamId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
   },
-  {
-    sequelize,
-    modelName: 'MatchTeams',
-    tableName: 'match_teams',
-    timestamps: true,
+  teamId: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    field: 'team_id',
+    references: {
+      model: 'teams',
+      key: 'id'
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
   }
-);
-
-// Definindo a associação com o modelo Team
-MatchTeamsModel.belongsTo(TeamModel, {
-  foreignKey: 'teamId',
-  as: 'Team'
+}, {
+  sequelize,
+  tableName: 'match_teams',
+  timestamps: false,
+  underscored: true
 });
 
-export default MatchTeamsModel; 
+export default MatchTeams; 

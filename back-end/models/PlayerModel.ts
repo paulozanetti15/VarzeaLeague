@@ -1,25 +1,32 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database';
+import User from './UserModel';
 
 interface PlayerAttributes {
   id: number;
   nome: string;
-  ano: number;
   sexo: string;
+  ano: string;
   posicao: string;
-  teamId: number;
+  isDeleted: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-class PlayerModel extends Model<PlayerAttributes> implements PlayerAttributes {
+interface PlayerCreationAttributes extends Omit<PlayerAttributes, 'id'> {}
+
+class Player extends Model<PlayerAttributes, PlayerCreationAttributes> {
   public id!: number;
   public nome!: string;
-  public ano!: number;
   public sexo!: string;
+  public ano!: string;
   public posicao!: string;
-  public teamId!: number;
+  public isDeleted!: boolean;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
 
-PlayerModel.init(
+Player.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -30,15 +37,11 @@ PlayerModel.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    ano: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      validate: {
-        min: 1925,
-        max: 2019
-      }
-    },
     sexo: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    ano: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -46,9 +49,10 @@ PlayerModel.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    teamId: {
-      type: DataTypes.INTEGER,
+    isDeleted: {
+      type: DataTypes.BOOLEAN,
       allowNull: false,
+      defaultValue: false
     },
   },
   {
@@ -56,7 +60,8 @@ PlayerModel.init(
     modelName: 'Player',
     tableName: 'players',
     timestamps: true,
+    underscored: true,
   }
 );
 
-export default PlayerModel; 
+export default Player; 

@@ -19,7 +19,7 @@ interface PlayerData {
   sexo: string;
   ano: string;
   posicao: string;
-
+  datanascimento?: string;
 }
 
 interface TeamFormData {

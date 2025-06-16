@@ -16,29 +16,26 @@ export default function InfoRulesModal({ idpartida, show, onHide }: AthleteFormM
     const [idadeMaxima, setIdadeMaxima] = useState<number | null>(null);
     const [genero, setGenero] = useState<string | null>(null);
     const [dataLimite, setDataLimite] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchingDados = async () => {
             try {
-                const response = await axios.get(`http://localhost:3001/api/matches/${idpartida}`, {
+                const response = await axios.get(`http://localhost:3001/api/rules/${idpartida}`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`
                     }
                 });
-                if (response.status === 200 && response.data.rules) {
-                    setIdadeMinima(response.data.rules.idade_minima);
-                    setIdadeMaxima(response.data.rules.idade_maxima);
-                    setGenero(response.data.rules.sexo);
-                    converterDataLimite(response.data.rules.dataLimite);
-                    setError(null);
+                if (response.status === 200) {
+                    setIdadeMinima(response.data.idadeMinima);
+                    setIdadeMaxima(response.data.idadeMaxima);
+                    setGenero(response.data.genero);
+                    converterDataLimite(response.data.dataLimite);
                 }
             } catch (error) {
                 console.error('Erro ao buscar regras:', error);
-                setError('Não foi possível carregar as regras da partida.');
             }
         };
-        if (show && idpartida) {
+        if (show) {
             fetchingDados();
         }
     }, [idpartida, show]);
@@ -55,7 +52,6 @@ export default function InfoRulesModal({ idpartida, show, onHide }: AthleteFormM
             setDataLimite(dataConvertida);
         } catch (error) {
             console.error('Erro ao converter data:', error);
-            setDataLimite(null);
         }
     };
 
@@ -71,32 +67,26 @@ export default function InfoRulesModal({ idpartida, show, onHide }: AthleteFormM
                 <Modal.Title>Regras da Partida</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                {error ? (
-                    <div className="alert alert-danger" role="alert">
-                        {error}
-                    </div>
-                ) : (
-                    <div className="rules-info">
-                        <div className="rules-grid">
-                            <div className="rule-item">
-                                <h6 className="rule-title">Idade Mínima</h6>
-                                <p className="rule-value">{idadeMinima !== null ? `${idadeMinima} anos` : '-'}</p>
-                            </div>
-                            <div className="rule-item">
-                                <h6 className="rule-title">Idade Máxima</h6>
-                                <p className="rule-value">{idadeMaxima !== null ? `${idadeMaxima} anos` : '-'}</p>
-                            </div>
-                            <div className="rule-item">
-                                <h6 className="rule-title">Gênero</h6>
-                                <p className="rule-value">{genero || '-'}</p>
-                            </div>
-                            <div className="rule-item">
-                                <h6 className="rule-title">Data Limite para Inscrição</h6>
-                                <p className="rule-value">{dataLimite || '-'}</p>
-                            </div>
+                <div className="rules-info">
+                    <div className="rules-grid">
+                        <div className="rule-item">
+                            <h6 className="rule-title">Idade Mínima</h6>
+                            <p className="rule-value">{idadeMinima} anos</p>
+                        </div>
+                        <div className="rule-item">
+                            <h6 className="rule-title">Idade Máxima</h6>
+                            <p className="rule-value">{idadeMaxima} anos</p>
+                        </div>
+                        <div className="rule-item">
+                            <h6 className="rule-title">Gênero</h6>
+                            <p className="rule-value">{genero}</p>
+                        </div>
+                        <div className="rule-item">
+                            <h6 className="rule-title">Data Limite para Inscrição</h6>
+                            <p className="rule-value">{dataLimite}</p>
                         </div>
                     </div>
-                )}
+                </div>
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="primary" onClick={onHide}>

@@ -57,7 +57,8 @@ export const getTeamsPlayers = async (req: Request, res: Response): Promise<void
             where: { teamId: id },
             include: [{ 
                 model: Player,
-                as: 'player'
+                as: 'player',
+                where: { isDeleted: false }
             }]
         });
         

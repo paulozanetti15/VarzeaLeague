@@ -107,12 +107,15 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
       const insertPartida = await axios.post(
         "http://localhost:3001/api/matches/",
         {
-          ...partidaDados,
-          rules: {
-            idade_minima: parseInt(idadeMinima),
-            idade_maxima: parseInt(idadeMaxima),
-            sexo: genero
-          }
+          title: partidaDados.title.trim(),
+          description: partidaDados.description?.trim(),
+          date: partidaDados.date,
+          location: partidaDados.location,
+          price: partidaDados.price ? parseFloat(partidaDados.price) : null,
+          city: partidaDados.city.trim(),
+          complement: partidaDados.complement?.trim(),
+          Uf: partidaDados.Uf,
+          Cep: partidaDados.Cep
         },
         {
           headers: {
@@ -122,6 +125,33 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
       );
 
       if (insertPartida.status === 201) {
+        await insertRegras();
+      }
+    } catch (error) {
+      console.error('Erro ao criar partida:', error);
+      setError('Erro ao criar partida. Tente novamente.');
+    }
+  };
+
+  const insertRegras = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:3001/api/rules/",
+        {
+          userId: userId,
+          dataLimite: format(parse(dataLimite, 'dd/MM/yyyy', new Date()), 'yyyy-MM-dd'),
+          idadeMinima: parseInt(idadeMinima),
+          idadeMaxima: parseInt(idadeMaxima),
+          genero: genero
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+
+      if (response.status === 201) {
         setToastMessage('Partida criada com sucesso!');
         setToastBg('success');
         setShowToast(true);
@@ -130,36 +160,37 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
         }, 1500);
       }
     } catch (error) {
-      console.error('Erro ao criar partida:', error);
-      setError('Erro ao criar partida. Tente novamente.');
+      console.error('Erro ao criar regras:', error);
+      setError('Erro ao criar regras. Tente novamente.');
     }
   };
 
   return (
     <>
-      <ToastComponent
-        show={showToast}
-        message={toastMessage}
-        onClose={() => setShowToast(false)}
-        bg={toastBg}
-      />
+      {showToast && (
+        <ToastComponent
+          message={toastMessage}
+          bg={toastBg}
+          onClose={() => setShowToast(false)}
+        />
+      )}
       <Modal
         show={show}
         onHide={onHide}
         centered
-        dialogClassName="custom-modal-width"
-        contentClassName="small-modal-content"
+        className="regras-modal"
+        backdrop="static"
+        keyboard={false}
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Regras da Partida</Modal.Title>
-        </Modal.Header>
         <Modal.Body>
-          <div className="form-container">
+          <div className="modal-content-wrapper">
+            <h2 className="modal-title">Regras da Partida</h2>
             {error && (
-              <div className="alert alert-danger" role="alert">
-                {error}
+              <div className="error-message">
+                <p>{error}</p>
               </div>
             )}
+            <br/>
             <div className="form-group">
               <label>Data Limite para Inscrição</label>
               <input
@@ -167,8 +198,9 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
                 className="form-control"
                 value={dataLimite}
                 onChange={handleDataLimiteChange}
-                required
                 placeholder="DD/MM/AAAA"
+                maxLength={10}
+                required
               />
             </div>
             <div className="form-row">
