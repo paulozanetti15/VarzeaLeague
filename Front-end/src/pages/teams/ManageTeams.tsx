@@ -9,7 +9,7 @@ const ManageTeams = () => {
   const navigate = useNavigate();
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
 
   const fetchTeams = async () => {
     setLoading(true);

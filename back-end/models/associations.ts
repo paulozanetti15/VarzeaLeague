@@ -1,4 +1,5 @@
 import User from './UserModel';
+import UserType from './UserTypeModel';
 import Match from './MatchModel';
 import Team from './TeamModel';
 import MatchPlayer from './MatchTeamsModel';
@@ -13,6 +14,10 @@ import Player from './PlayerModel';
 
 // User <-> Match associations
 export function associateModels() {
+  // Associação correta entre User e UserType
+  User.belongsTo(UserType, { foreignKey: 'userTypeId', as: 'usertype' });
+  UserType.hasMany(User, { foreignKey: 'userTypeId', as: 'users' });
+
   User.hasMany(Match, {
     foreignKey: 'organizerId',
     as: 'organizedMatches'

@@ -15,7 +15,6 @@ interface MatchFormData {
   title: string;
   description: string;
   location: string;
-  number: string;
   date: string;
   time: string;
   price: string;
@@ -24,6 +23,7 @@ interface MatchFormData {
   UF: string;
   city: string;
   category: string;
+  number: string;
 }
 
 const CreateMatch: React.FC = () => {
@@ -32,7 +32,14 @@ const CreateMatch: React.FC = () => {
   const btnContainerRef = useRef<HTMLDivElement>(null);
   const [showInfoAthleteModal, setShowInfoAthleteModal] = useState(false);
   const [usuario, setUsuario] = useState<any>(null);
-  const [dadosPartida, setDadosPartida] = useState<any>(null);	
+  const [dadosPartida, setDadosPartida] = useState<any>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastBg, setToastBg] = useState('');
+  const [cepValido, setCepValido] = useState<boolean | null>(null);
+  const [cepErrorMessage, setCepErrorMessage] = useState<string | null>(null);
+  const [enderecoCompleto, setEnderecoCompleto] = useState('');
+  
   const [formData, setFormData] = useState<MatchFormData>({
     title: '',
     description: '',
@@ -49,68 +56,42 @@ const CreateMatch: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [cepValido, setCepValido] = useState<boolean | null>(null);
-  const [buscandoCep, setBuscandoCep] = useState(false);
-  const [cepErrorMessage, setCepErrorMessage] = useState<string | null>(null);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastBg, setToastBg] = useState('success');
 
-  useEffect(() => {
-    const user= JSON.parse(localStorage.getItem('user') || '{}');
-    setUsuario(user);
-    if (titleInputRef.current && btnContainerRef.current) {
-      const titleWidth = titleInputRef.current.offsetWidth;
-      btnContainerRef.current.style.width = `${titleWidth}px`;
-    }
-  }, []);
-  
   const formatarCep = (cep: string): string => {
     cep = cep.replace(/\D/g, '');
-    
+    if (cep.length > 8) cep = cep.slice(0, 8);
     if (cep.length > 5) {
-      return `${cep.substring(0, 5)}-${cep.substring(5, 8)}`;
+      return `${cep.slice(0, 5)}-${cep.slice(5)}`;
     }
-    
     return cep;
   };
 
-  const isValidCep = (cep: string) => {
-    const cepRegex = /^[0-9]{5}-?[0-9]{3}$/;
-    return cepRegex.test(cep);
-  };
-
-  const formatDateToBR = (date: string) => {
+  const formatDateToBR = (date: string): string => {
     if (!date) return '';
     const [year, month, day] = date.split('-');
     return `${day}/${month}/${year}`;
   };
 
-  const formatDateToISO = (date: string) => {
+  const formatDateToISO = (date: string): string => {
     if (!date) return '';
     const [day, month, year] = date.split('/');
     return `${year}-${month}-${day}`;
   };
 
-  const formatTime = (value: string) => {
-    // Remove caracteres não numéricos, exceto :
+  const formatTime = (value: string): string => {
     let time = value.replace(/[^\d:]/g, '');
     
-    // Adiciona : automaticamente
     if (time.length > 2 && time.charAt(2) !== ':') {
       time = time.slice(0, 2) + ':' + time.slice(2);
     }
     
-    // Limita o tamanho a 5 caracteres (HH:MM)
     time = time.slice(0, 5);
     
-    // Valida as horas (00-23)
     const hours = parseInt(time.split(':')[0] || '0');
     if (hours > 23) {
       time = '23' + time.slice(2);
     }
     
-    // Valida os minutos (00-59)
     if (time.length > 2) {
       const minutes = parseInt(time.split(':')[1] || '0');
       if (minutes > 59) {
@@ -121,7 +102,7 @@ const CreateMatch: React.FC = () => {
     return time;
   };
 
-  const isValidDateBR = (date: string) => {
+  const isValidDateBR = (date: string): boolean => {
     const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/(19|20)\d\d$/;
     if (!regex.test(date)) return false;
     
@@ -133,17 +114,58 @@ const CreateMatch: React.FC = () => {
            d.getFullYear() === year;
   };
 
+  const buscarCep = async (cep: string) => {
+    try {
+      const response = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
+      if (response.data.erro) {
+        setCepValido(false);
+        setCepErrorMessage('CEP não encontrado');
+        return;
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        location: response.data.logradouro || '',
+        city: response.data.localidade || '',
+        UF: response.data.uf || ''
+      }));
+
+      const endCompleto = `${response.data.logradouro}, ${response.data.localidade} - ${response.data.uf}`;
+      setEnderecoCompleto(endCompleto);
+      
+      setCepValido(true);
+      setCepErrorMessage(null);
+    } catch (error) {
+      setCepValido(false);
+      setCepErrorMessage('Erro ao buscar CEP');
+    }
+  };
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    setUsuario(user);
+    if (titleInputRef.current && btnContainerRef.current) {
+      const titleWidth = titleInputRef.current.offsetWidth;
+      btnContainerRef.current.style.width = `${titleWidth}px`;
+    }
+  }, []);
+
+  const isValidCep = (cep: string): boolean => {
+    const cepRegex = /^[0-9]{5}-?[0-9]{3}$/;
+    return cepRegex.test(cep);
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
     if (name === 'cep') {
       const cepNumerico = value.replace(/\D/g, '');
-      
       const cepFormatado = formatarCep(cepNumerico);
-      setFormData({
-        ...formData,
+      
+      setFormData(prev => ({
+        ...prev,
         cep: cepFormatado
-      });
+      }));
       
       if (cepNumerico.length < 8) {
         setFormData(prev => ({
@@ -159,12 +181,10 @@ const CreateMatch: React.FC = () => {
       if (cepNumerico.length === 8) {
         buscarCep(cepNumerico);
       }
-      
       return;
     }
 
     if (name === 'date') {
-      // Validar e formatar a data
       const dateRegex = /^(\d{0,2})\/(\d{0,2})\/(\d{0,4})$/;
       let formattedDate = value.replace(/\D/g, '');
       
@@ -186,7 +206,6 @@ const CreateMatch: React.FC = () => {
     }
 
     if (name === 'time') {
-      // Validar e formatar a hora
       const timeRegex = /^(\d{0,2}):?(\d{0,2})$/;
       let formattedTime = value.replace(/\D/g, '');
       
@@ -213,58 +232,6 @@ const CreateMatch: React.FC = () => {
       [name]: value
     }));
   };
-  
-  const buscarCep = async (cep: string) => {
-    setBuscandoCep(true);
-    setCepValido(null);
-    setCepErrorMessage(null);
-    
-    try {
-      const response = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
-      
-      if (response.data.erro) {
-        setCepValido(false);
-        setFormData(prev => ({
-          ...prev,
-          location: '',
-          city: '',
-          UF: ''
-        }));
-        setCepErrorMessage('CEP não encontrado na base de dados.');
-        setToastMessage('CEP não encontrado');
-        setToastBg('danger');
-        setShowToast(true);
-        return;
-      }
-      
-      setCepValido(true);
-      setFormData(prev => ({
-        ...prev,
-        location: response.data.logradouro || '',
-        city: response.data.localidade || '',
-        UF: response.data.uf || ''
-      }));
-      
-      setToastMessage('CEP encontrado com sucesso!');
-      setToastBg('success');
-      setShowToast(true);
-    } catch (error) {
-      console.error('Erro ao buscar CEP:', error);
-      setCepValido(false);
-      setFormData(prev => ({
-        ...prev,
-        location: '',
-        city: '',
-        UF: ''
-      }));
-      setCepErrorMessage('Erro na conexão com o serviço de CEP. Tente novamente.');
-      setToastMessage('Erro ao buscar CEP. Verifique sua conexão.');
-      setToastBg('danger');
-      setShowToast(true);
-    } finally {
-      setBuscandoCep(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,20 +239,16 @@ const CreateMatch: React.FC = () => {
     setError('');
 
     try {
-      // Validações do formulário
       if (!formData.title?.trim()) {
         setError('O título da partida é obrigatório');
-        setLoading(false);
         return;
       }
 
       if (!formData.date || !formData.time) {
         setError('Data e hora são obrigatórios');
-        setLoading(false);
         return;
       }
 
-      // Validar formato da data
       const parsedDate = parse(formData.date, 'dd/MM/yyyy', new Date());
       if (!isValid(parsedDate)) {
         setError('Data inválida. Use o formato DD/MM/AAAA');
@@ -293,7 +256,6 @@ const CreateMatch: React.FC = () => {
         return;
       }
 
-      // Validar formato da hora
       const [hours, minutes] = formData.time.split(':').map(Number);
       if (isNaN(hours) || isNaN(minutes) || hours > 23 || minutes > 59) {
         setError('Hora inválida. Use o formato HH:MM');
@@ -301,7 +263,6 @@ const CreateMatch: React.FC = () => {
         return;
       }
 
-      // Validar data futura
       const matchDateTime = parse(
         `${formData.date} ${formData.time}`,
         'dd/MM/yyyy HH:mm',
@@ -310,45 +271,19 @@ const CreateMatch: React.FC = () => {
       
       if (!isAfter(matchDateTime, new Date())) {
         setError('A data da partida deve ser futura');
-        setLoading(false);
         return;
       }
     
-      // Validar preço
       if (formData.price && parseFloat(formData.price) < 0) {
         setError('O preço não pode ser negativo');
-        setLoading(false);
         return;
       }
-      
-      // Validar CEP
-      if (formData.cep.replace(/\D/g, '').length !== 8) {
-        setError('CEP inválido. Informe um CEP com 8 dígitos.');
-        setLoading(false);
+
+      if (!formData.cep || !isValidCep(formData.cep)) {
+        setError('CEP inválido');
         return;
       }
-      
-      if (!cepValido) {
-        setError('CEP não encontrado. Verifique se o CEP está correto.');
-        setLoading(false);
-        return;
-      }
-      
-      if (formData.UF.trim() === '' || formData.city.trim() === '') {
-        setError('Estado e cidade são obrigatórios.');
-        setLoading(false);
-        return;
-      }
-      
-      if (!formData.number.trim()) {
-        setError('O número do endereço é obrigatório.');
-        setLoading(false);
-        return;
-      }
-      
-      // Unir o endereço com o número antes de enviar ao backend
-      const enderecoCompleto = `${formData.location.trim()}, ${formData.number.trim()}`;
-      
+
       const matchData = {
         title: formData.title.trim(),
         date: format(matchDateTime, "yyyy-MM-dd'T'HH:mm:ss"),
@@ -360,6 +295,7 @@ const CreateMatch: React.FC = () => {
         Uf: formData.UF.trim(),
         Cep: formData.cep.trim(),
       };
+
       setDadosPartida(matchData);
       setShowInfoAthleteModal(true);
     } catch (err: any) {
@@ -432,6 +368,7 @@ const CreateMatch: React.FC = () => {
               placeholder="Descreva os detalhes da partida..."
             />
           </div>
+
           <div className="form-row">
             <div className="form-group" style={{ flex: 1 }}>
               <label htmlFor="date">Data *</label>
@@ -461,153 +398,117 @@ const CreateMatch: React.FC = () => {
                 maxLength={5}
               />
             </div>
-          </div>  
+          </div>
+
           <div className="form-group">
             <label htmlFor="cep">CEP *</label>
-            <div className={`cep-input-container ${cepValido === true ? 'valid' : cepValido === false ? 'invalid' : ''}`}>
-              <input 
-                type="text"
-                id="cep"
-                name="cep"
-                className="form-control"
-                maxLength={9}
-                value={formData.cep}
-                onChange={handleInputChange}
-                placeholder="00000-000"
-                required
-              />
-              {buscandoCep && (
-                <span className="cep-loading">
-                  <CircularProgress size={20} />
-                </span>
-              )}
-              {!buscandoCep && cepValido === true && (
-                <span className="cep-valid">
-                  <CheckCircleIcon style={{ fontSize: 20 }} />
-                </span>
-              )}
-              {!buscandoCep && cepValido === false && (
-                <span className="cep-invalid">
-                  <ErrorIcon style={{ fontSize: 20 }} />
-                </span>
-              )}
-            </div>
+            <input 
+              type="text"
+              id="cep"
+              name="cep"
+              pattern='[0-9]{5}-?[0-9]{3}'
+              maxLength={9}
+              value={formData.cep}
+              onChange={handleInputChange}
+              className="form-control"
+              required
+            />
             {cepErrorMessage && (
-              <div className="cep-error-message">
+              <div className="error-message">
                 {cepErrorMessage}
               </div>
             )}
           </div>
-          
-          <div className="form-row">
-            <div className="form-group" style={{ flex: 3 }}>
-              <label htmlFor="location">Endereço *</label>
-              <input
-                type="text"
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                className="form-control"
-                required
-                placeholder="Rua, Avenida, etc."
-                disabled={true}
-              />
-            </div>
-            
-            <div className="form-group" style={{ flex: 1 }}>
-              <label htmlFor="number">Número *</label>
-              <input
-                type="text"
-                id="number"
-                name="number"
-                value={formData.number}
-                onChange={handleInputChange}
-                className="form-control"
-                required
-                placeholder="Nº"
-              />
-            </div>
+
+          <div className="form-group">
+            <label htmlFor="location">Endereço</label>
+            <input
+              type="text"
+              id="location"
+              name="location"
+              value={formData.location}
+              onChange={handleInputChange}
+              disabled
+              placeholder="Ex: Rua das Flores, 123"
+              className="form-control"
+            />
           </div>
 
           <div className="form-row">
             <div className="form-group" style={{ flex: 2 }}>
-              <label htmlFor="city">Cidade *</label>
-              <input
+              <label htmlFor="city">Cidade</label>
+              <input 
                 type="text"
                 id="city"
                 name="city"
                 value={formData.city}
-                onChange={handleInputChange}
+                disabled
                 className="form-control"
-                required
-                placeholder="Cidade"
-                disabled={true}
               />
             </div>
 
             <div className="form-group" style={{ flex: 1 }}>
-              <label htmlFor="UF">Estado *</label>
+              <label htmlFor="UF">UF</label>
               <input
                 type="text"
                 id="UF"
                 name="UF"
                 value={formData.UF}
-                onChange={handleInputChange}
+                disabled
                 className="form-control"
-                required
-                placeholder="UF"
-                maxLength={2}
-                disabled={true}
               />
             </div>
           </div>
           
           <div className="form-group">
-            <label htmlFor="complement">Complemento</label>
+            <label htmlFor="complement">Complemento (opcional)</label>
             <input
               type="text"
               id="complement"
               name="complement"
               value={formData.complement}
               onChange={handleInputChange}
+              placeholder="Ex: Quadra 2, Campo de futebol, Portão lateral"
               className="form-control"
-              placeholder="Complemento, referências, etc."
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="price">Preço por jogador (R$)</label>
+            <label className="form-label">Preço (opcional)</label>
             <input
               type="number"
-              id="price"
+              className="form-control"
               name="price"
               value={formData.price}
               onChange={handleInputChange}
-              className="form-control"
-              placeholder="0.00"
+              placeholder="R$"
               min="0"
               step="0.01"
             />
           </div>
 
-          <div className="form-buttons">
-            <button 
-              type="submit" 
+          <div className="btn-container" ref={btnContainerRef}>
+            <button
+              type="submit"
               className="submit-btn"
               disabled={loading}
             >
-              {loading ? 'Criando...' : 'Próximo'}
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                'Continuar para criar partida'
+              )}
             </button>
           </div>
         </form>
       </div>
-      {showInfoAthleteModal && (
-        <RegrasFormRegisterModal 
+
+      {usuario && (
+        <RegrasFormRegisterModal
+          userId={usuario.id}
           show={showInfoAthleteModal}
-          onHide={() => setShowInfoAthleteModal(false)}
           partidaDados={dadosPartida}
-          userId={usuario?.id || 0}
+          onHide={() => setShowInfoAthleteModal(false)}
         />
       )}
     </div>

@@ -26,6 +26,7 @@ import fs from 'fs';
 import { forEachChild } from 'typescript';
 import championshipRoutes from './routes/championshipRoutes';
 // Importando as associações
+import userTypeRoutes from './routes/userTypeRoutes';
 dotenv.config();
 
 const app = express();
@@ -55,6 +56,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/players', playerRoutes);
 app.use('/api/rules', RulesRoutes);
 app.use('/api/championships', championshipRoutes);
+app.use('/api/usertypes', userTypeRoutes);
 
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API está funcionando!' });

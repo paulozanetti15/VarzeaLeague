@@ -6,6 +6,7 @@ interface User {
   id: number;
   name: string;
   email: string;
+  userTypeId?: number;
 }
 
 interface HeaderProps {
@@ -80,10 +81,10 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
   }, [isHomePage]);
   
   return (
-    <header className="header no-top-margin">
+    <header className="header no-top-margin" style={{ background: '#0d47a1', boxShadow: '0 4px 20px rgba(13,71,161,0.15)' }}>
       <nav className="navbar navbar-expand-lg navbar-dark">
         <div className="container">
-          <a className="navbar-brand" href="/">
+          <a className="navbar-brand" href="/" style={{ color: '#fff', fontWeight: 900, letterSpacing: 2, textTransform: 'uppercase', fontFamily: 'Inter, Montserrat, Arial, sans-serif', fontSize: '2rem' }}>
             Várzea League
           </a>
           <button
@@ -146,13 +147,16 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                     <button className="btn btn-link dropdown-toggle text-white text-decoration-none" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                       {user.name}
                     </button>
-                    <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                    <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style={{ background: '#0d47a1', color: '#fff', borderRadius: 12, boxShadow: '0 4px 20px rgba(13,71,161,0.15)', padding: '0.5rem 0' }}>
                       {(localStorage.getItem('Tipo_usuário:') === '1' || localStorage.getItem('Tipo_usuário:') === '3') && (
-                        <li><span className="dropdown-item" onClick={() => navigate('/teams')}>Meu time</span></li>
+                        <li><span className="dropdown-item" onClick={() => navigate('/teams')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Meu time</span></li>
                       )}
-                      <li><span className="dropdown-item" onClick={() => navigate('/perfil')}>Meu perfil</span></li>
+                      <li><span className="dropdown-item" onClick={() => navigate('/perfil')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Meu perfil</span></li>
+                      {user?.userTypeId === 1 && (
+                        <li><span className="dropdown-item" onClick={() => navigate('/admin/users')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Gerenciamento de Usuários</span></li>
+                      )}
                       <li><hr className="dropdown-divider" /></li>
-                      <li><span className="dropdown-item" onClick={onLogout}>Sair</span></li>
+                      <li><span className="dropdown-item" onClick={onLogout} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Sair</span></li>
                     </ul>
                   </div>
                 </>

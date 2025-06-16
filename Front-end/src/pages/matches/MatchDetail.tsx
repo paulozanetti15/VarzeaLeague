@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { format, set,  startOfDay, isBefore, parseISO  } from 'date-fns';
-import { is, ptBR, te, tr } from 'date-fns/locale';
+import { format, set } from 'date-fns';
+import { ptBR, tr } from 'date-fns/locale';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import './MatchDetail.css';
 import toast from 'react-hot-toast';
 import RegrasFormInfoModal from '../../components/Modals/Regras/RegrasFormInfoModal';
@@ -11,7 +13,8 @@ import { Button } from 'react-bootstrap';
 import axios from 'axios';
 import { Card } from 'react-bootstrap';
 import ModalTeams from '../../components/Modals/Teams/modelTeams';
-import { time } from 'console';
+import { useAuth } from '../../hooks/useAuth';
+import BackButton from '../../components/BackButton';
 
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,7 +25,18 @@ const MatchDetail: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [modal, setModal] = useState(false);
-  const [DataLimite, setDataLimite] = useState<Date | null>(null);
+  const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      setCurrentUser(user);
+    } else {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
   const getTimeInscrito = async (matchId: string) => {
     try {
       const response = await axios.get(`http://localhost:3001/api/matches/${matchId}/join-team`, {
@@ -45,29 +59,7 @@ const MatchDetail: React.FC = () => {
     if (!token) {
       navigate('/login');
     }
-  }, []); 
-  useEffect(() => {
-    const fetchMatch = async () => {
-      try{
-        await axios.get(`http://localhost:3001/api/matches/${id}/check-teams-rule-compliance`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-      }
-      catch(error:any)
-      {
-        const errorMessage = error.response?.data?.message || 'Erro ao verificar regras dos times.';
-        toast.error(errorMessage);
-        setTimeout(() => {
-          window.location.reload();
-        }, 1200); 
-        return;
-      } 
-    };
-    fetchMatch();
-    
-  }, [id]); 
+  }, []); // Add missing closing parenthesis for the first useEffect
   useEffect(() => {
     const fetchMatchDetailsInit = async () => {
       try {
@@ -96,6 +88,7 @@ const MatchDetail: React.FC = () => {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
     })
+    console.log('Response:', response);
     if (response.status === 200) {
       toast.success('Time removido da partida com sucesso!');
       setTimeout(() => {
@@ -137,6 +130,38 @@ const MatchDetail: React.FC = () => {
   const handleModalShow = () => {
     setModal(true);
   }  
+  const handleDeleteMatch = async () => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const response = await axios.delete(`http://localhost:3001/api/matches/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (response.status === 200) {
+        toast.success('Partida excluída com sucesso!');
+        navigate('/matches', { state: { filter: 'my' } }); // Redirect to my matches after deletion
+      } else {
+        toast.error('Erro ao excluir a partida. Tente novamente.');
+      }
+    } catch (err: any) {
+      console.error('Erro ao excluir partida:', err);
+      toast.error(err.response?.data?.message || 'Erro ao excluir partida. Tente novamente.');
+    } finally {
+      setLoading(false);
+      setOpenDeleteConfirm(false);
+    }
+  };
+
+  const handleOpenDeleteConfirm = () => {
+    setOpenDeleteConfirm(true);
+  };
+
+  const handleCloseDeleteConfirm = () => {
+    setOpenDeleteConfirm(false);
+  };
+
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
@@ -157,20 +182,6 @@ const MatchDetail: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const fetchRegras = async () => {
-      const regras = await axios.get(`http://localhost:3001/api/rules/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      setDataLimite(regras.data.datalimiteinscricao.split(' ')[0]);   
-    };
-    fetchRegras();
-    
-  },[])
-
-
   if (loading) {
     return <div className="match-detail-container loading">Carregando detalhes da partida...</div>;
   }
@@ -182,49 +193,12 @@ const MatchDetail: React.FC = () => {
   if (!match) {
     return <div className="match-detail-container error">Partida não encontrada.</div>;
   }
-  const isDateToJoinExpired = (dateString: Date | string | null): boolean => {
-    if (!dateString) return false;
-    
-    try {
-      const today = startOfDay(new Date());
-      const targetDate = startOfDay(typeof dateString === 'string' ? parseISO(dateString) : dateString);
-      return isBefore(targetDate, today);
-    } catch (error) {
-      console.error('Error parsing date:', error)
-    }
-    return true; // Se houver erro, considerar como expirado
-  };
-  const isTimeToJoinExpired = (timeString: string | null): boolean => {
-    if (!timeString) return false;
-    try {
-      const today = new Date();
-      String(timeString);
-      const [hours, minutes] = timeString.split(':').map(Number);
-      const targetTime = set(today, { hours, minutes, seconds: 0, milliseconds: 0 });
-      return isBefore(targetTime, today);
-    } catch (error) {
-      console.error('Error parsing time:', error);
-    } 
-    return true; 
-  }
+
+  const isOrganizer = user && match.organizerId === user.id;
+
   return (
     <div className="match-detail-container">
-      <div className="top-navigation">
-        <button 
-          className="back-btn"
-          onClick={() => navigate('/matches')} 
-        >
-          <ArrowBackIcon /> Voltar
-        </button>
-      </div>
-      
-      {error && (
-        <div className="error-message">
-          {error}
-          <button className="dismiss-error" onClick={() => setError(null)}>×</button>
-        </div>
-      )}
-      
+      <BackButton />
       <div className="detail-content">
         <div className="match-header">
           <h1>{match.title}</h1>
@@ -292,54 +266,78 @@ const MatchDetail: React.FC = () => {
           {timeCadastrados.length > 0 ? (
             <div className="teams-list d-flex flex-wrap justify-content-center" key={id}>
               {timeCadastrados.map((team: any) => (
-                <Card className="team-card" key={team.id}> 
+                <Card style={{ width: '18rem' }} key={team.id}> 
                   <Card.Body>
                     {team.banner &&
                       <Card.Img
                        src={`http://localhost:3001/uploads/teams/${team.banner}`} 
                        variant='top'
-                       className="team-banner"
                       />
                     }
                     <div className='d-flex flex-column align-items-center text-center mt-3'>
-                      <Card.Title className='team-name'>{team.name}</Card.Title>
-                      <Button 
-                        variant="outline-primary" 
-                        onClick={() => handleLeaveMatch(Number(id), team.id)}
-                        className="leave-match-btn"
-                      >
-                        Sair da Partida
-                      </Button>
+                      <Card.Title className='container'>{team.name}</Card.Title>
+                      <Button variant="primary" onClick={() => handleLeaveMatch(id,team.id)}>Sair Partida</Button>
                     </div>  
                   </Card.Body>
                 </Card>
               ))}
             </div>
           ) : (
-            <div className="no-teams-message">
+            <div>
               <p>Nenhum time inscrito ainda.</p>
             </div>
           )}
           <div className="d-flex justify-content-center w-100">
-            {(match.countTeams < match.maxTeams) && isDateToJoinExpired(DataLimite)==false && isDateToJoinExpired(match.date) === false && isTimeToJoinExpired(match.date) === false &&
+            {(match.countTeams < match.maxTeams) && 
               <Button 
-                variant="primary"
-                className="mt-5"
-                onClick={() =>handleModalShow()} // Exemplo: usar o primeiro time da lista
+                variant="success" 
+                onClick={handleModalShow} 
+                className="join-match-btn mt-3"
               >
-                Cadastrar time
+                <i className="fas fa-plus-circle me-2"></i> Cadastrar Time
               </Button>
             }
-            {modal && (
-              <ModalTeams 
-                show={modal} 
-                onHide={handleModalClose} 
-                matchid={match.id}
-              />
+            {isOrganizer && (
+              <Button
+                variant="danger"
+                onClick={handleOpenDeleteConfirm}
+                className="delete-match-button mt-3 ms-2"
+              >
+                <DeleteIcon /> Excluir Partida
+              </Button>
             )}
           </div>
         </div>
+        {modal && (
+          <ModalTeams
+            show={modal}
+            onHide={handleModalClose}
+            idpartida={id}
+            getTimeInscrito={() => getTimeInscrito(id as string)}
+          />
+        )}
       </div>
+      <Dialog
+        open={openDeleteConfirm}
+        onClose={handleCloseDeleteConfirm}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Confirmar Exclusão"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Tem certeza de que deseja excluir esta partida? Esta ação é irreversível.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteConfirm} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={handleDeleteMatch} color="primary" autoFocus>
+            Excluir
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

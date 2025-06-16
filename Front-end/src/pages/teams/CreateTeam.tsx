@@ -11,6 +11,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import EditIcon from '@mui/icons-material/Edit';
 import ToastComponent from '../../components/Toast/ToastComponent';
 import PlayerModal from '../../components/teams/PlayerModal';
+import BackButton from '../../components/BackButton';
 
 interface PlayerData {
   id?: number;
@@ -329,9 +330,18 @@ export default function CreateTeam() {
     } catch (err: any) {
       console.error('Erro completo:', err);
       setLoading(false);
-      const errorMsg = err.response.data.error || 'Erro ao criar time. Tente novamente.';
-      console.error('Erro ao criar time:', errorMsg);
+      let errorMsg = 'Erro ao criar time. Tente novamente.';
+      
+      if (err.response && err.response.data) {
+        if (typeof err.response.data.error === 'string') {
+          errorMsg = err.response.data.error;
+        } else if (typeof err.response.data.message === 'string') {
+          errorMsg = err.response.data.message;
+        }
+      }
+      
       setError(errorMsg);
+      setToastMessage(errorMsg);
       setToastBg('danger');
       setShowToast(true);
     }
@@ -427,6 +437,7 @@ export default function CreateTeam() {
 
   return (
     <div className="create-team-container">
+      <BackButton />
       {showToast && (
         <ToastComponent
           message={toastMessage}
@@ -441,15 +452,6 @@ export default function CreateTeam() {
         onSave={handleSavePlayer}
         editingPlayer={editingPlayer}
       />
-      
-      <div className="top-navigation">
-        <button 
-          onClick={() => navigate('/teams')} 
-          className="back-btn"
-        >
-          <ArrowBackIcon /> Voltar
-        </button>
-      </div>
       
       <div className="teams-header">
         <h1 className="teams-title">Criar meu time</h1>

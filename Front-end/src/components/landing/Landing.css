@@ -1,27 +1,30 @@
 .landing-page {
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
   min-height: 100vh;
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--gray-50);
+  /* display: flex; */
+  /* flex-direction: column; */
+  background: none !important;
+  background-color: transparent !important;
   overflow-x: hidden;
   position: relative;
 }
 
-.no-top-space {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
+.landing-page > * {
+  margin: 0 !important;
+  padding: 0 !important;
+  /* background: none !important; */
+  /* background-color: transparent !important; */
+  border: none !important;
+  box-shadow: none !important;
 }
 
-/* Garantir que o primeiro filho comece sem espaço */
 .landing-page > *:first-child {
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
 
-/* Remover qualquer pseudoelemento que possa estar adicionando espaço */
 .landing-page::before,
 .landing-page::after {
   display: none !important;

@@ -43,7 +43,13 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 15px;
+  padding: 0;
+}
+
+@media (max-width: 991.98px) {
+  .container {
+    padding: 0 15px;
+  }
 }
 
 /* Melhorias nos scrollbars */

@@ -59,7 +59,7 @@ export default function InfoRulesModal({idpartida, show, onHide}: AthleteFormMod
                 dialogClassName="custom-modal-width"
                 contentClassName="small-modal-content"
             >
-                <Modal.Header closeButton>
+                <Modal.Header closeButton className="bg-primary text-white">
                     <Modal.Title>Regras</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -85,7 +85,7 @@ export default function InfoRulesModal({idpartida, show, onHide}: AthleteFormMod
                         </div>
                     </div>
                 </Modal.Body>
-                <Modal.Footer>
+                <Modal.Footer className="bg-white">
                     <Button variant="primary" size="sm" onClick={onHide}>
                         Fechar
                     </Button>
