@@ -1,57 +1,52 @@
-import { DataTypes } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database';
 
-const Rules = sequelize.define('Rules', {
+interface RulesAttributes {
+  id: number;
+  partidaId: number;
+  idade_minima: number;
+  idade_maxima: number;
+  sexo: string;
+}
+
+class RulesModel extends Model<RulesAttributes> implements RulesAttributes {
+  public id!: number;
+  public partidaId!: number;
+  public idade_minima!: number;
+  public idade_maxima!: number;
+  public sexo!: string;
+}
+
+RulesModel.init(
+  {
     id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
     },
     partidaId: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        field: 'partidaid',
-        references: {
-            model: 'matches',
-            key: 'id',
-        },
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
-    dataLimite: {
-        type: DataTypes.DATE,    
-        allowNull: false,
-        field: 'datalimiteinscricao'
+    idade_minima: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
-    idadeMinima: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        field: 'idade_minima',
-        validate: {
-            min: 0,
-            max: 100
-        }
+    idade_maxima: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
-    idadeMaxima: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        field: 'idade_maxima',
-        validate: {
-            min: 0,
-            max: 100
-        }
+    sexo: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
-    genero: {
-        type: DataTypes.STRING,    
-        allowNull: false,
-        field: 'sexo',
-        validate: {
-            isIn: [['Masculino', 'Feminino', 'Ambos']]
-        }
-    }
-}, {
+  },
+  {
+    sequelize,
     modelName: 'Rules',
     tableName: 'rules',
-    timestamps: false,
-    underscored: true
-});
+    timestamps: true,
+  }
+);
 
-export default Rules;
+export default RulesModel;

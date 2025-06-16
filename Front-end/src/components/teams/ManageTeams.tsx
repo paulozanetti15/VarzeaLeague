@@ -41,7 +41,7 @@ export function ManageTeams() {
   };
 
   const handleEditTeam = (teamId: number) => {
-    navigate(`/edit-team/${teamId}`);
+    navigate(`/teams/edit/${teamId}`);
   };
 
   const handleDeleteTeam = async (teamId: number) => {

@@ -6,14 +6,14 @@ interface Props {
   message: string;
   bg: string;
   onClose: () => void;
-  autoHide?: boolean;
+  show: boolean;
 }
 
-const ToastComponent = ({ message, bg, onClose, autoHide = true }: Props) => {
-  const [show, setShow] = useState(true);
+const ToastComponent: React.FC<Props> = ({ message, bg, onClose, show }) => {
+  const [showToast, setShowToast] = useState(true);
 
   useEffect(() => {
-    setShow(true);
+    setShowToast(true);
   }, [message]);
 
   const handleClose = () => {
@@ -21,11 +21,11 @@ const ToastComponent = ({ message, bg, onClose, autoHide = true }: Props) => {
     if (toast) {
       toast.classList.add('toast-exit');
       setTimeout(() => {
-        setShow(false);
+        setShowToast(false);
         onClose();
       }, 300);
     } else {
-      setShow(false);
+      setShowToast(false);
       onClose();
     }
   };
@@ -33,12 +33,12 @@ const ToastComponent = ({ message, bg, onClose, autoHide = true }: Props) => {
   const toastClass = `toast-${bg}`;
 
   return (
-    <div className="toast-container">
+    <div className={`toast-container ${show ? 'show' : ''}`}>
       <Toast 
-        show={show} 
+        show={showToast} 
         onClose={handleClose} 
         delay={3000} 
-        autohide={autoHide}
+        autohide={true}
         className={toastClass}
         style={{ zIndex: 9999 }}
       >

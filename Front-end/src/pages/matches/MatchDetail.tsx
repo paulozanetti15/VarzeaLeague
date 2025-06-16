@@ -16,12 +16,21 @@ import ModalTeams from '../../components/Modals/Teams/modelTeams';
 import { useAuth } from '../../hooks/useAuth';
 import BackButton from '../../components/BackButton';
 
+interface Team {
+  id: number;
+  Team: {
+    id: number;
+    name: string;
+    userId: number;
+  };
+}
+
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [match, setMatch] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [timeCadastrados, setTimeCadastrados] = useState<any[]>([]);
+  const [timeCadastrados, setTimeCadastrados] = useState<Team[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [modal, setModal] = useState(false);
@@ -35,7 +44,7 @@ const MatchDetail: React.FC = () => {
         console.error('Token não encontrado');
         return;
       }
-      const response = await axios.get(`http://localhost:3001/api/matches/${matchId}/join-team`, {
+      const response = await axios.get(`http://localhost:3001/api/matches/${matchId}/teams`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -248,60 +257,94 @@ const MatchDetail: React.FC = () => {
             Visualizar regras
           </Button>
         </div>
-        {match && (
-          <RegrasFormInfoModal
-            idpartida={match.id} 
-            show={showRulesModal} 
-            onHide={() => setShowRulesModal(false)}
-          />
-        )}
-        <div className="match-description">
-          <h3 >Times Participantes</h3>
+        <div className="match-teams">
+          <h3>Times Participantes</h3>
           {timeCadastrados.length > 0 ? (
-            <div className="teams-list d-flex flex-wrap justify-content-center" key={id}>
-              {timeCadastrados.map((team: any) => (
-                <Card style={{ width: '18rem' }} key={team.id}> 
+            <div className="teams-grid">
+              {timeCadastrados.slice(0, 1).map((time) => (
+                <Card key={time.id} className="team-card">
                   <Card.Body>
-                    {team.banner &&
-                      <Card.Img
-                       src={`http://localhost:3001/uploads/teams/${team.banner}`} 
-                       variant='top'
-                      />
-                    }
-                    <div className='d-flex flex-column align-items-center text-center mt-3'>
-                      <Card.Title className='container'>{team.name}</Card.Title>
-                      <Button variant="primary" onClick={() => handleLeaveMatch(id,team.id)}>Sair Partida</Button>
-                    </div>  
+                    <Card.Title>{time.Team.name}</Card.Title>
+                    <div className="team-status">Time 1</div>
+                    {user && time.Team.userId === user.id && (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => handleLeaveMatch(id, time.Team.id)}
+                      >
+                        Sair da Partida
+                      </Button>
+                    )}
                   </Card.Body>
                 </Card>
               ))}
+              
+              <div className="versus-text">X</div>
+              
+              {timeCadastrados.slice(1, 2).map((time) => (
+                <Card key={time.id} className="team-card">
+                  <Card.Body>
+                    <Card.Title>{time.Team.name}</Card.Title>
+                    <div className="team-status">Time 2</div>
+                    {user && time.Team.userId === user.id && (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => handleLeaveMatch(id, time.Team.id)}
+                      >
+                        Sair da Partida
+                      </Button>
+                    )}
+                  </Card.Body>
+                </Card>
+              ))}
+              
+              {timeCadastrados.length === 1 && (
+                <Card className="team-card">
+                  <Card.Body>
+                    <Card.Title>Aguardando...</Card.Title>
+                    <div className="team-status">Time 2</div>
+                  </Card.Body>
+                </Card>
+              )}
             </div>
           ) : (
-            <div>
-              <p>Nenhum time inscrito ainda.</p>
-            </div>
+            <p className="no-teams">Nenhum time inscrito ainda.</p>
           )}
-          <div className="d-flex justify-content-center w-100">
-            {(match.countTeams < match.maxTeams) && 
-              <Button 
-                variant="success" 
-                onClick={handleModalShow} 
-                className="join-match-btn mt-3"
-              >
-                <i className="fas fa-plus-circle me-2"></i> Cadastrar Time
-              </Button>
-            }
-            {canDeleteMatch && (
-              <Button
-                variant="danger"
-                onClick={handleOpenDeleteConfirm}
-                className="delete-match-button mt-3 ms-2"
-              >
-                <DeleteIcon /> Excluir Partida
-              </Button>
-            )}
-          </div>
+
+          {match.status === 'open' && user && user.userTypeId === 3 && timeCadastrados.length < 2 && (
+            <Button
+              variant="primary"
+              className="mt-3"
+              onClick={handleModalShow}
+            >
+              Inscrever Time
+            </Button>
+          )}
         </div>
+
+        {showRulesModal && (
+          <RegrasFormInfoModal
+            show={showRulesModal}
+            onHide={() => setShowRulesModal(false)}
+            idpartida={Number(id)}
+          />
+        )}
+
+        {canDeleteMatch && (
+          <div className="delete-match-section">
+            <Button
+              variant="danger"
+              onClick={handleOpenDeleteConfirm}
+              className="delete-match-btn"
+            >
+              <DeleteIcon /> Excluir Partida
+            </Button>
+          </div>
+        )}
+
         {modal && (
           <ModalTeams
             show={modal}
