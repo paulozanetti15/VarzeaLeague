@@ -248,3 +248,29 @@
     font-size: 1.8rem;
   }
 }
+
+.date-input {
+  font-family: monospace;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.date-input::placeholder {
+  letter-spacing: normal;
+  font-family: inherit;
+}
+
+/* Ajuste para o layout responsivo */
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .form-row .form-group {
+    width: 100%;
+  }
+  
+  .date-input {
+    width: 100%;
+  }
+}

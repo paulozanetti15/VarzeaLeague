@@ -37,14 +37,6 @@ interface Match {
 
 }
 
-const formatLastUpdate=(timestamp: number): string => {
-  const now = Date.now();
-  const diff = Math.floor((now - timestamp) / 1000); // seconds
-  if (diff < 60) return `${diff} segundos`;
-  if (diff < 3600) return `${Math.floor(diff / 60)} minutos`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} horas`;
-  return `${Math.floor(diff / 86400)} dias`;
-}
 
 const MatchList: React.FC = () => {
   const navigate = useNavigate();
@@ -251,11 +243,11 @@ const MatchList: React.FC = () => {
     if (!showAdvancedFilters) return null;
   
     return (
-      <div className="filters-modal-overlay" style={{backdropFilter: 'blur(5px)'}}>
-        <div className="filters-modal-content" style={{background: 'linear-gradient(135deg, #1a237e 0%, #0d47a1 100%)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.1)'}}>
-          <div className="filters-modal-header" style={{borderBottom: '1px solid rgba(255, 255, 255, 0.1)'}}>
-            <h3 style={{color: 'white', textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'}}><FaFilter /> Filtros Avançados</h3>
-            <button className="close-modal" onClick={cancelFilters} style={{background: 'rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.8)'}}>
+      <div className="filters-modal-overlay">
+        <div className="filters-modal-content">
+          <div className="filters-modal-header">
+            <h3><FaFilter /> Filtros Avançados</h3>
+            <button className="close-modal" onClick={cancelFilters}>
               <IoMdClose />
             </button>
           </div>
@@ -270,63 +262,73 @@ const MatchList: React.FC = () => {
                     type="checkbox" 
                     id="status-open" 
                     checked={tempStatusFilter.includes('open')}
-                    onChange={() => {
-                      const newFilters = tempStatusFilter.includes('open')
-                        ? tempStatusFilter.filter(s => s !== 'open')
-                        : [...tempStatusFilter, 'open'];
-                      setTempStatusFilter(newFilters);
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTempStatusFilter([...tempStatusFilter, 'open']);
+                      } else {
+                        setTempStatusFilter(tempStatusFilter.filter(s => s !== 'open'));
+                      }
                     }}
                   />
-                  <label htmlFor="status-open" className={tempStatusFilter.includes('open') ? 'selected' : ''}>
+                  <label htmlFor="status-open">
                     <span className="status-indicator open"></span>
                     Abertas
                   </label>
                 </div>
+                
                 <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="status-full" 
                     checked={tempStatusFilter.includes('full')}
-                    onChange={() => {
-                      const newFilters = tempStatusFilter.includes('full')
-                        ? tempStatusFilter.filter(s => s !== 'full')
-                        : [...tempStatusFilter, 'full'];
-                      setTempStatusFilter(newFilters);
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTempStatusFilter([...tempStatusFilter, 'full']);
+                      } else {
+                        setTempStatusFilter(tempStatusFilter.filter(s => s !== 'full'));
+                      }
                     }}
                   />
-                  <label htmlFor="status-full" className={tempStatusFilter.includes('full') ? 'selected' : ''}>
+                  <label htmlFor="status-full">
+                    <span className="status-indicator full"></span>
                     Completas
                   </label>
                 </div>
+                
                 <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="status-waiting" 
                     checked={tempStatusFilter.includes('waiting')}
-                    onChange={() => {
-                      const newFilters = tempStatusFilter.includes('waiting')
-                        ? tempStatusFilter.filter(s => s !== 'waiting')
-                        : [...tempStatusFilter, 'waiting'];
-                      setTempStatusFilter(newFilters);
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTempStatusFilter([...tempStatusFilter, 'waiting']);
+                      } else {
+                        setTempStatusFilter(tempStatusFilter.filter(s => s !== 'waiting'));
+                      }
                     }}
                   />
-                  <label htmlFor="status-waiting" className={tempStatusFilter.includes('waiting') ? 'selected' : ''}>
+                  <label htmlFor="status-waiting">
+                    <span className="status-indicator waiting"></span>
                     Aguardando
                   </label>
                 </div>
+                
                 <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="status-confirmed" 
                     checked={tempStatusFilter.includes('confirmed')}
-                    onChange={() => {
-                      const newFilters = tempStatusFilter.includes('confirmed')
-                        ? tempStatusFilter.filter(s => s !== 'confirmed')
-                        : [...tempStatusFilter, 'confirmed'];
-                      setTempStatusFilter(newFilters);
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTempStatusFilter([...tempStatusFilter, 'confirmed']);
+                      } else {
+                        setTempStatusFilter(tempStatusFilter.filter(s => s !== 'confirmed'));
+                      }
                     }}
                   />
-                  <label htmlFor="status-confirmed" className={tempStatusFilter.includes('confirmed') ? 'selected' : ''}>
+                  <label htmlFor="status-confirmed">
+                    <span className="status-indicator confirmed"></span>
                     Confirmadas
                   </label>
                 </div>
@@ -342,31 +344,34 @@ const MatchList: React.FC = () => {
                     type="checkbox" 
                     id="price-free" 
                     checked={tempPriceFilter.includes('free')}
-                    onChange={() => {
-                      const newFilters = tempPriceFilter.includes('free')
-                        ? tempPriceFilter.filter(p => p !== 'free')
-                        : [...tempPriceFilter, 'free'];
-                      setTempPriceFilter(newFilters);
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTempPriceFilter([...tempPriceFilter, 'free']);
+                      } else {
+                        setTempPriceFilter(tempPriceFilter.filter(p => p !== 'free'));
+                      }
                     }}
                   />
-                  <label htmlFor="price-free" className={tempPriceFilter.includes('free') ? 'selected' : ''}>
+                  <label htmlFor="price-free">
                     <span className="price-indicator free">R$0</span>
                     Gratuito
                   </label>
                 </div>
+                
                 <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="price-paid" 
                     checked={tempPriceFilter.includes('paid')}
-                    onChange={() => {
-                      const newFilters = tempPriceFilter.includes('paid')
-                        ? tempPriceFilter.filter(p => p !== 'paid')
-                        : [...tempPriceFilter, 'paid'];
-                      setTempPriceFilter(newFilters);
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTempPriceFilter([...tempPriceFilter, 'paid']);
+                      } else {
+                        setTempPriceFilter(tempPriceFilter.filter(p => p !== 'paid'));
+                      }
                     }}
                   />
-                  <label htmlFor="price-paid" className={tempPriceFilter.includes('paid') ? 'selected' : ''}>
+                  <label htmlFor="price-paid">
                     <span className="price-indicator paid">R$</span>
                     Pago
                   </label>
@@ -383,46 +388,51 @@ const MatchList: React.FC = () => {
                     type="checkbox" 
                     id="date-today" 
                     checked={tempDateFilter.includes('today')}
-                    onChange={() => {
-                      const newFilters = tempDateFilter.includes('today')
-                        ? tempDateFilter.filter(d => d !== 'today')
-                        : [...tempDateFilter, 'today'];
-                      setTempDateFilter(newFilters);
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTempDateFilter([...tempDateFilter, 'today']);
+                      } else {
+                        setTempDateFilter(tempDateFilter.filter(d => d !== 'today'));
+                      }
                     }}
                   />
-                  <label htmlFor="date-today" className={tempDateFilter.includes('today') ? 'selected' : ''}>
+                  <label htmlFor="date-today">
                     Hoje
                   </label>
                 </div>
+                
                 <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="date-tomorrow" 
                     checked={tempDateFilter.includes('tomorrow')}
-                    onChange={() => {
-                      const newFilters = tempDateFilter.includes('tomorrow')
-                        ? tempDateFilter.filter(d => d !== 'tomorrow')
-                        : [...tempDateFilter, 'tomorrow'];
-                      setTempDateFilter(newFilters);
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTempDateFilter([...tempDateFilter, 'tomorrow']);
+                      } else {
+                        setTempDateFilter(tempDateFilter.filter(d => d !== 'tomorrow'));
+                      }
                     }}
                   />
-                  <label htmlFor="date-tomorrow" className={tempDateFilter.includes('tomorrow') ? 'selected' : ''}>
+                  <label htmlFor="date-tomorrow">
                     Amanhã
                   </label>
                 </div>
+                
                 <div className="filter-option">
                   <input 
                     type="checkbox" 
                     id="date-week" 
                     checked={tempDateFilter.includes('week')}
-                    onChange={() => {
-                      const newFilters = tempDateFilter.includes('week')
-                        ? tempDateFilter.filter(d => d !== 'week')
-                        : [...tempDateFilter, 'week'];
-                      setTempDateFilter(newFilters);
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setTempDateFilter([...tempDateFilter, 'week']);
+                      } else {
+                        setTempDateFilter(tempDateFilter.filter(d => d !== 'week'));
+                      }
                     }}
                   />
-                  <label htmlFor="date-week" className={tempDateFilter.includes('week') ? 'selected' : ''}>
+                  <label htmlFor="date-week">
                     Esta semana
                   </label>
                 </div>
@@ -430,16 +440,16 @@ const MatchList: React.FC = () => {
             </div>
           </div>
           
-          <div className="filters-modal-footer" style={{background: 'rgba(0, 0, 0, 0.2)', borderTop: '1px solid rgba(255, 255, 255, 0.1)'}}>
-            <button className="clear-filters-btn" onClick={clearTempFilters} style={{background: 'rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.8)', border: '1px solid rgba(255, 255, 255, 0.2)'}}>
-              <ClearIcon fontSize="small" style={{ marginRight: '5px' }} />
+          <div className="filters-modal-footer">
+            <button className="clear-filters-btn" onClick={clearTempFilters}>
+              <ClearIcon fontSize="small" />
               Limpar filtros
             </button>
             <div className="action-buttons">
-              <button className="cancel-button" onClick={cancelFilters} style={{background: 'rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.8)', border: '1px solid rgba(255, 255, 255, 0.2)'}}>
+              <button className="cancel-button" onClick={cancelFilters}>
                 Cancelar
               </button>
-              <button className="apply-button" onClick={applyFilters} style={{background: 'linear-gradient(135deg, #2196F3, #1976D2)', color: 'white'}}>
+              <button className="apply-button" onClick={applyFilters}>
                 Aplicar Filtros
               </button>
             </div>
@@ -502,15 +512,15 @@ const MatchList: React.FC = () => {
                 </div>
                 
                 <div className="match-info">
-                  <div className="info-row">
+                  <div className="info-row" style={{color: '#ffffff'}}>
                     <EventIcon fontSize="small" />
                     <strong>Data:</strong> {formatDate(match.date)}
                   </div>
-                  <div className="info-row">
+                  <div className="info-row" style={{color: '#ffffff'}}>
                     <AccessTimeIcon fontSize="small" />
                     <strong>Hora:</strong> {formatTime(match.date)}
                   </div>
-                  <div className="info-row">
+                  <div className="info-row" style={{color: '#ffffff'}}>
                     <LocationOnIcon fontSize="small" />
                     <strong>Local:</strong> {match.location}
                   </div>
@@ -538,7 +548,7 @@ const MatchList: React.FC = () => {
                     </div>
                   )}
                   {match.organizerId === currentUser.id && (
-                    <div className="organizer-badge">
+                    <div className="organizer-badge" style={{color: '#00ff00'}}>
                       Você é o organizador
                     </div>
                   )}
@@ -565,15 +575,15 @@ const MatchList: React.FC = () => {
   };
 
   return (
-    <div className="match-list-container" style={{background: 'linear-gradient(135deg, #1a237e 0%, #0d47a1 100%)'}}>
+    <div className="match-list-container">
       <div className="top-navigation">
         <button className="back-btn" onClick={() => navigate('/')}>
           <ArrowBackIcon /> Voltar
         </button>
       </div>
-      <div className="content-container" style={{background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)'}}>
+      <div className="match-list-content">
         <div className="header-container">
-          <h1 className="text-center" style={{color: '#fff', textShadow: '0 2px 10px rgba(0, 0, 0, 0.3)'}}>Partidas Disponíveis</h1>
+          <h1>Partidas Disponíveis</h1>
           
           <div className="search-controls">
             <div className="search-and-filter">
@@ -581,11 +591,10 @@ const MatchList: React.FC = () => {
                 <SearchIcon className="search-icon" />
                 <input
                   type="text"
-                  placeholder="Buscar partidas por título, local ou organizador..."
+                  placeholder="Buscar partidas..."
                   value={searchQuery}
                   onChange={handleSearchChange}
                   className="search-input"
-                  style={{background: 'rgba(255, 255, 255, 0.1)', color: '#fff', border: '1px solid rgba(255, 255, 255, 0.2)'}}
                 />
                 {searchQuery && (
                   <button className="clear-search" onClick={clearSearch}>
@@ -605,31 +614,30 @@ const MatchList: React.FC = () => {
               </button>
             </div>
             <div className="filter-container">
-              <div className="filter-group-wrapper" style={{background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)'}}>
+              <div className="filter-group-wrapper">
                 <ToggleButtonGroup
                   value={filter}
                   exclusive
                   onChange={handleFilterChange}
                   aria-label="filtro de partidas"
-                  style={{background: 'rgba(255, 255, 255, 0.1)'}}
+                  size="small"
                 >
-                  <ToggleButton value="all" aria-label="todas as partidas" style={{color: 'white'}}>
-                    <AllInclusiveIcon fontSize="small" style={{ marginRight: '5px' }} />
-                    Todas
+                  <ToggleButton value="all" aria-label="todas as partidas">
+                    <AllInclusiveIcon fontSize="small" />
+                    <span className="toggle-text">Todas</span>
                   </ToggleButton>
-                  <ToggleButton value="my" aria-label="minhas partidas" style={{color: 'white'}}>
-                    <PersonIcon fontSize="small" style={{ marginRight: '5px' }} />
-                    Minhas
+                  <ToggleButton value="my" aria-label="minhas partidas">
+                    <PersonIcon fontSize="small" />
+                    <span className="toggle-text">Minhas</span>
                   </ToggleButton>
                 </ToggleButtonGroup>
                 
-                <div className="update-info" style={{background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'rgba(255, 255, 255, 0.7)'}}>
+                <div className="update-info">
                   <button 
-                    className={`refresh-button ${isRefreshing ? 'refreshing' : ''} `} 
+                    className={`refresh-button ${isRefreshing ? 'refreshing' : ''}`} 
                     onClick={handleRefresh}
                     disabled={isRefreshing}
                     title="Atualizar lista de partidas"
-                    style={{color: 'rgba(255, 255, 255, 0.7)'}}
                   >
                     <RefreshIcon />
                   </button>
@@ -641,17 +649,17 @@ const MatchList: React.FC = () => {
           <button
             className="create-match-btn"
             onClick={() => navigate('/matches/create')}
-            style={{background: 'linear-gradient(135deg, #2196F3, #1976D2)', color: 'white', boxShadow: '0 4px 15px rgba(0, 0, 0, 0.15)'}}
           >
-            Criar Nova Partida
+            <span className="btn-text">Criar Nova Partida</span>
           </button>
+          
           {getActiveFiltersCount() > 0 && (
             <div className="active-filters-summary">
               <p>Filtros ativos:</p>
               <div className="active-filters-chips">
                 {statusFilter.length > 0 && (
                   <div className="filter-chip">
-                    Status: {statusFilter.map(s => {
+                    <span className="chip-label">Status:</span> {statusFilter.map(s => {
                       switch(s) {
                         case 'open': return 'Aberta';
                         case 'full': return 'Cheia';
@@ -673,7 +681,7 @@ const MatchList: React.FC = () => {
                 
                 {priceFilter.length > 0 && (
                   <div className="filter-chip">
-                    Preço: {priceFilter.map(p => {
+                    <span className="chip-label">Preço:</span> {priceFilter.map(p => {
                       switch(p) {
                         case 'free': return 'Gratuito';
                         case 'paid': return 'Pago';
@@ -692,7 +700,7 @@ const MatchList: React.FC = () => {
                 
                 {dateFilter.length > 0 && (
                   <div className="filter-chip">
-                    Data: {dateFilter.map(d => {
+                    <span className="chip-label">Data:</span> {dateFilter.map(d => {
                       switch(d) {
                         case 'today': return 'Hoje';
                         case 'tomorrow': return 'Amanhã';
@@ -725,7 +733,6 @@ const MatchList: React.FC = () => {
 
         {renderMatchList()}
         
-        {/* Componente de filtros avançados */}
         <AdvancedFiltersModal />
       </div>
     </div>

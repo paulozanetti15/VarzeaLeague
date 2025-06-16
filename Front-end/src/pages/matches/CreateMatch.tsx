@@ -8,6 +8,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import CircularProgress from '@mui/material/CircularProgress';
 import ToastComponent from '../../components/Toast/ToastComponent';
+import { format, parse, isValid, isAfter } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface MatchFormData {
   title: string;
@@ -36,8 +38,8 @@ const CreateMatch: React.FC = () => {
     description: '',
     location: '',
     number: '',
-    date: '',
-    time: '',
+    date: format(new Date(), 'dd/MM/yyyy'),
+    time: format(new Date(), 'HH:mm'),
     price: '',
     complement: '',
     city: '',
@@ -78,6 +80,59 @@ const CreateMatch: React.FC = () => {
     return cepRegex.test(cep);
   };
 
+  const formatDateToBR = (date: string) => {
+    if (!date) return '';
+    const [year, month, day] = date.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  const formatDateToISO = (date: string) => {
+    if (!date) return '';
+    const [day, month, year] = date.split('/');
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatTime = (value: string) => {
+    // Remove caracteres não numéricos, exceto :
+    let time = value.replace(/[^\d:]/g, '');
+    
+    // Adiciona : automaticamente
+    if (time.length > 2 && time.charAt(2) !== ':') {
+      time = time.slice(0, 2) + ':' + time.slice(2);
+    }
+    
+    // Limita o tamanho a 5 caracteres (HH:MM)
+    time = time.slice(0, 5);
+    
+    // Valida as horas (00-23)
+    const hours = parseInt(time.split(':')[0] || '0');
+    if (hours > 23) {
+      time = '23' + time.slice(2);
+    }
+    
+    // Valida os minutos (00-59)
+    if (time.length > 2) {
+      const minutes = parseInt(time.split(':')[1] || '0');
+      if (minutes > 59) {
+        time = time.slice(0, 3) + '59';
+      }
+    }
+    
+    return time;
+  };
+
+  const isValidDateBR = (date: string) => {
+    const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/(19|20)\d\d$/;
+    if (!regex.test(date)) return false;
+    
+    const [day, month, year] = date.split('/').map(Number);
+    const d = new Date(year, month - 1, day);
+    
+    return d.getDate() === day && 
+           d.getMonth() === month - 1 && 
+           d.getFullYear() === year;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
@@ -105,6 +160,51 @@ const CreateMatch: React.FC = () => {
         buscarCep(cepNumerico);
       }
       
+      return;
+    }
+
+    if (name === 'date') {
+      // Validar e formatar a data
+      const dateRegex = /^(\d{0,2})\/(\d{0,2})\/(\d{0,4})$/;
+      let formattedDate = value.replace(/\D/g, '');
+      
+      if (formattedDate.length <= 8) {
+        if (formattedDate.length > 4) {
+          formattedDate = formattedDate.replace(/(\d{2})(\d{2})(\d{0,4})/, '$1/$2/$3');
+        } else if (formattedDate.length > 2) {
+          formattedDate = formattedDate.replace(/(\d{2})(\d{0,2})/, '$1/$2');
+        }
+        
+        if (dateRegex.test(formattedDate) || formattedDate.length < 10) {
+          setFormData(prev => ({
+            ...prev,
+            [name]: formattedDate
+          }));
+        }
+      }
+      return;
+    }
+
+    if (name === 'time') {
+      // Validar e formatar a hora
+      const timeRegex = /^(\d{0,2}):?(\d{0,2})$/;
+      let formattedTime = value.replace(/\D/g, '');
+      
+      if (formattedTime.length <= 4) {
+        if (formattedTime.length > 2) {
+          formattedTime = formattedTime.replace(/(\d{2})(\d{0,2})/, '$1:$2');
+        }
+        
+        if (timeRegex.test(formattedTime)) {
+          const [hours, minutes] = formattedTime.split(':').map(Number);
+          if ((!hours || hours < 24) && (!minutes || minutes < 60)) {
+            setFormData(prev => ({
+              ...prev,
+              [name]: formattedTime
+            }));
+          }
+        }
+      }
       return;
     }
     
@@ -185,9 +285,30 @@ const CreateMatch: React.FC = () => {
         return;
       }
 
+      // Validar formato da data
+      const parsedDate = parse(formData.date, 'dd/MM/yyyy', new Date());
+      if (!isValid(parsedDate)) {
+        setError('Data inválida. Use o formato DD/MM/AAAA');
+        setLoading(false);
+        return;
+      }
+
+      // Validar formato da hora
+      const [hours, minutes] = formData.time.split(':').map(Number);
+      if (isNaN(hours) || isNaN(minutes) || hours > 23 || minutes > 59) {
+        setError('Hora inválida. Use o formato HH:MM');
+        setLoading(false);
+        return;
+      }
+
       // Validar data futura
-      const matchDateTime = new Date(`${formData.date}T${formData.time}`);
-      if (matchDateTime <= new Date()) {
+      const matchDateTime = parse(
+        `${formData.date} ${formData.time}`,
+        'dd/MM/yyyy HH:mm',
+        new Date()
+      );
+      
+      if (!isAfter(matchDateTime, new Date())) {
         setError('A data da partida deve ser futura');
         setLoading(false);
         return;
@@ -230,7 +351,7 @@ const CreateMatch: React.FC = () => {
       
       const matchData = {
         title: formData.title.trim(),
-        date: matchDateTime.toISOString(),
+        date: format(matchDateTime, "yyyy-MM-dd'T'HH:mm:ss"),
         location: enderecoCompleto,
         description: formData.description?.trim(),
         price: formData.price ? parseFloat(formData.price) : 0.00,
@@ -315,25 +436,29 @@ const CreateMatch: React.FC = () => {
             <div className="form-group" style={{ flex: 1 }}>
               <label htmlFor="date">Data *</label>
               <input
-                type="date"
+                type="text"
                 id="date"
                 name="date"
                 value={formData.date}
                 onChange={handleInputChange}
                 required
                 className="form-control"
+                placeholder="DD/MM/AAAA"
+                maxLength={10}
               />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label htmlFor="time">Horário *</label>
               <input
-                type="time"
+                type="text"
                 id="time"
                 name="time"
                 value={formData.time}
                 onChange={handleInputChange}
                 required
                 className="form-control"
+                placeholder="HH:MM"
+                maxLength={5}
               />
             </div>
           </div>  
