@@ -19,6 +19,7 @@ import { IoMdClose } from 'react-icons/io';
 import { fi } from 'date-fns/locale';
 import { set } from 'date-fns';
 import { m } from 'framer-motion';
+import { canCreateMatch } from '../../utils/roleUtils';
 
 interface Match {
   id: number;
@@ -40,7 +41,7 @@ interface Match {
 interface User {
   id: number;
   token: string;
-  // adicione outros campos do usuário se necessário
+  userTypeId: number;
 }
 
 const MatchList: React.FC = () => {
@@ -77,10 +78,10 @@ const MatchList: React.FC = () => {
     
     // Se não encontrar user, mas encontrar token, cria um objeto básico
     if (storedToken) {
-      return { id: 0, token: storedToken };
+      return { id: 0, token: storedToken, userTypeId: 4 };
     }
     
-    return { id: 0, token: '' };
+    return { id: 0, token: '', userTypeId: 4 };
   });
   
   const fetchMatches = async () => {
@@ -592,12 +593,14 @@ const MatchList: React.FC = () => {
 
           </div>
 
-          <button
-            className="create-match-btn"
-            onClick={() => navigate('/matches/create')}
-          >
-            <span className="btn-text">Criar Nova Partida</span>
-          </button>
+          {canCreateMatch(currentUser.userTypeId) && (
+            <button
+              className="create-match-btn"
+              onClick={() => navigate('/matches/create')}
+            >
+              <span className="btn-text">Criar Nova Partida</span>
+            </button>
+          )}
           
           {getActiveFiltersCount() > 0 && (
             <div className="active-filters-summary">

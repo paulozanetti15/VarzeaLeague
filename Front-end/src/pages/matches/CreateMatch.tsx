@@ -143,12 +143,25 @@ const CreateMatch: React.FC = () => {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userType = Number(user.userTypeId);
+    
+    // Verifica se o usuário tem permissão (userType 1 ou 2)
+    if (userType !== 1 && userType !== 2) {
+      setToastMessage('Você não tem permissão para criar partidas.');
+      setToastBg('error');
+      setShowToast(true);
+      setTimeout(() => {
+        navigate('/matches');
+      }, 2000);
+      return;
+    }
+
     setUsuario(user);
     if (titleInputRef.current && btnContainerRef.current) {
       const titleWidth = titleInputRef.current.offsetWidth;
       btnContainerRef.current.style.width = `${titleWidth}px`;
     }
-  }, []);
+  }, [navigate]);
 
   const isValidCep = (cep: string): boolean => {
     const cepRegex = /^[0-9]{5}-?[0-9]{3}$/;

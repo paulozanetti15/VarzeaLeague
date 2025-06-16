@@ -22,7 +22,7 @@ const ChampionshipDetail: React.FC = () => {
   const [championship, setChampionship] = useState<Championship | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isOrganizer, setIsOrganizer] = useState(false);
+  const [hasEditPermission, setHasEditPermission] = useState(false);
   const [teams] = useState<any[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showTeamSelectModal, setShowTeamSelectModal] = useState(false);
@@ -43,10 +43,13 @@ const ChampionshipDetail: React.FC = () => {
         const data = await api.championships.getById(Number(id));
         setChampionship(data);
         
-        // Verificar se o usuário é o organizador
+        // Verificar permissões do usuário
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        if (user.id === data.created_by) {
-          setIsOrganizer(true);
+        const isCreator = user.id === data.created_by;
+        const isAdmin = user.userType === 1;
+        
+        if (isCreator || isAdmin) {
+          setHasEditPermission(true);
         }
         
         setLoading(false);
@@ -185,7 +188,7 @@ const ChampionshipDetail: React.FC = () => {
         </div>
 
         <div className="championship-actions">
-          {isOrganizer ? (
+          {hasEditPermission ? (
             <>
               <button
                 className="edit-button"
@@ -202,13 +205,6 @@ const ChampionshipDetail: React.FC = () => {
             </>
           ) : (
             <>
-              <button
-                className="join-button"
-                onClick={handleJoinAsIndividual}
-                disabled={isJoining}
-              >
-                {isJoining ? 'Entrando...' : 'Entrar como Jogador Individual'}
-              </button>
               <button
                 className="join-team-button"
                 onClick={() => setShowTeamSelectModal(true)}

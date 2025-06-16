@@ -18,9 +18,19 @@ export default function ChampionshipList() {
   const [championships, setChampionships] = useState<Championship[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [canCreateChampionship, setCanCreateChampionship] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number>(0);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Verificar permissões do usuário
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userType = Number(user.userTypeId); // Alterado de userType para userTypeId
+    const isAdmin = userType === 1;
+    const isOrganizer = userType === 2;
+    setCanCreateChampionship(isAdmin || isOrganizer);
+    setCurrentUserId(Number(user.id));
+
     async function fetchChampionships() {
       try {
         const data = await api.championships.list();
@@ -40,13 +50,15 @@ export default function ChampionshipList() {
         <div className="header-container championship-header-visual">
           <img src={trophy} alt="Troféu Campeonato" className="championship-trophy-main" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           <h1 className="page-title" style={{ color: '#212121', textShadow: 'none' }}>Campeonatos</h1>
-          <button
-            className="create-match-btn"
-            onClick={() => navigate('/championships/create')}
-          >
-            <img src={trophy} alt="Novo Campeonato" className="championship-trophy-btn" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-            Novo Campeonato
-          </button>
+          {canCreateChampionship && (
+            <button
+              className="create-match-btn"
+              onClick={() => navigate('/championships/create')}
+            >
+              <img src={trophy} alt="Novo Campeonato" className="championship-trophy-btn" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              Novo Campeonato
+            </button>
+          )}
         </div>
         {loading ? (
           <div className="loading">Carregando campeonatos...</div>
@@ -86,6 +98,11 @@ export default function ChampionshipList() {
                     <div className="match-description">
                       <h3>Descrição</h3>
                       <p>{champ.description}</p>
+                    </div>
+                  )}
+                  {currentUserId === champ.created_by && (
+                    <div className="organizer-badge" style={{ marginTop: 'auto' }}>
+                      Você é o organizador
                     </div>
                   )}
                 </div>

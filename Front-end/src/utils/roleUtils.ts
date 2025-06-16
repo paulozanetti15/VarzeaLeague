@@ -19,3 +19,7 @@ export const getRoleName = (roleId: number): string => {
       return 'Role desconhecida';
   }
 };
+
+export const canCreateMatch = (userTypeId: number): boolean => {
+  return userTypeId === USER_ROLES.ADMIN_SISTEMA || userTypeId === USER_ROLES.ADMIN_EVENTOS;
+};

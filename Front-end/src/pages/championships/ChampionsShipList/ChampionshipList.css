@@ -133,9 +133,9 @@
 .match-card-inner {
   position: relative;
   padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
   z-index: 1;
 }
 .match-header {
@@ -335,4 +335,17 @@
 
 .back-btn svg {
   font-size: 16px;
+}
+
+.organizer-badge {
+  display: inline-block;
+  background-color: rgba(76, 175, 80, 0.15);
+  color: #4CAF50;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: auto;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  align-self: flex-start;
 }

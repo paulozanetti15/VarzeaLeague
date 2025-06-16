@@ -154,6 +154,7 @@ function AppContent() {
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
                 allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                redirectTo="/"
               >
                 <PageTransition>
                   <MatchList />
@@ -167,7 +168,8 @@ function AppContent() {
               <RoleBasedRoute 
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS]}
+                redirectTo="/"
               >
                 <PageTransition>
                   <CreateMatch />
@@ -182,6 +184,7 @@ function AppContent() {
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
                 allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                redirectTo="/"
               >
                 <PageTransition>
                   <MatchDetail />
@@ -195,7 +198,8 @@ function AppContent() {
               <RoleBasedRoute 
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_TIMES]}
+                redirectTo="/"
               >
                 <PageTransition>
                   <TeamList />
@@ -209,7 +213,8 @@ function AppContent() {
               <RoleBasedRoute 
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_TIMES]}
+                redirectTo="/"
               >
                 <PageTransition>
                   <CreateTeam />
@@ -218,12 +223,13 @@ function AppContent() {
             </PrivateRoute>
           } />
           
-          <Route path="/teams/edit/:id" element={
+          <Route path="/teams/:id" element={
             <PrivateRoute isLoggedIn={isLoggedIn}>
               <RoleBasedRoute 
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_TIMES]}
+                redirectTo="/"
               >
                 <PageTransition>
                   <EditTeam />
@@ -238,6 +244,7 @@ function AppContent() {
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
                 allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                redirectTo="/"
               >
                 <PageTransition>
                   <ChampionshipList />
@@ -251,7 +258,8 @@ function AppContent() {
               <RoleBasedRoute 
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS]}
+                redirectTo="/"
               >
                 <PageTransition>
                   <ChampionshipForm />
@@ -266,6 +274,7 @@ function AppContent() {
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
                 allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                redirectTo="/"
               >
                 <PageTransition>
                   <ChampionshipDetail />
@@ -279,7 +288,8 @@ function AppContent() {
               <RoleBasedRoute 
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS]}
+                redirectTo="/"
               >
                 <PageTransition>
                   <ChampionshipEditForm />
