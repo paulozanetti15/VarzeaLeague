@@ -1785,4 +1785,45 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+  }
+
+  .link-team-btn,
+  .unlink-team-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    margin-top: 10px;
+  }
+
+  .link-team-btn {
+    background-color: #1976d2;
+    color: white;
+  }
+
+  .link-team-btn:hover {
+    background-color: #1565c0;
+    transform: translateY(-1px);
+  }
+
+  .unlink-team-btn {
+    background-color: #ef5350;
+    color: white;
+  }
+
+  .unlink-team-btn:hover {
+    background-color: #e53935;
+    transform: translateY(-1px);
+  }
+
+  .match-action-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 12px;
   } 

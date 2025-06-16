@@ -1,13 +1,15 @@
-import { DataTypes, Model } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database';
-
+import TeamModel from './TeamModel';
 
 interface MatchTeamsAttributes {
+  id: number;
   matchId: number;
   teamId: number;
 }
 
-class MatchTeams extends Model<MatchTeamsAttributes> implements MatchTeamsAttributes {
+class MatchTeamsModel extends Model<MatchTeamsAttributes> implements MatchTeamsAttributes {
+  public id!: number;
   public matchId!: number;
   public teamId!: number;
 
@@ -17,38 +19,39 @@ class MatchTeams extends Model<MatchTeamsAttributes> implements MatchTeamsAttrib
   }
 
   // Example static method to find all players for a specific match
-  public static async findByMatchId(matchId: number): Promise<MatchTeams[]> {
-    return await MatchTeams.findAll({ where: { matchId } });
+  public static async findByMatchId(matchId: number): Promise<MatchTeamsModel[]> {
+    return await MatchTeamsModel.findAll({ where: { matchId } });
   }
 }
-MatchTeams.init({
-  matchId: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    field: 'match_id',
-    references: {
-      model: 'matches',
-      key: 'id'
+
+MatchTeamsModel.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
     },
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
+    matchId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    teamId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
   },
-  teamId: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    field: 'team_id',
-    references: {
-      model: 'teams',
-      key: 'id'
-    },
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE'
+  {
+    sequelize,
+    modelName: 'MatchTeams',
+    tableName: 'match_teams',
+    timestamps: true,
   }
-}, {
-  sequelize,
-  tableName: 'match_teams',
-  timestamps: false,
-  underscored: true
+);
+
+// Definindo a associação com o modelo Team
+MatchTeamsModel.belongsTo(TeamModel, {
+  foreignKey: 'teamId',
+  as: 'Team'
 });
 
-export default MatchTeams; 
+export default MatchTeamsModel; 

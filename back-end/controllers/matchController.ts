@@ -1,209 +1,175 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import MatchModel from '../models/MatchModel';
-import User from '../models/UserModel';
-import jwt from 'jsonwebtoken';
-import MatchTeamsModel from '../models/MatchTeamsModel';
+import Match from '../models/MatchModel';
 import Rules from '../models/RulesModel';
-
-interface UserWithType extends User {
-  userTypeId: number;
-}
-
-require('dotenv').config(); 
-const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
+import User from '../models/UserModel';
 
 export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
-   try {
-      const { title, description, date, location, complement, price, Uf, Cep } = req.body;
-      
-      if (!title || !date || !location) {
-        res.status(400).json({ message: 'Campos obrigatórios faltando' });
-        return;
-      }
+  try {
+    const { title, date, location, description, price, rules } = req.body;
+    const userId = req.user?.id;
 
-      const matchDate = new Date(date);
-      if (matchDate <= new Date()) {
-        res.status(400).json({ message: 'A data da partida deve ser futura' });
-        return;
-      }
-
-      // Verificar se o usuário está autenticado
-      if (!req.user || !req.user.id) {
-        res.status(401).json({ message: 'Usuário não autenticado' });
-        return;
-      }
-
-      const userId = req.user.id;
-
-      // Verificar se o usuário existe
-      const user = await User.findByPk(userId) as UserWithType | null;
-      if (!user) {
-        res.status(404).json({ message: 'Usuário não encontrado' });
-        return;
-      }
-
-      const fullLocation = complement ? `${location} - ${complement}` : location;
-
-      const match = await MatchModel.create({
-        title: title.trim(),
-        description: description?.trim(),
-        date: matchDate,
-        location: fullLocation,
-        price: price || null,
-        organizerId: userId,
-        status: 'open',
-        Uf: Uf,
-        Cep: Cep
-      });
-
-      res.status(201).json(match);
-    } catch (error) {
-      console.error('Erro ao criar partida:', error);
-      if (error instanceof Error) {
-        res.status(500).json({ 
-          message: 'Erro ao criar partida',
-          error: error.message 
-        });
-      } else {
-        res.status(500).json({ message: 'Erro ao criar partida' });
-      }
+    if (!userId) {
+      res.status(401).json({ message: 'Usuário não autenticado' });
+      return;
     }
+
+    // Validar se as regras foram enviadas
+    if (!rules) {
+      res.status(400).json({ message: 'As regras da partida são obrigatórias' });
+      return;
+    }
+
+    // Validar campos obrigatórios das regras
+    if (rules.idade_minima === undefined || rules.idade_maxima === undefined) {
+      res.status(400).json({ message: 'Idade mínima e máxima são obrigatórias' });
+      return;
+    }
+
+    // Criar a partida
+    const match = await Match.create({
+      title,
+      date,
+      location,
+      description,
+      price,
+      status: 'open',
+      organizerId: userId
+    });
+
+    // Criar as regras associadas
+    await Rules.create({
+      partidaId: match.id,
+      idade_minima: rules.idade_minima,
+      idade_maxima: rules.idade_maxima,
+      sexo: rules.sexo || null // sexo pode ser opcional
+    });
+
+    res.status(201).json({
+      message: 'Partida criada com sucesso',
+      match
+    });
+
+  } catch (error) {
+    console.error('Erro ao criar partida:', error);
+    res.status(500).json({ message: 'Erro ao criar partida' });
+  }
 };
 
 export const listMatches = async (req: Request, res: Response): Promise<void> => {
   try {
-    const matches = await MatchModel.findAll({
-      include: [
-        {
-          model: User,
-          as: 'organizer',
-          attributes: ['id', 'name', 'email']
-        },
-      ],
-      attributes: [
-        'id',
-        'title',
-        'date',
-        'location',
-        'status',
-        'description',
-        'price',
-        'organizerId'
-      ],
-      order: [['date', 'ASC']]
+    const matches = await Match.findAll({
+      include: [{
+        model: User,
+        as: 'organizer',
+        attributes: ['id', 'name']
+      }]
     });
-    matches.map(async (match: any) => {
-      const organizer = {
-        id: match.organizerId,
-        name: match.organizerName
-      };
-      return {
-        ...match,
-        organizer,
-      };
-    });
-    res.json(matches);
+
+    res.status(200).json(matches);
+
   } catch (error) {
     console.error('Erro ao listar partidas:', error);
     res.status(500).json({ message: 'Erro ao listar partidas' });
   }
 };
-  
+
 export const getMatch = async (req: Request, res: Response): Promise<void> => {
   try {
-    const match = await MatchModel.findByPk(req.params.id,{
-      include: [
-        {
-          model: User,
-          as: 'organizer',
-          attributes: ['id', 'name']
-        }
-      ]
+    const { id } = req.params;
+
+    const match = await Match.findByPk(id, {
+      include: [{
+        model: User,
+        as: 'organizer',
+        attributes: ['id', 'name']
+      }]
     });
-    const countTeams = await MatchTeamsModel.count({
-      where: {
-        matchId: req.params.id
-      }
-    })
+
     if (!match) {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }
-    const MaxTeams= await Rules.findOne({
-      where: {
-        partidaId: req.params.id
-      }
-    })
-    const dados={
-       ...match.toJSON(),
-      countTeams: countTeams,
-      maxTeams: MaxTeams.dataValues.quantidade_times
-    }
-    res.status(200).json(dados);
+
+    const rules = await Rules.findOne({
+      where: { partidaId: id }
+    });
+
+    res.status(200).json({
+      ...match.toJSON(),
+      rules
+    });
+
   } catch (error) {
-    console.error('Erro ao obter partida:', error);
-    res.status(500).json({ message: 'Erro ao obter partida' });
+    console.error('Erro ao buscar partida:', error);
+    res.status(500).json({ message: 'Erro ao buscar partida' });
   }
 };
 
-export const updateMatch = async (req: Request, res: Response): Promise<void> => {
+export const updateMatch = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const match = await MatchModel.findByPk(req.params.id);
+    const { id } = req.params;
+    const userId = req.user?.id;
+    const updates = req.body;
+
+    const match = await Match.findByPk(id);
+
     if (!match) {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }
-    await match.update(req.body);
-    res.json(match);
+
+    if (match.organizerId !== userId) {
+      res.status(403).json({ message: 'Apenas o organizador pode atualizar a partida' });
+      return;
+    }
+
+    await match.update(updates);
+
+    if (updates.rules) {
+      await Rules.update(updates.rules, {
+        where: { partidaId: id }
+      });
+    }
+
+    res.status(200).json({
+      message: 'Partida atualizada com sucesso',
+      match
+    });
+
   } catch (error) {
     console.error('Erro ao atualizar partida:', error);
     res.status(500).json({ message: 'Erro ao atualizar partida' });
   }
 };
 
-// Cancelar uma partida
-export const cancelMatch = async (req: Request, res: Response): Promise<void> => {
+export const deleteMatch = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const match = await MatchModel.findByPk(req.params.id);
-    if (!match) {
-      res.status(404).json({ message: 'Partida não encontrada' });
-      return;
-    }
-    await match.update({ status: 'cancelled' });
-    res.json({ message: 'Partida cancelada' });
-  } catch (error) {
-    console.error('Erro ao cancelar partida:', error);
-    res.status(500).json({ message: 'Erro ao cancelar partida' });
-  }
-};
+    const { id } = req.params;
+    const userId = req.user?.id;
 
-export const deleteMatch = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const matchId = req.params.id;
-    const match = await MatchModel.findByPk(matchId);
+    const match = await Match.findByPk(id);
 
     if (!match) {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }
 
-    // Delete associated rules first
+    if (match.organizerId !== userId) {
+      res.status(403).json({ message: 'Apenas o organizador pode deletar a partida' });
+      return;
+    }
+
     await Rules.destroy({
-      where: { partidaId: matchId }
+      where: { partidaId: id }
     });
 
-    // Delete associated team entries
-    await MatchTeamsModel.destroy({
-      where: { matchId: matchId }
-    });
-
-    // Finally, delete the match itself
     await match.destroy();
 
-    res.status(200).json({ message: 'Partida excluída com sucesso' });
+    res.status(200).json({ message: 'Partida deletada com sucesso' });
+
   } catch (error) {
-    console.error('Erro ao excluir partida:', error);
-    res.status(500).json({ message: 'Erro ao excluir partida' });
+    console.error('Erro ao deletar partida:', error);
+    res.status(500).json({ message: 'Erro ao deletar partida' });
   }
 }; 

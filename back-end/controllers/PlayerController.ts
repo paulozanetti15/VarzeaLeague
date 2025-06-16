@@ -32,22 +32,25 @@ export class PlayerController {
         }
       }
 
+      if (!teamId) {
+        res.status(400).json({ error: 'TeamId é obrigatório' });
+        return;
+      }
+
       // Criar o jogador
       const player = await Player.create({
         nome,
         sexo,
         ano,
         posicao,
-        isDeleted: false
+        teamId
       });
 
       // Se o teamId foi fornecido, adicionar o jogador ao time
-      if (teamId) {
-        await TeamPlayer.create({
-          teamId,
-          playerId: player.id
-        });
-      }
+      await TeamPlayer.create({
+        teamId,
+        playerId: player.id
+      });
 
       res.status(201).json(player);
     } catch (error) {
@@ -129,8 +132,7 @@ export class PlayerController {
           {
             model: Player,
             as: 'players',
-            through: { attributes: [] },
-            where: { isDeleted: false }
+            through: { attributes: [] }
           }
         ]
       });
@@ -282,8 +284,11 @@ export class PlayerController {
         return;
       }
 
-      // Marcar o jogador como excluído, mas manter no banco
-      await player.update({ isDeleted: true });
+      // Remover o jogador do time e do banco de dados
+      await TeamPlayer.destroy({
+        where: { playerId: id }
+      });
+      await player.destroy();
 
       res.status(200).json({ message: 'Jogador excluído com sucesso' });
     } catch (error) {

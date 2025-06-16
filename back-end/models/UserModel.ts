@@ -1,22 +1,36 @@
-import { DataTypes, Model } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database';
 import UserType from './UserTypeModel';
 
-class User extends Model {
+interface UserAttributes {
+  id: number;
+  name: string;
+  cpf: string;
+  phone: string;
+  email: string;
+  password: string;
+  sexo: string;
+  userTypeId: number;
+  resetPasswordExpires?: Date;
+  resetPasswordToken?: string;
+}
+
+class UserModel extends Model<UserAttributes> implements UserAttributes {
   public id!: number;
   public name!: string;
   public cpf!: string;
   public phone!: string;
   public email!: string;
   public password!: string;
-  public sexo!: string; 
+  public sexo!: string;
+  public userTypeId!: number;
   public resetPasswordExpires?: Date;
   public resetPasswordToken?: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 
-User.init({
+UserModel.init({
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -75,4 +89,4 @@ User.init({
   freezeTableName: true
 });
 
-export default User;
+export default UserModel;

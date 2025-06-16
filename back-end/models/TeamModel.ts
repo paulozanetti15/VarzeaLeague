@@ -21,6 +21,7 @@ interface TeamAttributes {
   estado?: string;
   cidade?: string;
   cep?: string;
+  userId: number;
 }
 
 interface TeamCreationAttributes extends Omit<TeamAttributes, 'id'> {
@@ -41,6 +42,7 @@ class Team extends Model<TeamAttributes, TeamCreationAttributes> {
   public estado!: string | null;
   public cidade!: string | null;
   public cep!: string | null;
+  public userId!: number;
 
   // Métodos de associação
   public addPlayer!: BelongsToManyAddAssociationMixin<Player, number>;
@@ -110,7 +112,11 @@ Team.init(
     cidade: {
       type: DataTypes.STRING,
       allowNull: true,
-    }
+    },
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
   },
   {
     sequelize,
@@ -120,6 +126,5 @@ Team.init(
     underscored: true,
   }
 );
-
 
 export default Team; 

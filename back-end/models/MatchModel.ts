@@ -4,21 +4,26 @@ import sequelize from '../config/database';
 import User from './UserModel';
 import MatchPlayer from './MatchTeamsModel';
 
-class Match extends Model {
+interface MatchAttributes {
+  id: number;
+  title: string;
+  date: Date;
+  location: string;
+  description?: string;
+  price?: number;
+  status: string;
+  organizerId: number;
+}
+
+class MatchModel extends Model<MatchAttributes> implements MatchAttributes {
   public id!: number;
   public title!: string;
   public date!: Date;
   public location!: string;
-  public number!: string;
-  public complement!: string;
-  public status!: 'open' | 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  public description?: string;
-  public price?: number;
+  public description!: string;
+  public price!: number;
+  public status!: string;
   public organizerId!: number;
-  public Uf!: string;
-  public Cep!: string;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
 
   public async addPlayer(userId: number): Promise<void> {
     const user = await User.findByPk(userId);
@@ -34,7 +39,8 @@ class Match extends Model {
     return players
   }
 }
-Match.init({
+
+MatchModel.init({
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -68,32 +74,6 @@ Match.init({
       len: [5, 200]
     }
   },
-  number: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  Cep: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: true,
-    }
-  },
-  Uf : {
-    type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: true,
-      len: [2, 2]
-    }
-  },
-  status: {
-    type: DataTypes.ENUM('open', 'pending', 'confirmed', 'cancelled', 'completed'),
-    defaultValue: 'open',
-    validate: {
-      isIn: [['open', 'pending', 'confirmed', 'cancelled', 'completed']]
-    }
-  },
   description: {
     type: DataTypes.TEXT,
     allowNull: true,
@@ -108,6 +88,11 @@ Match.init({
       min: 0
     }
   },
+  status: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'open',
+  },
   organizerId: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -117,7 +102,6 @@ Match.init({
     },
     field: 'organizer_id',
   },
-  
 }, {
   sequelize,
   tableName: 'matches',
@@ -126,14 +110,13 @@ Match.init({
   modelName: 'Match',
   freezeTableName: true,
   hooks: {
-    beforeValidate: (match: Match) => {
+    beforeValidate: (match: MatchModel) => {
       // Garantir que strings não sejam apenas espaços em branco
       if (match.title) match.title = match.title.trim();
       if (match.description) match.description = match.description.trim();
       if (match.location) match.location = match.location.trim();
-      if (match.complement) match.complement = match.complement.trim();
     }
   }
 });
 
-export default Match; 
+export default MatchModel; 
