@@ -62,7 +62,7 @@ export const store = async (req: AuthRequest, res: Response): Promise<void> => {
 export const update = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, email, cpf, phone, sexo, userTypeId, password } = req.body;
+    const updateData = req.body;
 
     const user = await User.findByPk(id);
 
@@ -71,9 +71,9 @@ export const update = async (req: AuthRequest, res: Response): Promise<void> => 
       return;
     }
 
-    if (email !== user.email) {
+    if (updateData.email && updateData.email !== user.email) {
       const emailExists = await User.findOne({
-        where: { email }
+        where: { email: updateData.email }
       });
 
       if (emailExists) {
@@ -82,28 +82,11 @@ export const update = async (req: AuthRequest, res: Response): Promise<void> => 
       }
     }
 
-    if (cpf !== user.cpf) {
-      const cpfExists = await User.findOne({
-        where: { cpf }
-      });
+    delete updateData.cpf;
+    delete updateData.userTypeId;
 
-      if (cpfExists) {
-        res.status(400).json({ error: 'CPF já cadastrado' });
-        return;
-      }
-    }
-
-    const updateData: any = {
-      name,
-      email,
-      cpf,
-      phone,
-      sexo,
-      userTypeId
-    };
-
-    if (password) {
-      updateData.password = await bcrypt.hash(password, 10);
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 10);
     }
 
     await user.update(updateData);

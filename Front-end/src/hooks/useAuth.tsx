@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api';
+import { api } from '../services/api';
 
 interface User {
   id: number;
   name: string;
   email: string;
   userTypeId: number;
+  avatar?: string;
 }
 
 interface AuthContextData {
@@ -23,8 +24,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('@VarzeaLeague:user');
-    const storedToken = localStorage.getItem('@VarzeaLeague:token');
+    const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
 
     if (storedUser && storedToken) {
       api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
@@ -34,19 +35,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  const login = (userData: { user: User; token: string }) => {
-    localStorage.setItem('@VarzeaLeague:user', JSON.stringify(userData.user));
-    localStorage.setItem('@VarzeaLeague:token', userData.token);
+  const login = async (userData: { user: User; token: string }) => {
+    localStorage.setItem('user', JSON.stringify(userData.user));
+    localStorage.setItem('token', userData.token);
 
     api.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`;
     setUser(userData.user);
   };
 
   const logout = () => {
-    localStorage.removeItem('@VarzeaLeague:user');
-    localStorage.removeItem('@VarzeaLeague:token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
+    window.location.href = '/login';
   };
 
   return (

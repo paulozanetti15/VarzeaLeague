@@ -4,7 +4,6 @@ import { getMatchErrorStatus, clearMatchErrors } from './apiHelpers';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 const token = localStorage.getItem('token');
 
-
 const handleResponse = async (response: Response) => {
   try {
     const data = await response.json();
@@ -228,6 +227,11 @@ const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout 
 };
 
 export const api = {
+  defaults: {
+    headers: {
+      common: {} as Record<string, string>
+    }
+  },
   auth: {
     register: async (userData: any) => {
       const response = await fetch(`${API_URL}/auth/register`, {

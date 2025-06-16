@@ -77,7 +77,7 @@ const MatchDetail: React.FC = () => {
 
     fetchMatchDetails();
   }, [id, navigate]);
-
+  
   const handleLeaveMatch = async (matchId: string | undefined, teamId: number) => {
     if (!matchId) return;
     const numericMatchId = Number(matchId);
