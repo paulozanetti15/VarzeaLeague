@@ -6,7 +6,8 @@ interface User {
     id: number;
     name: string;
     email: string; 
-    userTypeId: number; // ID do tipo de usuário (role)
+    userTypeId: number;
+    avatar: string; // ID do tipo de usuário (role)
 }
   
 interface LoginProps {
@@ -91,6 +92,7 @@ export function useAuth() {
     localStorage.removeItem('user');
     setIsLoggedIn(false);
     setUser(null);
+    window.location.href = '/login';
   };
     // Define your auth object properties or methods here
     return { isLoggedIn, isLoading, user, login, logout };

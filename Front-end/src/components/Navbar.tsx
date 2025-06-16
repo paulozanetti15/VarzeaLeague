@@ -105,7 +105,7 @@ const Navbar = () => {
       <List>
         {pages.map((page) => (
           <ListItem
-            button
+            component="div"
             key={page.name}
             onClick={() => handleNavigation(page.path)}
             sx={{
@@ -113,6 +113,10 @@ const Navbar = () => {
               color: isActive(page.path) ? 'primary.main' : 'text.primary',
               borderRadius: 2,
               mb: 1,
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: 'rgba(25, 118, 210, 0.04)',
+              },
             }}
           >
             <ListItemIcon sx={{ color: isActive(page.path) ? 'primary.main' : 'inherit' }}>{page.icon}</ListItemIcon>
@@ -124,7 +128,7 @@ const Navbar = () => {
             <Divider sx={{ my: 1 }} />
             {adminPages.map((page) => (
               <ListItem
-                button
+                component="div"
                 key={page.name}
                 onClick={() => handleNavigation(page.path)}
                 sx={{
@@ -132,6 +136,10 @@ const Navbar = () => {
                   color: isActive(page.path) ? 'primary.main' : 'text.primary',
                   borderRadius: 2,
                   mb: 1,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                  },
                 }}
               >
                 <ListItemIcon sx={{ color: isActive(page.path) ? 'primary.main' : 'inherit' }}>{page.icon}</ListItemIcon>
@@ -193,10 +201,10 @@ const Navbar = () => {
       {user?.userTypeId === 1 && (
         <Button
           fullWidth
-          variant="outlined"
+          variant="contained"
           color="primary"
           startIcon={<Person />}
-          sx={{ borderRadius: 3, fontWeight: 700, textTransform: 'none', py: 1.2, borderColor: '#1976d2', color: '#1976d2', mb: 2, '&:hover': { background: 'rgba(25,118,210,0.08)' } }}
+          sx={{ mb: 2, borderRadius: 3, fontWeight: 700, textTransform: 'none', py: 1.2, background: '#1976d2', '&:hover': { background: '#2196f3' } }}
           onClick={() => handleNavigation('/admin/users')}
         >
           Gerenciar Usuários
@@ -204,10 +212,10 @@ const Navbar = () => {
       )}
       <Button
         fullWidth
-        variant="outlined"
+        variant="contained"
         color="primary"
         startIcon={<Logout />}
-        sx={{ borderRadius: 3, fontWeight: 700, textTransform: 'none', py: 1.2, borderColor: '#1976d2', color: '#1976d2', '&:hover': { background: 'rgba(25,118,210,0.08)' } }}
+        sx={{ mb: 2, borderRadius: 3, fontWeight: 700, textTransform: 'none', py: 1.2, background: '#1976d2', '&:hover': { background: '#2196f3' } }}
         onClick={handleLogout}
       >
         Sair

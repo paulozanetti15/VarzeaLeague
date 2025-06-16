@@ -176,14 +176,9 @@ const ChampionshipDetail: React.FC = () => {
           <div className="info-row">
             <span className="info-label">Início:</span>
             <span className="info-value">{formatDate(championship.start_date)}</span>
-          </div>
-          <div className="info-row">
+          </div>          <div className="info-row">
             <span className="info-label">Término:</span>
             <span className="info-value">{formatDate(championship.end_date)}</span>
-          </div>
-          <div className="info-row">
-            <span className="info-label">Organizador:</span>
-            <span className="info-value">ID: {championship.created_by}</span>
           </div>
         </div>
 
