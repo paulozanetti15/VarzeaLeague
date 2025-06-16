@@ -525,7 +525,7 @@ const MatchList: React.FC = () => {
                    (match.status === 'open' || match.status === 'full') && 
                    match.organizerId !== currentUser?.id && (
                     <div className="match-full-message">
-                      Partida cheia
+                      
                     </div>
                   )}
                   {match.organizerId === currentUser?.id && (

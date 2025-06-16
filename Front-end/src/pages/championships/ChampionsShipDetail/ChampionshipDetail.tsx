@@ -145,9 +145,7 @@ const ChampionshipDetail: React.FC = () => {
       <div className="championship-detail-container">
         <div className="error-container">
           <h2>Campeonato não encontrado</h2>
-          <button onClick={() => navigate('/championships')} className="back-btn">
-            <ArrowBackIcon /> Voltar
-          </button>
+          
         </div>
       </div>
     );
@@ -155,9 +153,6 @@ const ChampionshipDetail: React.FC = () => {
 
   return (
     <div className="championship-detail-container">
-      <button className="back-btn" onClick={() => navigate(-1)}>
-        <ArrowBackIcon /> Voltar
-      </button>
 
       <div className="detail-content">
         <div className="championship-header">

@@ -194,6 +194,8 @@ const MatchDetail: React.FC = () => {
   }
 
   const isOrganizer = user && match.organizerId === user.id;
+  const isAdmin = user && user.userTypeId === 1;
+  const canDeleteMatch = isOrganizer || isAdmin;
 
   return (
     <div className="match-detail-container">
@@ -289,7 +291,7 @@ const MatchDetail: React.FC = () => {
                 <i className="fas fa-plus-circle me-2"></i> Cadastrar Time
               </Button>
             }
-            {isOrganizer && (
+            {canDeleteMatch && (
               <Button
                 variant="danger"
                 onClick={handleOpenDeleteConfirm}
