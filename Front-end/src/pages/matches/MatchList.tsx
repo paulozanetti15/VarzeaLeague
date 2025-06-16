@@ -19,6 +19,7 @@ import { IoMdClose } from 'react-icons/io';
 import { fi } from 'date-fns/locale';
 import { set } from 'date-fns';
 import { m } from 'framer-motion';
+
 interface Match {
   id: number;
   title: string;
@@ -34,9 +35,13 @@ interface Match {
     id: number;
     name: string;
   };
-
 }
 
+interface User {
+  id: number;
+  token: string;
+  // adicione outros campos do usuário se necessário
+}
 
 const MatchList: React.FC = () => {
   const navigate = useNavigate();
@@ -49,7 +54,6 @@ const MatchList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const matchesPerPage = 8;
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
@@ -59,24 +63,49 @@ const MatchList: React.FC = () => {
   const [tempStatusFilter, setTempStatusFilter] = useState<string[]>([]);
   const [tempPriceFilter, setTempPriceFilter] = useState<string[]>([]);
   const [tempDateFilter, setTempDateFilter] = useState<string[]>([]);
+  const [currentUser, setCurrentUser] = useState<User>(() => {
+    const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
+    
+    if (storedUser) {
+      try {
+        return JSON.parse(storedUser);
+      } catch (e) {
+        console.error('Erro ao parsear usuário do localStorage');
+      }
+    }
+    
+    // Se não encontrar user, mas encontrar token, cria um objeto básico
+    if (storedToken) {
+      return { id: 0, token: storedToken };
+    }
+    
+    return { id: 0, token: '' };
+  });
   
   const fetchMatches = async () => {
     try {
+      const token = currentUser.token || localStorage.getItem('token');
+      if (!token) {
+        setError('Usuário não autenticado');
+        return;
+      }
+      
       const response = await axios.get('http://localhost:3001/api/matches/', {
-        headers: { 'Authorization': `Bearer ${currentUser.token}` } });
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       setMatches(response.data);
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar partidas');
     } finally {
       setLoading(false);
-
     }
   };
 
   useEffect(() => {
     if (!matches || !Array.isArray(matches) || matches.length === 0) return;
     let filtered = [...matches];
-    if (filter === 'my') {
+    if (filter === 'my' && currentUser?.id) {
       filtered = filtered.filter(match => match.organizerId === currentUser.id);
     }
     if (searchQuery.trim()) {
@@ -127,7 +156,7 @@ const MatchList: React.FC = () => {
     }
     
     setFilteredMatches(filtered);
-  }, [matches, filter, searchQuery, currentUser.id, statusFilter, priceFilter, dateFilter]);
+  }, [matches, filter, searchQuery, currentUser?.id, statusFilter, priceFilter, dateFilter]);
   
   useEffect(() => {
     fetchMatches();
@@ -281,44 +310,6 @@ const MatchList: React.FC = () => {
                   <label htmlFor="status-full">
                     <span className="status-indicator full"></span>
                     Completas
-                  </label>
-                </div>
-                
-                <div className="filter-option">
-                  <input 
-                    type="checkbox" 
-                    id="status-waiting" 
-                    checked={tempStatusFilter.includes('waiting')}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setTempStatusFilter([...tempStatusFilter, 'waiting']);
-                      } else {
-                        setTempStatusFilter(tempStatusFilter.filter(s => s !== 'waiting'));
-                      }
-                    }}
-                  />
-                  <label htmlFor="status-waiting">
-                    <span className="status-indicator waiting"></span>
-                    Aguardando
-                  </label>
-                </div>
-                
-                <div className="filter-option">
-                  <input 
-                    type="checkbox" 
-                    id="status-confirmed" 
-                    checked={tempStatusFilter.includes('confirmed')}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setTempStatusFilter([...tempStatusFilter, 'confirmed']);
-                      } else {
-                        setTempStatusFilter(tempStatusFilter.filter(s => s !== 'confirmed'));
-                      }
-                    }}
-                  />
-                  <label htmlFor="status-confirmed">
-                    <span className="status-indicator confirmed"></span>
-                    Confirmadas
                   </label>
                 </div>
               </div>
@@ -530,13 +521,14 @@ const MatchList: React.FC = () => {
                 )}
                 
                 <div className="match-action-container">
-                  
-                  {!isPastMatch(match.date) && (match.status === 'open' || match.status === 'full')  && match.organizerId !== currentUser.id && (
+                  {!isPastMatch(match.date) && 
+                   (match.status === 'open' || match.status === 'full') && 
+                   match.organizerId !== currentUser?.id && (
                     <div className="match-full-message">
                       Partida cheia
                     </div>
                   )}
-                  {match.organizerId === currentUser.id && (
+                  {match.organizerId === currentUser?.id && (
                     <div className="organizer-badge" style={{color: '#00ff00'}}>
                       Você é o organizador
                     </div>
@@ -565,11 +557,6 @@ const MatchList: React.FC = () => {
 
   return (
     <div className="match-list-container">
-      <div className="top-navigation">
-        <button className="back-btn" onClick={() => navigate('/')}>
-          <ArrowBackIcon /> Voltar
-        </button>
-      </div>
       <div className="match-list-content">
         <div className="header-container">
           <h1>Partidas Disponíveis</h1>
@@ -602,37 +589,7 @@ const MatchList: React.FC = () => {
                 )}
               </button>
             </div>
-            <div className="filter-container">
-              <div className="filter-group-wrapper">
-                <ToggleButtonGroup
-                  value={filter}
-                  exclusive
-                  onChange={handleFilterChange}
-                  aria-label="filtro de partidas"
-                  size="small"
-                >
-                  <ToggleButton value="all" aria-label="todas as partidas">
-                    <AllInclusiveIcon fontSize="small" />
-                    <span className="toggle-text">Todas</span>
-                  </ToggleButton>
-                  <ToggleButton value="my" aria-label="minhas partidas">
-                    <PersonIcon fontSize="small" />
-                    <span className="toggle-text">Minhas</span>
-                  </ToggleButton>
-                </ToggleButtonGroup>
-                
-                <div className="update-info">
-                  <button 
-                    className={`refresh-button ${isRefreshing ? 'refreshing' : ''}`} 
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                    title="Atualizar lista de partidas"
-                  >
-                    <RefreshIcon />
-                  </button>
-                </div>
-              </div>
-            </div>
+
           </div>
 
           <button
@@ -651,20 +608,13 @@ const MatchList: React.FC = () => {
                     <span className="chip-label">Status:</span> {statusFilter.map(s => {
                       switch(s) {
                         case 'open': return 'Aberta';
-                        case 'full': return 'Cheia';
+                        case 'full': return 'Finalizadas';
                         case 'in_progress': return 'Em andamento';
                         case 'completed': return 'Finalizada';
                         case 'cancelled': return 'Cancelada';
                         default: return s;
                       }
                     }).join(', ')}
-                    <button 
-                      className="clear-filter"
-                      onClick={() => setStatusFilter([])}
-                      title="Limpar filtro de status"
-                    >
-                      ×
-                    </button>
                   </div>
                 )}
                 
@@ -677,13 +627,6 @@ const MatchList: React.FC = () => {
                         default: return p;
                       }
                     }).join(', ')}
-                    <button 
-                      className="clear-filter"
-                      onClick={() => setPriceFilter([])}
-                      title="Limpar filtro de preço"
-                    >
-                      ×
-                    </button>
                   </div>
                 )}
                 
@@ -698,13 +641,6 @@ const MatchList: React.FC = () => {
                         default: return d;
                       }
                     }).join(', ')}
-                    <button 
-                      className="clear-filter"
-                      onClick={() => setDateFilter([])}
-                      title="Limpar filtro de data"
-                    >
-                      ×
-                    </button>
                   </div>
                 )}
                 

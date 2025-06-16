@@ -106,9 +106,6 @@ const ChampionshipForm: React.FC = () => {
 
   return (
     <div className="championship-form-bg">
-      <button className="back-btn" onClick={() => navigate(-1)}>
-        <ArrowBackIcon /> Voltar
-      </button>
       
       <div className="championship-form-container">
         <div className="championship-form-header">

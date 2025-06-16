@@ -135,12 +135,6 @@ const TeamList = () => {
 
   return (
     <div className="teams-container">
-      <div className="top-navigation">
-        <button className="back-btn" onClick={handleBack}>
-          <ArrowBackIcon />
-          <span>Voltar</span>
-        </button>
-      </div>
 
       <div className="teams-header">
         <h1 className="teams-title">Meu time</h1>

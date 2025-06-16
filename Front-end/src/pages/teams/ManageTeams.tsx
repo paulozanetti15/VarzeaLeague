@@ -9,7 +9,7 @@ const ManageTeams = () => {
   const navigate = useNavigate();
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchTeams = async () => {
     setLoading(true);
@@ -55,7 +55,7 @@ const ManageTeams = () => {
         <h1>Seus Times</h1>
         <div className="info-message">
           <p>
-            <strong>Nota:</strong> Você só pode ver times dos quais é capitão ou jogador. 
+            <strong>Nota:</strong> Você só pode ver times dos quaiss é capitão ou jogador. 
             Times que você não faz parte não aparecerão nesta lista.
           </p>
         </div>

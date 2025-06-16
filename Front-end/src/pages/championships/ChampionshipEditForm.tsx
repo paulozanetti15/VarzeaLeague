@@ -82,9 +82,6 @@ const ChampionshipEditForm: React.FC = () => {
   return (
     <div className="championship-form-bg" style={{ background: 'linear-gradient(135deg, #0A2351 0%, #0D47A1 100%)', minHeight: '100vh' }}>
       <div className="championship-form-container">
-        <button type="button" className="back-btn top-btn" onClick={() => navigate(-1)}>
-          <span className="back-arrow">←</span> Voltar
-        </button>
         <div className="championship-form-header">
           <img src={trophy} alt="Troféu" className="championship-form-trophy" />
           <h2>Editar Campeonato</h2>

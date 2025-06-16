@@ -243,14 +243,13 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
         <div className="register-body">
           <form onSubmit={handleSubmit} className="register-form">
             {errors.general && (
-              <div className="register-error" role="alert">{errors.general}</div>
+              <div className="register-error">{errors.general}</div>
             )}
             <div className="register-row">
               <div className="register-form-group">
-                <label htmlFor="name" className="register-label">Nome</label>
+                <label className="register-label">Nome</label>
                 <input
                   type="text"
-                  id="name"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
@@ -261,10 +260,9 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
                 {errors.name && <span className="register-error-message">{errors.name}</span>}
               </div>
               <div className="register-form-group">
-                <label htmlFor="cpf" className="register-label">CPF</label>
+                <label className="register-label">CPF</label>
                 <input
                   type="text"
-                  id="cpf"
                   name="cpf"
                   value={formData.cpf}
                   onChange={handleChange}
@@ -278,12 +276,11 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
             </div>
             <div className="register-row">
               <div className="register-form-group">
-                <label htmlFor="sexo" className="register-label">Sexo</label>
+                <label className="register-label">Sexo</label>
                 <select
-                  id="sexo"
                   name="sexo"
                   value={formData.sexo}
-                  onChange={handleChange as any}
+                  onChange={handleChange}
                   className={`register-input${errors.sexo ? ' register-input-error' : ''}`}
                   disabled={isLoading}
                 >
@@ -295,10 +292,9 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
                 {errors.sexo && <span className="register-error-message">{errors.sexo}</span>}
               </div>
               <div className="register-form-group">
-                <label htmlFor="phone" className="register-label">Telefone</label>
+                <label className="register-label">Telefone</label>
                 <input
                   type="text"
-                  id="phone"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
@@ -312,10 +308,9 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
             </div>
             <div className="register-row">
               <div className="register-form-group" style={{ flex: 2 }}>
-                <label htmlFor="email" className="register-label">E-mail</label>
+                <label className="register-label">E-mail</label>
                 <input
                   type="email"
-                  id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
@@ -328,30 +323,27 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
             </div>
             <div className="register-row">
               <div className="register-form-group">
-                <label htmlFor="password" className="register-label">Senha</label>
+                <label className="register-label">Senha</label>
                 <div className="register-password-container">
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    id="password"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
                     className={`register-input${errors.password ? ' register-input-error' : ''}`}
                     placeholder="Digite sua senha"
                     disabled={isLoading}
-                    style={{ paddingRight: '3rem' }}
                   />
                   <button
                     type="button"
                     className="register-password-toggle"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={-1}
-                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   >
                     {showPassword ? (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                     ) : (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.81 21.81 0 0 1 5.06-6.06"/><path d="M1 1l22 22"/><path d="M9.53 9.53A3 3 0 0 0 12 15a3 3 0 0 0 2.47-5.47"/></svg>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.81 21.81 0 0 1 5.06-6.06"/><path d="M1 1l22 22"/><path d="M9.53 9.53A3 3 0 0 0 12 15a3 3 0 0 0 2.47-5.47"/></svg>
                     )}
                   </button>
                 </div>
@@ -385,40 +377,41 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
                 {errors.password && <span className="register-error-message">{errors.password}</span>}
               </div>
               <div className="register-form-group">
-                <label htmlFor="confirmPassword" className="register-label">Confirmar Senha</label>
+                <label className="register-label">Confirmar Senha</label>
                 <div className="register-password-container">
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
-                    id="confirmPassword"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     className={`register-input${errors.confirmPassword ? ' register-input-error' : ''}`}
                     placeholder="Confirme sua senha"
                     disabled={isLoading}
-                    style={{ paddingRight: '3rem' }}
                   />
                   <button
                     type="button"
                     className="register-password-toggle"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     tabIndex={-1}
-                    aria-label={showConfirmPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   >
                     {showConfirmPassword ? (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                     ) : (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.81 21.81 0 0 1 5.06-6.06"/><path d="M1 1l22 22"/><path d="M9.53 9.53A3 3 0 0 0 12 15a3 3 0 0 0 2.47-5.47"/></svg>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.81 21.81 0 0 1 5.06-6.06"/><path d="M1 1l22 22"/><path d="M9.53 9.53A3 3 0 0 0 12 15a3 3 0 0 0 2.47-5.47"/></svg>
                     )}
                   </button>
                 </div>
                 {errors.confirmPassword && <span className="register-error-message">{errors.confirmPassword}</span>}
               </div>
             </div>
-            <button type="submit" className="register-btn" disabled={isLoading}>{isLoading ? 'Registrando...' : 'Criar Conta'}</button>
+            <button type="submit" className="register-btn" disabled={isLoading}>
+              {isLoading ? 'Registrando...' : 'Criar Conta'}
+            </button>
             <div className="register-login-link">
               Já tem uma conta?
-              <a href="/login" onClick={(e) => {e.preventDefault();navigate('/login');}}>Faça login</a>
+              <a href="/login" onClick={(e) => {e.preventDefault(); navigate('/login');}}>
+                Faça login
+              </a>
             </div>
           </form>
         </div>

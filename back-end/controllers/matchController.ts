@@ -9,59 +9,58 @@ require('dotenv').config();
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
 export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
    try {
-      const { title, description, date, location, complement,price,Uf,Cep } = req.body;
+      const { title, description, date, location, complement, price, Uf, Cep } = req.body;
+      
       if (!title || !date || !location) {
         res.status(400).json({ message: 'Campos obrigatórios faltando' });
         return;
       }
+
       const matchDate = new Date(date);
       if (matchDate <= new Date()) {
         res.status(400).json({ message: 'A data da partida deve ser futura' });
         return;
       }
-      const token = req.headers.authorization?.replace('Bearer ', '');
-      try {
-        jwt.decode(token);
-      } catch (decodeErr) {
-        console.error('Erro ao decodificar token:', decodeErr);
+
+      // Verificar se o usuário está autenticado
+      if (!req.user || !req.user.id) {
+        res.status(401).json({ message: 'Usuário não autenticado' });
+        return;
       }
-      try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-        const userId = decoded.id;
-        const fullLocation = complement ? `${location} - ${complement}` : location;
-        const match = await MatchModel.create({
-          title: title.trim(),
-          description: description?.trim(),
-          date: matchDate,
-          location: fullLocation,
-          price: price || null,
-          organizerId: userId,
-          status: 'open',
-          Uf: Uf,
-          Cep: Cep
-        });
 
-        // Revertendo a lógica de atualização do userTypeId para o estado anterior
-        await User.update(
-          { userTypeId: 2 }, 
-          { 
-            where: { id: userId },
-            silent: true // Não dispara hooks
-          }
-        );
+      const userId = req.user.id;
 
-        res.status(201).json(match);
-      } catch (error) {
-        console.error('Erro ao criar partida:', error);
-        if (error instanceof Error) {
-          res.status(500).json({ 
-            message: 'Erro ao criar partida',
-            error: error.message 
-          });
-        } else {
-          res.status(500).json({ message: 'Erro ao criar partida' });
+      // Verificar se o usuário existe
+      const user = await User.findByPk(userId);
+      if (!user) {
+        res.status(404).json({ message: 'Usuário não encontrado' });
+        return;
+      }
+
+      const fullLocation = complement ? `${location} - ${complement}` : location;
+
+      const match = await MatchModel.create({
+        title: title.trim(),
+        description: description?.trim(),
+        date: matchDate,
+        location: fullLocation,
+        price: price || null,
+        organizerId: userId,
+        status: 'open',
+        Uf: Uf,
+        Cep: Cep
+      });
+
+      // Atualizar o tipo de usuário para organizador (userTypeId: 2)
+      await User.update(
+        { userTypeId: 2 }, 
+        { 
+          where: { id: userId },
+          silent: true
         }
-      }
+      );
+
+      res.status(201).json(match);
     } catch (error) {
       console.error('Erro ao criar partida:', error);
       if (error instanceof Error) {
@@ -72,7 +71,7 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
       } else {
         res.status(500).json({ message: 'Erro ao criar partida' });
       }
-    } 
+    }
 };
 
 export const listMatches = async (req: Request, res: Response): Promise<void> => {

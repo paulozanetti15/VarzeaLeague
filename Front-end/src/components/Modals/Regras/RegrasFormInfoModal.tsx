@@ -5,92 +5,94 @@ import axios from 'axios';
 import { useEffect } from 'react';
 import './RegrasStyles.css';
 
-interface AthleteFormModalProps{
+interface AthleteFormModalProps {
     idpartida: number;
     show: boolean;
     onHide: () => void;
 }
-export default function InfoRulesModal({idpartida, show, onHide}: AthleteFormModalProps) {
-    const [minimaIntegrantes, setMinimaIntegrantes] = useState<number | null>(null);
-    const [maximoIntegrante, setMaximoIntegrante] = useState<number | null>(null);
-    const [limitestimes, setLimitestimes] = useState<number | null>(null);
-    const [categoria, setCategoria] = useState<String | null>(null);
-    const [possuiEmpate, setPossuiEmpate] = useState<String | null>(null);
-    const [quantidade_times, setQuantidadeTimes] = useState<String | null>(null);
-    const [sexo , setSexo] = useState<String | null>(null);
-    const [datalimite, setDataLimite] = useState<String | null>(null);
-    
+
+export default function InfoRulesModal({ idpartida, show, onHide }: AthleteFormModalProps) {
+    const [idadeMinima, setIdadeMinima] = useState<number | null>(null);
+    const [idadeMaxima, setIdadeMaxima] = useState<number | null>(null);
+    const [genero, setGenero] = useState<string | null>(null);
+    const [dataLimite, setDataLimite] = useState<string | null>(null);
+
     useEffect(() => {
         const fetchingDados = async () => {
-            const response = await axios.get(`http://localhost:3001/api/rules/${idpartida}`, 
-                {
+            try {
+                const response = await axios.get(`http://localhost:3001/api/rules/${idpartida}`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`
                     }
+                });
+                if (response.status === 200) {
+                    setIdadeMinima(response.data.idadeMinima);
+                    setIdadeMaxima(response.data.idadeMaxima);
+                    setGenero(response.data.genero);
+                    converterDataLimite(response.data.dataLimite);
                 }
-            );
-            if(response.status === 200) {
-                setLimitestimes(response.data.quantidade_times);
-                converterDataLimite(response.data.datalimiteinscricao);
-                setCategoria(response.data.categoria);
-                setQuantidadeTimes(response.data.quantidade_times);
-                setPossuiEmpate(response.data.possuiEmpate);
-                setSexo(response.data.sexo);
-            }   
+            } catch (error) {
+                console.error('Erro ao buscar regras:', error);
+            }
+        };
+        if (show) {
+            fetchingDados();
         }
-        fetchingDados();
-    },[])
-    
+    }, [idpartida, show]);
+
     const converterDataLimite = (dataLimite: Date) => {
-        const data = new Date(dataLimite);
-        const dia = String(data.getDate()).padStart(2, '0');
-        const mes = String(data.getMonth() + 1).padStart(2, '0');
-        const ano = data.getFullYear();
-        const dataConvertida=`${dia}/${mes}/${ano}`;
-        setDataLimite(dataConvertida);
+        if (!dataLimite) return;
+        try {
+            const data = new Date(dataLimite);
+            if (isNaN(data.getTime())) return;
+            const dia = String(data.getDate()).padStart(2, '0');
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const ano = data.getFullYear();
+            const dataConvertida = `${dia}/${mes}/${ano}`;
+            setDataLimite(dataConvertida);
+        } catch (error) {
+            console.error('Erro ao converter data:', error);
+        }
     };
-    
+
     return (
-        <>
-           <Modal 
-                show={show} 
-                onHide={onHide} 
-                centered 
-                dialogClassName="custom-modal-width"
-                contentClassName="small-modal-content"
-            >
-                <Modal.Header closeButton className="bg-primary text-white">
-                    <Modal.Title>Regras</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <div className="rules-info">
-                        <div className="rules-grid">  
-                            <div className="rule-item">
-                                <h6 className="rule-title">Categoria</h6>
-                                <p className="rule-value">{categoria} </p>
-                            </div>
-                            <div className="rule-item">
-                                <h6 className="rule-title">Gênero</h6>
-                                <p className="rule-value">{sexo}</p>
-                            </div>      
-                            <div className="rule-item">
-                                <h6 className="rule-title">Limite times</h6>
-                                <p className="rule-value">{limitestimes} times</p>
-                            </div>
-                            
-                            <div className="rule-item">
-                                <h6 className="rule-title">Data limite</h6>
-                                <p className="rule-value">{datalimite}</p>
-                            </div>
+        <Modal
+            show={show}
+            onHide={onHide}
+            centered
+            dialogClassName="custom-modal-width"
+            contentClassName="small-modal-content"
+        >
+            <Modal.Header closeButton>
+                <Modal.Title>Regras da Partida</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <div className="rules-info">
+                    <div className="rules-grid">
+                        <div className="rule-item">
+                            <h6 className="rule-title">Idade Mínima</h6>
+                            <p className="rule-value">{idadeMinima} anos</p>
+                        </div>
+                        <div className="rule-item">
+                            <h6 className="rule-title">Idade Máxima</h6>
+                            <p className="rule-value">{idadeMaxima} anos</p>
+                        </div>
+                        <div className="rule-item">
+                            <h6 className="rule-title">Gênero</h6>
+                            <p className="rule-value">{genero}</p>
+                        </div>
+                        <div className="rule-item">
+                            <h6 className="rule-title">Data Limite para Inscrição</h6>
+                            <p className="rule-value">{dataLimite}</p>
                         </div>
                     </div>
-                </Modal.Body>
-                <Modal.Footer className="bg-white">
-                    <Button variant="primary" size="sm" onClick={onHide}>
-                        Fechar
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        </>
+                </div>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="primary" onClick={onHide}>
+                    Fechar
+                </Button>
+            </Modal.Footer>
+        </Modal>
     );
 }

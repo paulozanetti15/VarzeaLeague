@@ -437,7 +437,6 @@ export default function CreateTeam() {
 
   return (
     <div className="create-team-container">
-      <BackButton />
       {showToast && (
         <ToastComponent
           message={toastMessage}

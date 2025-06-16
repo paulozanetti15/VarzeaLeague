@@ -130,7 +130,7 @@ const CreateMatch: React.FC = () => {
         UF: response.data.uf || ''
       }));
 
-      const endCompleto = `${response.data.logradouro}, ${response.data.localidade} - ${response.data.uf}`;
+      const endCompleto = `${response.data.logradouro}${formData.number ? `, ${formData.number}` : ''}, ${response.data.localidade} - ${response.data.uf}`;
       setEnderecoCompleto(endCompleto);
       
       setCepValido(true);
@@ -158,6 +158,19 @@ const CreateMatch: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
+    if (name === 'number') {
+      setFormData(prev => ({
+        ...prev,
+        number: value
+      }));
+      
+      if (formData.location) {
+        const endCompleto = `${formData.location}${value ? `, ${value}` : ''}, ${formData.city} - ${formData.UF}`;
+        setEnderecoCompleto(endCompleto);
+      }
+      return;
+    }
+
     if (name === 'cep') {
       const cepNumerico = value.replace(/\D/g, '');
       const cepFormatado = formatarCep(cepNumerico);
@@ -288,6 +301,7 @@ const CreateMatch: React.FC = () => {
         title: formData.title.trim(),
         date: format(matchDateTime, "yyyy-MM-dd'T'HH:mm:ss"),
         location: enderecoCompleto,
+        number: formData.number.trim(),
         description: formData.description?.trim(),
         price: formData.price ? parseFloat(formData.price) : 0.00,
         city: formData.city.trim(),
@@ -322,14 +336,6 @@ const CreateMatch: React.FC = () => {
         />
       )}
       
-      <div className="top-navigation">
-        <button 
-          className="back-btn"
-          onClick={() => navigate('/matches')} 
-        >
-          <ArrowBackIcon /> Voltar
-        </button>
-      </div>
 
       <div className="form-container">
         <h1 className="form-title">
@@ -344,7 +350,7 @@ const CreateMatch: React.FC = () => {
 
         <form onSubmit={handleSubmit} style={{width: '100%'}}>
           <div className="form-group">
-            <label className="form-label">Título da Partida</label>
+            <label>Título da Partida</label>
             <input
               ref={titleInputRef}
               type="text"
@@ -358,7 +364,7 @@ const CreateMatch: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Descrição</label>
+            <label>Descrição</label>
             <textarea
               className="form-control"
               name="description"
@@ -435,6 +441,38 @@ const CreateMatch: React.FC = () => {
           </div>
 
           <div className="form-row">
+            <div className="form-col number-col">
+              <div className="form-group">
+                <label htmlFor="number">Número</label>
+                <input
+                  type="text"
+                  id="number"
+                  name="number"
+                  value={formData.number}
+                  onChange={handleInputChange}
+                  placeholder="123"
+                  className="form-control"
+                />
+              </div>
+            </div>
+
+            <div className="form-col">
+              <div className="form-group">
+                <label htmlFor="complement">Complemento (opcional)</label>
+                <input
+                  type="text"
+                  id="complement"
+                  name="complement"
+                  value={formData.complement}
+                  onChange={handleInputChange}
+                  placeholder="Ex: Quadra 2, Campo de futebol, Portão lateral"
+                  className="form-control"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="form-row">
             <div className="form-group" style={{ flex: 2 }}>
               <label htmlFor="city">Cidade</label>
               <input 
@@ -461,20 +499,7 @@ const CreateMatch: React.FC = () => {
           </div>
           
           <div className="form-group">
-            <label htmlFor="complement">Complemento (opcional)</label>
-            <input
-              type="text"
-              id="complement"
-              name="complement"
-              value={formData.complement}
-              onChange={handleInputChange}
-              placeholder="Ex: Quadra 2, Campo de futebol, Portão lateral"
-              className="form-control"
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Preço (opcional)</label>
+            <label>Preço (opcional)</label>
             <input
               type="number"
               className="form-control"

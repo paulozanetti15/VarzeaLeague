@@ -26,22 +26,18 @@ const MatchDetail: React.FC = () => {
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [modal, setModal] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
-  const [currentUser, setCurrentUser] = useState<any>(null);
   const { user } = useAuth();
-
-  useEffect(() => {
-    if (user) {
-      setCurrentUser(user);
-    } else {
-      navigate('/login');
-    }
-  }, [user, navigate]);
 
   const getTimeInscrito = async (matchId: string) => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('Token não encontrado');
+        return;
+      }
       const response = await axios.get(`http://localhost:3001/api/matches/${matchId}/join-team`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${token}`
         }
       });
       setTimeCadastrados(response.data);
@@ -49,41 +45,44 @@ const MatchDetail: React.FC = () => {
       console.error('Erro ao buscar times cadastrados:', error);
     }
   };
-  useEffect(() => {
-    if (id) {
-      getTimeInscrito(id);
-    }
-  }, [id]); 
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
+      return;
     }
-  }, []); // Add missing closing parenthesis for the first useEffect
-  useEffect(() => {
-    const fetchMatchDetailsInit = async () => {
+
+    const fetchMatchDetails = async () => {
       try {
         setLoading(true);
         const response = await axios.get(`http://localhost:3001/api/matches/${id}`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${token}`
           }
-        })
+        });
         setMatch(response.data);
-      }catch (err) {
+        await getTimeInscrito(id!);
+      } catch (err: any) {
+        console.error('Erro ao carregar detalhes:', err);
+        if (err.response?.status === 401) {
+          navigate('/login');
+          return;
+        }
         setError('Não foi possível carregar os detalhes da partida. Tente novamente mais tarde.');
       } finally {
         setLoading(false);
       }
     };
-    if (id) {
-      fetchMatchDetailsInit();
-    }
-  }, [id]);
-  
-  const handleLeaveMatch = async (id:number,teamid:number) => {
-    id= Number(id);
-    const response=await axios.delete(`http://localhost:3001/api/matches/${id}/join-team/${teamid}`, {
+
+    fetchMatchDetails();
+  }, [id, navigate]);
+
+  const handleLeaveMatch = async (matchId: string | undefined, teamId: number) => {
+    if (!matchId) return;
+    const numericMatchId = Number(matchId);
+    
+    const response = await axios.delete(`http://localhost:3001/api/matches/${numericMatchId}/join-team/${teamId}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
@@ -198,7 +197,6 @@ const MatchDetail: React.FC = () => {
 
   return (
     <div className="match-detail-container">
-      <BackButton />
       <div className="detail-content">
         <div className="match-header">
           <h1>{match.title}</h1>
@@ -228,12 +226,6 @@ const MatchDetail: React.FC = () => {
             <div className="info-label">Preço:</div>
             <div className="info-value">
               {formatPrice(match.price)}
-            </div>
-          </div>
-          <div className="info-row">
-            <div className="info-label">Vagas de times:</div>
-            <div className="info-value">
-              {match.countTeams}/{match.maxTeams}  
             </div>
           </div>
         </div>
@@ -312,8 +304,7 @@ const MatchDetail: React.FC = () => {
           <ModalTeams
             show={modal}
             onHide={handleModalClose}
-            idpartida={id}
-            getTimeInscrito={() => getTimeInscrito(id as string)}
+            matchid={id ? Number(id) : 0}
           />
         )}
       </div>

@@ -36,9 +36,6 @@ export default function ChampionshipList() {
 
   return (
     <div className="match-list-container">
-      <button className="back-btn" onClick={() => navigate(-1)}>
-        <ArrowBackIcon /> Voltar
-      </button>
       <div className="content-container">
         <div className="header-container championship-header-visual">
           <img src={trophy} alt="Troféu Campeonato" className="championship-trophy-main" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />

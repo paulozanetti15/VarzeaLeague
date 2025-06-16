@@ -4,14 +4,16 @@ import {joinMatchByTeam,getMatchTeams, deleteTeamMatch,getTeamsAvailable, checkT
 import { createMatch, listMatches, getMatch, deleteMatch } from '../controllers/matchController';
 
 const router = express.Router();
-router.get('/:id/available', getTeamsAvailable, authenticateToken); // <-- Coloque antes das rotas com :id
-router.post('/', createMatch, authenticateToken);
-router.get('/', listMatches, authenticateToken);
-router.get('/:id', getMatch, authenticateToken);
-router.delete('/:id', deleteMatch, authenticateToken); // New route for deleting a match
-router.post('/:id/join-team', joinMatchByTeam, authenticateToken);
-router.get('/:id/join-team', getMatchTeams, authenticateToken);
-router.delete('/:id/join-team/:teamId', deleteTeamMatch, authenticateToken);// <-- Rota para obter times da partida
-router.get('/:id/check-teams-rule-compliance', checkTeamsRuleCompliance, authenticateToken);
+
+// Aplicando middleware de autenticação antes dos controllers
+router.get('/:id/available', authenticateToken, getTeamsAvailable);
+router.post('/', authenticateToken, createMatch);
+router.get('/', authenticateToken, listMatches);
+router.get('/:id', authenticateToken, getMatch);
+router.delete('/:id', authenticateToken, deleteMatch);
+router.post('/:id/join-team', authenticateToken, joinMatchByTeam);
+router.get('/:id/join-team', authenticateToken, getMatchTeams);
+router.delete('/:id/join-team/:teamId', authenticateToken, deleteTeamMatch);
+router.get('/:id/check-teams-rule-compliance', authenticateToken, checkTeamsRuleCompliance);
 
 export default router; 

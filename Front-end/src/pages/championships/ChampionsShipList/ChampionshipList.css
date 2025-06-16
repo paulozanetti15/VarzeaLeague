@@ -80,7 +80,7 @@
   width: 100%;
   padding: 1rem;
   margin-bottom: 2rem;
-  background: var(--primary-color);
+  background: rgba(255, 255, 255, 0.1);
   color: white;
   border: none;
   border-radius: var(--border-radius);
@@ -148,7 +148,6 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 .match-title {
-  color: var(--text-primary);
   font-size: 1.25rem;
   font-weight: 700;
   margin: 0;

@@ -9,6 +9,7 @@ class Match extends Model {
   public title!: string;
   public date!: Date;
   public location!: string;
+  public number!: string;
   public complement!: string;
   public status!: 'open' | 'pending' | 'confirmed' | 'cancelled' | 'completed';
   public description?: string;
@@ -66,6 +67,10 @@ Match.init({
       notEmpty: true,
       len: [5, 200]
     }
+  },
+  number: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   Cep: {
     type: DataTypes.STRING,

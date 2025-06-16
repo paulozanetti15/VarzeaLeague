@@ -135,9 +135,6 @@ const ChampionshipDetail: React.FC = () => {
         <div className="error-container">
           <h2>Erro ao carregar dados</h2>
           <p>{error}</p>
-          <button onClick={() => navigate('/championships')} className="back-btn">
-            <ArrowBackIcon /> Voltar
-          </button>
         </div>
       </div>
     );
