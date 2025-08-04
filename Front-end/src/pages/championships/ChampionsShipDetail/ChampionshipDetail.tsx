@@ -101,7 +101,6 @@ const ChampionshipDetail: React.FC = () => {
       toast.error('Selecione um time para entrar no campeonato');
       return;
     }
-
     try {
       setIsJoining(true);
       await api.championships.joinWithTeam(Number(id), selectedTeamId);
