@@ -4,10 +4,10 @@ import MatchModel from "../models/MatchModel";
 
 export const insertRules = async (req, res) => {
     try {
-        const { dataLimite, idadeMinima, idadeMaxima, genero } = req.body;
+        const { dataLimite, idadeMinima, idadeMaxima, genero, partidaId } = req.body;
         
         // Validações
-        if (!dataLimite || !idadeMinima || !idadeMaxima || !genero) {
+        if (!dataLimite || !idadeMinima || !idadeMaxima || !genero || !partidaId) {
             return res.status(400).json({ message: "Todos os campos são obrigatórios" });
         }
 
@@ -25,12 +25,14 @@ export const insertRules = async (req, res) => {
             return res.status(400).json({ message: "Gênero inválido" });
         }
 
-        const idPartida = await MatchModel.findOne({
-            order: [['id', 'DESC']]
-        });
+        // Verificar se a partida existe
+        const match = await MatchModel.findByPk(partidaId);
+        if (!match) {
+            return res.status(404).json({ message: "Partida não encontrada" });
+        }
 
         await Rules.create({
-            partidaId: idPartida.id,
+            partidaId: partidaId,
             dataLimite: dataLimite,
             idadeMinima: parseInt(idadeMinima),
             idadeMaxima: parseInt(idadeMaxima),

@@ -30,6 +30,7 @@ interface Match {
   description: string;
   price: number | null;
   status: string;
+  duration: string;
   _hasPlayerLoadError?: boolean;
   organizerId: number;
   organizer?: {
@@ -501,6 +502,12 @@ const MatchList: React.FC = () => {
                     <AccessTimeIcon fontSize="small" />
                     <strong>Hora:</strong> {formatTime(match.date)}
                   </div>
+                  {match.duration && (
+                    <div className="info-row" style={{color: '#ffffff'}}>
+                      <AccessTimeIcon fontSize="small" />
+                      <strong>Duração:</strong> {match.duration}
+                    </div>
+                  )}
                   <div className="info-row" style={{color: '#ffffff'}}>
                     <LocationOnIcon fontSize="small" />
                     <strong>Local:</strong> {match.location}

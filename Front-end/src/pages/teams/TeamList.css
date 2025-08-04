@@ -159,7 +159,6 @@
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.5s ease;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 6px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
   flex-direction: column;
   height: 100%;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -459,14 +458,14 @@
 }
 
 .team-container {
-  display: flex;
   justify-content: center;
   padding: 1rem;
 }
 
 .team-detail-card {
-  max-width: 800px;
   width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .edit-team-btn {
@@ -698,9 +697,7 @@
     padding: 0.5rem;
   }
   
-  .team-card {
-    min-height: 250px;
-  }
+
   
   .team-detail-card {
     max-width: 100%;
@@ -754,4 +751,4 @@
     opacity: 1;
     transform: translateY(0);
   }
-} 
+}

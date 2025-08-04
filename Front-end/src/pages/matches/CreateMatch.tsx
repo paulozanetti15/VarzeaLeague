@@ -17,6 +17,7 @@ interface MatchFormData {
   location: string;
   date: string;
   time: string;
+  duration: string;
   price: string;
   complement: string;
   cep: string;
@@ -47,6 +48,7 @@ const CreateMatch: React.FC = () => {
     number: '',
     date: format(new Date(), 'dd/MM/yyyy'),
     time: format(new Date(), 'HH:mm'),
+    duration: '',
     price: '',
     complement: '',
     city: '',
@@ -100,6 +102,30 @@ const CreateMatch: React.FC = () => {
     }
     
     return time;
+  };
+
+  const formatDuration = (value: string): string => {
+    let duration = value.replace(/[^\d:]/g, '');
+    
+    if (duration.length > 2 && duration.charAt(2) !== ':') {
+      duration = duration.slice(0, 2) + ':' + duration.slice(2);
+    }
+    
+    duration = duration.slice(0, 5);
+    
+    const hours = parseInt(duration.split(':')[0] || '0');
+    if (hours > 23) {
+      duration = '23' + duration.slice(2);
+    }
+    
+    if (duration.length > 2) {
+      const minutes = parseInt(duration.split(':')[1] || '0');
+      if (minutes > 59) {
+        duration = duration.slice(0, 3) + '59';
+      }
+    }
+    
+    return duration;
   };
 
   const isValidDateBR = (date: string): boolean => {
@@ -252,6 +278,28 @@ const CreateMatch: React.FC = () => {
       }
       return;
     }
+
+    if (name === 'duration') {
+      const durationRegex = /^(\d{0,2}):?(\d{0,2})$/;
+      let formattedDuration = value.replace(/\D/g, '');
+      
+      if (formattedDuration.length <= 4) {
+        if (formattedDuration.length > 2) {
+          formattedDuration = formattedDuration.replace(/(\d{2})(\d{0,2})/, '$1:$2');
+        }
+        
+        if (durationRegex.test(formattedDuration)) {
+          const [hours, minutes] = formattedDuration.split(':').map(Number);
+          if ((!hours || hours < 24) && (!minutes || minutes < 60)) {
+            setFormData(prev => ({
+              ...prev,
+              [name]: formattedDuration
+            }));
+          }
+        }
+      }
+      return;
+    }
     
     setFormData(prev => ({
       ...prev,
@@ -289,6 +337,15 @@ const CreateMatch: React.FC = () => {
         return;
       }
 
+      if (formData.duration) {
+        const [durationHours, durationMinutes] = formData.duration.split(':').map(Number);
+        if (isNaN(durationHours) || isNaN(durationMinutes) || durationHours > 23 || durationMinutes > 59) {
+          setError('Duração inválida. Use o formato HH:MM');
+          setLoading(false);
+          return;
+        }
+      }
+
       const matchDateTime = parse(
         `${formData.date} ${formData.time}`,
         'dd/MM/yyyy HH:mm',
@@ -316,6 +373,7 @@ const CreateMatch: React.FC = () => {
         location: enderecoCompleto,
         number: formData.number.trim(),
         description: formData.description?.trim(),
+        duration: formData.duration,
         price: formData.price ? parseFloat(formData.price) : 0.00,
         city: formData.city.trim(),
         complement: formData.complement?.trim(),
@@ -412,6 +470,19 @@ const CreateMatch: React.FC = () => {
                 value={formData.time}
                 onChange={handleInputChange}
                 required
+                className="form-control"
+                placeholder="HH:MM"
+                maxLength={5}
+              />
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label htmlFor="duration">Duração</label>
+              <input
+                type="text"
+                id="duration"
+                name="duration"
+                value={formData.duration}
+                onChange={handleInputChange}
                 className="form-control"
                 placeholder="HH:MM"
                 maxLength={5}

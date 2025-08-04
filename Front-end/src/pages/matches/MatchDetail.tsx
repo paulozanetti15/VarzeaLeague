@@ -218,6 +218,13 @@ const MatchDetail: React.FC = () => {
             <div className="info-value">{formatTime(match.time)}</div>
           </div>
           
+          {match.duration && (
+            <div className="info-row">
+              <div className="info-label">Duração:</div>
+              <div className="info-value">{match.duration}</div>
+            </div>
+          )}
+          
           <div className="info-row">
             <div className="info-label">Local:</div>
             <div className="info-value">
@@ -256,51 +263,57 @@ const MatchDetail: React.FC = () => {
           />
         )}
         <div className="match-description">
-          <h3 >Times Participantes</h3>
-          {timeCadastrados.length > 0 ? (
-            <div className="teams-list d-flex flex-wrap justify-content-center" key={id}>
-              {timeCadastrados.map((team: any) => (
-                <Card style={{ width: '18rem' }} key={team.id}> 
-                  <Card.Body>
-                    {team.banner &&
-                      <Card.Img
-                       src={`http://localhost:3001/uploads/teams/${team.banner}`} 
-                       variant='top'
-                      />
-                    }
-                    <div className='d-flex flex-column align-items-center text-center mt-3'>
-                      <Card.Title className='container'>{team.name}</Card.Title>
-                      <Button variant="primary" onClick={() => handleLeaveMatch(id,team.id)}>Sair Partida</Button>
-                    </div>  
-                  </Card.Body>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div>
+          <h3>Times Participantes</h3>
+          <div className="teams-list">
+            {timeCadastrados.length > 0 ? (
+              <>
+                {timeCadastrados.map((team: any) => (
+                  <Card className="team-card" key={team.id}> 
+                    <Card.Body>
+                      {team.banner &&
+                        <Card.Img
+                         src={`http://localhost:3001/uploads/teams/${team.banner}`} 
+                         variant='top'
+                        />
+                      }
+                      <div className='d-flex flex-column align-items-center text-center'>
+                        <Card.Title>{team.name}</Card.Title>
+                        <Button variant="danger" onClick={() => handleLeaveMatch(id,team.id)}>
+                          Sair da Partida
+                        </Button>
+                      </div>  
+                    </Card.Body>
+                  </Card>
+                ))}
+                {timeCadastrados.length === 1 && <div className="versus-text">X</div>}
+              </>
+            ) : (
               <p>Nenhum time inscrito ainda.</p>
-            </div>
-          )}
-          <div className="d-flex justify-content-center w-100">
-            {(match.countTeams < match.maxTeams) && 
+            )}
+            
+            {match.status === 'open' && user?.userTypeId === 3 && (match.countTeams < match.maxTeams) && 
               <Button 
                 variant="success" 
                 onClick={handleModalShow} 
-                className="join-match-btn mt-3"
+                className="join-match-btn"
               >
-                <i className="fas fa-plus-circle me-2"></i> Cadastrar Time
+                <i className="fas fa-plus-circle"></i>
+                Cadastrar Time
               </Button>
             }
-            {canDeleteMatch && (
+          </div>
+          
+          {canDeleteMatch && (
+            <div className="d-flex justify-content-center mt-4">
               <Button
                 variant="danger"
                 onClick={handleOpenDeleteConfirm}
-                className="delete-match-button mt-3 ms-2"
+                className="delete-match-button"
               >
                 <DeleteIcon /> Excluir Partida
               </Button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
         {modal && (
           <ModalTeams

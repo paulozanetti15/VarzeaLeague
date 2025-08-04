@@ -8,6 +8,7 @@ class Match extends Model {
   public id!: number;
   public title!: string;
   public date!: Date;
+  public duration?: string;
   public location!: string;
   public number!: string;
   public complement!: string;
@@ -56,6 +57,21 @@ Match.init({
       isFuture(value: Date) {
         if (value <= new Date()) {
           throw new Error('A data da partida deve ser futura');
+        }
+      }
+    }
+  },
+  duration: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      is: /^([0-9]{1,2}):([0-5][0-9])$/,
+      customValidator(value: string) {
+        if (value) {
+          const [hours, minutes] = value.split(':').map(Number);
+          if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+            throw new Error('Duração inválida. Use o formato HH:MM');
+          }
         }
       }
     }

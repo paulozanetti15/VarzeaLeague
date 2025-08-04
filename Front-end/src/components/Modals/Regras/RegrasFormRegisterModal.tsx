@@ -104,19 +104,10 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
     }
 
     try {
-      const insertPartida = await axios.post(
+      // Primeiro criar a partida
+      const matchResponse = await axios.post(
         "http://localhost:3001/api/matches/",
-        {
-          title: partidaDados.title.trim(),
-          description: partidaDados.description?.trim(),
-          date: partidaDados.date,
-          location: partidaDados.location,
-          price: partidaDados.price ? parseFloat(partidaDados.price) : null,
-          city: partidaDados.city.trim(),
-          complement: partidaDados.complement?.trim(),
-          Uf: partidaDados.Uf,
-          Cep: partidaDados.Cep
-        },
+        partidaDados,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -124,44 +115,37 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
         }
       );
 
-      if (insertPartida.status === 201) {
-        await insertRegras();
-      }
-    } catch (error) {
-      console.error('Erro ao criar partida:', error);
-      setError('Erro ao criar partida. Tente novamente.');
-    }
-  };
-
-  const insertRegras = async () => {
-    try {
-      const response = await axios.post(
-        "http://localhost:3001/api/rules/",
-        {
-          userId: userId,
-          dataLimite: format(parse(dataLimite, 'dd/MM/yyyy', new Date()), 'yyyy-MM-dd'),
-          idadeMinima: parseInt(idadeMinima),
-          idadeMaxima: parseInt(idadeMaxima),
-          genero: genero
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+      if (matchResponse.status === 201) {
+        // Depois criar as regras associadas à partida
+        const rulesResponse = await axios.post(
+          "http://localhost:3001/api/rules/",
+          {
+            userId: userId,
+            partidaId: matchResponse.data.id,
+            dataLimite: format(parse(dataLimite, 'dd/MM/yyyy', new Date()), 'yyyy-MM-dd'),
+            idadeMinima: parseInt(idadeMinima),
+            idadeMaxima: parseInt(idadeMaxima),
+            genero: genero
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
           }
-        }
-      );
+        );
 
-      if (response.status === 201) {
-        setToastMessage('Partida criada com sucesso!');
-        setToastBg('success');
-        setShowToast(true);
-        setTimeout(() => {
-          navigate('/matches');
-        }, 1500);
+        if (rulesResponse.status === 201) {
+          setToastMessage('Partida criada com sucesso!');
+          setToastBg('success');
+          setShowToast(true);
+          setTimeout(() => {
+            navigate('/matches');
+          }, 1500);
+        }
       }
     } catch (error) {
-      console.error('Erro ao criar regras:', error);
-      setError('Erro ao criar regras. Tente novamente.');
+      console.error('Erro ao criar partida e regras:', error);
+      setError('Erro ao criar partida e regras. Tente novamente.');
     }
   };
 

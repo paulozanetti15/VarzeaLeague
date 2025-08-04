@@ -15,7 +15,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
 
 export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
    try {
-      const { title, description, date, location, complement, price, Uf, Cep } = req.body;
+      const { title, description, date, location, complement, price, Uf, Cep, duration } = req.body;
       
       if (!title || !date || !location) {
         res.status(400).json({ message: 'Campos obrigatórios faltando' });
@@ -26,6 +26,19 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
       if (matchDate <= new Date()) {
         res.status(400).json({ message: 'A data da partida deve ser futura' });
         return;
+      }
+
+      if (duration) {
+        const durationRegex = /^([0-9]{1,2}):([0-5][0-9])$/;
+        if (!durationRegex.test(duration)) {
+          res.status(400).json({ message: 'Formato de duração inválido. Use HH:MM' });
+          return;
+        }
+        const [hours, minutes] = duration.split(':').map(Number);
+        if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+          res.status(400).json({ message: 'Duração inválida' });
+          return;
+        }
       }
 
       // Verificar se o usuário está autenticado
@@ -49,6 +62,7 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
         title: title.trim(),
         description: description?.trim(),
         date: matchDate,
+        duration: duration,
         location: fullLocation,
         price: price || null,
         organizerId: userId,
@@ -89,7 +103,8 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
         'status',
         'description',
         'price',
-        'organizerId'
+        'organizerId',
+        'duration'
       ],
       order: [['date', 'ASC']]
     });
@@ -119,6 +134,19 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
           as: 'organizer',
           attributes: ['id', 'name']
         }
+      ],
+      attributes: [
+        'id',
+        'title',
+        'date',
+        'location',
+        'status',
+        'description',
+        'price',
+        'organizerId',
+        'duration',
+        'Uf',
+        'Cep'
       ]
     });
     const countTeams = await MatchTeamsModel.count({
