@@ -4,8 +4,7 @@ module.exports = {
   up: async (queryInterface: QueryInterface) => {
     await queryInterface.addColumn('matches', 'number', {
       type: DataTypes.STRING,
-      allowNull: true,
-      after: 'location'
+      allowNull: true
     });
   },
 

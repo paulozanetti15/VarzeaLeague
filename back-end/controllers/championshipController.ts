@@ -1,5 +1,8 @@
 import { Request, Response, RequestHandler } from 'express';
 import Championship from '../models/ChampionshipModel';
+import Team from '../models/TeamModel';
+import TeamPlayer from '../models/TeamPlayerModel';
+import TeamChampionship from '../models/TeamChampionshipModel'; // Added import for TeamChampionshipModel
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
@@ -28,7 +31,6 @@ export const createChampionship = asyncHandler(async (req: Request, res: Respons
   res.status(201).json(championship);
 });
 
-// Listar campeonatos
 export const listChampionships = asyncHandler(async (req: Request, res: Response) => {
   const championships = await Championship.findAll();
   res.json(championships);
@@ -62,4 +64,26 @@ export const deleteChampionship = asyncHandler(async (req: Request, res: Respons
   }
   await championship.destroy();
   res.json({ message: 'Campeonato deletado com sucesso' });
+});
+
+export const joinTeamInChampionship = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { teamId } = req.body;
+  if (!teamId) {
+    return res.status(400).json({ message: 'teamId é obrigatório' });
+  }
+  const championship = await Championship.findByPk(id);
+  if (!championship) {
+    return res.status(404).json({ message: 'Campeonato não encontrado' });
+  }
+  const team = await Team.findByPk(teamId);
+  if (!team) {
+    return res.status(404).json({ message: 'Time não encontrado' });
+  }
+  const exists = await TeamChampionship.findOne({ where: { teamId, championshipId: id } });
+  if (exists) {
+    return res.status(400).json({ message: 'O time já está inscrito neste campeonato' });
+  }
+  await TeamChampionship.create({ teamId, championshipId: id });
+  res.json({ message: 'Time inscrito no campeonato com sucesso' });
 });

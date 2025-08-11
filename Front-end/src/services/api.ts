@@ -333,12 +333,11 @@ export const api = {
             // Verificar vários formatos de coordenadas
             const coordPatterns = [
               /\(?(-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)?/,                  // Formato básico: 12.345, -67.890
-              /\(?(-?\d+\.?\d*)[,;]\s*(-?\d+\.?\d*)\)?/,               // Com separador vírgula ou ponto e vírgula
-              /latitude\s*[=:]\s*(-?\d+\.?\d*).*longitude\s*[=:]\s*(-?\d+\.?\d*)/i, // Formato com rótulos
-              /lat\s*[=:]\s*(-?\d+\.?\d*).*lng\s*[=:]\s*(-?\d+\.?\d*)/i            // Formato abreviado
+              /\(?(-?\d+\.?\d*)[,;]\s*(-?\d+\.?\d*)\)?/,               
+              /latitude\s*[=:]\s*(-?\d+\.?\d*).*longitude\s*[=:]\s*(-?\d+\.?\d*)/i, 
+              /lat\s*[=:]\s*(-?\d+\.?\d*).*lng\s*[=:]\s*(-?\d+\.?\d*)/i         
             ];
             
-            // Tentar extrair coordenadas usando os padrões
             for (const pattern of coordPatterns) {
               const match2 = match.location.match(pattern);
               if (match2 && match2.length >= 3) {
@@ -356,12 +355,9 @@ export const api = {
             }
           }
           
-          // Se a API já enviou latitude e longitude diretamente, usar esses valores
-          // caso contrário, manter os que encontramos ou deixar indefinido
           match.latitude = match.latitude || match.location?.latitude;
           match.longitude = match.longitude || match.location?.longitude;
           
-          // Se temos coordenadas do usuário e da partida, calcular a distância
           if (userLocationStr && match.latitude && match.longitude) {
             const userLocation = JSON.parse(userLocationStr);
             match.distance = calculateDistance(
@@ -433,9 +429,7 @@ export const api = {
         throw new Error('Usuário não autenticado');
       }
 
-      console.log(`Buscando detalhes da partida ${matchId}`);
 
-      // Verificar se devemos simular um erro para testes
       if (simulateError(matchId)) {
         console.warn(`[SIMULAÇÃO] Erro simulado para a partida ${matchId}`);
         return {
@@ -451,29 +445,24 @@ export const api = {
         };
       }
 
-      // Verificar se temos dados válidos em cache
       const cachedData = getCachedMatch(matchId);
       if (cachedData) {
         console.log(`Usando dados em cache para partida ${matchId}`);
         return cachedData;
       }
 
-      // Contagem de tentativas para esta chamada
       let retryCount = 0;
       const maxRetries = 2;
 
       const tryFetchMatch = async () => {
         try {
-          // Solicitar explicitamente inclusão de jogadores e times
           const match = await fetchWithTimeout(
             `${API_URL}/matches/${matchId}?includeAllPlayers=true&includeTotalCounts=true`,
             { method: 'GET' },
-            8000 // Timeout maior para garantir que temos tempo para buscar todos os detalhes
+            8000 
           );
           
-          // Verificar se os jogadores foram carregados corretamente
           if (!match.players || !Array.isArray(match.players)) {
-            // Se não temos jogadores, tentar buscar apenas os jogadores
             try {
               const playersData = await fetchWithTimeout(
                 `${API_URL}/matches/${matchId}/players`,
@@ -481,10 +470,8 @@ export const api = {
                 5000
               );
               
-              // Adicionar jogadores ao objeto match
               match.players = playersData || [];
             } catch (playerError) {
-              // Marcar que tivemos um erro ao carregar jogadores
               match._hasPlayerLoadError = true;
               match.players = [];
             }
@@ -531,7 +518,6 @@ export const api = {
       console.log('Buscando times do usuário');
 
       try {
-        // Usar diretamente a API de times e filtrar pelo usuário atual
         const allTeamsResponse = await fetch(`${API_URL}/teams`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -540,16 +526,9 @@ export const api = {
         
         const allTeams = await handleResponse(allTeamsResponse);
         
-        // Obtém o ID do usuário atual
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         
-        // Filtra pelos times onde o usuário é o capitão ou jogador
-        if (Array.isArray(allTeams)) {
-          // Na resposta da API, os times já estão filtrados para o usuário atual
-          // então não precisamos filtrar novamente
-          console.log(`A API retornou ${allTeams.length} times para o usuário`);
-          
-          // Verificar quais times o usuário é capitão
+        if (Array.isArray(allTeams)) {        
           const teamsAsCaptain = allTeams.filter(team => 
             team && team.isCurrentUserCaptain === true
           );
@@ -558,7 +537,6 @@ export const api = {
           return allTeams;
         }
         
-        // Se não conseguir filtrar, retorna a lista completa
         return allTeams;
       } catch (error) {
         console.error("Erro ao buscar times do usuário:", error);
@@ -635,7 +613,6 @@ export const api = {
         throw new Error('Usuário não autenticado');
       }
 
-      console.log(`Atualizando campeonato ${champId}`);
       const response = await fetch(`${API_URL}/championships/${champId}`, {
         method: 'PUT',
         headers: {
@@ -652,7 +629,6 @@ export const api = {
         throw new Error('Usuário não autenticado');
       }
 
-      console.log(`Excluindo campeonato ${champId}`);
       const response = await fetch(`${API_URL}/championships/${champId}`, {
         method: 'DELETE',
         headers: {
@@ -667,7 +643,6 @@ export const api = {
         throw new Error('Usuário não autenticado');
       }
 
-      console.log(`Entrando no campeonato ${champId}`);
       const response = await fetch(`${API_URL}/championships/${champId}/join`, {
         method: 'POST',
         headers: {
@@ -683,7 +658,6 @@ export const api = {
         throw new Error('Usuário não autenticado');
       }
 
-      console.log(`Entrando no campeonato ${champId} com o time ${teamId}`);
       const response = await fetch(`${API_URL}/championships/${champId}/join-team`, {
         method: 'POST',
         headers: {
@@ -700,7 +674,6 @@ export const api = {
         throw new Error('Usuário não autenticado');
       }
 
-      console.log(`Saindo do campeonato ${champId}`);
       const response = await fetch(`${API_URL}/championships/${champId}/leave`, {
         method: 'POST',
         headers: {
@@ -719,7 +692,6 @@ function calculatePlayerStats(match: any) {
     return;
   }
   
-  // Se não, calcular com base nos jogadores
   if (!match.players || !Array.isArray(match.players)) {
     console.warn(`Não é possível calcular estatísticas: jogadores inválidos para partida ${match.id}`);
     match.playerStats = {
@@ -732,11 +704,9 @@ function calculatePlayerStats(match: any) {
     return;
   }
   
-  // Contar jogadores individuais e times
   const individualPlayers = match.players.filter((p: any) => !p.isTeam);
   const teams = match.players.filter((p: any) => p.isTeam);
   
-  // Calcular jogadores em times
   const teamPlayers = teams.reduce((acc: number, team: any) => 
     acc + (parseInt(team?.playerCount, 10) || 1), 0);
   
@@ -748,12 +718,10 @@ function calculatePlayerStats(match: any) {
     isEmpty: match.players.length === 0
   };
   
-  console.log(`Estatísticas calculadas para partida ${match.id}:`, match.playerStats);
 }
 
-// Função para calcular a distância entre dois pontos usando a fórmula de Haversine
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Raio da terra em km
+  const R = 6371; 
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = 
