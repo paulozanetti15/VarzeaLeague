@@ -1,17 +1,13 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   AppBar,
   Box,
-  Toolbar,
   IconButton,
   Typography,
-  Menu,
   Avatar,
   Button,
   Tooltip,
-  MenuItem,
   useTheme,
-  useMediaQuery,
   Drawer,
   List,
   ListItem,
@@ -19,7 +15,6 @@ import {
   ListItemText,
   Divider,
   Badge,
-  Paper,
   Chip,
 } from '@mui/material';
 import {
@@ -40,6 +35,7 @@ import { getRoleName } from '../utils/roleUtils';
 import '../components/landing/Header.css';
 
 const pages = [
+  { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
   { name: 'Times', path: '/teams', icon: <People /> },
   { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
   { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
@@ -47,30 +43,18 @@ const pages = [
 ];
 
 const adminPages = [
-  { name: 'Dashboard', path: '/admin', icon: <Dashboard /> },
   { name: 'Usuários', path: '/admin/users', icon: <Person /> },
 ];
 
 const Navbar = () => {
-  const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerUserOpen, setDrawerUserOpen] = useState(false);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  // Mostra o botão de voltar em todas as páginas exceto na home ('/')
   const showBackButton = location.pathname !== '/';
-
-  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElUser(event.currentTarget);
-  };
-
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
-  };
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -399,9 +383,6 @@ const Navbar = () => {
                   zIndex: theme.zIndex.appBar + 20,
                 },
               }}
-              transitionDuration={350}
-              disableScrollLock
-              ModalProps={{ style: { zIndex: 2010 } }}
             >
               {userDrawer}
             </Drawer>
@@ -412,4 +393,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar; 
+export default Navbar;
