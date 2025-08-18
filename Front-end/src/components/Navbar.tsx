@@ -136,7 +136,6 @@ const Navbar = () => {
     </Box>
   );
 
-  // Drawer do usuário (menu lateral animado)
   const userDrawer = (
     <Box
       sx={{

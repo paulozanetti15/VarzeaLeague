@@ -40,7 +40,6 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
     }
   }, [isHomePage, location.hash]);
 
-  // Função para rolagem suave
   const scrollToSection = (sectionId: string) => {
     if (isHomePage) {
       const section = document.getElementById(sectionId);
@@ -52,14 +51,12 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
         });
       }
     } else {
-      // Se não estiver na página inicial, navega para a página inicial com o hash do section
       navigate(`/?section=${sectionId}#${sectionId}`);
     }
   };
 
-  // Detectar seção ativa ao rolar
   useEffect(() => {
-    if (!isHomePage) return; // Só verifica scroll na home page
+    if (!isHomePage) return; 
     
     const handleScroll = () => {
       const sections = ['beneficios', 'depoimentos', 'contato'];
@@ -133,10 +130,10 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
               </li>
               <li className="nav-item">
                 <span 
-                  className={`nav-link ${activeSection === "contato" ? "active" : ""}`}
-                  onClick={() => scrollToSection("contato")}
+                  className={`nav-link ${location.pathname === "/dashboard" ? "active" : ""}`}
+                  onClick={() => navigate('/dashboard')}
                 >
-                  Contato
+                  Dashboard
                 </span>
               </li>
             </ul>
