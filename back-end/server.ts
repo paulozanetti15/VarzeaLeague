@@ -27,6 +27,7 @@ import { forEachChild } from 'typescript';
 import championshipRoutes from './routes/championshipRoutes';
 // Importando as associações
 import userTypeRoutes from './routes/userTypeRoutes';
+import overviewRoutes from './routes/overviewRoutes';
 dotenv.config();
 
 const app = express();
@@ -57,6 +58,7 @@ app.use('/api/players', playerRoutes);
 app.use('/api/rules', RulesRoutes);
 app.use('/api/championships', championshipRoutes);
 app.use('/api/usertypes', userTypeRoutes);
+app.use('/api/overview', overviewRoutes);
 
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API está funcionando!' });
@@ -172,6 +174,7 @@ const startServer = async () => {
       console.log('- POST /api/players');
       console.log('- GET /api/players/team/:teamId');
       console.log('- POST /api/players/add-to-team');
+      console.log('- GET /api/overview');
     });
   } catch (error) {
     console.error('Erro ao iniciar o servidor:', error);
