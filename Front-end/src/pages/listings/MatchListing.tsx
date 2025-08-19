@@ -14,6 +14,10 @@ import {
   Checkbox,
   FormControlLabel,
   CircularProgress,
+  Divider,
+  Avatar,
+  Stack,
+  Chip,
   Typography,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -37,44 +41,41 @@ const defaultStatuses = [
 
 const MatchCard: React.FC<{ match: Match }> = ({ match }) => {
   return (
-    <Paper sx={{ p: 2, mb: 2 }} elevation={1}>
-      <Grid container alignItems="center" spacing={2}>
-        <Grid item xs={8}>
-          <Typography variant="h6">{match.title || 'Partida sem título'}</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {match.location || 'Local não informado'}
-          </Typography>
-        </Grid>
-        <Grid item xs={4} textAlign="right">
-          <Typography variant="subtitle2">
-            {match.date ? format(new Date(match.date), 'dd/MM/yyyy') : '-'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {match.status || '—'}
-          </Typography>
-        </Grid>
-      </Grid>
+    <Paper sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2, boxShadow: 3 }} elevation={0}>
+      <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56 }}>{(match.title || 'P').charAt(0)}</Avatar>
+      <Box sx={{ flex: 1 }}>
+        <Typography variant="h6">{match.title || 'Partida sem título'}</Typography>
+        <Typography variant="body2" color="text.secondary">{match.location || 'Local não informado'}</Typography>
+        <Stack direction="row" spacing={1} mt={1}>
+          {match.teamA && <Chip size="small" label={match.teamA} />}
+          {match.teamB && <Chip size="small" label={match.teamB} />}
+        </Stack>
+      </Box>
+      <Box textAlign="right">
+        <Chip label={match.date ? format(new Date(match.date), 'dd/MM/yyyy') : '-'} color="secondary" size="small" />
+        <Box mt={1}>
+          <Chip label={match.status || '—'} size="small" />
+        </Box>
+      </Box>
     </Paper>
   );
 };
 
 const ChampionshipCard: React.FC<{ champ: Championship }> = ({ champ }) => {
   return (
-    <Paper sx={{ p: 2, mb: 2 }} elevation={1}>
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <Typography variant="h6">{champ.name || 'Campeonato sem nome'}</Typography>
-        </Grid>
-        <Grid item xs={6}>
-          <Typography variant="body2"><strong>Início:</strong> {champ.start_date ? format(new Date(champ.start_date), 'dd/MM/yyyy') : '-'}</Typography>
-        </Grid>
-        <Grid item xs={6}>
-          <Typography variant="body2"><strong>Fim:</strong> {champ.end_date ? format(new Date(champ.end_date), 'dd/MM/yyyy') : '-'}</Typography>
-        </Grid>
-        <Grid item xs={12}>
-          <Typography variant="body2">{champ.description || ''}</Typography>
-        </Grid>
-      </Grid>
+    <Paper sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2, boxShadow: 3 }} elevation={0}>
+      <Avatar sx={{ bgcolor: 'warning.main', width: 56, height: 56 }}>{(champ.name || 'C').charAt(0)}</Avatar>
+      <Box sx={{ flex: 1 }}>
+        <Typography variant="h6">{champ.name || 'Campeonato sem nome'}</Typography>
+        <Typography variant="body2" color="text.secondary">{champ.description || ''}</Typography>
+        <Stack direction="row" spacing={1} mt={1}>
+          <Chip label={`Início: ${champ.start_date ? format(new Date(champ.start_date), 'dd/MM/yyyy') : '-'}`} size="small" />
+          <Chip label={`Fim: ${champ.end_date ? format(new Date(champ.end_date), 'dd/MM/yyyy') : '-'}`} size="small" />
+        </Stack>
+      </Box>
+      <Box textAlign="right">
+        <Chip label="Campeonato" color="info" size="small" />
+      </Box>
     </Paper>
   );
 };
@@ -204,7 +205,7 @@ const MatchListing: React.FC = () => {
         ModalProps={{ keepMounted: true }}
         sx={{ display: { xs: 'block', md: 'none' } }}
       >
-        <Box sx={{ width: 280, p: 2 }}>
+        <Box sx={{ width: 320, p: 2 }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             <Typography variant="h6">Filtros</Typography>
             <IconButton onClick={() => setOpenFilters(false)} aria-label="Fechar filtros"><ClearIcon /></IconButton>
@@ -235,9 +236,10 @@ const MatchListing: React.FC = () => {
         </Box>
       </Drawer>
 
-  <Box component="aside" sx={{ width: { md: 320 }, display: { xs: 'none', md: 'block' }, p: 2, ml: { md: 2 } }}>
-        <Paper sx={{ p: 2 }}>
+  <Box component="aside" sx={{ width: { md: 320 }, display: { xs: 'none', md: 'block' }, p: 2, ml: { md: 2 }, mt: { md: 3 } }}>
+        <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3 }}>
           <Typography variant="h6" mb={1}>Filtros</Typography>
+          <Divider sx={{ mb: 2 }} />
           <TextField
             fullWidth
             label="Buscar"
@@ -246,27 +248,30 @@ const MatchListing: React.FC = () => {
             sx={{ mb: 2 }}
           />
 
-          <TextField
-            label="De"
-            type="date"
-            value={filters.from}
-            onChange={(e) => setFilters(prev => ({ ...prev, from: e.target.value }))}
-            InputLabelProps={{ shrink: true }}
-            fullWidth
-            sx={{ mb: 2 }}
-          />
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={6}>
+              <TextField
+                label="De"
+                type="date"
+                value={filters.from}
+                onChange={(e) => setFilters(prev => ({ ...prev, from: e.target.value }))}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Até"
+                type="date"
+                value={filters.to}
+                onChange={(e) => setFilters(prev => ({ ...prev, to: e.target.value }))}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+              />
+            </Grid>
+          </Grid>
 
-          <TextField
-            label="Até"
-            type="date"
-            value={filters.to}
-            onChange={(e) => setFilters(prev => ({ ...prev, to: e.target.value }))}
-            InputLabelProps={{ shrink: true }}
-            fullWidth
-            sx={{ mb: 2 }}
-          />
-
-          {/* Time and Championship selects removed as requested */}
+          <Divider sx={{ mb: 2 }} />
 
           <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
             <ToggleButtonGroup
@@ -282,21 +287,25 @@ const MatchListing: React.FC = () => {
             </ToggleButtonGroup>
           </Box>
 
+          <Divider sx={{ my: 2 }} />
+
           <Box mb={2}>
-            <Typography variant="subtitle2">Status</Typography>
-            {defaultStatuses.map(s => (
-              <FormControlLabel
-                key={s.value}
-                control={<Checkbox
-                  checked={filters.statuses.includes(s.value)}
-                  onChange={(e) => setFilters(prev => ({
+            <Typography variant="subtitle2" gutterBottom>Status</Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap">
+              {defaultStatuses.map(s => (
+                <Chip
+                  key={s.value}
+                  label={s.label}
+                  clickable
+                  color={filters.statuses.includes(s.value) ? 'primary' : 'default'}
+                  onClick={() => setFilters(prev => ({
                     ...prev,
-                    statuses: e.target.checked ? [...prev.statuses, s.value] : prev.statuses.filter(x => x !== s.value)
+                    statuses: prev.statuses.includes(s.value) ? prev.statuses.filter(x => x !== s.value) : [...prev.statuses, s.value]
                   }))}
-                />}
-                label={s.label}
-              />
-            ))}
+                  sx={{ mb: 1 }}
+                />
+              ))}
+            </Stack>
           </Box>
 
           <FormControl fullWidth sx={{ mb: 2 }}>
@@ -312,7 +321,7 @@ const MatchListing: React.FC = () => {
             </Select>
           </FormControl>
 
-          <Button variant="contained" fullWidth onClick={() => { /* apply handled automatically */ }}>
+          <Button variant="contained" fullWidth onClick={() => { /* apply handled automatically */ }} sx={{ mb: 1 }}>
             Aplicar
           </Button>
           <Button variant="text" fullWidth onClick={() => setFilters({ search: '', from: '', to: '', teamId: '', championshipId: '', statuses: [], sort: 'date_desc', type: 'both' })}>
@@ -321,7 +330,7 @@ const MatchListing: React.FC = () => {
         </Paper>
       </Box>
 
-      <Box component="main" sx={{ flex: 1, p: 2 }}>
+  <Box component="main" sx={{ flex: 1, p: 2, mt: { md: 3 } }}>
         {loading ? (
           <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}><CircularProgress /></Box>
         ) : (
