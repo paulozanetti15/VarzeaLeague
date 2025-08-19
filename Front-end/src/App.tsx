@@ -10,6 +10,7 @@ import { ResetPassword } from './pages/reset-password/ResetPassword'
 import CreateMatch from './pages/matches/CreateMatch'
 import MatchList from './pages/matches/MatchList'
 import MatchDetail from './pages/matches/MatchDetail'
+import MatchListing from './pages/listings/MatchListing'
 import TeamList from './pages/teams/TeamList'
 import CreateTeam from './pages/teams/CreateTeam'
 import EditTeam from './pages/teams/EditTeam'
@@ -55,10 +56,8 @@ function AppContent() {
     return <Loading />;
   }
 
-  // Lista de rotas que não devem mostrar a Navbar
   const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/reset-password'];
 
-  // Verifica se a rota atual é pública (apenas se for exatamente igual)
   const isPublicRoute = publicRoutes.includes(location.pathname);
 
   return (
@@ -92,6 +91,12 @@ function AppContent() {
           <Route path="/dashboard" element={
             <PageTransition>
               <SystemOverview />
+            </PageTransition>
+          } />
+
+          <Route path="/listings" element={
+            <PageTransition>
+              <MatchListing />
             </PageTransition>
           } />
           

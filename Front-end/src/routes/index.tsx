@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Landing } from '../pages/landing/Landing';
 import { Login } from '../pages/login/Login';
 import UserManagement from '../pages/UserManagement';
+import MatchListing from '../pages/listings/MatchListing';
 import Layout from '../components/Layout';
 
 interface PrivateRouteProps {
@@ -61,6 +62,12 @@ const AppRoutes: React.FC = () => {
               <UserManagement />
             </Layout>
           </PrivateRoute>
+        } />
+
+        <Route path="/listings" element={
+          <Layout>
+            <MatchListing />
+          </Layout>
         } />
 
         <Route path="*" element={<Navigate to="/" />} />

@@ -8,8 +8,9 @@ const router = express.Router();
 // Aplicando middleware de autenticação antes dos controllers
 router.get('/:id/available', authenticateToken, getTeamsAvailable);
 router.post('/', authenticateToken, createMatch);
-router.get('/', authenticateToken, listMatches);
-router.get('/:id', authenticateToken, getMatch);
+// Public read routes so listings and details are accessible to anonymous users
+router.get('/', listMatches);
+router.get('/:id', getMatch);
 router.delete('/:id', authenticateToken, deleteMatch);
 router.post('/:id/join-team', authenticateToken, joinMatchByTeam);
 router.get('/:id/join-team', authenticateToken, getMatchTeams);
