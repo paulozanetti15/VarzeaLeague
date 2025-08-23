@@ -224,11 +224,22 @@ const MatchDetail: React.FC = () => {
               <div className="info-value">{match.duration}</div>
             </div>
           )}
-          
+          <div className="info-row">
+            <div className="info-label">Nome Quadra:</div>
+            <div className="info-value">
+              {match.nomequadra || 'Nome da quadra não informado'}
+            </div>
+          </div>
           <div className="info-row">
             <div className="info-label">Local:</div>
             <div className="info-value">
               {match.location?.address || (typeof match.location === 'string' ? match.location : 'Endereço não informado')}
+            </div>
+          </div>
+          <div className="info-row">
+            <div className="info-label">Modalidade:</div>
+            <div className="info-value">
+              {match.modalidade || 'Modalidade não informada'}
             </div>
           </div>
           <div className="info-row">

@@ -14,9 +14,9 @@ require('dotenv').config();
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
 
 export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
-   try {
-      const { title, description, date, location, complement, price, Uf, Cep, duration } = req.body;
-      
+  try {
+      const { title, description, date, location, complement, price, Uf, Cep, duration,namequadra,modalidade } = req.body;
+      console.log(req.body); 
       if (!title || !date || !location) {
         res.status(400).json({ message: 'Campos obrigatórios faltando' });
         return;
@@ -49,7 +49,7 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
 
       const userId = req.user.id;
 
-      // Verificar se o usuário existe
+      
       const user = await User.findByPk(userId) as UserWithType | null;
       if (!user) {
         res.status(404).json({ message: 'Usuário não encontrado' });
@@ -68,6 +68,8 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
         organizerId: userId,
         status: 'open',
         Uf: Uf,
+        nomequadra: namequadra,
+        modalidade: modalidade,
         Cep: Cep
       });
 
@@ -104,7 +106,8 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
         'description',
         'price',
         'organizerId',
-        'duration'
+        'nomequadra',
+        'modalidade',
       ],
       order: [['date', 'ASC']]
     });
@@ -146,7 +149,9 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
         'organizerId',
         'duration',
         'Uf',
-        'Cep'
+        'Cep',
+        'nomequadra',
+        'modalidade',
       ]
     });
     const countTeams = await MatchTeamsModel.count({

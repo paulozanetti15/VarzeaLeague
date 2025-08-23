@@ -1,15 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import './CreateMatch.css';
 import RegrasFormRegisterModal from '../../components/Modals/Regras/RegrasFormRegisterModal';
 import axios from 'axios';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
 import CircularProgress from '@mui/material/CircularProgress';
 import ToastComponent from '../../components/Toast/ToastComponent';
 import { format, parse, isValid, isAfter } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 interface MatchFormData {
   title: string;
@@ -25,6 +21,9 @@ interface MatchFormData {
   city: string;
   category: string;
   number: string;
+  modalidade:string;
+  quadra: string;
+
 }
 
 const CreateMatch: React.FC = () => {
@@ -54,7 +53,9 @@ const CreateMatch: React.FC = () => {
     city: '',
     cep: '',
     category: '',
-    UF: ''
+    UF: '',
+    modalidade:'',
+    quadra: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -89,7 +90,7 @@ const CreateMatch: React.FC = () => {
     
     time = time.slice(0, 5);
     
-    const hours = parseInt(time.split(':')[0] || '0');
+  const hours = parseInt(time.split(':')[0] || '0');
     if (hours > 23) {
       time = '23' + time.slice(2);
     }
@@ -126,6 +127,13 @@ const CreateMatch: React.FC = () => {
     }
     
     return duration;
+  };
+  const handleSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const { value } = event.target;
+    setFormData(prev => ({
+      ...prev,
+      modalidade: value
+    }));
   };
 
   const isValidDateBR = (date: string): boolean => {
@@ -246,7 +254,7 @@ const CreateMatch: React.FC = () => {
         } else if (formattedDate.length > 2) {
           formattedDate = formattedDate.replace(/(\d{2})(\d{0,2})/, '$1/$2');
         }
-        
+
         if (dateRegex.test(formattedDate) || formattedDate.length < 10) {
           setFormData(prev => ({
             ...prev,
@@ -377,10 +385,12 @@ const CreateMatch: React.FC = () => {
         price: formData.price ? parseFloat(formData.price) : 0.00,
         city: formData.city.trim(),
         complement: formData.complement?.trim(),
+        namequadra: formData.quadra.trim(),
+        modalidade: formData.modalidade.trim(),
         Uf: formData.UF.trim(),
         Cep: formData.cep.trim(),
       };
-
+       
       setDadosPartida(matchData);
       setShowInfoAthleteModal(true);
     } catch (err: any) {
@@ -595,7 +605,28 @@ const CreateMatch: React.FC = () => {
               step="0.01"
             />
           </div>
-
+          <div className="form-group">
+            <label>Nome da Quadra  </label>
+            <input name="quadra" type='text' className='form-control' onChange={handleInputChange} value={formData.quadra} />
+          </div>
+          <div className="form-group">
+            <label>Modalidade</label>
+            <select 
+              style={{            
+                color: '#0e0202ff',
+                WebkitTextFillColor: '#f7f6f6ff',
+                fontSize: '1rem',
+              }}
+              name="modalidade"
+              onChange={handleSelect}
+              value={formData.modalidade}
+            >
+              <option value="">Selecione a modalidade</option>
+              <option value="Fut7">Fut7</option>
+              <option value="Futsal">Futsal</option>
+              <option value="Futebol campo">Futebol campo</option>
+            </select> 
+          </div>
           <div className="btn-container" ref={btnContainerRef}>
             <button
               type="submit"
