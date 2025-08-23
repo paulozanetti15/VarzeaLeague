@@ -22,6 +22,7 @@ interface MatchFormData {
   category: string;
   number: string;
   modalidade:string;
+  quadra: string;
 
 }
 
@@ -53,7 +54,8 @@ const CreateMatch: React.FC = () => {
     cep: '',
     category: '',
     UF: '',
-    modalidade:''
+    modalidade:'',
+    quadra: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -252,7 +254,7 @@ const CreateMatch: React.FC = () => {
         } else if (formattedDate.length > 2) {
           formattedDate = formattedDate.replace(/(\d{2})(\d{0,2})/, '$1/$2');
         }
-        
+
         if (dateRegex.test(formattedDate) || formattedDate.length < 10) {
           setFormData(prev => ({
             ...prev,
@@ -383,10 +385,12 @@ const CreateMatch: React.FC = () => {
         price: formData.price ? parseFloat(formData.price) : 0.00,
         city: formData.city.trim(),
         complement: formData.complement?.trim(),
+        namequadra: formData.quadra.trim(),
+        modalidade: formData.modalidade.trim(),
         Uf: formData.UF.trim(),
         Cep: formData.cep.trim(),
       };
-
+       
       setDadosPartida(matchData);
       setShowInfoAthleteModal(true);
     } catch (err: any) {
@@ -602,28 +606,26 @@ const CreateMatch: React.FC = () => {
             />
           </div>
           <div className="form-group">
+            <label>Nome da Quadra  </label>
+            <input name="quadra" type='text' className='form-control' onChange={handleInputChange} value={formData.quadra} />
+          </div>
+          <div className="form-group">
             <label>Modalidade</label>
             <select 
-            style={{            
-              color: '#0e0202ff',
-              WebkitTextFillColor: '#f7f6f6ff',
-              fontSize: '1rem',
-            }}
-            name="modalidade"
-            onChange={handleSelect}
-            value={formData.modalidade}
+              style={{            
+                color: '#0e0202ff',
+                WebkitTextFillColor: '#f7f6f6ff',
+                fontSize: '1rem',
+              }}
+              name="modalidade"
+              onChange={handleSelect}
+              value={formData.modalidade}
             >
               <option value="">Selecione a modalidade</option>
               <option value="Fut7">Fut7</option>
               <option value="Futsal">Futsal</option>
               <option value="Futebol campo">Futebol campo</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>Local </label>
-            <input onChange={handleInputChange} value={formData.location}>
-            </input >
+            </select> 
           </div>
           <div className="btn-container" ref={btnContainerRef}>
             <button
