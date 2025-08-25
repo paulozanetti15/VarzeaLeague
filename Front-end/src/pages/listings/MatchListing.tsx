@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Box,
   Grid,
@@ -22,6 +22,7 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ClearIcon from '@mui/icons-material/Clear';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { api } from '../../services/api';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 import { format } from 'date-fns';
@@ -86,6 +87,10 @@ const MatchListing: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [champs, setChamps] = useState<Championship[]>([]);
+  const fromRef = useRef<HTMLInputElement>(null);
+  const toRef = useRef<HTMLInputElement>(null);
+  const fromRefMobile = useRef<HTMLInputElement>(null);
+  const toRefMobile = useRef<HTMLInputElement>(null);
 
   const [filters, setFilters] = useState({
     search: '',
@@ -158,18 +163,19 @@ const MatchListing: React.FC = () => {
   const filteredMatches = (data || []).filter((m: Match) => {
           if (filters.search) {
             const s = filters.search.toLowerCase();
-            if (!((m.title || '') + (m.description || '')).toLowerCase().includes(s)) return false;
+            const hay = `${m.title || ''} ${m.description || ''} ${m.location || ''}`.toLowerCase();
+            if (!hay.includes(s)) return false;
           }
           if (filters.teamId && m.teamId && String(m.teamId) !== String(filters.teamId)) return false;
           if (filters.championshipId && String(m.championshipId) !== String(filters.championshipId)) return false;
           if (filters.statuses.length && !filters.statuses.includes(m.status)) return false;
           if (filters.from) {
-            const from = new Date(filters.from);
+            const from = new Date(`${filters.from}T00:00:00`);
             const md = m.date ? new Date(m.date) : null;
             if (!md || md < from) return false;
           }
           if (filters.to) {
-            const to = new Date(filters.to);
+            const to = new Date(`${filters.to}T23:59:59.999`);
             const md = m.date ? new Date(m.date) : null;
             if (!md || md > to) return false;
           }
@@ -189,6 +195,27 @@ const MatchListing: React.FC = () => {
       mounted = false;
     };
   }, [buildQuery]);
+
+  const filteredChamps = useMemo(() => {
+    const list = Array.isArray(champs) ? champs : [];
+    return list.filter((c: any) => {
+      if (filters.search) {
+        const s = filters.search.toLowerCase();
+        const text = `${c.name || ''} ${c.description || ''}`.toLowerCase();
+        if (!text.includes(s)) return false;
+      }
+      const cd = c.start_date ? new Date(c.start_date) : null;
+      if (filters.from) {
+        const from = new Date(`${filters.from}T00:00:00`);
+        if (!cd || cd < from) return false;
+      }
+      if (filters.to) {
+        const to = new Date(`${filters.to}T23:59:59.999`);
+        if (!cd || cd > to) return false;
+      }
+      return true;
+    });
+  }, [champs, filters.search, filters.from, filters.to]);
 
   return (
     <Box sx={{ display: 'flex', width: '100%' }}>
@@ -217,6 +244,46 @@ const MatchListing: React.FC = () => {
             onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
             sx={{ mb: 2 }}
           />
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={6}>
+              <TextField
+                label="De"
+                type="date"
+                value={filters.from}
+                onChange={(e) => setFilters(prev => ({ ...prev, from: e.target.value }))}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                inputRef={fromRef}
+                InputProps={{
+                  endAdornment: (
+                    <IconButton size="small" onClick={() => fromRef.current?.showPicker?.()} aria-label="Abrir calendário de De">
+                      <CalendarMonthIcon fontSize="small" />
+                    </IconButton>
+                  ),
+                }}
+                helperText="Formato: AAAA-MM-DD"
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Até"
+                type="date"
+                value={filters.to}
+                onChange={(e) => setFilters(prev => ({ ...prev, to: e.target.value }))}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                inputRef={toRef}
+                InputProps={{
+                  endAdornment: (
+                    <IconButton size="small" onClick={() => toRef.current?.showPicker?.()} aria-label="Abrir calendário de Até">
+                      <CalendarMonthIcon fontSize="small" />
+                    </IconButton>
+                  ),
+                }}
+                helperText="Formato: AAAA-MM-DD"
+              />
+            </Grid>
+          </Grid>
           <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
             <ToggleButtonGroup
               color="primary"
@@ -337,7 +404,7 @@ const MatchListing: React.FC = () => {
           <>
             {(() => {
               const items: { type: 'match' | 'champ'; date: Date | null; data: any }[] = [];
-              champs.forEach((c: any) => items.push({ type: 'champ', date: c.start_date ? new Date(c.start_date) : null, data: c }));
+              filteredChamps.forEach((c: any) => items.push({ type: 'champ', date: c.start_date ? new Date(c.start_date) : null, data: c }));
               matches.forEach((m: any) => items.push({ type: 'match', date: m.date ? new Date(m.date) : null, data: m }));
 
               const filteredByType = items.filter(it => {
