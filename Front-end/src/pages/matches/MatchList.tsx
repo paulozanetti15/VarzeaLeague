@@ -319,7 +319,7 @@ const MatchList: React.FC = () => {
             
             {/* Filtro de Preço */}
             <div className="filter-group">
-              <h4><FaMoneyBillWave /> Preço</h4>
+              <h4><FaMoneyBillWave /> Valor da quadra</h4>
               <div className="price-filter-options">
                 <div className="filter-option">
                   <input 
@@ -630,7 +630,7 @@ const MatchList: React.FC = () => {
                 
                 {priceFilter.length > 0 && (
                   <div className="filter-chip">
-                    <span className="chip-label">Preço:</span> {priceFilter.map(p => {
+                    <span className="chip-label">Valor da quadra:</span> {priceFilter.map(p => {
                       switch(p) {
                         case 'free': return 'Gratuito';
                         case 'paid': return 'Pago';

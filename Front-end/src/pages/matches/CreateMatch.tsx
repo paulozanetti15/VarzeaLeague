@@ -337,14 +337,24 @@ const CreateMatch: React.FC = () => {
         return;
       }
 
-      if (formData.duration) {
-        const [durationHours, durationMinutes] = formData.duration.split(':').map(Number);
-        if (isNaN(durationHours) || isNaN(durationMinutes) || durationHours > 23 || durationMinutes > 59) {
-          setError('Duração inválida. Use o formato HH:MM');
-          setLoading(false);
-          return;
-        }
-      }
+      // Gambiarra: normalizar duração (vazia ou inválida vira 00:00)
+      const normalizeDuration = (d: string | undefined): string => {
+        if (!d || !d.trim()) return '00:00';
+        const parts = d.split(':');
+        if (parts.length !== 2) return '00:00';
+        let [h, m] = parts;
+        // Garantir apenas números
+        if (!/^\d{1,2}$/.test(h)) h = '0';
+        if (!/^\d{1,2}$/.test(m)) m = '0';
+        let hn = parseInt(h, 10);
+        let mn = parseInt(m, 10);
+        if (isNaN(hn) || hn > 23) hn = 0;
+        if (isNaN(mn) || mn > 59) mn = 0;
+        const hh = hn.toString().padStart(2, '0');
+        const mm = mn.toString().padStart(2, '0');
+        return `${hh}:${mm}`;
+      };
+      const durationNormalized = normalizeDuration(formData.duration);
 
       const matchDateTime = parse(
         `${formData.date} ${formData.time}`,
@@ -358,7 +368,7 @@ const CreateMatch: React.FC = () => {
       }
     
       if (formData.price && parseFloat(formData.price) < 0) {
-        setError('O preço não pode ser negativo');
+        setError('O valor da quadra não pode ser negativo');
         return;
       }
 
@@ -373,7 +383,7 @@ const CreateMatch: React.FC = () => {
         location: enderecoCompleto,
         number: formData.number.trim(),
         description: formData.description?.trim(),
-        duration: formData.duration,
+        duration: durationNormalized,
         price: formData.price ? parseFloat(formData.price) : 0.00,
         city: formData.city.trim(),
         complement: formData.complement?.trim(),
@@ -583,7 +593,7 @@ const CreateMatch: React.FC = () => {
           </div>
           
           <div className="form-group">
-            <label>Preço (opcional)</label>
+            <label>Valor da quadra (opcional)</label>
             <input
               type="number"
               className="form-control"

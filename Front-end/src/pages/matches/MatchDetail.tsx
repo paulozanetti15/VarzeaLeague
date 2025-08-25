@@ -232,7 +232,7 @@ const MatchDetail: React.FC = () => {
             </div>
           </div>
           <div className="info-row">
-            <div className="info-label">Preço:</div>
+            <div className="info-label">Valor da quadra:</div>
             <div className="info-value">
               {formatPrice(match.price)}
             </div>
