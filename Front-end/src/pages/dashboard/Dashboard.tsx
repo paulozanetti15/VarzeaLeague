@@ -31,7 +31,7 @@ export function Dashboard({ onLogout }: DashboardProps) {
       <div className="container mt-4">
         <div className="row">
           <div className="col-12">
-            <h1>Bem-vindo ao Várzea League</h1>
+            <h1 className="dashboard-title">Bem-vindo ao Várzea League</h1>
             <p>Em breve você poderá:</p>
             <ul>
               <li>Criar e gerenciar seus times</li>
