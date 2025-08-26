@@ -1,36 +1,32 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Grid,
   Paper,
   TextField,
   Button,
-  Drawer,
-  IconButton,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
-  Checkbox,
-  FormControlLabel,
   CircularProgress,
   Divider,
   Avatar,
   Stack,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Typography,
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import ClearIcon from '@mui/icons-material/Clear';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import { api } from '../../services/api';
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 import { format } from 'date-fns';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
 type Match = any;
-type Team = any;
 type Championship = any;
 
 const defaultStatuses = [
@@ -43,7 +39,7 @@ const defaultStatuses = [
 const MatchCard: React.FC<{ match: Match }> = ({ match }) => {
   return (
     <Paper sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2, boxShadow: 3 }} elevation={0}>
-      <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56 }}>{(match.title || 'P').charAt(0)}</Avatar>
+      <Avatar sx={{ bgcolor: 'primary.main', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>{(match.title || 'P').charAt(0)}</Avatar>
       <Box sx={{ flex: 1 }}>
         <Typography variant="h6">{match.title || 'Partida sem título'}</Typography>
         <Typography variant="body2" color="text.secondary">{match.location || 'Local não informado'}</Typography>
@@ -65,7 +61,7 @@ const MatchCard: React.FC<{ match: Match }> = ({ match }) => {
 const ChampionshipCard: React.FC<{ champ: Championship }> = ({ champ }) => {
   return (
     <Paper sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2, boxShadow: 3 }} elevation={0}>
-      <Avatar sx={{ bgcolor: 'warning.main', width: 56, height: 56 }}>{(champ.name || 'C').charAt(0)}</Avatar>
+      <Avatar sx={{ bgcolor: 'warning.main', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>{(champ.name || 'C').charAt(0)}</Avatar>
       <Box sx={{ flex: 1 }}>
         <Typography variant="h6">{champ.name || 'Campeonato sem nome'}</Typography>
         <Typography variant="body2" color="text.secondary">{champ.description || ''}</Typography>
@@ -85,39 +81,21 @@ const MatchListing: React.FC = () => {
   const [openFilters, setOpenFilters] = useState(false);
   const [loading, setLoading] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
   const [champs, setChamps] = useState<Championship[]>([]);
-  const fromRef = useRef<HTMLInputElement>(null);
-  const toRef = useRef<HTMLInputElement>(null);
-  const fromRefMobile = useRef<HTMLInputElement>(null);
-  const toRefMobile = useRef<HTMLInputElement>(null);
 
   const [filters, setFilters] = useState({
     search: '',
     from: '',
     to: '',
-    teamId: '',
-    championshipId: '',
     statuses: [] as string[],
-  sort: 'date_desc',
-  type: 'both', 
+    sort: 'date_desc',
+    type: 'both',
   });
 
   useEffect(() => {
     const loadMeta = async () => {
       try {
-        const [teamsRes, champsRes] = await Promise.all([
-          fetch(`${API_URL}/teams`),
-          fetch(`${API_URL}/championships`),
-        ]);
-
-        if (teamsRes.ok) {
-          const t = await teamsRes.json();
-          setTeams(Array.isArray(t) ? t : []);
-        } else {
-          setTeams([]);
-        }
-
+        const champsRes = await fetch(`${API_URL}/championships`);
         if (champsRes.ok) {
           const c = await champsRes.json();
           setChamps(Array.isArray(c) ? c : []);
@@ -126,7 +104,6 @@ const MatchListing: React.FC = () => {
         }
       } catch (err) {
         console.error('Erro ao carregar times/campeonatos', err);
-        setTeams([]);
         setChamps([]);
       }
     };
@@ -136,8 +113,7 @@ const MatchListing: React.FC = () => {
   const buildQuery = useMemo(() => {
     const params = new URLSearchParams();
     if (filters.search) params.set('search', filters.search);
-    if (filters.teamId) params.set('teamId', String(filters.teamId));
-    if (filters.championshipId) params.set('championshipId', String(filters.championshipId));
+  // teamId/championshipId removidos dos filtros
     if (filters.statuses.length) params.set('status', filters.statuses.join(','));
     if (filters.from) params.set('from', filters.from);
     if (filters.to) params.set('to', filters.to);
@@ -160,14 +136,13 @@ const MatchListing: React.FC = () => {
           data = [];
         }
 
-  const filteredMatches = (data || []).filter((m: Match) => {
+        const filteredMatches = (data || []).filter((m: Match) => {
           if (filters.search) {
             const s = filters.search.toLowerCase();
             const hay = `${m.title || ''} ${m.description || ''} ${m.location || ''}`.toLowerCase();
             if (!hay.includes(s)) return false;
           }
-          if (filters.teamId && m.teamId && String(m.teamId) !== String(filters.teamId)) return false;
-          if (filters.championshipId && String(m.championshipId) !== String(filters.championshipId)) return false;
+          // filtros por time/campeonato removidos
           if (filters.statuses.length && !filters.statuses.includes(m.status)) return false;
           if (filters.from) {
             const from = new Date(`${filters.from}T00:00:00`);
@@ -181,7 +156,7 @@ const MatchListing: React.FC = () => {
           }
           return true;
         });
-  if (mounted) setMatches(filteredMatches.slice(0, 50));
+        if (mounted) setMatches(filteredMatches.slice(0, 50));
       } catch (err) {
         console.error('Erro ao buscar partidas', err);
       } finally {
@@ -218,25 +193,30 @@ const MatchListing: React.FC = () => {
   }, [champs, filters.search, filters.from, filters.to]);
 
   return (
-    <Box sx={{ display: 'flex', width: '100%' }}>
-      <Box sx={{ display: { xs: 'block', md: 'none' }, p: 1 }}>
-        <IconButton onClick={() => setOpenFilters(true)} aria-label="Abrir filtros">
-          <MenuIcon />
-        </IconButton>
+    <Box sx={{ display: 'flex', width: '100%', flexDirection: { xs: 'column', md: 'row' } }}>
+      <Box sx={{ display: { xs: 'flex', md: 'none' }, p: 1, justifyContent: 'center' }}>
+          <Typography
+            variant="subtitle2"
+            color="text.secondary"
+            onClick={() => setOpenFilters(true)}
+            sx={{ cursor: 'pointer', userSelect: 'none' }}
+            role="button"
+            aria-label="Abrir filtros"
+          >
+            Filtros
+          </Typography>
       </Box>
 
-      <Drawer
-        variant="temporary"
+      <Dialog
         open={openFilters}
         onClose={() => setOpenFilters(false)}
-        ModalProps={{ keepMounted: true }}
+        fullWidth
+        maxWidth="sm"
         sx={{ display: { xs: 'block', md: 'none' } }}
+        PaperProps={{ sx: { bgcolor: '#fff', color: 'text.secondary', border: 'none', outline: 'none', boxShadow: 6, '&:focus-visible': { outline: 'none' } } }}
       >
-        <Box sx={{ width: 320, p: 2 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Typography variant="h6">Filtros</Typography>
-            <IconButton onClick={() => setOpenFilters(false)} aria-label="Fechar filtros"><ClearIcon /></IconButton>
-          </Box>
+        <DialogTitle sx={{ color: 'text.secondary' }}>Filtros</DialogTitle>
+        <DialogContent sx={{ bgcolor: '#fff' }}>
           <TextField
             fullWidth
             label="Buscar"
@@ -248,39 +228,25 @@ const MatchListing: React.FC = () => {
             <Grid item xs={6}>
               <TextField
                 label="De"
-                type="date"
+                type="text"
                 value={filters.from}
                 onChange={(e) => setFilters(prev => ({ ...prev, from: e.target.value }))}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
-                inputRef={fromRef}
-                InputProps={{
-                  endAdornment: (
-                    <IconButton size="small" onClick={() => fromRef.current?.showPicker?.()} aria-label="Abrir calendário de De">
-                      <CalendarMonthIcon fontSize="small" />
-                    </IconButton>
-                  ),
-                }}
-                helperText="Formato: AAAA-MM-DD"
+                placeholder="AAAA-MM-DD"
+                inputProps={{ inputMode: 'numeric' }}
               />
             </Grid>
             <Grid item xs={6}>
               <TextField
                 label="Até"
-                type="date"
+                type="text"
                 value={filters.to}
                 onChange={(e) => setFilters(prev => ({ ...prev, to: e.target.value }))}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
-                inputRef={toRef}
-                InputProps={{
-                  endAdornment: (
-                    <IconButton size="small" onClick={() => toRef.current?.showPicker?.()} aria-label="Abrir calendário de Até">
-                      <CalendarMonthIcon fontSize="small" />
-                    </IconButton>
-                  ),
-                }}
-                helperText="Formato: AAAA-MM-DD"
+                placeholder="AAAA-MM-DD"
+                inputProps={{ inputMode: 'numeric' }}
               />
             </Grid>
           </Grid>
@@ -297,15 +263,50 @@ const MatchListing: React.FC = () => {
               <ToggleButton value="championships">Campeonatos</ToggleButton>
             </ToggleButtonGroup>
           </Box>
-          <Button variant="outlined" fullWidth onClick={() => setFilters({ search: '', from: '', to: '', teamId: '', championshipId: '', statuses: [], sort: 'date_desc', type: 'both' })}>
-            Limpar filtros
-          </Button>
-        </Box>
-      </Drawer>
 
-  <Box component="aside" sx={{ width: { md: 320 }, display: { xs: 'none', md: 'block' }, p: 2, ml: { md: 2 }, mt: { md: 3 } }}>
-        <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3 }}>
-          <Typography variant="h6" mb={1}>Filtros</Typography>
+          <Divider sx={{ my: 2 }} />
+
+          <Box mb={2}>
+            <Typography variant="subtitle2" gutterBottom>Status</Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap">
+              {defaultStatuses.map(s => (
+                <Chip
+                  key={s.value}
+                  label={s.label}
+                  clickable
+                  color={filters.statuses.includes(s.value) ? 'primary' : 'default'}
+                  onClick={() => setFilters(prev => ({
+                    ...prev,
+                    statuses: prev.statuses.includes(s.value) ? prev.statuses.filter(x => x !== s.value) : [...prev.statuses, s.value]
+                  }))}
+                  sx={{ mb: 1 }}
+                />
+              ))}
+            </Stack>
+          </Box>
+
+          <FormControl fullWidth sx={{ mb: 1 }}>
+            <InputLabel id="sort-select-label-mobile">Ordenar</InputLabel>
+            <Select
+              labelId="sort-select-label-mobile"
+              value={filters.sort}
+              label="Ordenar"
+              onChange={(e) => setFilters(prev => ({ ...prev, sort: String(e.target.value) }))}
+            >
+              <MenuItem value="date_desc">Data (mais recente)</MenuItem>
+              <MenuItem value="date_asc">Data (mais antiga)</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+  <DialogActions sx={{ bgcolor: '#fff' }}>
+          <Button onClick={() => setFilters({ search: '', from: '', to: '', statuses: [], sort: 'date_desc', type: 'both' })} color="inherit">Limpar</Button>
+          <Button variant="contained" onClick={() => setOpenFilters(false)}>Aplicar</Button>
+        </DialogActions>
+      </Dialog>
+
+  <Box component="aside" sx={{ width: { md: 320 }, display: { xs: 'none', md: 'block' }, p: { md: 2 }, ml: { md: 2 }, mt: { md: 3 } }}>
+        <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3, bgcolor: '#fff', color: 'text.secondary' }}>
+          <Typography variant="h6" mb={1} color="text.secondary">Filtros</Typography>
           <Divider sx={{ mb: 2 }} />
           <TextField
             fullWidth
@@ -315,25 +316,29 @@ const MatchListing: React.FC = () => {
             sx={{ mb: 2 }}
           />
 
-          <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid item xs={6}>
               <TextField
                 label="De"
-                type="date"
+        type="text"
                 value={filters.from}
                 onChange={(e) => setFilters(prev => ({ ...prev, from: e.target.value }))}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
+        placeholder="AAAA-MM-DD"
+        inputProps={{ inputMode: 'numeric' }}
               />
             </Grid>
             <Grid item xs={6}>
               <TextField
                 label="Até"
-                type="date"
+        type="text"
                 value={filters.to}
                 onChange={(e) => setFilters(prev => ({ ...prev, to: e.target.value }))}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
+        placeholder="AAAA-MM-DD"
+        inputProps={{ inputMode: 'numeric' }}
               />
             </Grid>
           </Grid>
@@ -391,13 +396,13 @@ const MatchListing: React.FC = () => {
           <Button variant="contained" fullWidth onClick={() => { /* apply handled automatically */ }} sx={{ mb: 1 }}>
             Aplicar
           </Button>
-          <Button variant="text" fullWidth onClick={() => setFilters({ search: '', from: '', to: '', teamId: '', championshipId: '', statuses: [], sort: 'date_desc', type: 'both' })}>
+          <Button variant="text" fullWidth onClick={() => setFilters({ search: '', from: '', to: '', statuses: [], sort: 'date_desc', type: 'both' })}>
             Limpar filtros
           </Button>
         </Paper>
       </Box>
 
-  <Box component="main" sx={{ flex: 1, p: 2, mt: { md: 3 } }}>
+  <Box component="main" sx={{ flex: 1, p: { xs: 1, sm: 2 }, mt: { md: 3 } }}>
         {loading ? (
           <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}><CircularProgress /></Box>
         ) : (

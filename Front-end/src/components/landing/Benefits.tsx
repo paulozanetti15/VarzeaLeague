@@ -40,7 +40,8 @@ export function Benefits({ isLoggedIn, onViewMatches, id }: BenefitsProps) {
     {
       icon: '📊',
       title: 'Estatísticas',
-      description: 'Acompanhe o desempenho dos jogadores e times com estatísticas detalhadas.'
+      description: 'Acompanhe o desempenho dos jogadores e times com estatísticas detalhadas.',
+      onClick: () => handleNavigation('/dashboard')
     },
     {
       icon: '🏆',
@@ -71,7 +72,7 @@ export function Benefits({ isLoggedIn, onViewMatches, id }: BenefitsProps) {
               <div 
                 className="benefit-card w-100" 
                 onClick={benefit.onClick}
-                style={{ cursor: benefit.onClick ? 'pointer' : 'default' }}
+                style={{ cursor: 'pointer' }}
               >
                 <div className="benefit-icon">{benefit.icon}</div>
                 <h3 className="benefit-title">{benefit.title}</h3>

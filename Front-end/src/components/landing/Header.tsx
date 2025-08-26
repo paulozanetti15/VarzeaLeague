@@ -1,6 +1,5 @@
 import './Header.css';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
 
 interface User {
   id: number;
@@ -20,62 +19,7 @@ interface HeaderProps {
 export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeSection, setActiveSection] = useState("");
-  const isHomePage = location.pathname === '/';
-
-  // Handle navigation with hash when the component loads
-  useEffect(() => {
-    // Check if we're on the home page with a hash
-    if (isHomePage && location.hash) {
-      const sectionId = location.hash.substring(1); // Remove the # symbol
-      const section = document.getElementById(sectionId);
-      
-      if (section) {
-        // Add a slight delay to ensure the page is fully loaded
-        setTimeout(() => {
-          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          setActiveSection(sectionId);
-        }, 300);
-      }
-    }
-  }, [isHomePage, location.hash]);
-
-  const scrollToSection = (sectionId: string) => {
-    if (isHomePage) {
-      const section = document.getElementById(sectionId);
-      if (section) {
-        setActiveSection(sectionId);
-        section.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }
-    } else {
-      navigate(`/?section=${sectionId}#${sectionId}`);
-    }
-  };
-
-  useEffect(() => {
-    if (!isHomePage) return; 
-    
-    const handleScroll = () => {
-      const sections = ['beneficios', 'depoimentos', 'contato'];
-      
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          if (rect.top <= 100 && rect.bottom >= 100) {
-            setActiveSection(section);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isHomePage]);
+  
   
   return (
     <header className="header no-top-margin" style={{ background: '#0d47a1', boxShadow: '0 4px 20px rgba(13,71,161,0.15)' }}>
@@ -112,22 +56,6 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                   )}
                 </>
               )}
-              <li className="nav-item">
-                <span 
-                  className={`nav-link ${activeSection === "beneficios" ? "active" : ""}`}
-                  onClick={() => scrollToSection("beneficios")}
-                >
-                  Benefícios
-                </span>
-              </li>
-              <li className="nav-item">
-                <span 
-                  className={`nav-link ${activeSection === "depoimentos" ? "active" : ""}`}
-                  onClick={() => scrollToSection("depoimentos")}
-                >
-                  Depoimentos
-                </span>
-              </li>
               <li className="nav-item">
                 <span 
                   className={`nav-link ${location.pathname === "/dashboard" ? "active" : ""}`}
