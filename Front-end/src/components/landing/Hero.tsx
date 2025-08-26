@@ -32,7 +32,7 @@ export function Hero({ onGetStarted, onViewMatches }: HeroProps) {
                 className="btn btn-outline-primary btn-lg hero-cta-secondary"
                 onClick={onViewMatches}
               >
-                Ver Partidas
+                Gerenciar Partidas
               </button>
             </div>
           </div>
