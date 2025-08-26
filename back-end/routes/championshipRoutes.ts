@@ -5,8 +5,9 @@ import { authenticateToken } from '../middleware/auth';
 const router = express.Router();
 
 router.post('/', authenticateToken, createChampionship);
-router.get('/', authenticateToken, listChampionships);
-router.get('/:id', authenticateToken, getChampionship);
+// List and get must be public so non-authenticated users can see championships
+router.get('/', listChampionships);
+router.get('/:id', getChampionship);
 router.put('/:id', authenticateToken, updateChampionship);
 router.delete('/:id', authenticateToken, deleteChampionship);
 router.post('/:id/join-team', authenticateToken, joinTeamInChampionship);

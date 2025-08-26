@@ -326,13 +326,10 @@ export const api = {
         
         console.log(`${matchesData.length} partidas encontradas`);
         
-        // Processar cada partida para garantir que tenha as propriedades necessárias
         const processedMatches = matchesData.map((match: any) => {
-          // Extrair coordenadas da localização se existirem no formato "lat,lng"
           if (match.location && typeof match.location === 'string') {
-            // Verificar vários formatos de coordenadas
             const coordPatterns = [
-              /\(?(-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)?/,                  // Formato básico: 12.345, -67.890
+              /\(?(-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)?/,                  
               /\(?(-?\d+\.?\d*)[,;]\s*(-?\d+\.?\d*)\)?/,               
               /latitude\s*[=:]\s*(-?\d+\.?\d*).*longitude\s*[=:]\s*(-?\d+\.?\d*)/i, 
               /lat\s*[=:]\s*(-?\d+\.?\d*).*lng\s*[=:]\s*(-?\d+\.?\d*)/i         

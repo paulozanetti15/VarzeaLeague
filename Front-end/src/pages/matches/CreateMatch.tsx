@@ -10,6 +10,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import ToastComponent from '../../components/Toast/ToastComponent';
 import { format, parse, isValid, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
 interface MatchFormData {
   title: string;
@@ -31,6 +32,7 @@ const CreateMatch: React.FC = () => {
   const navigate = useNavigate();
   const titleInputRef = useRef<HTMLInputElement>(null);
   const btnContainerRef = useRef<HTMLDivElement>(null);
+  const hiddenDateInputRef = useRef<HTMLInputElement>(null);
   const [showInfoAthleteModal, setShowInfoAthleteModal] = useState(false);
   const [usuario, setUsuario] = useState<any>(null);
   const [dadosPartida, setDadosPartida] = useState<any>(null);
@@ -46,8 +48,8 @@ const CreateMatch: React.FC = () => {
     description: '',
     location: '',
     number: '',
-    date: format(new Date(), 'dd/MM/yyyy'),
-    time: format(new Date(), 'HH:mm'),
+    date: '',
+    time: '',
     duration: '',
     price: '',
     complement: '',
@@ -397,6 +399,34 @@ const CreateMatch: React.FC = () => {
     }
   };
 
+  const formatDateISOToBR = (iso: string): string => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  };
+
+  const handleOpenDatePicker = () => {
+    const el = hiddenDateInputRef.current;
+    if (!el) return;
+    const current = (document.getElementById('date') as HTMLInputElement | null)?.value || '';
+    if (current && current.length === 10) {
+      const [d, m, y] = current.split('/');
+      el.value = `${y}-${m}-${d}`;
+    }
+    const anyEl = el as any;
+    if (typeof anyEl.showPicker === 'function') {
+      anyEl.showPicker();
+    } else {
+      el.click();
+    }
+  };
+
+  const handleHiddenDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const iso = e.target.value;
+    const br = formatDateISOToBR(iso);
+    setFormData(prev => ({ ...prev, date: br }));
+  };
+
   return (
     <div className="create-match-container">
       {showToast && (
@@ -447,7 +477,7 @@ const CreateMatch: React.FC = () => {
           </div>
 
           <div className="form-row">
-            <div className="form-group" style={{ flex: 1 }}>
+            <div className="form-group" style={{ flex: 1, position: 'relative' }}>
               <label htmlFor="date">Data *</label>
               <input
                 type="text"
@@ -459,6 +489,33 @@ const CreateMatch: React.FC = () => {
                 className="form-control"
                 placeholder="DD/MM/AAAA"
                 maxLength={10}
+                style={{ paddingRight: 44 }}
+              />
+              <button
+                type="button"
+                aria-label="Abrir calendário"
+                onClick={handleOpenDatePicker}
+                style={{
+                  position: 'absolute',
+                  right: 10,
+                  top: 60,
+                  transform: 'translateY(-50%)',
+                  border: 'none',
+                  background: 'transparent',
+                  padding: 6,
+                  cursor: 'pointer',
+                  color: '#0d47a1'
+                }}
+              >
+                <CalendarMonthIcon />
+              </button>
+              <input
+                ref={hiddenDateInputRef}
+                type="date"
+                onChange={handleHiddenDateChange}
+                style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                aria-hidden="true"
+                tabIndex={-1}
               />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
