@@ -13,9 +13,21 @@
 }
 
 .dashboard h1 {
-  color: #2c3e50;
+  /* Updated color to black as requested */
+  color: #000000;
   margin-bottom: 1.5rem;
   font-size: 2.5rem;
+}
+
+/* Stronger override in case MUI Paper root (.css-1k9tg7t-MuiPaper-root) is inheriting or forcing color */
+.dashboard .dashboard-title {
+  color: #000000 !important; /* enforce black */
+}
+
+/* If inside a Paper component, increase specificity further */
+.css-1k9tg7t-MuiPaper-root .dashboard .dashboard-title,
+.css-1k9tg7t-MuiPaper-root.dashboard .dashboard-title {
+  color: #000000 !important;
 }
 
 .dashboard p {

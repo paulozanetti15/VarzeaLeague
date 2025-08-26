@@ -87,11 +87,21 @@ const SystemOverview: React.FC = () => {
         <Box sx={{ p: { xs: 1.5, md: 3 } }}>
           <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
             <Box>
-              <Typography variant="overline" sx={{ opacity: 0.85, letterSpacing: 1.2 }}>Visão Geral</Typography>
-              <Typography variant={isSmall ? 'h5' : 'h4'} fontWeight={900}>Dashboard</Typography>
-              <Box sx={{ mt: 1, height: 3, width: 100, background: 'linear-gradient(90deg, #fff, rgba(255,255,255,0.2))', borderRadius: 2 }} />
+              <Typography
+                variant="overline"
+                sx={{ opacity: 0.85, letterSpacing: 1.2, color: '#000000 !important' }}
+              >
+                Visão Geral
+              </Typography>
+              <Typography
+                variant={isSmall ? 'h5' : 'h4'}
+                fontWeight={900}
+                sx={{ color: '#000000 !important' }}
+              >
+                Dashboard
+              </Typography>
+              <Box sx={{ mt: 1, height: 3, width: 200, background: 'linear-gradient(90deg, #000000ff, rgba(255,255,255,0.2))', borderRadius: 2 }} />
             </Box>
-            <Chip size={isSmall ? 'small' : 'medium'} icon={<Update sx={{ color: '#fff !important' }} />} sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.4)' }} label="Atualizado agora" variant="outlined" />
           </Stack>
         </Box>
       </Paper>
