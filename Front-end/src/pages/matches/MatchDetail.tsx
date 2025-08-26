@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { format, set } from 'date-fns';
-import { ptBR, tr } from 'date-fns/locale';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import './MatchDetail.css';
@@ -12,9 +11,9 @@ import RegrasFormInfoModal from '../../components/Modals/Regras/RegrasFormInfoMo
 import { Button } from 'react-bootstrap';
 import axios from 'axios';
 import { Card } from 'react-bootstrap';
-import ModalTeams from '../../components/Modals/Teams/modelTeams';
+import ModalTeams from '../../components/Modals/Teams/modelTeams'; // legacy (pode ser removido futuramente)
+import SelectTeamPlayersModal from '../../components/Modals/Teams/SelectTeamPlayersModal';
 import { useAuth } from '../../hooks/useAuth';
-import BackButton from '../../components/BackButton';
 
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +23,8 @@ const MatchDetail: React.FC = () => {
   const [timeCadastrados, setTimeCadastrados] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showRulesModal, setShowRulesModal] = useState(false);
-  const [modal, setModal] = useState(false);
+  const [modal, setModal] = useState(false); // legacy
+  const [showSelectTeamPlayers, setShowSelectTeamPlayers] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const { user } = useAuth();
 
@@ -126,9 +126,13 @@ const MatchDetail: React.FC = () => {
   const handleModalClose = () => {
     setModal(false);
   }
-  const handleModalShow = () => {
-    setModal(true);
-  }  
+  // legacy modal (não utilizado atualmente)
+  const handleOpenSelectTeamPlayers = () => {
+    setShowSelectTeamPlayers(true);
+  }
+  const handleCloseSelectTeamPlayers = () => {
+    setShowSelectTeamPlayers(false);
+  }
   const handleDeleteMatch = async () => {
     if (!id) return;
     setLoading(true);
@@ -232,7 +236,7 @@ const MatchDetail: React.FC = () => {
             </div>
           </div>
           <div className="info-row">
-            <div className="info-label">Preço:</div>
+            <div className="info-label">Valor da quadra:</div>
             <div className="info-value">
               {formatPrice(match.price)}
             </div>
@@ -288,19 +292,20 @@ const MatchDetail: React.FC = () => {
                 {timeCadastrados.length === 1 && <div className="versus-text">X</div>}
               </>
             ) : (
-              <p>Nenhum time inscrito ainda.</p>
+              <div className="no-teams-wrapper">
+                <div className="no-teams-text">Nenhum time inscrito ainda.</div>
+                {match.status === 'open' && user?.userTypeId === 3 && (typeof match.maxTeams !== 'number' || match.countTeams < match.maxTeams) && (
+                  <Button 
+                    variant="success" 
+                    onClick={handleOpenSelectTeamPlayers} 
+                    className="join-match-btn"
+                  >
+                    <i className="fas fa-link"></i>
+                    Vincular meu Time
+                  </Button>
+                )}
+              </div>
             )}
-            
-            {match.status === 'open' && user?.userTypeId === 3 && (match.countTeams < match.maxTeams) && 
-              <Button 
-                variant="success" 
-                onClick={handleModalShow} 
-                className="join-match-btn"
-              >
-                <i className="fas fa-plus-circle"></i>
-                Cadastrar Time
-              </Button>
-            }
           </div>
           
           {canDeleteMatch && (
@@ -320,6 +325,17 @@ const MatchDetail: React.FC = () => {
             show={modal}
             onHide={handleModalClose}
             matchid={id ? Number(id) : 0}
+          />
+        )}
+        {showSelectTeamPlayers && (
+          <SelectTeamPlayersModal
+            show={showSelectTeamPlayers}
+            onHide={handleCloseSelectTeamPlayers}
+            matchId={id ? Number(id) : 0}
+            onSuccess={() => {
+              // refresh teams list after success
+              getTimeInscrito(id!);
+            }}
           />
         )}
       </div>

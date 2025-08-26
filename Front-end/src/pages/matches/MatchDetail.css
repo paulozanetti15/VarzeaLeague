@@ -590,9 +590,8 @@
     font-size: 1rem;
   }
   
+  /* Removido layout grid antigo de teams-list para evitar conflito */
   .teams-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1.5rem;
     margin-top: 1.5rem;
   }
@@ -1162,17 +1161,20 @@
   .team-card {
     flex: 0 0 200px;
     text-align: center;
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    transition: transform 0.2s ease;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 10px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
     margin: 0;
     height: fit-content;
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    background: transparent !important; /* remove bg */
+    backdrop-filter: blur(4px) brightness(1.05);
+    box-shadow: 0 6px 20px -4px rgba(0,0,0,0.35);
   }
   
   .team-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-6px);
+    box-shadow: 0 10px 28px -4px rgba(0,0,0,0.5);
+    border-color: #ffffff88;
   }
   
   .team-card .card-body {
@@ -1198,17 +1200,22 @@
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    border-radius: 8px !important;
-    background: rgba(40, 167, 69, 0.2) !important;
-    border: 2px dashed #28a745 !important;
-    transition: all 0.3s ease !important;
-    font-size: 1.1rem !important;
-    color: #28a745 !important;
+    border-radius: 14px !important;
+    background: linear-gradient(135deg, rgba(13,71,161,0.25), rgba(25,118,210,0.25)) !important;
+    border: 2px dashed rgba(255,255,255,0.35) !important;
+    transition: all 0.35s ease !important;
+    font-size: 1.05rem !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    backdrop-filter: blur(4px);
+    text-align: center;
+    line-height: 1.3;
   }
-  
+
   .join-match-btn:hover {
-    background: rgba(40, 167, 69, 0.3) !important;
-    transform: translateY(-5px);
+    background: linear-gradient(135deg, rgba(13,71,161,0.45), rgba(25,118,210,0.45)) !important;
+    transform: translateY(-4px) scale(1.02);
+    border-color: rgba(255,255,255,0.6) !important;
   }
   
   .join-match-btn i {
@@ -1223,6 +1230,21 @@
     gap: 2rem;
     flex-wrap: wrap;
     margin: 2rem 0;
+  }
+
+  .teams-list p { white-space: nowrap; }
+  .no-teams-wrapper { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.25rem; width:auto; min-height:240px; }
+  .no-teams-text { font-size:0.95rem; font-weight:500; color:#fff; opacity:0.9; text-align:center; }
+  /* Centralização robusta quando há apenas o estado vazio */
+  .teams-list { width:100%; justify-content:center !important; align-items:center !important; flex-direction:row; }
+  /* Força display flex mesmo se alguma regra anterior setar grid */
+  .match-detail-container .teams-list { display:flex !important; }
+  .match-detail-container .teams-list.no-teams { flex-direction:column !important; }
+  .teams-list .no-teams-wrapper { margin:0 auto; max-width:340px; }
+  .join-match-btn { margin:0 auto !important; }
+  .no-teams-wrapper .join-match-btn { width:180px !important; height:180px !important; }
+  @media (min-width: 600px){
+    .no-teams-wrapper { max-width:380px; }
   }
   
   .versus-text {
