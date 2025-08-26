@@ -58,7 +58,8 @@ export function Benefits({ isLoggedIn, id }: BenefitsProps) {
     {
       icon: '📊',
       title: 'Estatísticas',
-      description: 'Acompanhe o desempenho dos jogadores e times com estatísticas detalhadas.'
+      description: 'Acompanhe o desempenho dos jogadores e times com estatísticas detalhadas.',
+      onClick: () => handleNavigation('/dashboard')
     },
     {
       icon: '🏆',

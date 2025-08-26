@@ -22,7 +22,6 @@ import {
   SportsSoccer,
   People,
   EmojiEvents,
-  CalendarMonth,
   Dashboard,
   Logout,
   Person,
@@ -39,7 +38,6 @@ const pages = [
   { name: 'Times', path: '/teams', icon: <People /> },
   { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
   { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
-  { name: 'Calendário', path: '/calendar', icon: <CalendarMonth /> },
 ];
 
 const adminPages = [
