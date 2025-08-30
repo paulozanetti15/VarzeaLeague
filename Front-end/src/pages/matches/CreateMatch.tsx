@@ -6,6 +6,8 @@ import axios from 'axios';
 import CircularProgress from '@mui/material/CircularProgress';
 import ToastComponent from '../../components/Toast/ToastComponent';
 import { format, parse, isValid, isAfter } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
 interface MatchFormData {
   title: string;
@@ -30,6 +32,7 @@ const CreateMatch: React.FC = () => {
   const navigate = useNavigate();
   const titleInputRef = useRef<HTMLInputElement>(null);
   const btnContainerRef = useRef<HTMLDivElement>(null);
+  const hiddenDateInputRef = useRef<HTMLInputElement>(null);
   const [showInfoAthleteModal, setShowInfoAthleteModal] = useState(false);
   const [usuario, setUsuario] = useState<any>(null);
   const [dadosPartida, setDadosPartida] = useState<any>(null);
@@ -45,8 +48,8 @@ const CreateMatch: React.FC = () => {
     description: '',
     location: '',
     number: '',
-    date: format(new Date(), 'dd/MM/yyyy'),
-    time: format(new Date(), 'HH:mm'),
+    date: '',
+    time: '',
     duration: '',
     price: '',
     complement: '',
@@ -345,14 +348,24 @@ const CreateMatch: React.FC = () => {
         return;
       }
 
-      if (formData.duration) {
-        const [durationHours, durationMinutes] = formData.duration.split(':').map(Number);
-        if (isNaN(durationHours) || isNaN(durationMinutes) || durationHours > 23 || durationMinutes > 59) {
-          setError('Duração inválida. Use o formato HH:MM');
-          setLoading(false);
-          return;
-        }
-      }
+      // Gambiarra: normalizar duração (vazia ou inválida vira 00:00)
+      const normalizeDuration = (d: string | undefined): string => {
+        if (!d || !d.trim()) return '00:00';
+        const parts = d.split(':');
+        if (parts.length !== 2) return '00:00';
+        let [h, m] = parts;
+        // Garantir apenas números
+        if (!/^\d{1,2}$/.test(h)) h = '0';
+        if (!/^\d{1,2}$/.test(m)) m = '0';
+        let hn = parseInt(h, 10);
+        let mn = parseInt(m, 10);
+        if (isNaN(hn) || hn > 23) hn = 0;
+        if (isNaN(mn) || mn > 59) mn = 0;
+        const hh = hn.toString().padStart(2, '0');
+        const mm = mn.toString().padStart(2, '0');
+        return `${hh}:${mm}`;
+      };
+      const durationNormalized = normalizeDuration(formData.duration);
 
       const matchDateTime = parse(
         `${formData.date} ${formData.time}`,
@@ -366,7 +379,7 @@ const CreateMatch: React.FC = () => {
       }
     
       if (formData.price && parseFloat(formData.price) < 0) {
-        setError('O preço não pode ser negativo');
+        setError('O valor da quadra não pode ser negativo');
         return;
       }
 
@@ -381,7 +394,7 @@ const CreateMatch: React.FC = () => {
         location: enderecoCompleto,
         number: formData.number.trim(),
         description: formData.description?.trim(),
-        duration: formData.duration,
+        duration: durationNormalized,
         price: formData.price ? parseFloat(formData.price) : 0.00,
         city: formData.city.trim(),
         complement: formData.complement?.trim(),
@@ -405,6 +418,34 @@ const CreateMatch: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatDateISOToBR = (iso: string): string => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  };
+
+  const handleOpenDatePicker = () => {
+    const el = hiddenDateInputRef.current;
+    if (!el) return;
+    const current = (document.getElementById('date') as HTMLInputElement | null)?.value || '';
+    if (current && current.length === 10) {
+      const [d, m, y] = current.split('/');
+      el.value = `${y}-${m}-${d}`;
+    }
+    const anyEl = el as any;
+    if (typeof anyEl.showPicker === 'function') {
+      anyEl.showPicker();
+    } else {
+      el.click();
+    }
+  };
+
+  const handleHiddenDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const iso = e.target.value;
+    const br = formatDateISOToBR(iso);
+    setFormData(prev => ({ ...prev, date: br }));
   };
 
   return (
@@ -457,7 +498,7 @@ const CreateMatch: React.FC = () => {
           </div>
 
           <div className="form-row">
-            <div className="form-group" style={{ flex: 1 }}>
+            <div className="form-group" style={{ flex: 1, position: 'relative' }}>
               <label htmlFor="date">Data *</label>
               <input
                 type="text"
@@ -469,6 +510,33 @@ const CreateMatch: React.FC = () => {
                 className="form-control"
                 placeholder="DD/MM/AAAA"
                 maxLength={10}
+                style={{ paddingRight: 44 }}
+              />
+              <button
+                type="button"
+                aria-label="Abrir calendário"
+                onClick={handleOpenDatePicker}
+                style={{
+                  position: 'absolute',
+                  right: 10,
+                  top: 60,
+                  transform: 'translateY(-50%)',
+                  border: 'none',
+                  background: 'transparent',
+                  padding: 6,
+                  cursor: 'pointer',
+                  color: '#0d47a1'
+                }}
+              >
+                <CalendarMonthIcon />
+              </button>
+              <input
+                ref={hiddenDateInputRef}
+                type="date"
+                onChange={handleHiddenDateChange}
+                style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                aria-hidden="true"
+                tabIndex={-1}
               />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
@@ -593,7 +661,7 @@ const CreateMatch: React.FC = () => {
           </div>
           
           <div className="form-group">
-            <label>Preço (opcional)</label>
+            <label>Valor da quadra (opcional)</label>
             <input
               type="number"
               className="form-control"

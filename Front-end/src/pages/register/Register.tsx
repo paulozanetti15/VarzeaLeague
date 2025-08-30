@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Register.css';
 import { api } from '../../services/api';
@@ -30,13 +30,9 @@ interface FormErrors {
   general?: string;
 }
 
-interface PasswordRequirement {
-  regex: RegExp;
-  text: string;
-  met: boolean;
-}
+// Removido PasswordRequirement (não utilizado após refatoração)
 
-const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
+const Register: React.FC<RegisterProps> = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -53,15 +49,7 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-
-  const [passwordRequirements, setPasswordRequirements] = useState<PasswordRequirement[]>([
-    { regex: /.{8,}/, text: 'Mínimo de 8 caracteres', met: false },
-    { regex: /[A-Z]/, text: 'Pelo menos uma letra maiúscula', met: false },
-    { regex: /[a-z]/, text: 'Pelo menos uma letra minúscula', met: false },
-    { regex: /[0-9]/, text: 'Pelo menos um número', met: false },
-    { regex: /[^A-Za-z0-9]/, text: 'Pelo menos um caractere especial', met: false }
-  ]);
+  // apiUrl removido (não utilizado). Requisitos armazenados dentro de checkPasswordStrength.
 
   const validateCPF = (cpf: string): boolean => {
     cpf = cpf.replace(/[^\d]/g, '');
@@ -180,10 +168,15 @@ const Register: React.FC<RegisterProps> = ({ onLoginClick }) => {
     setErrors({});
     
     try {
-      const data = await api.auth.register(formData);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      navigate('/dashboard');
+  await api.auth.register(formData);
+      // Em vez de logar direto, forçamos o usuário a autenticar manualmente
+      // Garantir que nada residual fique salvo
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // Opcional: armazenar flag para mostrar mensagem pós-registro na tela de login
+      sessionStorage.setItem('justRegisteredEmail', formData.email);
+      sessionStorage.setItem('registerSuccess', 'true');
+      navigate('/login');
     } catch (error) {
       setErrors(prev => ({ 
         ...prev, 

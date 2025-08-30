@@ -1,19 +1,14 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { ToggleButtonGroup, ToggleButton, Pagination } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PersonIcon from '@mui/icons-material/Person';
+﻿import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Pagination } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import AllInclusiveIcon from '@mui/icons-material/AllInclusive';
 import axios from 'axios';
 import './MatchList.css';
-import { toast } from 'react-hot-toast';
 import { FaFilter, FaCalendarAlt, FaMoneyBillWave, FaTags } from 'react-icons/fa';
 import { IoMdClose } from 'react-icons/io';
 import { fi } from 'date-fns/locale';
@@ -51,17 +46,13 @@ interface User {
 
 const MatchList: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [matches, setMatches] = useState<Match[]>([]);
   const [filteredMatches, setFilteredMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState<String>((location.state as { filter?: string })?.filter || 'all'); // 'all', 'my' ou 'nearby'
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const matchesPerPage = 8;
-  const [lastUpdate, setLastUpdate] = useState(Date.now());
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [priceFilter, setPriceFilter] = useState<string[]>([]);
@@ -69,7 +60,7 @@ const MatchList: React.FC = () => {
   const [tempStatusFilter, setTempStatusFilter] = useState<string[]>([]);
   const [tempPriceFilter, setTempPriceFilter] = useState<string[]>([]);
   const [tempDateFilter, setTempDateFilter] = useState<string[]>([]);
-  const [currentUser, setCurrentUser] = useState<User>(() => {
+  const [currentUser] = useState<User>(() => {
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token');
     
@@ -100,8 +91,11 @@ const MatchList: React.FC = () => {
       const response = await axios.get('http://localhost:3001/api/matches/', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      setMatches(response.data);
-      console.log('Matches fetched:', response.data);
+      // Mantém somente partidas criadas pelo usuário logado
+      const onlyMine = currentUser?.id
+        ? (response.data || []).filter((m: Match) => m.organizerId === currentUser.id)
+        : [];
+      setMatches(onlyMine);
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar partidas');
     } finally {
@@ -110,11 +104,11 @@ const MatchList: React.FC = () => {
   };
 
   useEffect(() => {
-    if (!matches || !Array.isArray(matches) || matches.length === 0) return;
-    let filtered = [...matches];
-    if (filter === 'my' && currentUser?.id) {
-      filtered = filtered.filter(match => match.organizerId === currentUser.id);
+    if (!matches || !Array.isArray(matches) || matches.length === 0) {
+      setFilteredMatches([]);
+      return;
     }
+    let filtered = [...matches];
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(match => 
@@ -163,31 +157,15 @@ const MatchList: React.FC = () => {
     }
     
     setFilteredMatches(filtered);
-  }, [matches, filter, searchQuery, currentUser?.id, statusFilter, priceFilter, dateFilter]);
+  }, [matches, searchQuery, statusFilter, priceFilter, dateFilter]);
   
   useEffect(() => {
     fetchMatches();
-  }, [filter]);
+  }, []);
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      await fetchMatches();
-      setLastUpdate(Date.now());
-    } catch (error) {
-      toast.error('Erro ao atualizar a lista de partidas');
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
+  // Refresh manual removido
 
-  const handleFilterChange = (_: React.MouseEvent<HTMLElement>, newFilter: string | null) => {
-    if (newFilter !== null) {
-      setFilter(newFilter);
-      setSearchQuery('');
-      setPage(1);
-    }
-  };
+  // Filtro de tipo (all/my/nearby) removido
 
  
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,9 +199,8 @@ const MatchList: React.FC = () => {
     const date = new Date(matchDate);
     return date < new Date();
   };
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+  const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
-    // Scroll para o topo da página quando mudar de página
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
@@ -324,7 +301,7 @@ const MatchList: React.FC = () => {
             
             {/* Filtro de Preço */}
             <div className="filter-group">
-              <h4><FaMoneyBillWave /> Preço</h4>
+              <h4><FaMoneyBillWave /> Valor da quadra</h4>
               <div className="price-filter-options">
                 <div className="filter-option">
                   <input 
@@ -581,7 +558,7 @@ const MatchList: React.FC = () => {
     <div className="match-list-container">
       <div className="match-list-content">
         <div className="header-container">
-          <h1>Partidas Disponíveis</h1>
+          <h1>Gerenciar partidas criadas por você!</h1>
           
           <div className="search-controls">
             <div className="search-and-filter">
@@ -644,7 +621,7 @@ const MatchList: React.FC = () => {
                 
                 {priceFilter.length > 0 && (
                   <div className="filter-chip">
-                    <span className="chip-label">Preço:</span> {priceFilter.map(p => {
+                    <span className="chip-label">Valor da quadra:</span> {priceFilter.map(p => {
                       switch(p) {
                         case 'free': return 'Gratuito';
                         case 'paid': return 'Pago';

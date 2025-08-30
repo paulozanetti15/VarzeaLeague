@@ -3,12 +3,19 @@ import { useNavigate } from 'react-router-dom';
 
 interface BenefitsProps {
   isLoggedIn: boolean;
-  onViewMatches: () => void;
   id?: string;
 }
 
-export function Benefits({ isLoggedIn, onViewMatches, id }: BenefitsProps) {
+export function Benefits({ isLoggedIn, id }: BenefitsProps) {
   const navigate = useNavigate();
+  const storedUser = localStorage.getItem('user');
+  let userTypeId: number = 0;
+  try {
+    if (storedUser) {
+      userTypeId = Number(JSON.parse(storedUser).userTypeId) || 0;
+    }
+  } catch {}
+  const canCreateChampionship = userTypeId === 2; // tier 2
 
   const handleNavigation = (path: string) => {
     if (isLoggedIn) {
@@ -23,13 +30,24 @@ export function Benefits({ isLoggedIn, onViewMatches, id }: BenefitsProps) {
       icon: '⚽',
       title: 'Organize Partidas',
       description: 'Crie e gerencie jogos facilmente, definindo local, data e participantes.',
-      onClick: () => handleNavigation('/matches/create')
+      // Only allow navigation for tier 2 (userTypeId === 2); keep styling unchanged for others
+      onClick: () => {
+        if (userTypeId === 2) {
+          handleNavigation('/matches/create');
+        }
+      }
     },
     {
       icon: '🔍',
       title: 'Encontre Jogos',
       description: 'Descubra partidas próximas e junte-se a outros jogadores na sua região.',
-      onClick: onViewMatches
+      onClick: () => {
+        if (isLoggedIn) {
+          window.location.href = 'http://localhost:3000/listings';
+        } else {
+          navigate('/login');
+        }
+      }
     },
     {
       icon: '👥',
@@ -40,13 +58,14 @@ export function Benefits({ isLoggedIn, onViewMatches, id }: BenefitsProps) {
     {
       icon: '📊',
       title: 'Estatísticas',
-      description: 'Acompanhe o desempenho dos jogadores e times com estatísticas detalhadas.'
+      description: 'Acompanhe o desempenho dos jogadores e times com estatísticas detalhadas.',
+      onClick: () => handleNavigation('/dashboard')
     },
     {
       icon: '🏆',
       title: 'Campeonatos',
       description: 'Organize torneios e acompanhe classificação em tempo real.',
-      onClick: () => handleNavigation('/championships')
+  onClick: undefined
     }
   ];
 
@@ -66,19 +85,88 @@ export function Benefits({ isLoggedIn, onViewMatches, id }: BenefitsProps) {
         </p>
 
         <div className="row g-4 justify-content-center">
-          {benefits.map((benefit, index) => (
-            <div key={index} className="col-12 col-sm-6 col-lg-4 d-flex align-items-stretch">
-              <div 
-                className="benefit-card w-100" 
-                onClick={benefit.onClick}
-                style={{ cursor: benefit.onClick ? 'pointer' : 'default' }}
-              >
-                <div className="benefit-icon">{benefit.icon}</div>
-                <h3 className="benefit-title">{benefit.title}</h3>
-                <p className="benefit-description">{benefit.description}</p>
+          {benefits.map((benefit, index) => {
+            const isChampionshipCard = benefit.title === 'Campeonatos';
+            return (
+              <div key={index} className="col-12 col-sm-6 col-lg-4 d-flex align-items-stretch">
+                <div
+                  className="benefit-card w-100"
+                  onClick={!isChampionshipCard ? benefit.onClick : undefined}
+                  style={{ cursor: !isChampionshipCard && benefit.onClick ? 'pointer' : 'default' }}
+                >
+                  <div className="benefit-icon">{benefit.icon}</div>
+                  <h3 className="benefit-title">{benefit.title}</h3>
+                  <p className="benefit-description">{benefit.description}</p>
+                  {isChampionshipCard && (
+                    <div className="benefit-actions" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 'auto' }}>
+                      <button
+                        onClick={() => handleNavigation('/listings')}
+                        className="benefit-btn"
+                        style={{
+                          background: '#1976d2',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '10px 14px',
+                          borderRadius: '6px',
+                          fontWeight: 600,
+                          fontSize: '0.9rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Procurar campeonatos
+                      </button>
+                      {canCreateChampionship ? (
+                        <button
+                          onClick={() => handleNavigation('/championships')}
+                          className="benefit-btn"
+                          style={{
+                            background: '#0d47a1',
+                            color: '#fff',
+                            border: 'none',
+                            padding: '10px 14px',
+                            borderRadius: '6px',
+                            fontWeight: 600,
+                            fontSize: '0.9rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Criar campeonato
+                        </button>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                          <button
+                            disabled
+                            style={{
+                              background: 'rgba(0,0,0,0.12)',
+                              color: '#555',
+                              border: 'none',
+                              padding: '10px 14px',
+                              borderRadius: '6px',
+                              fontWeight: 500,
+                              fontSize: '0.85rem',
+                              cursor: 'not-allowed',
+                              width: '100%'
+                            }}
+                          >
+                            Criar campeonato (restrito)
+                          </button>
+                          <small style={{
+                            fontSize: '0.65rem',
+                            color: '#d32f2f',
+                            fontWeight: 600,
+                            textAlign: 'center',
+                            lineHeight: 1.2
+                          }}>
+                            Você não possui permissão. Necessário ser organizador de campeonatos.
+                          </small>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import './RegrasStyles.css';
+import './RegrasFormRegisterModal.css';
 import ToastComponent from '../../Toast/ToastComponent';
 import { format, parse, isValid, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -20,6 +20,7 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
   const [idadeMaxima, setIdadeMaxima] = useState<string>("");
   const [genero, setGenero] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastBg, setToastBg] = useState('success');
@@ -88,6 +89,7 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
   };
 
   const insertPartida = async () => {
+    if (loading) return;
     setError('');
     
     if (!dataLimite || !verificarDataLimite(dataLimite, partidaDados.date)) {
@@ -104,7 +106,8 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
     }
 
     try {
-      // Primeiro criar a partida
+      setLoading(true);
+      // Criar partida
       const matchResponse = await axios.post(
         "http://localhost:3001/api/matches/",
         partidaDados,
@@ -116,7 +119,7 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
       );
 
       if (matchResponse.status === 201) {
-        // Depois criar as regras associadas à partida
+        // Criar regras
         const rulesResponse = await axios.post(
           "http://localhost:3001/api/rules/",
           {
@@ -140,12 +143,14 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
           setShowToast(true);
           setTimeout(() => {
             navigate('/matches');
-          }, 1500);
+          }, 1400);
         }
       }
     } catch (error) {
       console.error('Erro ao criar partida e regras:', error);
       setError('Erro ao criar partida e regras. Tente novamente.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -168,7 +173,10 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
       >
         <Modal.Body>
           <div className="modal-content-wrapper">
-            <h2 className="modal-title">Regras da Partida</h2>
+            <div className="modal-header-custom">
+              <h2 className="modal-title">Regras da Partida</h2>
+              <button onClick={onHide} type="button" className="close-icon-btn" aria-label="Fechar">&times;</button>
+            </div>
             {error && (
               <div className="error-message">
                 <p>{error}</p>
@@ -232,10 +240,19 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
             <div className="modal-buttons">
               <button
                 type="button"
-                className="btn btn-primary"
-                onClick={insertPartida}
+                className="btn btn-secondary outline"
+                onClick={onHide}
+                disabled={loading}
               >
-                Criar Partida
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary create-btn"
+                onClick={insertPartida}
+                disabled={loading}
+              >
+                {loading ? 'Criando...' : 'Criar Partida'}
               </button>
             </div>
           </div>

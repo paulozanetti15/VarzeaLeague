@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import axios from 'axios'
 import { Toaster } from 'react-hot-toast'
 // import { AnimatePresence } from 'framer-motion'
 import './App.css'
@@ -12,6 +10,7 @@ import { ResetPassword } from './pages/reset-password/ResetPassword'
 import CreateMatch from './pages/matches/CreateMatch'
 import MatchList from './pages/matches/MatchList'
 import MatchDetail from './pages/matches/MatchDetail'
+import MatchListing from './pages/listings/MatchListing'
 import TeamList from './pages/teams/TeamList'
 import CreateTeam from './pages/teams/CreateTeam'
 import EditTeam from './pages/teams/EditTeam'
@@ -21,7 +20,6 @@ import { USER_ROLES } from './utils/roleUtils'
 import { useAuth } from './hooks/useAuth'
 import Profile from './pages/perfil/Perfil'
 import PageTransition from './components/PageTransition'
-import React, { lazy, Suspense } from 'react'
 import ChampionshipList from './pages/championships/ChampionsShipList/ChampionshipList'
 import ChampionshipForm from './pages/championships/ChampionshipForm'
 import ChampionshipDetail from './pages/championships/ChampionsShipDetail/ChampionshipDetail'
@@ -30,6 +28,7 @@ import UserManagement from './pages/UserManagement'
 import Navbar from './components/Navbar'
 import EditMatch from './pages/matches/EditMatch'
 import { Box, CssBaseline } from '@mui/material'
+import SystemOverview from './components/dashboard/SystemOverview'
 
 // Componente simples para loading
 const Loading = () => (
@@ -58,10 +57,8 @@ function AppContent() {
     return <Loading />;
   }
 
-  // Lista de rotas que não devem mostrar a Navbar
   const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/reset-password'];
 
-  // Verifica se a rota atual é pública (apenas se for exatamente igual)
   const isPublicRoute = publicRoutes.includes(location.pathname);
 
   return (
@@ -89,6 +86,18 @@ function AppContent() {
                 onRegisterClick={() => navigate('/register')}
                 onLogout={handleLogout}
               />
+            </PageTransition>
+          } />
+
+          <Route path="/dashboard" element={
+            <PageTransition>
+              <SystemOverview />
+            </PageTransition>
+          } />
+
+          <Route path="/listings" element={
+            <PageTransition>
+              <MatchListing />
             </PageTransition>
           } />
           

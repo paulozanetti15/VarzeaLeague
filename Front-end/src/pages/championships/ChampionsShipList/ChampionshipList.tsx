@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import './ChampionshipList.css';
 import { api } from '../../../services/api';
 import trophy from "../../../assets/championship-trophy.svg";
@@ -34,7 +33,13 @@ export default function ChampionshipList() {
     async function fetchChampionships() {
       try {
         const data = await api.championships.list();
-        setChampionships(data);
+        const uid = Number(user.id);
+        if (uid) {
+          const onlyMine = (data || []).filter((c: Championship) => c.created_by === uid);
+          setChampionships(onlyMine);
+        } else {
+          setChampionships([]);
+        }
       } catch (err) {
         setError('Erro ao carregar campeonatos');
       } finally {
@@ -49,7 +54,7 @@ export default function ChampionshipList() {
       <div className="content-container">
         <div className="header-container championship-header-visual">
           <img src={trophy} alt="Troféu Campeonato" className="championship-trophy-main" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-          <h1 className="page-title" style={{ color: '#212121', textShadow: 'none' }}>Campeonatos</h1>
+          <h1 className="page-title" style={{ textShadow: 'none' }}>Gerenciar campeonatos criado por você!</h1>
           {canCreateChampionship && (
             <button
               className="create-match-btn"

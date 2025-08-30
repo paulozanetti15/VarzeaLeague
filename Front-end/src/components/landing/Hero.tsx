@@ -7,6 +7,14 @@ interface HeroProps {
 }
 
 export function Hero({ onGetStarted, onViewMatches }: HeroProps) {
+  let userTypeId = 0;
+  try {
+    const userRaw = localStorage.getItem('user');
+    if (userRaw) {
+      userTypeId = Number(JSON.parse(userRaw).userTypeId) || 0;
+    }
+  } catch {}
+  const isTier2 = userTypeId === 2;
   return (
     <section className="hero-section">
       <div className="container h-100">
@@ -21,20 +29,22 @@ export function Hero({ onGetStarted, onViewMatches }: HeroProps) {
                 Tudo em um só lugar para você se concentrar apenas em jogar.
               </p>
             </div>
-            <div className="hero-buttons">
-              <button 
-                className="btn btn-primary btn-lg hero-cta me-3"
-                onClick={onGetStarted}
-              >
-                Criar Partida
-              </button>
-              <button 
-                className="btn btn-outline-primary btn-lg hero-cta-secondary"
-                onClick={onViewMatches}
-              >
-                Ver Partidas
-              </button>
-            </div>
+            {isTier2 && (
+              <div className="hero-buttons">
+                <button 
+                  className="btn btn-primary btn-lg hero-cta me-3"
+                  onClick={onGetStarted}
+                >
+                  Criar Partida
+                </button>
+                <button 
+                  className="btn btn-outline-primary btn-lg hero-cta-secondary"
+                  onClick={onViewMatches}
+                >
+                  Gerenciar Partidas
+                </button>
+              </div>
+            )}
           </div>
           <div className="col-lg-6">
             <div className="hero-image">
