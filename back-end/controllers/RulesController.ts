@@ -60,7 +60,7 @@ export const deleteRules = async (req, res) => {
 
 export const updateRules = async (req, res) => {
     try {
-        const { partidaId } = req.params;
+        const { id } = req.params;
         const { idadeMinima, idadeMaxima, genero, dataLimite } = req.body;
 
         // Validações
@@ -81,13 +81,13 @@ export const updateRules = async (req, res) => {
         if (!['Masculino', 'Feminino', 'Ambos'].includes(genero)) {
             return res.status(400).json({ message: "Gênero inválido" });
         }
-
-        await Rules.update({ 
+       
+        await Rules.update({
             dataLimite: dataLimite,
             idadeMinima: parseInt(idadeMinima),
             idadeMaxima: parseInt(idadeMaxima),
             genero: genero
-        }, { where: { partidaId: partidaId } });
+        }, { where: { partidaId:id } });
 
         res.status(200).json({ message: "Regras atualizadas com sucesso!" });
     }
@@ -110,10 +110,12 @@ export const getAllRules = async (req, res) => {
 export const getRuleById = async (req, res) => {
     try {
         const { id } = req.params;
+        
         const regras = await Rules.findOne({ where: { partidaId: id } });
         if (!regras) {
             return res.status(404).json({ message: "Não existem regras cadastradas" });
         }
+        
         res.status(200).json(regras);
     } catch (error) {
         console.error("Erro ao buscar regras:", error);
