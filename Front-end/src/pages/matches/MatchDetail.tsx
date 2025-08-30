@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { format, set } from 'date-fns';
 import { ptBR, tr } from 'date-fns/locale';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import './MatchDetail.css';
 import toast from 'react-hot-toast';
@@ -14,7 +15,8 @@ import axios from 'axios';
 import { Card } from 'react-bootstrap';
 import ModalTeams from '../../components/Modals/Teams/modelTeams';
 import { useAuth } from '../../hooks/useAuth';
-import BackButton from '../../components/BackButton';
+import EditRulesModal from '../../components/Modals/Regras/RegrasFormEditModal';
+
 
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +28,7 @@ const MatchDetail: React.FC = () => {
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [modal, setModal] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const [editRules, setEditRules] = useState(false);
   const { user } = useAuth();
 
   const getTimeInscrito = async (matchId: string) => {
@@ -87,7 +90,6 @@ const MatchDetail: React.FC = () => {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
     })
-    console.log('Response:', response);
     if (response.status === 200) {
       toast.success('Time removido da partida com sucesso!');
       setTimeout(() => {
@@ -128,7 +130,8 @@ const MatchDetail: React.FC = () => {
   }
   const handleModalShow = () => {
     setModal(true);
-  }  
+  }
+
   const handleDeleteMatch = async () => {
     if (!id) return;
     setLoading(true);
@@ -298,8 +301,9 @@ const MatchDetail: React.FC = () => {
                 ))}
                 {timeCadastrados.length === 1 && <div className="versus-text">X</div>}
               </>
+
             ) : (
-              <p>Nenhum time inscrito ainda.</p>
+              <p className='text-center'>Nenhum time inscrito ainda.</p>
             )}
             
             {match.status === 'open' && user?.userTypeId === 3 && (match.countTeams < match.maxTeams) && 
@@ -313,24 +317,45 @@ const MatchDetail: React.FC = () => {
               </Button>
             }
           </div>
-          
-          {canDeleteMatch && (
-            <div className="d-flex justify-content-center mt-4">
-              <Button
-                variant="danger"
-                onClick={handleOpenDeleteConfirm}
-                className="delete-match-button"
-              >
-                <DeleteIcon /> Excluir Partida
-              </Button>
+            <div className='d-flex gap-2 container justify-content-center'>
+              {canDeleteMatch && (
+                <Button
+                  variant="danger"
+                  onClick={handleOpenDeleteConfirm}
+                >
+                  <DeleteIcon /> Excluir Partida
+                </Button>
+              )}     
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate(`/matches/edit/${id}`)}
+                >
+                  <EditIcon/> Editar Partida 
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  onClick={() => setEditRules(true)}
+                >
+                  <EditIcon/> Editar Regras   
+                </Button>
+              
             </div>
-          )}
         </div>
         {modal && (
           <ModalTeams
             show={modal}
             onHide={handleModalClose}
             matchid={id ? Number(id) : 0}
+          />
+        )}
+        {editRules && (
+          <EditRulesModal
+            show={editRules}
+            onHide={handleModalClose}
+            onClose={() => setEditRules(false)}
+            userId={Number(user?.id)}
+            partidaDados={match}
           />
         )}
       </div>
