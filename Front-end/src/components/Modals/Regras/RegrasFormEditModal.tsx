@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal } from 'react-bootstrap';
+import { Button, Modal } from 'react-bootstrap';
 import axios from 'axios';
 import './RegrasStyles.css';
 import ToastComponent from '../../Toast/ToastComponent';
@@ -227,10 +227,10 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
         className="regras-modal"
         backdrop="static"
         keyboard={false}
-      >
+      > 
         <Modal.Body>
           <div className="modal-content-wrapper">
-            <h2 className="modal-title">Regras da Partida</h2>
+            <h2 className="modal-title">Atualizar regras da partida</h2>
             {error && (
               <div className="error-message">
                 <p>{error}</p>
@@ -310,8 +310,13 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
               >
                 Atualizar Regras
               </button>
+              <Button variant="secondary" onClick={onClose}>
+                Fechar
+              </Button>
             </div>
+           
           </div>
+         
         </Modal.Body>
       </Modal>
     </>
