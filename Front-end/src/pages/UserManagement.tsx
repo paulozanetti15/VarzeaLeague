@@ -276,6 +276,7 @@ const UserManagement: React.FC = () => {
   const [formErrors, setFormErrors] = useState<any>({});
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [userToDeleteId, setUserToDeleteId] = useState<number | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<any>(null);
@@ -438,6 +439,14 @@ const UserManagement: React.FC = () => {
         tempErrors.cpf = "CPF inválido"; 
         isValid = false; 
       }
+      else {
+        // Verificar CPF duplicado no array de usuários (somente criação ou se mudou no edição)
+        const cpfExists = users.some(u => String(u.cpf).replace(/\D/g, '') === String(cpfLimpo) && (!selectedUser || u.id !== selectedUser.id));
+        if (cpfExists) {
+          tempErrors.cpf = 'CPF já cadastrado';
+          isValid = false;
+        }
+      }
     }
 
     // Validação do telefone
@@ -459,6 +468,19 @@ const UserManagement: React.FC = () => {
     if (!formData.userTypeId) { 
       tempErrors.userTypeId = "Tipo de usuário é obrigatório"; 
       isValid = false; 
+    }
+
+    // Validação de email duplicado (usar lista local de usuários)
+    if (!formData.email.trim()) {
+      tempErrors.email = tempErrors.email || 'Email é obrigatório';
+      isValid = false;
+    } else {
+      // Checar se email já existe em outro usuário
+      const emailExists = users.some(u => String(u.email).toLowerCase() === String(formData.email).toLowerCase() && (!selectedUser || u.id !== selectedUser.id));
+      if (emailExists) {
+        tempErrors.email = 'Email já cadastrado';
+        isValid = false;
+      }
     }
 
     // Validação da senha (apenas para novos usuários ou quando senha é fornecida)
@@ -506,9 +528,16 @@ const UserManagement: React.FC = () => {
       fetchUsers();
       handleCloseDialog();
     } catch (error: any) {
+      // Extrair mensagem de erro de várias formas possíveis
+      let errMsg = 'Erro ao salvar usuário';
+      if (error?.response?.data) {
+        errMsg = error.response.data.error || error.response.data.message || errMsg;
+      } else if (error?.message) {
+        errMsg = error.message;
+      }
       setSnackbar({
         open: true,
-        message: error.response?.data?.error || error.message || 'Erro ao salvar usuário',
+        message: errMsg,
         severity: 'error'
       });
     } finally {
@@ -518,7 +547,8 @@ const UserManagement: React.FC = () => {
 
   const handleDelete = async (userId: number) => {
     setUserToDeleteId(userId);
-    setOpenDeleteConfirm(true);
+  setDeleteError(null);
+  setOpenDeleteConfirm(true);
   };
 
   const confirmDelete = async () => {
@@ -529,22 +559,30 @@ const UserManagement: React.FC = () => {
       await api.delete(`/user/${userToDeleteId}`);
       setSnackbar({open: true, message: 'Usuário excluído com sucesso!', severity: 'success'});
       fetchUsers();
-    } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: error.response?.data?.error === 'Usuário não encontrado' ? 'Usuário já foi removido.' : (error.message || 'Erro ao excluir usuário'),
-        severity: 'error'
-      });
-    } finally {
-      setLoading(false);
+      // success: close modal and clear
       setOpenDeleteConfirm(false);
       setUserToDeleteId(null);
+      setDeleteError(null);
+    } catch (error: any) {
+      // extract message robustly
+      let errMsg = 'Erro ao excluir usuário';
+      if (error?.response?.data) {
+        errMsg = error.response.data.error || error.response.data.message || errMsg;
+      } else if (error?.message) {
+        errMsg = error.message;
+      }
+      // show snackbar and also show inside modal
+      setSnackbar({ open: true, message: errMsg, severity: 'error' });
+      setDeleteError(errMsg);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCloseDeleteConfirm = () => {
-    setOpenDeleteConfirm(false);
-    setUserToDeleteId(null);
+  setOpenDeleteConfirm(false);
+  setUserToDeleteId(null);
+  setDeleteError(null);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -990,6 +1028,7 @@ const UserManagement: React.FC = () => {
           <Button 
             onClick={handleCloseDialog} 
             variant="outlined" 
+            color="primary"
             sx={{ 
               borderRadius: 12, 
               px: 5, 
@@ -1063,16 +1102,28 @@ const UserManagement: React.FC = () => {
           <Typography className="user-management-modal-content" sx={{ color: theme.palette.error.main, fontWeight: 700 }}>
             Esta ação não pode ser desfeita.
           </Typography>
+          {deleteError && (
+            <Box sx={{ mt: 2 }}>
+              <Alert severity="error" sx={{ fontWeight: 700 }}>{deleteError}</Alert>
+            </Box>
+          )}
         </DialogContent>
         <DialogActions className="user-management-modal-actions">
-          <Button 
-            onClick={handleCloseDeleteConfirm} 
-            variant="text" 
-            color="inherit" 
+          <Button
+            onClick={handleCloseDeleteConfirm}
+            variant="text"
+            color="primary"
             sx={{
-              color: theme.palette.text.secondary,
+              // force readable text/background because global CSS sometimes overrides button styles
+              color: `${theme.palette.text.primary} !important`,
+              backgroundColor: '#ffffff !important',
+              borderRadius: 8,
+              px: 3,
+              py: 1,
+              fontWeight: 700,
+              textTransform: 'none',
               '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                backgroundColor: 'rgba(0, 0, 0, 0.04) !important',
               }
             }}
           >
