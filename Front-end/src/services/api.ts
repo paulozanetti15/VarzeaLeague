@@ -232,6 +232,80 @@ export const api = {
       common: {} as Record<string, string>
     }
   },
+  
+  // Função GET genérica
+  get: async (endpoint: string) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    return handleResponse(response);
+  },
+
+  // Função POST genérica
+  post: async (endpoint: string, data: any = {}) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    return handleResponse(response);
+  },
+
+  // Função PUT genérica
+  put: async (endpoint: string, data: any = {}) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    return handleResponse(response);
+  },
+
+  // Função DELETE genérica
+  delete: async (endpoint: string) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    return handleResponse(response);
+  },
   auth: {
     register: async (userData: any) => {
       const response = await fetch(`${API_URL}/auth/register`, {

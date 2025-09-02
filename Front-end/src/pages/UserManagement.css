@@ -432,4 +432,108 @@
 .user-management-modal .MuiSelect-select {
   padding: 16.5px 14px; /* Voltando para padding padrão */
   line-height: 1.5; /* Ajusta a altura da linha do texto do select */
+}
+
+/* Estilos limpos para o modal */
+.user-management-modal .MuiIconButton-root {
+  transition: all 0.2s ease;
+}
+
+.user-management-modal .MuiIconButton-root:hover {
+  background: rgba(33, 203, 243, 0.1);
+}
+
+/* Indicador de força da senha */
+.password-strength-container {
+  margin-top: 8px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.password-strength-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.password-strength-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.password-strength-label.weak {
+  color: #dc2626;
+}
+
+.password-strength-label.medium {
+  color: #d97706;
+}
+
+.password-strength-label.strong {
+  color: #059669;
+}
+
+.password-strength-label.very-strong {
+  color: #047857;
+}
+
+.password-strength-meter {
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.password-strength-progress {
+  height: 100%;
+  transition: all 0.3s ease;
+  border-radius: 2px;
+}
+
+.password-strength-progress.weak {
+  width: 25%;
+  background: #dc2626;
+}
+
+.password-strength-progress.medium {
+  width: 50%;
+  background: #d97706;
+}
+
+.password-strength-progress.strong {
+  width: 75%;
+  background: #059669;
+}
+
+.password-strength-progress.very-strong {
+  width: 100%;
+  background: #047857;
+}
+
+.password-requirements {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.password-requirement {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #64748b;
+}
+
+.password-requirement.valid {
+  color: #059669;
+}
+
+.password-requirement.invalid {
+  color: #dc2626;
 } 
