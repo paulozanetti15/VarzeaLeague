@@ -11,7 +11,12 @@ import axios from 'axios';
 import './MatchList.css';
 import { FaFilter, FaCalendarAlt, FaMoneyBillWave, FaTags } from 'react-icons/fa';
 import { IoMdClose } from 'react-icons/io';
+import { fi } from 'date-fns/locale';
+import { set } from 'date-fns';
+import { m } from 'framer-motion';
+import { GiSoccerField } from "react-icons/gi";
 import { canCreateMatch } from '../../utils/roleUtils';
+import { FaFutbol } from 'react-icons/fa';
 
 interface Match {
   id: number;
@@ -29,6 +34,8 @@ interface Match {
     id: number;
     name: string;
   };
+  modalidade?: string;
+  nomequadra?: string;
 }
 
 interface User {
@@ -483,10 +490,19 @@ const MatchList: React.FC = () => {
                       <strong>Duração:</strong> {match.duration}
                     </div>
                   )}
+                  <div className='info-row' style={{color: '#ffffff'}}>
+                    <GiSoccerField fontSize={"medium"}/>
+                    <strong>Quadra:</strong> {match.nomequadra}
+                  </div>
                   <div className="info-row" style={{color: '#ffffff'}}>
                     <LocationOnIcon fontSize="small" />
                     <strong>Local:</strong> {match.location}
                   </div>
+                  <div className="info-row" style={{color: '#ffffff'}}>
+                    <FaFutbol fontSize="small" />
+                    <strong>Modalidade:</strong> {match.modalidade}
+                  </div>
+                  
                 </div>            
                 {match.price && (
                   <div className="match-price">
