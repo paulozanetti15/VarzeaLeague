@@ -285,6 +285,22 @@ const UserManagement: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
 
+  // MenuProps to force white background for Select dropdowns (overrides global CSS)
+  const selectMenuProps: any = {
+    PaperProps: {
+      sx: {
+        backgroundColor: '#ffffff',
+        // ensure text is dark
+        color: theme.palette.text.primary,
+      }
+    },
+    MenuListProps: {
+      sx: {
+        backgroundColor: '#ffffff'
+      }
+    }
+  };
+
   useEffect(() => {
     if (user?.userTypeId === 1) {
       fetchUsers();
@@ -887,7 +903,9 @@ const UserManagement: React.FC = () => {
                   name="sexo"
                   value={formData.sexo}
                   label="Gênero *"
-                  onChange={handleInputChange}
+                  onChange={(e) => handleInputChange(e as any)}
+                  MenuProps={selectMenuProps}
+                  sx={{ backgroundColor: '#ffffff' }}
                 >
                   {SEXO_OPTIONS.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
@@ -907,7 +925,9 @@ const UserManagement: React.FC = () => {
                   name="userTypeId"
                   value={formData.userTypeId}
                   label="Tipo de Usuário *"
-                  onChange={handleInputChange}
+                  onChange={(e) => handleInputChange(e as any)}
+                  MenuProps={selectMenuProps}
+                  sx={{ backgroundColor: '#ffffff' }}
                 >
                   {USER_TYPE_OPTIONS.map((type) => (
                     <MenuItem key={type.id} value={type.id}>
