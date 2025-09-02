@@ -637,33 +637,36 @@ const UserManagement: React.FC = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((user) => (
-                  <TableRow key={user.id} hover>
+                filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((u) => (
+                  <TableRow key={u.id} hover>
                     <TableCell className="user-avatar-cell">
-                      <Avatar className="user-avatar-premium">{user.name[0]}</Avatar>
+                      <Avatar className="user-avatar-premium">{u.name[0]}</Avatar>
                     </TableCell>
-                    <TableCell style={{ fontWeight: 600 }}>{user.name}</TableCell>
-                    <TableCell className="user-email-cell">{user.email}</TableCell>
-                    <TableCell className="user-cpf-cell">{user.cpf}</TableCell>
-                    <TableCell className="user-phone-cell">{user.phone}</TableCell>
-                    <TableCell>{user.sexo}</TableCell>
-                    <TableCell>{userTypeLabel(user.userTypeId)}</TableCell>
+                    <TableCell style={{ fontWeight: 600 }}>{u.name}</TableCell>
+                    <TableCell className="user-email-cell">{u.email}</TableCell>
+                    <TableCell className="user-cpf-cell">{u.cpf}</TableCell>
+                    <TableCell className="user-phone-cell">{u.phone}</TableCell>
+                    <TableCell>{u.sexo}</TableCell>
+                    <TableCell>{userTypeLabel(u.userTypeId)}</TableCell>
                     <TableCell className="user-actions-cell" align="right">
                       <Tooltip title="Ver detalhes" arrow>
-                        <IconButton color="info" onClick={() => handleOpenDetail(user)}>
+                        <IconButton color="info" onClick={() => handleOpenDetail(u)}>
                           <VisibilityIcon />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Editar" arrow>
-                        <IconButton color="primary" onClick={() => handleOpenDialog(user)}>
+                        <IconButton color="primary" onClick={() => handleOpenDialog(u)}>
                           <EditIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Excluir" arrow>
-                        <IconButton color="error" onClick={() => handleDelete(user.id)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
+                      {/* Não mostrar botão de excluir para o próprio usuário logado */}
+                      {u.id !== user?.id && (
+                        <Tooltip title="Excluir" arrow>
+                          <IconButton color="error" onClick={() => handleDelete(u.id)}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
