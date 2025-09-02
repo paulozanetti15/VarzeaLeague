@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  InputAdornment,
   Paper,
   Table,
   TableBody,
@@ -894,12 +895,16 @@ const UserManagement: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 InputProps={{
                   endAdornment: (
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                    </IconButton>
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(prev => !prev)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        edge="end"
+                        aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                      >
+                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
                   ),
                 }}
               />
@@ -957,12 +962,16 @@ const UserManagement: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 InputProps={{
                   endAdornment: (
-                    <IconButton
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      edge="end"
-                    >
-                      {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                    </IconButton>
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowConfirmPassword(prev => !prev)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        edge="end"
+                        aria-label={showConfirmPassword ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}
+                      >
+                        {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
                   ),
                 }}
               />
@@ -989,15 +998,20 @@ const UserManagement: React.FC = () => {
               fontWeight: 700,
               textTransform: 'none',
               borderColor: '#d1d5db',
-              color: '#374151',
-              backgroundColor: '#ffffff',
+              color: `${theme.palette.text.primary} !important`,
+              backgroundColor: '#ffffff !important',
               borderWidth: 2,
               minWidth: '140px',
               boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+              '&.MuiButton-outlined': {
+                color: `${theme.palette.text.primary} !important`,
+                backgroundColor: '#ffffff !important',
+                borderColor: '#d1d5db !important'
+              },
               '&:hover': {
                 borderColor: '#9ca3af',
-                color: '#111827',
-                backgroundColor: '#f9fafb',
+                color: `${theme.palette.text.primary} !important`,
+                backgroundColor: '#f9fafb !important',
                 borderWidth: 2,
                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                 transform: 'translateY(-1px)',
