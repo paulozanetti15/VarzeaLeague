@@ -9,6 +9,7 @@ import './MatchDetail.css';
 import toast from 'react-hot-toast';
 import RegrasFormInfoModal from '../../components/Modals/Regras/RegrasFormInfoModal';
 import { Button } from 'react-bootstrap';
+import MatchFinalizeModal from '../../components/Modals/MatchFinalizeModal';
 import axios from 'axios';
 import { Card } from 'react-bootstrap';
 import ModalTeams from '../../components/Modals/Teams/modelTeams'; // legacy (pode ser removido futuramente)
@@ -26,6 +27,11 @@ const MatchDetail: React.FC = () => {
   const [modal, setModal] = useState(false); // legacy
   const [showSelectTeamPlayers, setShowSelectTeamPlayers] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  // Edit match modal state (moved to top)
+  const [editMode, setEditMode] = useState(false);
+  const [editFields, setEditFields] = useState<any>({});
+  const [editLoading, setEditLoading] = useState(false);
+  const [showFinalizeModal, setShowFinalizeModal] = useState(false);
   const { user } = useAuth();
 
   const getTimeInscrito = async (matchId: string) => {
@@ -188,18 +194,83 @@ const MatchDetail: React.FC = () => {
   if (loading) {
     return <div className="match-detail-container loading">Carregando detalhes da partida...</div>;
   }
-  
   if (error) {
     return <div className="match-detail-container error">{error}</div>;
   }
-  
   if (!match) {
     return <div className="match-detail-container error">Partida não encontrada.</div>;
   }
 
   const isOrganizer = user && match.organizerId === user.id;
+
   const isAdmin = user && user.userTypeId === 1;
   const canDeleteMatch = isOrganizer || isAdmin;
+  const canEditMatch = isOrganizer || isAdmin;
+
+  // (removido: duplicado, já está no topo do componente)
+
+  const handleEditClick = () => {
+    setEditFields({
+      title: match.title,
+      date: match.date,
+      time: match.time,
+      duration: match.duration,
+      location: match.location,
+      price: match.price,
+      description: match.description,
+      status: match.status,
+    });
+    setEditMode(true);
+  };
+
+  const handleEditFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setEditFields({ ...editFields, [e.target.name]: e.target.value });
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`http://localhost:3001/api/matches/${id}`, editFields, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Partida atualizada com sucesso!');
+      setEditMode(false);
+      window.location.reload();
+    } catch (err: any) {
+      toast.error('Erro ao atualizar partida.');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleFinalizeMatch = () => {
+    setShowFinalizeModal(true);
+  };
+
+  const handleFinalizeSubmit = async (data: { goals: number; yellowCards: number; redCards: number }) => {
+    setEditLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      // Finaliza partida
+      await axios.put(`http://localhost:3001/api/matches/${id}`, { status: 'completed' }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Salva relatório de gols/cartões (ajuste endpoint conforme backend)
+      await axios.post(`http://localhost:3001/api/matches/${id}/finalize-report`, data, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Partida finalizada e relatório salvo!');
+      setShowFinalizeModal(false);
+      setEditMode(false);
+      window.location.reload();
+    } catch (err: any) {
+      toast.error('Erro ao finalizar partida ou salvar relatório.');
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
   return (
     <div className="match-detail-container">
@@ -307,7 +378,22 @@ const MatchDetail: React.FC = () => {
               </div>
             )}
           </div>
-          
+          {/* Edit and finalize buttons */}
+          {canEditMatch && (
+            <div className="d-flex justify-content-center mt-4 gap-2">
+              <Button variant="primary" onClick={handleEditClick} disabled={editLoading} className="edit-match-button">
+                Editar Partida
+              </Button>
+              <Button variant="success" onClick={handleFinalizeMatch} disabled={editLoading || match.status === 'completed'} className="finalize-match-button">
+                Marcar como Finalizada
+              </Button>
+              <MatchFinalizeModal
+                open={showFinalizeModal}
+                onClose={() => setShowFinalizeModal(false)}
+                onSubmit={handleFinalizeSubmit}
+              />
+            </div>
+          )}
           {canDeleteMatch && (
             <div className="d-flex justify-content-center mt-4">
               <Button
@@ -318,6 +404,34 @@ const MatchDetail: React.FC = () => {
                 <DeleteIcon /> Excluir Partida
               </Button>
             </div>
+          )}
+          {/* Edit match modal */}
+          {editMode && (
+            <Dialog open={editMode} onClose={() => setEditMode(false)}>
+              <DialogTitle>Editar Partida</DialogTitle>
+              <form onSubmit={handleEditSubmit}>
+                <DialogContent>
+                  <input name="title" value={editFields.title} onChange={handleEditFieldChange} className="form-control mb-2" placeholder="Título" />
+                  <input name="date" type="date" value={editFields.date?.slice(0,10)} onChange={handleEditFieldChange} className="form-control mb-2" placeholder="Data" />
+                  <input name="time" type="time" value={editFields.time || ''} onChange={handleEditFieldChange} className="form-control mb-2" placeholder="Horário" />
+                  <input name="duration" value={editFields.duration || ''} onChange={handleEditFieldChange} className="form-control mb-2" placeholder="Duração (HH:MM)" />
+                  <input name="location" value={editFields.location} onChange={handleEditFieldChange} className="form-control mb-2" placeholder="Local" />
+                  <input name="price" type="number" value={editFields.price || ''} onChange={handleEditFieldChange} className="form-control mb-2" placeholder="Valor" />
+                  <textarea name="description" value={editFields.description || ''} onChange={handleEditFieldChange} className="form-control mb-2" placeholder="Descrição" />
+                  <select name="status" value={editFields.status} onChange={handleEditFieldChange} className="form-control mb-2">
+                    <option value="open">Aberta</option>
+                    <option value="pending">Pendente</option>
+                    <option value="confirmed">Confirmada</option>
+                    <option value="cancelled">Cancelada</option>
+                    <option value="completed">Finalizada</option>
+                  </select>
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={() => setEditMode(false)} color="primary">Cancelar</Button>
+                  <Button type="submit" color="primary" disabled={editLoading}>Salvar</Button>
+                </DialogActions>
+              </form>
+            </Dialog>
           )}
         </div>
         {modal && (

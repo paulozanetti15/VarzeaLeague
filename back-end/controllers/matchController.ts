@@ -1,3 +1,48 @@
+// Salvar relatório de finalização de partida (gols, cartões)
+import MatchReport from '../models/MatchReportModel';
+import MatchCard from '../models/MatchCardModel';
+import MatchGoal from '../models/MatchGoalModel';
+
+export const finalizeReport = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const matchId = req.params.id;
+    const { goals, yellowCards, redCards } = req.body;
+    // Salva relatório geral
+    await MatchReport.create({
+      match_id: matchId,
+      team1_score: goals, // ajuste conforme times
+      team2_score: 0, // ajuste conforme times
+      created_by: req.user?.id || null,
+    });
+    // Salva gols
+    for (let i = 0; i < goals; i++) {
+      await MatchGoal.create({
+        match_id: matchId,
+        user_id: req.user?.id || null,
+      });
+    }
+    // Salva cartões amarelos
+    for (let i = 0; i < yellowCards; i++) {
+      await MatchCard.create({
+        match_id: matchId,
+        user_id: req.user?.id || null,
+        card_type: 'yellow',
+      });
+    }
+    // Salva cartões vermelhos
+    for (let i = 0; i < redCards; i++) {
+      await MatchCard.create({
+        match_id: matchId,
+        user_id: req.user?.id || null,
+        card_type: 'red',
+      });
+    }
+    res.status(201).json({ message: 'Relatório salvo com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao salvar relatório:', error);
+    res.status(500).json({ message: 'Erro ao salvar relatório' });
+  }
+};
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import MatchModel from '../models/MatchModel';

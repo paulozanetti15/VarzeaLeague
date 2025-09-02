@@ -104,10 +104,10 @@ Match.init({
     }
   },
   status: {
-    type: DataTypes.ENUM('open', 'pending', 'confirmed', 'cancelled', 'completed'),
+    type: DataTypes.ENUM('open', 'in_progress', 'completed'),
     defaultValue: 'open',
     validate: {
-      isIn: [['open', 'pending', 'confirmed', 'cancelled', 'completed']]
+      isIn: [['open', 'in_progress', 'completed']]
     }
   },
   description: {
