@@ -3,7 +3,6 @@ import { getOverview, searchOverviewEntities } from '../controllers/overviewCont
 
 const router = Router();
 
-// Public overview endpoint
 router.get('/', getOverview);
 router.get('/search', searchOverviewEntities);
 

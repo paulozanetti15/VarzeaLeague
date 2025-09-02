@@ -1,3 +1,26 @@
+export const searchOverviewEntities = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const q = String(req.query.q || '').trim();
+    if (!q) { res.json([]); return; }
+
+    const like = { [Op.like]: `%${q}%` } as any;
+
+    const [matches, teams] = await Promise.all([
+      MatchModel.findAll({ where: { title: like }, attributes: ['id','title','date'], limit: 10, order: [['date','DESC']], raw: true }),
+      TeamModel.findAll({ where: { name: like }, attributes: ['id','name'], limit: 10, order: [['name','ASC']], raw: true })
+    ]);
+
+    const results = [
+      ...matches.map((m: any) => ({ type: 'match', id: m.id, label: m.title, date: m.date })),
+      ...teams.map((t: any) => ({ type: 'team', id: t.id, label: t.name }))
+    ];
+
+    res.json(results);
+  } catch (err) {
+    console.error('Erro ao buscar entidades do overview:', err);
+    res.status(500).json({ message: 'Erro na busca' });
+  }
+};
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import sequelize from '../config/database';
@@ -70,7 +93,7 @@ export const getOverview = async (req: Request, res: Response): Promise<void> =>
       matches,
       goals,
       cards,
-      nextMatches,
+      nextMatchesRaw,
       recentMatches,
       statusRaw
     ] = await Promise.all([
@@ -84,10 +107,13 @@ export const getOverview = async (req: Request, res: Response): Promise<void> =>
       MatchModel.findAll({ where: matchesSinceWhere, attributes: ['id','date'], raw: true }).catch(()=>[] as any[]),
       MatchGoalModel.findAll({ where: goalsWhere, attributes: ['id','created_at'], raw: true }).catch(()=>[] as any[]),
       MatchCardModel.findAll({ where: cardsWhere, attributes: ['id','created_at','card_type'], raw: true }).catch(()=>[] as any[]),
-      MatchModel.findAll({ where: upcomingWhere, order: [['date', 'ASC']], limit: 5, attributes: ['id','title','date','location','status'], raw: true }).catch(()=>[] as any[]),
+      MatchModel.findAll({ where: upcomingWhere, order: [['date', 'ASC']], limit: 10, attributes: ['id','title','date','location','status'], raw: true }).catch(()=>[] as any[]),
       MatchModel.findAll({ where: pastWhere, order: [['date', 'DESC']], limit: 5, attributes: ['id','title','date','location','status'], raw: true }).catch(()=>[] as any[]),
       MatchModel.findAll({ attributes: ['status', [sequelize.fn('COUNT', sequelize.col('status')), 'count']], where: matchWhere, group: ['status'], raw: true }).catch(()=>[] as any[])
     ]);
+
+    // Filtra para mostrar apenas partidas que NÃO estão completed
+    const nextMatches = (nextMatchesRaw as any[]).filter(m => m.status !== 'completed').slice(0, 5);
 
     const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     const months = (() => { const arr: string[] = []; const base = new Date(); base.setDate(1); for (let i = 11; i >= 0; i--) { const d = new Date(base.getFullYear(), base.getMonth() - i, 1); arr.push(monthKey(d)); } return arr; })();
@@ -143,26 +169,3 @@ export const getOverview = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-export const searchOverviewEntities = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const q = String(req.query.q || '').trim();
-    if (!q) { res.json([]); return; }
-
-    const like = { [Op.like]: `%${q}%` } as any;
-
-    const [matches, teams] = await Promise.all([
-      MatchModel.findAll({ where: { title: like }, attributes: ['id','title','date'], limit: 10, order: [['date','DESC']], raw: true }),
-      TeamModel.findAll({ where: { name: like }, attributes: ['id','name'], limit: 10, order: [['name','ASC']], raw: true })
-    ]);
-
-    const results = [
-      ...matches.map((m: any) => ({ type: 'match', id: m.id, label: m.title, date: m.date })),
-      ...teams.map((t: any) => ({ type: 'team', id: t.id, label: t.name }))
-    ];
-
-    res.json(results);
-  } catch (err) {
-    console.error('Erro ao buscar entidades do overview:', err);
-    res.status(500).json({ message: 'Erro na busca' });
-  }
-};
