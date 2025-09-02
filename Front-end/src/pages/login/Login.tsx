@@ -46,6 +46,21 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
         onLoginSuccess(data);
       }
 
+      // Verificar partidas pendentes de sumário
+      try {
+        const token = data.token;
+        const pendingRes = await axios.get('http://localhost:3001/api/matches/pending-summary', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const pendings = pendingRes.data;
+        if (pendings && pendings.length > 0) {
+          // Redireciona para tela de sumário da primeira partida pendente
+          navigate(`/matches/${pendings[0].id}/summary`, { state: { forceSummary: true } });
+          return;
+        }
+      } catch (err) {
+        // Se erro, segue fluxo normal
+      }
       // Redirecionar para a página principal
       navigate('/');
     } catch (error) {

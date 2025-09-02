@@ -1,27 +1,72 @@
-// Salvar relatório de finalização de partida (gols, cartões)
 import MatchReport from '../models/MatchReportModel';
 import MatchCard from '../models/MatchCardModel';
 import MatchGoal from '../models/MatchGoalModel';
+import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
+import MatchModel from '../models/MatchModel';
+import User from '../models/UserModel';
+import jwt from 'jsonwebtoken';
+import MatchTeamsModel from '../models/MatchTeamsModel';
+import Rules from '../models/RulesModel';
+
+
+export const getPendingSummaryMatch = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+  if (!userId) { res.status(401).json({ message: 'Não autenticado' }); return; }
+    const matches = await MatchModel.findAll({
+      where: { status: 'completed' },
+      include: [
+        {
+          model: MatchReport,
+          required: false,
+          where: { created_by: userId }
+        }
+      ]
+    });
+    const pending = matches.filter((m: any) => !m.MatchReports || m.MatchReports.length === 0);
+    res.json(pending);
+  } catch (err) {
+    res.status(500).json({ message: 'Erro ao buscar partidas pendentes' });
+  }
+};
+import { Op } from 'sequelize';
+
+export const autoCompleteMatches = async (): Promise<void> => {
+  const now = new Date();
+  const matches = await MatchModel.findAll({
+    where: {
+      status: 'in_progress',
+      date: { [Op.lte]: new Date(now.getTime() - 1000 * 60 * 5) }
+    }
+  });
+  for (const match of matches) {
+    const startDate = new Date(match.date);
+  const duration = Number(match.duration) || 90; 
+  const endDate = new Date(startDate.getTime() + duration * 60000);
+    if (now >= endDate) {
+      match.status = 'completed';
+      await match.save();
+    }
+  }
+};
 
 export const finalizeReport = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const matchId = req.params.id;
     const { goals, yellowCards, redCards } = req.body;
-    // Salva relatório geral
     await MatchReport.create({
       match_id: matchId,
-      team1_score: goals, // ajuste conforme times
-      team2_score: 0, // ajuste conforme times
+      team1_score: goals, 
+      team2_score: 0, 
       created_by: req.user?.id || null,
     });
-    // Salva gols
     for (let i = 0; i < goals; i++) {
       await MatchGoal.create({
         match_id: matchId,
         user_id: req.user?.id || null,
       });
     }
-    // Salva cartões amarelos
     for (let i = 0; i < yellowCards; i++) {
       await MatchCard.create({
         match_id: matchId,
@@ -29,7 +74,6 @@ export const finalizeReport = async (req: AuthRequest, res: Response): Promise<v
         card_type: 'yellow',
       });
     }
-    // Salva cartões vermelhos
     for (let i = 0; i < redCards; i++) {
       await MatchCard.create({
         match_id: matchId,
@@ -43,13 +87,6 @@ export const finalizeReport = async (req: AuthRequest, res: Response): Promise<v
     res.status(500).json({ message: 'Erro ao salvar relatório' });
   }
 };
-import { Request, Response } from 'express';
-import { AuthRequest } from '../middleware/auth';
-import MatchModel from '../models/MatchModel';
-import User from '../models/UserModel';
-import jwt from 'jsonwebtoken';
-import MatchTeamsModel from '../models/MatchTeamsModel';
-import Rules from '../models/RulesModel';
 
 interface UserWithType extends User {
   userTypeId: number;
@@ -235,7 +272,6 @@ export const updateMatch = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-// Cancelar uma partida
 export const cancelMatch = async (req: Request, res: Response): Promise<void> => {
   try {
     const match = await MatchModel.findByPk(req.params.id);
@@ -261,17 +297,14 @@ export const deleteMatch = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    // Delete associated rules first
     await Rules.destroy({
       where: { partidaId: matchId }
     });
 
-    // Delete associated team entries
     await MatchTeamsModel.destroy({
       where: { matchId: matchId }
     });
 
-    // Finally, delete the match itself
     await match.destroy();
 
     res.status(200).json({ message: 'Partida excluída com sucesso' });

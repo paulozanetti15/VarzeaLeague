@@ -1,3 +1,4 @@
+import MatchSummary from './pages/matches/MatchSummary';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 // import { AnimatePresence } from 'framer-motion'
@@ -201,6 +202,21 @@ function AppContent() {
               </RoleBasedRoute>
             </PrivateRoute>
           } />
+          
+            <Route path="/matches/:id/summary" element={
+              <PrivateRoute isLoggedIn={isLoggedIn}>
+                <RoleBasedRoute 
+                  isLoggedIn={isLoggedIn} 
+                  userRole={user?.userTypeId} 
+                  allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                  redirectTo="/"
+                >
+                  <PageTransition>
+                    <MatchSummary />
+                  </PageTransition>
+                </RoleBasedRoute>
+              </PrivateRoute>
+            } />
           
           <Route path="/teams" element={
             <PrivateRoute isLoggedIn={isLoggedIn}>

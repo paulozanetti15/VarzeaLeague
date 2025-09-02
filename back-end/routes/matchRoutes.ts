@@ -1,3 +1,5 @@
+import { getPendingSummaryMatch } from '../controllers/matchController';
+router.get('/pending-summary', authenticateToken, getPendingSummaryMatch);
 import express, { Request, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import {joinMatchByTeam,getMatchTeams, deleteTeamMatch,getTeamsAvailable, checkTeamsRuleCompliance} from '../controllers/MatchTeamsController';
