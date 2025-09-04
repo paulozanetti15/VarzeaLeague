@@ -26,6 +26,7 @@ import ChampionshipDetail from './pages/championships/ChampionsShipDetail/Champi
 import ChampionshipEditForm from './pages/championships/ChampionshipEditForm'
 import UserManagement from './pages/UserManagement'
 import Navbar from './components/Navbar'
+import EditMatch from './pages/matches/EditMatch'
 import { Box, CssBaseline } from '@mui/material'
 import SystemOverview from './components/dashboard/SystemOverview'
 import CalendarioPage from './pages/calendario/calendárioPage'
@@ -258,6 +259,20 @@ import CalendarioPage from './pages/calendario/calendárioPage'
               >
                 <PageTransition>
                   <EditTeam />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
+          <Route path="/matches/edit/:id" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA,USER_ROLES.ADMIN_EVENTOS,USER_ROLES.ADMIN_TIMES]}
+                redirectTo="/"
+              >
+                <PageTransition>
+                  <EditMatch />
                 </PageTransition>
               </RoleBasedRoute>
             </PrivateRoute>

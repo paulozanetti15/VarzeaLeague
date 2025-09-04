@@ -18,6 +18,8 @@ class Match extends Model {
   public organizerId!: number;
   public Uf!: string;
   public Cep!: string;
+  public quadra!: string;
+  public modalidade!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -87,6 +89,20 @@ Match.init({
   number: {
     type: DataTypes.STRING,
     allowNull: true,
+  },
+  modalidade : {
+   type: DataTypes.STRING,
+   allowNull: false,
+   validate: {
+     notEmpty: true,
+   }
+  },
+  nomequadra: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: true,
+    }
   },
   Cep: {
     type: DataTypes.STRING,

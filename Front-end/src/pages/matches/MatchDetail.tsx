@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import './MatchDetail.css';
 import toast from 'react-hot-toast';
@@ -14,7 +15,8 @@ import { Card } from 'react-bootstrap';
 import ModalTeams from '../../components/Modals/Teams/modelTeams'; // legacy (pode ser removido futuramente)
 import SelectTeamPlayersModal from '../../components/Modals/Teams/SelectTeamPlayersModal';
 import { useAuth } from '../../hooks/useAuth';
-
+import BackButton from '../../components/BackButton';
+import EditRulesModal from '../../components/Modals/Regras/RegrasFormEditModal';
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -26,6 +28,7 @@ const MatchDetail: React.FC = () => {
   const [modal, setModal] = useState(false); // legacy
   const [showSelectTeamPlayers, setShowSelectTeamPlayers] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const [editRules, setEditRules] = useState(false);
   const { user } = useAuth();
 
   const getTimeInscrito = async (matchId: string) => {
@@ -87,7 +90,6 @@ const MatchDetail: React.FC = () => {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
     })
-    console.log('Response:', response);
     if (response.status === 200) {
       toast.success('Time removido da partida com sucesso!');
       setTimeout(() => {
@@ -125,6 +127,9 @@ const MatchDetail: React.FC = () => {
   };
   const handleModalClose = () => {
     setModal(false);
+  }
+  const handleModalShow = () => {
+    setModal(true);
   }
   // legacy modal (não utilizado atualmente)
   const handleOpenSelectTeamPlayers = () => {
@@ -228,11 +233,22 @@ const MatchDetail: React.FC = () => {
               <div className="info-value">{match.duration}</div>
             </div>
           )}
-          
+          <div className="info-row">
+            <div className="info-label">Nome Quadra:</div>
+            <div className="info-value">
+              {match.nomequadra || 'Nome da quadra não informado'}
+            </div>
+          </div>
           <div className="info-row">
             <div className="info-label">Local:</div>
             <div className="info-value">
               {match.location?.address || (typeof match.location === 'string' ? match.location : 'Endereço não informado')}
+            </div>
+          </div>
+          <div className="info-row">
+            <div className="info-label">Modalidade:</div>
+            <div className="info-value">
+              {match.modalidade || 'Modalidade não informada'}
             </div>
           </div>
           <div className="info-row">
@@ -291,6 +307,7 @@ const MatchDetail: React.FC = () => {
                 ))}
                 {timeCadastrados.length === 1 && <div className="versus-text">X</div>}
               </>
+
             ) : (
               <div className="no-teams-wrapper">
                 <div className="no-teams-text">Nenhum time inscrito ainda.</div>
@@ -307,18 +324,30 @@ const MatchDetail: React.FC = () => {
               </div>
             )}
           </div>
-          
-          {canDeleteMatch && (
-            <div className="d-flex justify-content-center mt-4">
-              <Button
-                variant="danger"
-                onClick={handleOpenDeleteConfirm}
-                className="delete-match-button"
-              >
-                <DeleteIcon /> Excluir Partida
-              </Button>
+            <div className='d-flex gap-2 container justify-content-center'>
+              {canDeleteMatch && (
+                <Button
+                  variant="danger"
+                  onClick={handleOpenDeleteConfirm}
+                >
+                  <DeleteIcon /> Excluir Partida
+                </Button>
+              )}     
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate(`/matches/edit/${id}`)}
+                >
+                  <EditIcon/> Editar Partida 
+                </Button>
+
+                <Button
+                  variant="secondary"
+                  onClick={() => setEditRules(true)}
+                >
+                  <EditIcon/> Editar Regras   
+                </Button>
+              
             </div>
-          )}
         </div>
         {modal && (
           <ModalTeams
@@ -336,6 +365,15 @@ const MatchDetail: React.FC = () => {
               // refresh teams list after success
               getTimeInscrito(id!);
             }}
+          />
+        )}
+        {editRules && (
+          <EditRulesModal
+            show={editRules}
+            onHide={handleModalClose}
+            onClose={() => setEditRules(false)}
+            userId={Number(user?.id)}
+            partidaDados={match}
           />
         )}
       </div>

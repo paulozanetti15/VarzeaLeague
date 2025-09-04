@@ -5,18 +5,18 @@ import { index, store, update, remove, getById } from '../controllers/UserContro
 const router = express.Router();
 
 // Get all users
-router.get('/', index, authenticateToken);
+router.get('/', authenticateToken, index);
 
 // Get user by ID
-router.get('/:id', getById, authenticateToken);
+router.get('/:id', authenticateToken, getById);
 
 // Create new user
-router.post('/', store, authenticateToken);
+router.post('/', authenticateToken, store);
 
 // Update user
-router.put('/:id', update, authenticateToken);
+router.put('/:id', authenticateToken, update);
 
 // Delete user
-router.delete('/:id', remove, authenticateToken);
+router.delete('/:id', authenticateToken, remove);
 
 export default router;

@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  InputAdornment,
   Paper,
   Table,
   TableBody,
@@ -40,72 +41,104 @@ import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import './UserManagement.css';
 
-// Glassmorphism modal - REMOVENDO ESTILO GLASSMORFICO
-// Deixando apenas um Dialog padrão para ser estilizado pelo CSS
+// Modal moderno e profissional
 const CustomDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiPaper-root': {
-    borderRadius: 16,
-    boxShadow: '0 8px 30px 0 rgba(0, 0, 0, 0.1)',
-    padding: theme.spacing(2, 2, 2, 2),
-    minWidth: 340,
-    maxWidth: 'none',
-    width: 'fit-content',
+    borderRadius: 20,
+    background: '#ffffff',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+    padding: 0,
+    minWidth: 520,
+    maxWidth: 640,
+    width: '90vw',
     margin: 'auto',
+    overflow: 'hidden',
+    border: 'none',
+  },
+  '& .MuiBackdrop-root': {
+    background: 'rgba(0, 0, 0, 0.6)',
+    backdropFilter: 'blur(4px)',
   },
 }));
 
-// Avatar para o modal - REMOVENDO GRADIENTE FORTE
+// Avatar moderno e sofisticado
 const StyledAvatar = styled(Avatar)(({ theme }) => ({
-  background: theme.palette.grey[300], // Um cinza suave
-  color: theme.palette.grey[800], // Texto escuro
+  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  color: 'white',
   width: 72,
   height: 72,
-  fontSize: 36,
-  fontWeight: 800,
-  boxShadow: '0 4px 12px 0 rgba(0, 0, 0, 0.1)',
-  border: `3px solid ${theme.palette.background.paper}`,
+  fontSize: 28,
+  fontWeight: 700,
+  boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
+  border: '3px solid #ffffff',
 }));
 
-// Input with focus effect
+// Input moderno e elegante
 const FancyTextField = styled(TextField)(({ theme }) => ({
-  background: '#fff',
-  borderRadius: 12,
-  boxShadow: '0 1px 4px 0 rgba(33,203,243,0.07)',
   '& .MuiOutlinedInput-root': {
     borderRadius: 12,
-    fontSize: 17,
-    fontWeight: 500,
+    fontSize: 15,
+    backgroundColor: '#fafbfc',
+    minHeight: 56,
     '& fieldset': {
-      borderColor: theme.palette.primary.light,
+      borderColor: '#e1e5e9',
+      borderWidth: 1.5,
     },
     '&:hover fieldset': {
-      borderColor: theme.palette.primary.main,
+      borderColor: '#667eea',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#21cbf3',
+      borderColor: '#667eea',
       borderWidth: 2,
+      boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.1)',
     },
+  },
+  '& .MuiInputLabel-root': {
+    color: '#64748b',
+    fontWeight: 600,
+    fontSize: '14px',
+    '&.Mui-focused': {
+      color: '#667eea',
+    },
+  },
+  '& .MuiOutlinedInput-input': {
+    padding: '16px 14px',
+    fontSize: '15px',
+    fontWeight: 500,
   },
 }));
 
 const FancyFormControl = styled(FormControl)(({ theme }) => ({
-  background: '#fff',
-  borderRadius: 12,
-  boxShadow: '0 1px 4px 0 rgba(33,203,243,0.07)',
   '& .MuiOutlinedInput-root': {
     borderRadius: 12,
-    fontSize: 17,
-    fontWeight: 500,
+    fontSize: 15,
+    backgroundColor: '#fafbfc',
+    minHeight: 56,
     '& fieldset': {
-      borderColor: theme.palette.primary.light,
+      borderColor: '#e1e5e9',
+      borderWidth: 1.5,
     },
     '&:hover fieldset': {
-      borderColor: theme.palette.primary.main,
+      borderColor: '#667eea',
     },
     '&.Mui-focused fieldset': {
-      borderColor: '#21cbf3',
+      borderColor: '#667eea',
       borderWidth: 2,
+      boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.1)',
     },
+  },
+  '& .MuiInputLabel-root': {
+    color: '#64748b',
+    fontWeight: 600,
+    fontSize: '14px',
+    '&.Mui-focused': {
+      color: '#667eea',
+    },
+  },
+  '& .MuiSelect-select': {
+    padding: '16px 14px',
+    fontSize: '15px',
+    fontWeight: 500,
   },
 }));
 
@@ -156,13 +189,66 @@ const sexoValue = (label: string) => {
   return found ? found.value : label;
 };
 const USER_TYPE_OPTIONS = [
-  { id: 1, name: 'Administrador' },
-  { id: 2, name: 'Gerenciador de Times' },
-  { id: 3, name: 'Gerenciador de Eventos' },
+  { id: 1, name: 'Admin Master' },
+  { id: 2, name: 'Admin Eventos' },
+  { id: 3, name: 'Admin Times' },
+  { id: 4, name: 'Usuário Comum' },
 ];
 const userTypeLabel = (id: number|string) => {
   const found = USER_TYPE_OPTIONS.find(opt => String(opt.id) === String(id));
   return found ? found.name : 'Desconhecido';
+};
+
+// Validação de CPF real
+const validateCPF = (cpf: string): boolean => {
+  cpf = cpf.replace(/[^\d]/g, '');
+  
+  if (cpf.length !== 11) return false;
+  
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+  
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(cpf.charAt(i)) * (10 - i);
+  }
+  let remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cpf.charAt(9))) return false;
+  
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(cpf.charAt(i)) * (11 - i);
+  }
+  remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cpf.charAt(10))) return false;
+  
+  return true;
+};
+
+// Validação de força da senha
+const checkPasswordStrength = (password: string) => {
+  const requirements = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /\d/.test(password),
+    special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+  };
+
+  const score = Object.values(requirements).filter(Boolean).length;
+  
+  let strength = 'weak';
+  if (score >= 5) strength = 'very-strong';
+  else if (score >= 4) strength = 'strong';
+  else if (score >= 3) strength = 'medium';
+  
+  return {
+    isStrong: score >= 4,
+    strength,
+    requirements,
+    score
+  };
 };
 
 const UserManagement: React.FC = () => {
@@ -190,12 +276,30 @@ const UserManagement: React.FC = () => {
   const [formErrors, setFormErrors] = useState<any>({});
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [userToDeleteId, setUserToDeleteId] = useState<number | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState<any>(null);
 
   const { user } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
+
+  // MenuProps to force white background for Select dropdowns (overrides global CSS)
+  const selectMenuProps: any = {
+    PaperProps: {
+      sx: {
+        backgroundColor: '#ffffff',
+        // ensure text is dark
+        color: theme.palette.text.primary,
+      }
+    },
+    MenuListProps: {
+      sx: {
+        backgroundColor: '#ffffff'
+      }
+    }
+  };
 
   useEffect(() => {
     if (user?.userTypeId === 1) {
@@ -272,6 +376,7 @@ const UserManagement: React.FC = () => {
     setOpenDialog(false);
     setSelectedUser(null);
     setFormErrors({});
+    setPasswordStrength(null);
   };
 
   const handleOpenDetail = (user: User) => {
@@ -287,6 +392,7 @@ const UserManagement: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
     const { name, value } = e.target;
     let newValue = value;
+    
     if (name === 'cpf') {
       let v = String(value).replace(/\D/g, '').slice(0, 11);
       if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
@@ -294,6 +400,7 @@ const UserManagement: React.FC = () => {
       else if (v.length > 3) v = v.replace(/(\d{3})(\d{0,3})/, '$1.$2');
       newValue = v;
     }
+    
     if (name === 'phone') {
       let v = String(value).replace(/\D/g, '').slice(0, 11);
       if (v.length > 10) v = v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
@@ -301,9 +408,17 @@ const UserManagement: React.FC = () => {
       else if (v.length > 2) v = v.replace(/(\d{2})(\d{0,5})/, '($1) $2');
       newValue = v;
     }
+    
     if (name === 'sexo') {
       newValue = value;
     }
+
+    // Validação da senha em tempo real
+    if (name === 'password') {
+      const passwordCheck = checkPasswordStrength(String(value));
+      setPasswordStrength(passwordCheck);
+    }
+
     setFormData(prev => ({
       ...prev,
       [name as string]: newValue,
@@ -315,20 +430,92 @@ const UserManagement: React.FC = () => {
     let tempErrors: any = {};
     let isValid = true;
 
-    if (!formData.name) { tempErrors.name = "Nome é obrigatório"; isValid = false; }
-    if (!formData.email) { tempErrors.email = "Email é obrigatório"; isValid = false; }
-    else if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formData.email)) { tempErrors.email = "Email inválido"; isValid = false; }
-    if (!formData.cpf) { tempErrors.cpf = "CPF é obrigatório"; isValid = false; }
-    else if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf)) { tempErrors.cpf = "CPF inválido"; isValid = false; }
-    if (!formData.phone) { tempErrors.phone = "Telefone é obrigatório"; isValid = false; }
-    else if (!/^\(\d{2}\)\s\d{5}-\d{4}$/.test(formData.phone)) { tempErrors.phone = "Telefone inválido"; isValid = false; }
-    if (!formData.sexo) { tempErrors.sexo = "Gênero é obrigatório"; isValid = false; }
-    if (!formData.userTypeId) { tempErrors.userTypeId = "Tipo de usuário é obrigatório"; isValid = false; }
+    // Validação do nome
+    if (!formData.name.trim()) { 
+      tempErrors.name = "Nome é obrigatório"; 
+      isValid = false; 
+    }
 
-    // Only validate password if creating a new user or if password field is not empty during edit
+    // Validação do email
+    if (!formData.email.trim()) { 
+      tempErrors.email = "Email é obrigatório"; 
+      isValid = false; 
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) { 
+      tempErrors.email = "Email inválido"; 
+      isValid = false; 
+    }
+
+    // Validação do CPF
+    if (!formData.cpf.trim()) { 
+      tempErrors.cpf = "CPF é obrigatório"; 
+      isValid = false; 
+    } else {
+      const cpfLimpo = formData.cpf.replace(/\D/g, '');
+      if (!validateCPF(cpfLimpo)) { 
+        tempErrors.cpf = "CPF inválido"; 
+        isValid = false; 
+      }
+      else {
+        // Verificar CPF duplicado no array de usuários (somente criação ou se mudou no edição)
+        const cpfExists = users.some(u => String(u.cpf).replace(/\D/g, '') === String(cpfLimpo) && (!selectedUser || u.id !== selectedUser.id));
+        if (cpfExists) {
+          tempErrors.cpf = 'CPF já cadastrado';
+          isValid = false;
+        }
+      }
+    }
+
+    // Validação do telefone
+    if (!formData.phone.trim()) { 
+      tempErrors.phone = "Telefone é obrigatório"; 
+      isValid = false; 
+    } else if (!/^\d{10,11}$/.test(formData.phone.replace(/\D/g, ''))) { 
+      tempErrors.phone = "Telefone inválido"; 
+      isValid = false; 
+    }
+
+    // Validação do gênero
+    if (!formData.sexo) { 
+      tempErrors.sexo = "Gênero é obrigatório"; 
+      isValid = false; 
+    }
+
+    // Validação do tipo de usuário
+    if (!formData.userTypeId) { 
+      tempErrors.userTypeId = "Tipo de usuário é obrigatório"; 
+      isValid = false; 
+    }
+
+    // Validação de email duplicado (usar lista local de usuários)
+    if (!formData.email.trim()) {
+      tempErrors.email = tempErrors.email || 'Email é obrigatório';
+      isValid = false;
+    } else {
+      // Checar se email já existe em outro usuário
+      const emailExists = users.some(u => String(u.email).toLowerCase() === String(formData.email).toLowerCase() && (!selectedUser || u.id !== selectedUser.id));
+      if (emailExists) {
+        tempErrors.email = 'Email já cadastrado';
+        isValid = false;
+      }
+    }
+
+    // Validação da senha (apenas para novos usuários ou quando senha é fornecida)
     if (!selectedUser || (selectedUser && formData.password)) {
-      if (!formData.password) { tempErrors.password = "Senha é obrigatória"; isValid = false; }
-      if (formData.password !== formData.confirmPassword) { tempErrors.confirmPassword = "As senhas não coincidem"; isValid = false; }
+      if (!formData.password) { 
+        tempErrors.password = "Senha é obrigatória"; 
+        isValid = false; 
+      } else {
+        const passwordCheck = checkPasswordStrength(formData.password);
+        if (!passwordCheck.isStrong) {
+          tempErrors.password = "A senha deve cumprir todos os requisitos de segurança";
+          isValid = false;
+        }
+      }
+      
+      if (formData.password !== formData.confirmPassword) { 
+        tempErrors.confirmPassword = "As senhas não coincidem"; 
+        isValid = false; 
+      }
     }
 
     setFormErrors(tempErrors);
@@ -357,9 +544,16 @@ const UserManagement: React.FC = () => {
       fetchUsers();
       handleCloseDialog();
     } catch (error: any) {
+      // Extrair mensagem de erro de várias formas possíveis
+      let errMsg = 'Erro ao salvar usuário';
+      if (error?.response?.data) {
+        errMsg = error.response.data.error || error.response.data.message || errMsg;
+      } else if (error?.message) {
+        errMsg = error.message;
+      }
       setSnackbar({
         open: true,
-        message: error.response?.data?.error || error.message || 'Erro ao salvar usuário',
+        message: errMsg,
         severity: 'error'
       });
     } finally {
@@ -369,7 +563,8 @@ const UserManagement: React.FC = () => {
 
   const handleDelete = async (userId: number) => {
     setUserToDeleteId(userId);
-    setOpenDeleteConfirm(true);
+  setDeleteError(null);
+  setOpenDeleteConfirm(true);
   };
 
   const confirmDelete = async () => {
@@ -380,22 +575,30 @@ const UserManagement: React.FC = () => {
       await api.delete(`/user/${userToDeleteId}`);
       setSnackbar({open: true, message: 'Usuário excluído com sucesso!', severity: 'success'});
       fetchUsers();
-    } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: error.response?.data?.error === 'Usuário não encontrado' ? 'Usuário já foi removido.' : (error.message || 'Erro ao excluir usuário'),
-        severity: 'error'
-      });
-    } finally {
-      setLoading(false);
+      // success: close modal and clear
       setOpenDeleteConfirm(false);
       setUserToDeleteId(null);
+      setDeleteError(null);
+    } catch (error: any) {
+      // extract message robustly
+      let errMsg = 'Erro ao excluir usuário';
+      if (error?.response?.data) {
+        errMsg = error.response.data.error || error.response.data.message || errMsg;
+      } else if (error?.message) {
+        errMsg = error.message;
+      }
+      // show snackbar and also show inside modal
+      setSnackbar({ open: true, message: errMsg, severity: 'error' });
+      setDeleteError(errMsg);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCloseDeleteConfirm = () => {
-    setOpenDeleteConfirm(false);
-    setUserToDeleteId(null);
+  setOpenDeleteConfirm(false);
+  setUserToDeleteId(null);
+  setDeleteError(null);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -489,33 +692,36 @@ const UserManagement: React.FC = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((user) => (
-                  <TableRow key={user.id} hover>
+                filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((u) => (
+                  <TableRow key={u.id} hover>
                     <TableCell className="user-avatar-cell">
-                      <Avatar className="user-avatar-premium">{user.name[0]}</Avatar>
+                      <Avatar className="user-avatar-premium">{u.name[0]}</Avatar>
                     </TableCell>
-                    <TableCell style={{ fontWeight: 600 }}>{user.name}</TableCell>
-                    <TableCell className="user-email-cell">{user.email}</TableCell>
-                    <TableCell className="user-cpf-cell">{user.cpf}</TableCell>
-                    <TableCell className="user-phone-cell">{user.phone}</TableCell>
-                    <TableCell>{user.sexo}</TableCell>
-                    <TableCell>{userTypeLabel(user.userTypeId)}</TableCell>
+                    <TableCell style={{ fontWeight: 600 }}>{u.name}</TableCell>
+                    <TableCell className="user-email-cell">{u.email}</TableCell>
+                    <TableCell className="user-cpf-cell">{u.cpf}</TableCell>
+                    <TableCell className="user-phone-cell">{u.phone}</TableCell>
+                    <TableCell>{u.sexo}</TableCell>
+                    <TableCell>{userTypeLabel(u.userTypeId)}</TableCell>
                     <TableCell className="user-actions-cell" align="right">
                       <Tooltip title="Ver detalhes" arrow>
-                        <IconButton color="info" onClick={() => handleOpenDetail(user)}>
+                        <IconButton color="info" onClick={() => handleOpenDetail(u)}>
                           <VisibilityIcon />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Editar" arrow>
-                        <IconButton color="primary" onClick={() => handleOpenDialog(user)}>
+                        <IconButton color="primary" onClick={() => handleOpenDialog(u)}>
                           <EditIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Excluir" arrow>
-                        <IconButton color="error" onClick={() => handleDelete(user.id)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
+                      {/* Não mostrar botão de excluir para o próprio usuário logado */}
+                      {u.id !== user?.id && (
+                        <Tooltip title="Excluir" arrow>
+                          <IconButton color="error" onClick={() => handleDelete(u.id)}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
@@ -575,19 +781,59 @@ const UserManagement: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      <CustomDialog open={openDialog} onClose={handleCloseDialog} TransitionComponent={Slide} transitionDuration={400} PaperProps={{ sx: { maxWidth: '650px', width: '90%' } }}>
-        <DialogTitle sx={{ textAlign: 'center', pb: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 2 }}>
+      <CustomDialog open={openDialog} onClose={handleCloseDialog} TransitionComponent={Slide} transitionDuration={400}>
+        <DialogTitle sx={{ 
+          textAlign: 'center', 
+          pb: 4, 
+          pt: 5,
+          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+          borderBottom: '1px solid #e2e8f0',
+          position: 'relative',
+        }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            mb: 3,
+          }}>
             <StyledAvatar>
               {selectedUser ? selectedUser.name[0] : <AddIcon fontSize="large" />}
             </StyledAvatar>
           </Box>
-          <Typography variant="h5" component="div" fontWeight={700} sx={{ color: theme.palette.text.primary }}>
+          <Typography 
+            variant="h4" 
+            component="div" 
+            fontWeight={800} 
+            sx={{ 
+              color: '#1e293b',
+              mb: 1.5,
+              fontSize: '28px',
+              letterSpacing: '-0.025em',
+            }}
+          >
             {selectedUser ? 'Editar Usuário' : 'Novo Usuário'}
           </Typography>
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              color: '#64748b', 
+              fontWeight: 500,
+              fontSize: '16px',
+              maxWidth: '400px',
+              margin: '0 auto',
+              lineHeight: 1.5,
+            }}
+          >
+            {selectedUser ? 'Atualize as informações do usuário' : 'Preencha os dados para criar um novo usuário'}
+          </Typography>
         </DialogTitle>
-        <DialogContent sx={{ px: 4, py: 3, overflowY: 'visible' }}>
-          <Grid container spacing={3}>
+        <DialogContent sx={{ 
+          px: 5, 
+          py: 4, 
+          overflowY: 'visible',
+          backgroundColor: '#ffffff',
+        }}>
+          <Grid container spacing={3.5}>
             <Grid item xs={12} md={6}>
               <FancyTextField
                 margin="dense"
@@ -657,7 +903,9 @@ const UserManagement: React.FC = () => {
                   name="sexo"
                   value={formData.sexo}
                   label="Gênero *"
-                  onChange={handleInputChange}
+                  onChange={(e) => handleInputChange(e as any)}
+                  MenuProps={selectMenuProps}
+                  sx={{ backgroundColor: '#ffffff' }}
                 >
                   {SEXO_OPTIONS.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
@@ -677,7 +925,9 @@ const UserManagement: React.FC = () => {
                   name="userTypeId"
                   value={formData.userTypeId}
                   label="Tipo de Usuário *"
-                  onChange={handleInputChange}
+                  onChange={(e) => handleInputChange(e as any)}
+                  MenuProps={selectMenuProps}
+                  sx={{ backgroundColor: '#ffffff' }}
                 >
                   {USER_TYPE_OPTIONS.map((type) => (
                     <MenuItem key={type.id} value={type.id}>
@@ -703,15 +953,57 @@ const UserManagement: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 InputProps={{
                   endAdornment: (
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                    </IconButton>
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(prev => !prev)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        edge="end"
+                        aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                      >
+                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
                   ),
                 }}
               />
+              {formData.password && passwordStrength && (
+                <div className="password-strength-container">
+                  <div className="password-strength-title">
+                    <span>Força da senha</span>
+                    <span className={`password-strength-label ${passwordStrength.strength}`}>
+                      {passwordStrength.strength === 'weak' && 'Fraca'}
+                      {passwordStrength.strength === 'medium' && 'Média'}
+                      {passwordStrength.strength === 'strong' && 'Forte'}
+                      {passwordStrength.strength === 'very-strong' && 'Muito Forte'}
+                    </span>
+                  </div>
+                  <div className="password-strength-meter">
+                    <div className={`password-strength-progress ${passwordStrength.strength}`}></div>
+                  </div>
+                  <div className="password-requirements">
+                    <div className={`password-requirement ${passwordStrength.requirements.length ? 'valid' : 'invalid'}`}>
+                      <span>{passwordStrength.requirements.length ? '✓' : '✗'}</span>
+                      <span>Mín. 8 caracteres</span>
+                    </div>
+                    <div className={`password-requirement ${passwordStrength.requirements.uppercase ? 'valid' : 'invalid'}`}>
+                      <span>{passwordStrength.requirements.uppercase ? '✓' : '✗'}</span>
+                      <span>Maiúscula</span>
+                    </div>
+                    <div className={`password-requirement ${passwordStrength.requirements.lowercase ? 'valid' : 'invalid'}`}>
+                      <span>{passwordStrength.requirements.lowercase ? '✓' : '✗'}</span>
+                      <span>Minúscula</span>
+                    </div>
+                    <div className={`password-requirement ${passwordStrength.requirements.number ? 'valid' : 'invalid'}`}>
+                      <span>{passwordStrength.requirements.number ? '✓' : '✗'}</span>
+                      <span>Número</span>
+                    </div>
+                    <div className={`password-requirement ${passwordStrength.requirements.special ? 'valid' : 'invalid'}`}>
+                      <span>{passwordStrength.requirements.special ? '✓' : '✗'}</span>
+                      <span>Símbolo</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </Grid>
             <Grid item xs={12} md={6}>
               <FancyTextField
@@ -728,24 +1020,87 @@ const UserManagement: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 InputProps={{
                   endAdornment: (
-                    <IconButton
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      edge="end"
-                    >
-                      {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                    </IconButton>
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowConfirmPassword(prev => !prev)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        edge="end"
+                        aria-label={showConfirmPassword ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}
+                      >
+                        {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
                   ),
                 }}
               />
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions sx={{ justifyContent: 'center', pt: 3, pb: 2 }}>
-          <Button onClick={handleCloseDialog} variant="outlined" color="secondary" sx={{ borderRadius: 8, px: 4, py: 1.2 }}>
-            CANCELAR
+        <DialogActions sx={{ 
+          justifyContent: 'center', 
+          pt: 4, 
+          pb: 5,
+          px: 5,
+          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+          borderTop: '1px solid #e2e8f0',
+          gap: 3,
+        }}>
+          <Button 
+            onClick={handleCloseDialog} 
+            variant="outlined" 
+            color="primary"
+            sx={{ 
+              borderRadius: 12, 
+              px: 5, 
+              py: 1.5,
+              fontSize: '15px',
+              fontWeight: 700,
+              textTransform: 'none',
+              borderColor: '#d1d5db',
+              color: `${theme.palette.text.primary} !important`,
+              backgroundColor: '#ffffff !important',
+              borderWidth: 2,
+              minWidth: '140px',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+              '&.MuiButton-outlined': {
+                color: `${theme.palette.text.primary} !important`,
+                backgroundColor: '#ffffff !important',
+                borderColor: '#d1d5db !important'
+              },
+              '&:hover': {
+                borderColor: '#9ca3af',
+                color: `${theme.palette.text.primary} !important`,
+                backgroundColor: '#f9fafb !important',
+                borderWidth: 2,
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                transform: 'translateY(-1px)',
+              },
+            }}
+          >
+            Cancelar
           </Button>
-          <Button type="submit" onClick={handleSubmit} variant="contained" color="primary" sx={{ borderRadius: 8, px: 4, py: 1.2 }}>
-            SALVAR
+          <Button 
+            type="submit" 
+            onClick={handleSubmit} 
+            variant="contained" 
+            sx={{ 
+              borderRadius: 12, 
+              px: 5, 
+              py: 1.5,
+              fontSize: '15px',
+              fontWeight: 700,
+              textTransform: 'none',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              minWidth: '160px',
+              boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
+                boxShadow: '0 6px 16px rgba(102, 126, 234, 0.4)',
+                transform: 'translateY(-1px)',
+              },
+            }}
+          >
+            {selectedUser ? 'Atualizar' : 'Criar Usuário'}
           </Button>
         </DialogActions>
       </CustomDialog>
@@ -767,16 +1122,28 @@ const UserManagement: React.FC = () => {
           <Typography className="user-management-modal-content" sx={{ color: theme.palette.error.main, fontWeight: 700 }}>
             Esta ação não pode ser desfeita.
           </Typography>
+          {deleteError && (
+            <Box sx={{ mt: 2 }}>
+              <Alert severity="error" sx={{ fontWeight: 700 }}>{deleteError}</Alert>
+            </Box>
+          )}
         </DialogContent>
         <DialogActions className="user-management-modal-actions">
-          <Button 
-            onClick={handleCloseDeleteConfirm} 
-            variant="text" 
-            color="inherit" 
+          <Button
+            onClick={handleCloseDeleteConfirm}
+            variant="text"
+            color="primary"
             sx={{
-              color: theme.palette.text.secondary,
+              // force readable text/background because global CSS sometimes overrides button styles
+              color: `${theme.palette.text.primary} !important`,
+              backgroundColor: '#ffffff !important',
+              borderRadius: 8,
+              px: 3,
+              py: 1,
+              fontWeight: 700,
+              textTransform: 'none',
               '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                backgroundColor: 'rgba(0, 0, 0, 0.04) !important',
               }
             }}
           >

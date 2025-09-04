@@ -1,6 +1,13 @@
 import { Response } from 'express';
 import bcrypt from 'bcryptjs';
 import User from '../models/UserModel';
+import Team from '../models/TeamModel';
+import TeamUser from '../models/TeamUserModel';
+import Match from '../models/MatchModel';
+import Championship from '../models/ChampionshipModel';
+import MatchGoal from '../models/MatchGoalModel';
+import MatchCard from '../models/MatchCardModel';
+import MatchReport from '../models/MatchReportModel';
 import { AuthRequest } from '../middleware/auth';
 
 export const index = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -106,6 +113,31 @@ export const remove = async (req: AuthRequest, res: Response): Promise<void> => 
 
     if (!user) {
       res.status(404).json({ error: 'Usuário não encontrado' });
+      return;
+    }
+
+    // Verificar dependências relacionadas antes de excluir
+    const [captainedTeams, teamMemberships, organizedMatches, createdChampionships, goals, cards, reports] = await Promise.all([
+      Team.count({ where: { captainId: id } }),
+      TeamUser.count({ where: { userId: id } }),
+      Match.count({ where: { organizerId: id } }),
+      Championship.count({ where: { created_by: id } }),
+      MatchGoal.count({ where: { user_id: id } }),
+      MatchCard.count({ where: { user_id: id } }),
+      MatchReport.count({ where: { created_by: id } }),
+    ]);
+
+    const reasons: string[] = [];
+    if (captainedTeams) reasons.push(`${captainedTeams} time(s) como capitão`);
+    if (teamMemberships) reasons.push(`${teamMemberships} associação(ões) a time(s)`);
+    if (organizedMatches) reasons.push(`${organizedMatches} partida(s) organizadas`);
+    if (createdChampionships) reasons.push(`${createdChampionships} campeonato(s) criados`);
+    if (goals) reasons.push(`${goals} gol(s) registrados`);
+    if (cards) reasons.push(`${cards} cartão(ões) registrados`);
+    if (reports) reasons.push(`${reports} relatório(s) de partida`);
+
+    if (reasons.length > 0) {
+      res.status(400).json({ error: `Impossível excluir usuário. Existem registros relacionados: ${reasons.join(', ')}. Remova ou reatribua-os antes de tentar excluir.` });
       return;
     }
 
