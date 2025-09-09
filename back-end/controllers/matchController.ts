@@ -4,7 +4,9 @@ import MatchModel from '../models/MatchModel';
 import User from '../models/UserModel';
 import jwt from 'jsonwebtoken';
 import MatchTeamsModel from '../models/MatchTeamsModel';
+import TeamModel from "../models/TeamModel"
 import Rules from '../models/RulesModel';
+import { Op } from 'sequelize';
 
 interface UserWithType extends User {
   userTypeId: number;
@@ -239,4 +241,47 @@ export const deleteMatch = async (req: Request, res: Response): Promise<void> =>
     console.error('Erro ao excluir partida:', error);
     res.status(500).json({ message: 'Erro ao excluir partida' });
   }
-}; 
+};
+export const getMatchesByTeam = async (req: AuthRequest, res: Response) => {
+  const dadosPartidas=[]
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Usuário não autenticado' });
+      return;
+    }
+    const idMatches = await MatchTeamsModel.findAll({
+      where: { teamId: id },
+    });
+    for(const dados of idMatches){
+      const Matches = await MatchTeamsModel.findAll({
+        where :{
+          matchId:dados.matchId,
+          teamId: {
+            [Op.notIn]: [id] // id deve estar dentro de um array
+          }
+        },
+        include:
+        [
+          {
+            model:TeamModel,
+            as:"team",
+            attributes:["name"],
+            
+          },
+          {
+            model:MatchModel,
+            as:"match",
+            attributes:["date","location"]
+          }
+        ]
+      })
+      dadosPartidas.push(...Matches)
+    }
+     
+    res.status(200).json(dadosPartidas)
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao listar partidas por time' });
+  }
+}

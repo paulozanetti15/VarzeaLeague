@@ -346,7 +346,6 @@ const MatchDetail: React.FC = () => {
                 >
                   <EditIcon/> Editar Regras   
                 </Button>
-              
             </div>
         </div>
         {modal && (
