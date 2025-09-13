@@ -44,7 +44,7 @@ function PartidaEditForm({show,onHide,local,Data,horario,timeAdversario}:Partida
                             <p className="rule-value">{converterData(Data)}</p>
                         </div>
                         <div className="rule-item">
-                            <h6 className="rule-title">Horario</h6>
+                            <h6 className="rule-title">Horário</h6>
                             <p className="rule-value">{converterHora(horario.toLocaleString())}</p>
                         </div>
                     </div>
