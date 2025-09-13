@@ -19,8 +19,24 @@ interface HeaderProps {
 export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  
+  const pageLinks = [
+    { name: 'Times', path: '/teams', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true },
+    { name: 'Partidas', path: '/matches', allowedCommonUser:false, allowedAdminUser:true, allowedAdminEvent:true, allowedTeamAdmin:true },
+    { name: 'Campeonatos', path: '/championships', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true},
+    {name: 'Dashboard', path: '/dashboard', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true}
+  ];
+  const getAccessiblePages=(userTypeId:number)=>{
+    switch (userTypeId){
+      case 1:
+        return pageLinks.filter(f=>f.allowedAdminEvent)
+      case 2:   
+        return pageLinks.filter(f=>f.allowedAdminEvent)
+      case 3:   
+        return pageLinks.filter(f=>f.allowedTeamAdmin)
+      default:
+        return []  
+    }  
+  }
   return (
     <header className="header no-top-margin" style={{ background: '#0d47a1', boxShadow: '0 4px 20px rgba(13,71,161,0.15)' }}>
       <nav className="navbar navbar-expand-lg navbar-dark">
@@ -41,31 +57,16 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
           </button>
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto">
-              {isLoggedIn && (
-                <>
-                  <li className="nav-item">
-                    <span className="nav-link" onClick={() => navigate('/matches')}>Partidas</span>
-                  </li>
-                  <li className="nav-item">
-                    <span className="nav-link" onClick={() => navigate('/championships')}>Campeonatos</span>
-                  </li>
-                  {(localStorage.getItem('Tipo_usuário:') === '1'|| localStorage.getItem('Tipo_usuário:') === '4' || localStorage.getItem('Tipo_usuário:') === '3') && (
+              {isLoggedIn &&  user && getAccessiblePages(Number(user?.userTypeId)).map((page)=>(
+                  <>
                     <li className="nav-item">
-                      <span className="nav-link" onClick={() => navigate('/teams')}>Meu time</span>
-                    </li>
-                  )}
-                </>
-              )}
-              <li className="nav-item">
-                <span 
-                  className={`nav-link ${location.pathname === "/dashboard" ? "active" : ""}`}
-                  onClick={() => navigate('/dashboard')}
-                >
-                  Dashboard
-                </span>
-              </li>
-            </ul>
-            <div className="d-flex align-items-center">
+                      <span className="nav-link" onClick={() => navigate(`${page.path}`)}>{page.name}</span>
+                    </li>    
+                  </>
+              ))}
+            </ul>             
+          </div>
+           <div className="d-flex align-items-center">
               {isLoggedIn && user ? (
                 <>
                   <div className="dropdown me-3">
@@ -103,7 +104,7 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
               )}
             </div>
           </div>
-        </div>
+
       </nav>
     </header>
   );
