@@ -29,7 +29,7 @@ import Navbar from './components/Navbar'
 import EditMatch from './pages/matches/EditMatch'
 import { Box, CssBaseline } from '@mui/material'
 import SystemOverview from './components/dashboard/SystemOverview'
-import CalendarioPage from './pages/calendario/calendárioPage'
+import CalendarioPage from './components/calendario/calendárioPage'
 
 // Componente simples para loading
   const Loading = () => (
@@ -147,7 +147,7 @@ import CalendarioPage from './pages/calendario/calendárioPage'
               <RoleBasedRoute 
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_TIMES]}
                 redirectTo="/"
               >
                 <PageTransition>
@@ -352,6 +352,7 @@ import CalendarioPage from './pages/calendario/calendárioPage'
               </RoleBasedRoute>
             </PrivateRoute>
           } />
+          
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
