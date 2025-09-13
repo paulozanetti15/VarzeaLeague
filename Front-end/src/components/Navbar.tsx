@@ -27,22 +27,38 @@ import {
   Person,
   Notifications,
   ArrowBack,
+  CalendarMonth
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getRoleName } from '../utils/roleUtils';
 import '../components/landing/Header.css';
 
-const pages = [
-  { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
-  { name: 'Times', path: '/teams', icon: <People /> },
-  { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
-  { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
+const pageLinks = [
+  { name: 'Dashboard', path: '/dashboard', icon: <Dashboard />, allowedCommonUser:false, allowedAdminUser:true, allowedAdminEvent:false, allowedTeamAdmin:false },
+  { name: 'Times', path: '/teams', icon: <People />, allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true },
+  { name: 'Partidas', path: '/matches', icon: <SportsSoccer />, allowedCommonUser:false, allowedAdminUser:true, allowedAdminEvent:true, allowedTeamAdmin:true },
+  { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents />, allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true },
+  { name: 'Calendario', path: '/calendario', icon: <CalendarMonth />, allowedCommonUser:false, allowedAdminUser:true, allowedAdminEvent:false, allowedTeamAdmin:true },
 ];
 
 const adminPages = [
   { name: 'Usuários', path: '/admin/users', icon: <Person /> },
 ];
+
+// 🔑 Função central para pegar páginas permitidas
+const getAccessiblePages = (userTypeId?: number) => {
+  switch (userTypeId) {
+    case 1:
+      return [...adminPages, ...pageLinks.filter(p => p.allowedAdminUser)];
+    case 2:
+      return pageLinks.filter(p => p.allowedAdminEvent);
+    case 3:
+      return pageLinks.filter(p => p.allowedTeamAdmin);
+    default:
+      return pageLinks.filter(p => p.allowedCommonUser); // aqui pode liberar links "públicos" se quiser
+  }
+};
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -78,6 +94,7 @@ const Navbar = () => {
     navigate(-1);
   };
 
+  // Drawer lateral (mobile)
   const drawer = (
     <Box sx={{ textAlign: 'center', p: 2 }}>
       <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: 'primary.main' }}>
@@ -85,7 +102,7 @@ const Navbar = () => {
       </Typography>
       <Divider sx={{ mb: 1 }} />
       <List>
-        {pages.map((page) => (
+        {getAccessiblePages(user?.userTypeId).map((page) => (
           <ListItem
             component="div"
             key={page.name}
@@ -101,39 +118,17 @@ const Navbar = () => {
               },
             }}
           >
-            <ListItemIcon sx={{ color: isActive(page.path) ? 'primary.main' : 'inherit' }}>{page.icon}</ListItemIcon>
+            <ListItemIcon sx={{ color: isActive(page.path) ? 'primary.main' : 'inherit' }}>
+              {page.icon}
+            </ListItemIcon>
             <ListItemText primary={page.name} />
           </ListItem>
         ))}
-        {user?.userTypeId === 1 && (
-          <>
-            <Divider sx={{ my: 1 }} />
-            {adminPages.map((page) => (
-              <ListItem
-                component="div"
-                key={page.name}
-                onClick={() => handleNavigation(page.path)}
-                sx={{
-                  backgroundColor: isActive(page.path) ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
-                  color: isActive(page.path) ? 'primary.main' : 'text.primary',
-                  borderRadius: 2,
-                  mb: 1,
-                  cursor: 'pointer',
-                  '&:hover': {
-                    backgroundColor: 'rgba(25, 118, 210, 0.04)',
-                  },
-                }}
-              >
-                <ListItemIcon sx={{ color: isActive(page.path) ? 'primary.main' : 'inherit' }}>{page.icon}</ListItemIcon>
-                <ListItemText primary={page.name} />
-              </ListItem>
-            ))}
-          </>
-        )}
       </List>
     </Box>
   );
 
+  // Drawer do usuário (perfil + logout)
   const userDrawer = (
     <Box
       sx={{
@@ -209,10 +204,7 @@ const Navbar = () => {
   );
 
   return (
-    <AppBar
-      position="fixed"
-      elevation={0}
-    >
+    <AppBar position="fixed" elevation={0}>
       <Box
         sx={{
           background: 'linear-gradient(90deg, #0d47a1 0%, #1976d2 100%)',
@@ -238,35 +230,13 @@ const Navbar = () => {
             <ArrowBack />
           </IconButton>
         )}
-        {/* Logo e nome */}
-        <a
-          href="/"
-          className="navbar-brand"
-          style={{
-            textDecoration: 'none',
-            position: 'relative',
-            display: 'inline-block',
-            color: '#fff',
-            fontWeight: 900,
-            letterSpacing: 2,
-            textTransform: 'uppercase',
-            fontFamily: 'Inter, Montserrat, Arial, sans-serif',
-            fontSize: '1.55rem',
-            lineHeight: 1.1,
-            padding: '0.2rem 0',
-            transition: 'all 0.3s ease',
-            cursor: 'pointer',
-            verticalAlign: 'middle',
-            minWidth: 0,
-            maxWidth: '100%',
-            whiteSpace: 'nowrap',
-          }}
-        >
+        {/* Logo */}
+        <a href="/" className="navbar-brand" style={{ textDecoration: 'none', color: '#fff', fontWeight: 900, letterSpacing: 2, textTransform: 'uppercase', fontSize: '1.55rem' }}>
           VÁRZEA LEAGUE
         </a>
         {/* Menu desktop */}
         <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
-          {pages.map((page) => (
+          {getAccessiblePages(user?.userTypeId).map((page) => (
             <Button
               key={page.name}
               onClick={() => handleNavigation(page.path)}
@@ -278,7 +248,6 @@ const Navbar = () => {
                 letterSpacing: 1,
                 borderRadius: 8,
                 padding: '0.5rem 1.2rem',
-                position: 'relative',
                 transition: 'all 0.3s',
                 '&:hover': {
                   color: '#ffd600',
@@ -289,34 +258,6 @@ const Navbar = () => {
               {page.name}
             </Button>
           ))}
-          {user?.userTypeId === 1 && (
-            <>
-              <Divider orientation="vertical" flexItem sx={{ mx: 2 }} />
-              {adminPages.map((page) => (
-                <Button
-                  key={page.name}
-                  onClick={() => handleNavigation(page.path)}
-                  startIcon={page.icon}
-                  sx={{
-                    color: '#fff',
-                    fontWeight: 700,
-                    fontSize: 18,
-                    letterSpacing: 1,
-                    borderRadius: 8,
-                    padding: '0.5rem 1.2rem',
-                    position: 'relative',
-                    transition: 'all 0.3s',
-                    '&:hover': {
-                      color: '#ffd600',
-                      background: 'rgba(255,255,255,0.08)',
-                    },
-                  }}
-                >
-                  {page.name}
-                </Button>
-              ))}
-            </>
-          )}
         </Box>
         {/* Menu mobile */}
         <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
@@ -339,7 +280,7 @@ const Navbar = () => {
             {drawer}
           </Drawer>
         </Box>
-        {/* Avatar e notificações */}
+        {/* Avatar + notificações */}
         {user && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 2 }}>
             <Tooltip title="Notificações">
@@ -351,17 +292,7 @@ const Navbar = () => {
             </Tooltip>
             <Tooltip title="Abrir menu do usuário">
               <IconButton onClick={() => setDrawerUserOpen(true)} sx={{ p: 0 }}>
-                <Avatar
-                  alt={user.name}
-                  src={user.avatar}
-                  sx={{
-                    bgcolor: 'primary.main',
-                    width: 40,
-                    height: 40,
-                    border: '2px solid #ffd600',
-                    boxShadow: '0 2px 8px rgba(13,71,161,0.10)',
-                  }}
-                >
+                <Avatar alt={user.name} src={user.avatar} sx={{ bgcolor: 'primary.main', width: 40, height: 40, border: '2px solid #ffd600' }}>
                   {user.name?.charAt(0)}
                 </Avatar>
               </IconButton>
