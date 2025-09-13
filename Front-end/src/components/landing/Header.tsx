@@ -18,17 +18,16 @@ interface HeaderProps {
 
 export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) {
   const navigate = useNavigate();
-  const location = useLocation();
   const pageLinks = [
     { name: 'Times', path: '/teams', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true },
-    { name: 'Partidas', path: '/matches', allowedCommonUser:false, allowedAdminUser:true, allowedAdminEvent:true, allowedTeamAdmin:true },
+    { name: 'Partidas', path: '/matches', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:true, allowedTeamAdmin:true },
     { name: 'Campeonatos', path: '/championships', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true},
-    {name: 'Dashboard', path: '/dashboard', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true}
+    {name: 'Dashboard', path: '/dashboard', allowedCommonUser:false, allowedAdminUser:true, allowedAdminEvent:false, allowedTeamAdmin:false}
   ];
   const getAccessiblePages=(userTypeId:number)=>{
     switch (userTypeId){
       case 1:
-        return pageLinks.filter(f=>f.allowedAdminEvent)
+        return pageLinks.filter(f=>f.allowedAdminUser)
       case 2:   
         return pageLinks.filter(f=>f.allowedAdminEvent)
       case 3:   
@@ -74,7 +73,7 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                       {user.name}
                     </button>
                     <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style={{ background: '#0d47a1', color: '#fff', borderRadius: 12, boxShadow: '0 4px 20px rgba(13,71,161,0.15)', padding: '0.5rem 0' }}>
-                      {(localStorage.getItem('Tipo_usuário:') === '1' || localStorage.getItem('Tipo_usuário:') === '3') && (
+                      {(user.userTypeId === 1 ||user.userTypeId === 3) && (
                         <li><span className="dropdown-item" onClick={() => navigate('/teams')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Meu time</span></li>
                       )}
                       <li><span className="dropdown-item" onClick={() => navigate('/perfil')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Meu perfil</span></li>
