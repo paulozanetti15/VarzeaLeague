@@ -18,6 +18,7 @@ const ChampionshipEditForm: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{[k:string]: string}>({});
   const navigate = useNavigate();
 
   const hiddenStartRef = useRef<HTMLInputElement>(null);
@@ -103,35 +104,46 @@ const ChampionshipEditForm: React.FC = () => {
     setSubmitting(true);
     setError('');
     setSuccess('');
+    setFieldErrors({});
     try {
-      // Validar datas se preenchidas
+      const errors: {[k:string]: string} = {};
+      const nameTrim = form.name.trim();
+      if (!nameTrim) {
+        errors.name = 'Informe o nome';
+      } else if (nameTrim.length < 3) {
+        errors.name = 'Nome muito curto (mín. 3)';
+      } else if (nameTrim.length > 100) {
+        errors.name = 'Nome muito longo (máx. 100)';
+      }
+      if (form.description && form.description.length > 1000) {
+        errors.description = 'Descrição excede 1000 caracteres';
+      }
+      if (!form.start_date) errors.start_date = 'Informe a data de início';
+      if (!form.end_date) errors.end_date = 'Informe a data de término';
+      let parsedStart: Date | null = null;
+      let parsedEnd: Date | null = null;
       if (form.start_date) {
-        const parsedStart = parse(form.start_date, 'dd/MM/yyyy', new Date());
-        if (!isValid(parsedStart)) {
-          setError('Data de início inválida');
-          setSubmitting(false);
-          return;
-        }
+        const p = parse(form.start_date, 'dd/MM/yyyy', new Date());
+        if (!isValid(p)) errors.start_date = 'Data de início inválida'; else parsedStart = p;
       }
       if (form.end_date) {
-        const parsedEnd = parse(form.end_date, 'dd/MM/yyyy', new Date());
-        if (!isValid(parsedEnd)) {
-          setError('Data de término inválida');
-          setSubmitting(false);
-          return;
-        }
+        const p = parse(form.end_date, 'dd/MM/yyyy', new Date());
+        if (!isValid(p)) errors.end_date = 'Data de término inválida'; else parsedEnd = p;
       }
-      if (form.start_date && form.end_date) {
-        const s = parse(form.start_date, 'dd/MM/yyyy', new Date());
-        const e = parse(form.end_date, 'dd/MM/yyyy', new Date());
-        if (!isAfter(e, s)) {
-          setError('Data de término deve ser após a data de início');
-          setSubmitting(false);
-          return;
-        }
+      const today = new Date(); today.setHours(0,0,0,0);
+      if (parsedStart) { const s0 = new Date(parsedStart); s0.setHours(0,0,0,0); if (s0 < today) errors.start_date = 'Início deve ser hoje ou futuro'; }
+      if (parsedStart && parsedEnd && !isAfter(parsedEnd, parsedStart)) {
+        errors.end_date = 'Término deve ser após o início';
+      }
+      if (Object.keys(errors).length) {
+        setFieldErrors(errors);
+        setError('Corrija os campos destacados.');
+        setSubmitting(false);
+        return;
       }
       const payload = {
         ...form,
+        name: nameTrim,
         start_date: brToISO(form.start_date),
         end_date: brToISO(form.end_date)
       };
@@ -166,12 +178,14 @@ const ChampionshipEditForm: React.FC = () => {
         </div>
         <form className="championship-form" onSubmit={handleSubmit}>
           <label>Nome <span className="required-asterisk" aria-hidden="true">*</span></label>
-          <input name="name" value={form.name} onChange={handleChange} required placeholder="Nome do campeonato" />
+          <input name="name" value={form.name} onChange={handleChange} required placeholder="Nome do campeonato" style={fieldErrors.name ? { borderColor:'#e53935' } : undefined} aria-invalid={!!fieldErrors.name} />
+          {fieldErrors.name && <small style={{ color:'#e53935' }}>{fieldErrors.name}</small>}
           <label>Descrição</label>
-          <textarea name="description" value={form.description} onChange={handleChange} placeholder="Descrição, regras, premiação..." />
+          <textarea name="description" value={form.description} onChange={handleChange} placeholder="Descrição, regras, premiação..." style={fieldErrors.description ? { borderColor:'#e53935' } : undefined} aria-invalid={!!fieldErrors.description} />
+          {fieldErrors.description && <small style={{ color:'#e53935' }}>{fieldErrors.description}</small>}
           <div className="form-row">
             <div className="form-group">
-              <label>Data de Início</label>
+              <label>Data de Início <span className="required-asterisk" aria-hidden="true">*</span></label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ position: 'relative', flex: 1 }}>
                   <input
@@ -183,6 +197,9 @@ const ChampionshipEditForm: React.FC = () => {
                     maxLength={10}
                     onFocus={() => openPicker('start')}
                     className="date-input"
+                    required
+                    style={fieldErrors.start_date ? { borderColor:'#e53935' } : undefined}
+                    aria-invalid={!!fieldErrors.start_date}
                   />
                   <input
                     ref={hiddenStartRef}
@@ -217,7 +234,7 @@ const ChampionshipEditForm: React.FC = () => {
               </div>
             </div>
             <div className="form-group">
-              <label>Data de Término</label>
+              <label>Data de Término <span className="required-asterisk" aria-hidden="true">*</span></label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ position: 'relative', flex: 1 }}>
                   <input
@@ -229,6 +246,9 @@ const ChampionshipEditForm: React.FC = () => {
                     maxLength={10}
                     onFocus={() => openPicker('end')}
                     className="date-input"
+                    required
+                    style={fieldErrors.end_date ? { borderColor:'#e53935' } : undefined}
+                    aria-invalid={!!fieldErrors.end_date}
                   />
                   <input
                     ref={hiddenEndRef}
@@ -263,6 +283,8 @@ const ChampionshipEditForm: React.FC = () => {
               </div>
             </div>
           </div>
+          {fieldErrors.start_date && <small style={{ color:'#e53935' }}>{fieldErrors.start_date}</small>}
+          {fieldErrors.end_date && <small style={{ color:'#e53935' }}>{fieldErrors.end_date}</small>}
           {error && <div className="form-error">{error}</div>}
           {success && <div className="form-success">{success}</div>}
           <button type="submit" className="form-btn" disabled={submitting}>

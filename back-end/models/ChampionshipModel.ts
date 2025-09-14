@@ -19,11 +19,25 @@ Championship.init({
   },
   start_date: {
     type: DataTypes.DATE,
-    allowNull: true,
+    allowNull: false,
+    validate: {
+      notNull: { msg: 'Data de início é obrigatória' },
+      isDate: true,
+    }
   },
   end_date: {
     type: DataTypes.DATE,
-    allowNull: true,
+    allowNull: false,
+    validate: {
+      notNull: { msg: 'Data de término é obrigatória' },
+      isDate: true,
+      isAfterStart(value: any) {
+        // "this" é a instância do modelo
+        if (this.start_date && value && new Date(value) <= new Date(this.start_date)) {
+          throw new Error('Data de término deve ser após a data de início');
+        }
+      }
+    }
   },
   created_by: {
     type: DataTypes.INTEGER,
