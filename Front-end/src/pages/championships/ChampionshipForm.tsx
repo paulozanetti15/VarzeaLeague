@@ -136,7 +136,7 @@ const ChampionshipForm: React.FC = () => {
 
         <form className="championship-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Nome do Campeonato *</label>
+            <label>Nome do Campeonato <span className="required-asterisk" aria-hidden="true">*</span></label>
             <input
               name="name"
               value={form.name}

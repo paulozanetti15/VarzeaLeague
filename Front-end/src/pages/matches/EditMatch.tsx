@@ -334,7 +334,7 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
         )}
         <form onSubmit={handleSubmit} style={{width: '100%'}}> 
             <div className="form-group">
-              <label>Título da Partida</label>
+              <label>Título da Partida <span className="required-asterisk" aria-hidden="true">*</span></label>
               <input
                 ref={titleInputRef}
                 type="text"
@@ -360,7 +360,7 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
 
               <div className="form-row">
               <div className="form-group" style={{ flex: 1 }}>
-                <label htmlFor="date">Data *</label>
+                <label htmlFor="date">Data <span className="required-asterisk" aria-hidden="true">*</span></label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ position: 'relative', flex: 1 }}>
                     <input
@@ -425,7 +425,7 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
                 </div>
               </div>
               <div className="form-group" style={{ flex: 1 }}>
-                <label htmlFor="time">Horário *</label>
+                <label htmlFor="time">Horário <span className="required-asterisk" aria-hidden="true">*</span></label>
                 <input
                   type="text"
                   id="time"
@@ -466,11 +466,11 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
               />
             </div>
             <div className="form-group">
-              <label>Nome da Quadra  </label>
+              <label>Nome da Quadra <span className="required-asterisk" aria-hidden="true">*</span></label>
               <input name="quadra" type='text' className='form-control' onChange={() => setFormData({...formData, nomequadra: formData.nomequadra})} value={formData.nomequadra} />
             </div>
             <div className="form-group">
-              <label>Modalidade</label>
+              <label>Modalidade <span className="required-asterisk" aria-hidden="true">*</span></label>
               <select 
                 style={{            
                   color: '#0e0202ff',

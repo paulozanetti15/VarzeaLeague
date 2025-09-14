@@ -1,3 +1,5 @@
+@import '../../styles/required.css';
+
 .create-match-container {
   min-height: 100vh;
   padding: 2rem;
@@ -282,29 +284,6 @@ textarea.form-control {
   max-height: 100px;
 }
 
-.create-match-container .city-autocomplete {
-  /* Estilos removidos para evitar conflitos */
-}
-
-.create-match-container .city-autocomplete:hover {
-  /* Estilos removidos para evitar conflitos */
-}
-
-.create-match-container .city-autocomplete .MuiOutlinedInput-root {
-  /* Estilos removidos para evitar conflitos */
-}
-
-.create-match-container .city-autocomplete .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
-  /* Estilos removidos para evitar conflitos */
-}
-
-.create-match-container .city-autocomplete .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
-  /* Estilos removidos para evitar conflitos */
-}
-
-.create-match-container .city-autocomplete .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
-  /* Estilos removidos para evitar conflitos */
-}
 
 /* Estilos para campos desabilitados */
 input:disabled {

@@ -165,7 +165,7 @@ const ChampionshipEditForm: React.FC = () => {
           <p className="championship-form-subtitle">Atualize os dados do seu campeonato</p>
         </div>
         <form className="championship-form" onSubmit={handleSubmit}>
-          <label>Nome *</label>
+          <label>Nome <span className="required-asterisk" aria-hidden="true">*</span></label>
           <input name="name" value={form.name} onChange={handleChange} required placeholder="Nome do campeonato" />
           <label>Descrição</label>
           <textarea name="description" value={form.description} onChange={handleChange} placeholder="Descrição, regras, premiação..." />
