@@ -41,15 +41,22 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
           </button>
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto">
-              {isLoggedIn && (
+              {isLoggedIn && user && (
                 <>
-                  <li className="nav-item">
-                    <span className="nav-link" onClick={() => navigate('/matches')}>Partidas</span>
-                  </li>
-                  <li className="nav-item">
-                    <span className="nav-link" onClick={() => navigate('/championships')}>Campeonatos</span>
-                  </li>
-                  {(localStorage.getItem('Tipo_usuário:') === '1'|| localStorage.getItem('Tipo_usuário:') === '4' || localStorage.getItem('Tipo_usuário:') === '3') && (
+                  {/* Partidas - roles 1 e 2 */}
+                  {(user.userTypeId === 1 || user.userTypeId === 2) && (
+                    <li className="nav-item">
+                      <span className="nav-link" onClick={() => navigate('/matches')}>Partidas</span>
+                    </li>
+                  )}
+                  {/* Campeonatos - roles 1 e 2 */}
+                  {(user.userTypeId === 1 || user.userTypeId === 2) && (
+                    <li className="nav-item">
+                      <span className="nav-link" onClick={() => navigate('/championships')}>Campeonatos</span>
+                    </li>
+                  )}
+                  {/* Meu time - roles 1 e 3 */}
+                  {(user.userTypeId === 1 || user.userTypeId === 3) && (
                     <li className="nav-item">
                       <span className="nav-link" onClick={() => navigate('/teams')}>Meu time</span>
                     </li>
@@ -73,7 +80,7 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                       {user.name}
                     </button>
                     <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style={{ background: '#0d47a1', color: '#fff', borderRadius: 12, boxShadow: '0 4px 20px rgba(13,71,161,0.15)', padding: '0.5rem 0' }}>
-                      {(localStorage.getItem('Tipo_usuário:') === '1' || localStorage.getItem('Tipo_usuário:') === '3') && (
+                      {(user.userTypeId === 1 || user.userTypeId === 3) && (
                         <li><span className="dropdown-item" onClick={() => navigate('/teams')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Meu time</span></li>
                       )}
                       <li><span className="dropdown-item" onClick={() => navigate('/perfil')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Meu perfil</span></li>

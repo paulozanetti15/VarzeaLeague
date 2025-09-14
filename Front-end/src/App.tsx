@@ -163,7 +163,8 @@ function AppContent() {
               <RoleBasedRoute 
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                // Partidas: somente roles 1 (ADMIN_SISTEMA) e 2 (ADMIN_EVENTOS)
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS]}
                 redirectTo="/"
               >
                 <PageTransition>
@@ -193,7 +194,8 @@ function AppContent() {
               <RoleBasedRoute 
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                // Detalhes de partidas: roles 1,2,3
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
                 redirectTo="/"
               >
                 <PageTransition>
@@ -267,7 +269,8 @@ function AppContent() {
               <RoleBasedRoute 
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                // Campeonatos: somente roles 1 e 2
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS]}
                 redirectTo="/"
               >
                 <PageTransition>
@@ -297,7 +300,8 @@ function AppContent() {
               <RoleBasedRoute 
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES, USER_ROLES.USUARIO_COMUM]}
+                // Detalhes de campeonatos: roles 1,2,3
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
                 redirectTo="/"
               >
                 <PageTransition>

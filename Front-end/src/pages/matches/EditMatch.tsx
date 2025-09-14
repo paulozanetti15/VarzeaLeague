@@ -3,22 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import './CreateMatch.css';
 import CircularProgress from '@mui/material/CircularProgress';
 import ToastComponent from '../../components/Toast/ToastComponent';
-import { format, parse, isValid, isAfter, set } from 'date-fns';
+import { format, parse, isValid, isAfter } from 'date-fns';
 import axios from 'axios';
 
 interface EditMatchProps {
-  title: string;
-  description: string;
-  date: string;
-  time: string;
-  duration: string;
-  price: string;
-  category: string;
-  modalidade:string;
-  nomequadra: string;
-
+  title?: string;
+  description?: string;
+  date?: string;
+  time?: string;
+  duration?: string;
+  price?: string;
+  category?: string;
+  modalidade?: string;
+  nomequadra?: string;
 }
 
+// O componente não utiliza props externas; tipagem mantida apenas para consistência
 const EditMatch: React.FC<EditMatchProps>  = () => {
   const navigate = useNavigate();
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -26,7 +26,6 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastBg, setToastBg] = useState('');
-  const [usuario, setUsuario] = useState<any>(null);
   const [dadosPartida, setDadosPartida] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -156,7 +155,6 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
       return;
     }
 
-    setUsuario(user);
     if (titleInputRef.current && btnContainerRef.current) {
       const titleWidth = titleInputRef.current.offsetWidth;
       btnContainerRef.current.style.width = `${titleWidth}px`;
@@ -178,7 +176,6 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
       return;
     }
 
-    setUsuario(user);
     if (titleInputRef.current && btnContainerRef.current) {
       const titleWidth = titleInputRef.current.offsetWidth;
       btnContainerRef.current.style.width = `${titleWidth}px`;
@@ -287,8 +284,8 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
         description: formData.description?.trim(),
         duration: formData.duration,
         price: formData.price ? parseFloat(formData.price) : 0.00,
-        namequadra: formData.nomequadra.trim(),
-        modalidade: formData.modalidade.trim(),
+  namequadra: (formData.nomequadra ?? '').trim(),
+  modalidade: (formData.modalidade ?? '').trim(),
       };
 
       const response=await axios.put(`http://localhost:3001/api/matches/${dadosPartida.id}`, matchData, {

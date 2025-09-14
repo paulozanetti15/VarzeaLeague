@@ -33,11 +33,13 @@ import { useAuth } from '../hooks/useAuth';
 import { getRoleName } from '../utils/roleUtils';
 import '../components/landing/Header.css';
 
+// Map de páginas com papéis (roles) permitidos
+// roles: 'all' para qualquer usuário autenticado ou array de IDs de userType
 const pages = [
-  { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
-  { name: 'Times', path: '/teams', icon: <People /> },
-  { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
-  { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
+  { name: 'Dashboard', path: '/dashboard', icon: <Dashboard />, roles: 'all' },
+  { name: 'Meu Time', path: '/teams', icon: <People />, roles: [1, 3] }, // IDs 1 (Admin Sistema) e 3 (Admin Times)
+  { name: 'Partidas', path: '/matches', icon: <SportsSoccer />, roles: [1, 2] }, // IDs 1 e 2
+  { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents />, roles: [1, 2] }, // IDs 1 e 2
 ];
 
 const adminPages = [
@@ -51,6 +53,10 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  // Filtra páginas de acordo com o userTypeId
+  const roleId = user?.userTypeId;
+  const visiblePages = pages.filter(p => p.roles === 'all' || (Array.isArray(p.roles) && roleId && p.roles.includes(roleId)));
 
   const showBackButton = location.pathname !== '/';
 
@@ -85,7 +91,7 @@ const Navbar = () => {
       </Typography>
       <Divider sx={{ mb: 1 }} />
       <List>
-        {pages.map((page) => (
+        {visiblePages.map((page) => (
           <ListItem
             component="div"
             key={page.name}
@@ -266,7 +272,7 @@ const Navbar = () => {
         </a>
         {/* Menu desktop */}
         <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
-          {pages.map((page) => (
+          {visiblePages.map((page) => (
             <Button
               key={page.name}
               onClick={() => handleNavigation(page.path)}
