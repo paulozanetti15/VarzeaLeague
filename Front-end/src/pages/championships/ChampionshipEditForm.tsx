@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../services/api';
 import trophy from '../../assets/championship-trophy.svg';
 import './ChampionshipForm.css';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import { parse, format, isValid, isAfter } from 'date-fns';
 
 const ChampionshipEditForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,23 +20,51 @@ const ChampionshipEditForm: React.FC = () => {
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
+  const hiddenStartRef = useRef<HTMLInputElement>(null);
+  const hiddenEndRef = useRef<HTMLInputElement>(null);
+
+  const isoToBR = (iso?: string) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return format(d, 'dd/MM/yyyy');
+  };
+
+  const brToISO = (br: string) => {
+    if (!br) return '';
+    const parsed = parse(br, 'dd/MM/yyyy', new Date());
+    if (!isValid(parsed)) return '';
+    return format(parsed, 'yyyy-MM-dd');
+  };
+
+  const openPicker = (which: 'start' | 'end') => {
+    const ref = which === 'start' ? hiddenStartRef.current : hiddenEndRef.current;
+    if (!ref) return;
+    const current = which === 'start' ? form.start_date : form.end_date;
+    if (current && current.length === 10) {
+      const [d,m,y] = current.split('/');
+      ref.value = `${y}-${m}-${d}`;
+    }
+    const anyEl: any = ref;
+    if (typeof anyEl.showPicker === 'function') { anyEl.showPicker(); } else { ref.click(); }
+  };
+
+  const handleHiddenChange = (e: React.ChangeEvent<HTMLInputElement>, which: 'start' | 'end') => {
+    const iso = e.target.value; if(!iso) return; const [y,m,d] = iso.split('-');
+    const br = `${d}/${m}/${y}`;
+    setForm(prev => ({ ...prev, [which === 'start' ? 'start_date' : 'end_date']: br }));
+  };
+
   useEffect(() => {
     const fetchChampionship = async () => {
       try {
         setLoading(true);
         const data = await api.championships.getById(Number(id));
-        
-        const formatDate = (dateString?: string) => {
-          if (!dateString) return '';
-          const date = new Date(dateString);
-          return date.toISOString().split('T')[0];
-        };
-        
         setForm({
           name: data.name || '',
           description: data.description || '',
-          start_date: formatDate(data.start_date),
-          end_date: formatDate(data.end_date),
+          start_date: isoToBR(data.start_date),
+          end_date: isoToBR(data.end_date),
         });
         setLoading(false);
       } catch (err: any) {
@@ -49,7 +79,23 @@ const ChampionshipEditForm: React.FC = () => {
   }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'start_date' || name === 'end_date') {
+      const dateRegex = /^(\d{0,2})\/(\d{0,2})\/(\d{0,4})$/;
+      let formattedDate = value.replace(/\D/g, '');
+      if (formattedDate.length <= 8) {
+        if (formattedDate.length > 4) {
+          formattedDate = formattedDate.replace(/(\d{2})(\d{2})(\d{0,4})/, '$1/$2/$3');
+        } else if (formattedDate.length > 2) {
+          formattedDate = formattedDate.replace(/(\d{2})(\d{0,2})/, '$1/$2');
+        }
+        if (dateRegex.test(formattedDate) || formattedDate.length < 10) {
+          setForm(prev => ({ ...prev, [name]: formattedDate }));
+        }
+      }
+      return;
+    }
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,7 +104,38 @@ const ChampionshipEditForm: React.FC = () => {
     setError('');
     setSuccess('');
     try {
-      await api.championships.update(Number(id), form);
+      // Validar datas se preenchidas
+      if (form.start_date) {
+        const parsedStart = parse(form.start_date, 'dd/MM/yyyy', new Date());
+        if (!isValid(parsedStart)) {
+          setError('Data de início inválida');
+          setSubmitting(false);
+          return;
+        }
+      }
+      if (form.end_date) {
+        const parsedEnd = parse(form.end_date, 'dd/MM/yyyy', new Date());
+        if (!isValid(parsedEnd)) {
+          setError('Data de término inválida');
+          setSubmitting(false);
+          return;
+        }
+      }
+      if (form.start_date && form.end_date) {
+        const s = parse(form.start_date, 'dd/MM/yyyy', new Date());
+        const e = parse(form.end_date, 'dd/MM/yyyy', new Date());
+        if (!isAfter(e, s)) {
+          setError('Data de término deve ser após a data de início');
+          setSubmitting(false);
+          return;
+        }
+      }
+      const payload = {
+        ...form,
+        start_date: brToISO(form.start_date),
+        end_date: brToISO(form.end_date)
+      };
+      await api.championships.update(Number(id), payload);
       setSuccess('Campeonato atualizado com sucesso!');
       setTimeout(() => navigate(`/championships/${id}`), 1200);
     } catch (err: any) {
@@ -93,13 +170,97 @@ const ChampionshipEditForm: React.FC = () => {
           <label>Descrição</label>
           <textarea name="description" value={form.description} onChange={handleChange} placeholder="Descrição, regras, premiação..." />
           <div className="form-row">
-            <div>
-              <label>Data de início</label>
-              <input type="date" name="start_date" value={form.start_date} onChange={handleChange} />
+            <div className="form-group">
+              <label>Data de Início</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <input
+                    type="text"
+                    name="start_date"
+                    value={form.start_date}
+                    onChange={handleChange}
+                    placeholder="DD/MM/AAAA"
+                    maxLength={10}
+                    onFocus={() => openPicker('start')}
+                    className="date-input"
+                  />
+                  <input
+                    ref={hiddenStartRef}
+                    type="date"
+                    onChange={(e) => handleHiddenChange(e, 'start')}
+                    style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-label="Abrir calendário início"
+                  onClick={() => openPicker('start')}
+                  style={{
+                    border: 'none',
+                    background: '#0d47a1',
+                    padding: 0,
+                    cursor: 'pointer',
+                    color: '#fff',
+                    borderRadius: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 44,
+                    height: 44,
+                    minWidth: 44
+                  }}
+                >
+                  <CalendarMonthIcon fontSize="medium" style={{ marginRight: 0 }} />
+                </button>
+              </div>
             </div>
-            <div>
-              <label>Data de término</label>
-              <input type="date" name="end_date" value={form.end_date} onChange={handleChange} />
+            <div className="form-group">
+              <label>Data de Término</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <input
+                    type="text"
+                    name="end_date"
+                    value={form.end_date}
+                    onChange={handleChange}
+                    placeholder="DD/MM/AAAA"
+                    maxLength={10}
+                    onFocus={() => openPicker('end')}
+                    className="date-input"
+                  />
+                  <input
+                    ref={hiddenEndRef}
+                    type="date"
+                    onChange={(e) => handleHiddenChange(e, 'end')}
+                    style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-label="Abrir calendário término"
+                  onClick={() => openPicker('end')}
+                  style={{
+                    border: 'none',
+                    background: '#0d47a1',
+                    padding: 0,
+                    cursor: 'pointer',
+                    color: '#fff',
+                    borderRadius: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 44,
+                    height: 44,
+                    minWidth: 44
+                  }}
+                >
+                  <CalendarMonthIcon fontSize="medium" style={{ marginRight: 0 }} />
+                </button>
+              </div>
             </div>
           </div>
           {error && <div className="form-error">{error}</div>}

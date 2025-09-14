@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { api } from '../../services/api';
 import trophy from '../../assets/championship-trophy.svg';
 import './ChampionshipForm.css';
 import { format, parse, isValid, isAfter } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
 const initialState = {
   name: '',
@@ -20,6 +19,8 @@ const ChampionshipForm: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+  const hiddenStartRef = useRef<HTMLInputElement>(null);
+  const hiddenEndRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -104,6 +105,25 @@ const ChampionshipForm: React.FC = () => {
     }
   };
 
+  const openPicker = (which: 'start' | 'end') => {
+    const ref = which === 'start' ? hiddenStartRef.current : hiddenEndRef.current;
+    if (!ref) return;
+    const current = which === 'start' ? form.start_date : form.end_date;
+    if (current && current.length === 10) {
+      const [d,m,y] = current.split('/');
+      ref.value = `${y}-${m}-${d}`;
+    }
+    const anyEl: any = ref;
+    if (typeof anyEl.showPicker === 'function') { anyEl.showPicker(); } else { ref.click(); }
+  };
+
+  const handleHiddenChange = (e: React.ChangeEvent<HTMLInputElement>, which: 'start' | 'end') => {
+    const iso = e.target.value; if (!iso) return;
+    const [y,m,d] = iso.split('-');
+    const br = `${d}/${m}/${y}`;
+    setForm(prev => ({ ...prev, [which === 'start' ? 'start_date' : 'end_date']: br }));
+  };
+
   return (
     <div className="championship-form-bg">
       
@@ -140,27 +160,95 @@ const ChampionshipForm: React.FC = () => {
           <div className="form-row">
             <div className="form-group">
               <label>Data de Início</label>
-              <input
-                type="text"
-                name="start_date"
-                value={form.start_date}
-                onChange={handleChange}
-                placeholder="DD/MM/AAAA"
-                maxLength={10}
-                className="date-input"
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <input
+                    type="text"
+                    name="start_date"
+                    value={form.start_date}
+                    onChange={handleChange}
+                    placeholder="DD/MM/AAAA"
+                    maxLength={10}
+                    className="date-input"
+                    onFocus={() => openPicker('start')}
+                  />
+                  <input
+                    ref={hiddenStartRef}
+                    type="date"
+                    onChange={(e) => handleHiddenChange(e, 'start')}
+                    style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-label="Abrir calendário início"
+                  onClick={() => openPicker('start')}
+                  style={{
+                    border: 'none',
+                    background: '#0d47a1',
+                    padding: 0,
+                    cursor: 'pointer',
+                    color: '#fff',
+                    borderRadius: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 44,
+                    height: 44,
+                    minWidth: 44
+                  }}
+                >
+                  <CalendarMonthIcon fontSize="medium" style={{ marginRight: 0 }} />
+                </button>
+              </div>
             </div>
             <div className="form-group">
               <label>Data de Término</label>
-              <input
-                type="text"
-                name="end_date"
-                value={form.end_date}
-                onChange={handleChange}
-                placeholder="DD/MM/AAAA"
-                maxLength={10}
-                className="date-input"
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <input
+                    type="text"
+                    name="end_date"
+                    value={form.end_date}
+                    onChange={handleChange}
+                    placeholder="DD/MM/AAAA"
+                    maxLength={10}
+                    className="date-input"
+                    onFocus={() => openPicker('end')}
+                  />
+                  <input
+                    ref={hiddenEndRef}
+                    type="date"
+                    onChange={(e) => handleHiddenChange(e, 'end')}
+                    style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-label="Abrir calendário término"
+                  onClick={() => openPicker('end')}
+                  style={{
+                    border: 'none',
+                    background: '#0d47a1',
+                    padding: 0,
+                    cursor: 'pointer',
+                    color: '#fff',
+                    borderRadius: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 44,
+                    height: 44,
+                    minWidth: 44
+                  }}
+                >
+                  <CalendarMonthIcon fontSize="medium" style={{ marginRight: 0 }} />
+                </button>
+              </div>
             </div>
           </div>
 

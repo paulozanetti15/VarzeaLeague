@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './RegrasFormRegisterModal.css';
 import ToastComponent from '../../Toast/ToastComponent';
 import { format, parse, isValid, isAfter } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 interface RegrasFormRegisterModalProps {
   show: boolean;
@@ -24,6 +24,7 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastBg, setToastBg] = useState('success');
+  const hiddenDateInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const handleDataLimiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,6 +43,34 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
         setDataLimite(formattedDate);
       }
     }
+  };
+
+  // Funções para calendário (mesma abordagem da CreateMatch)
+  const formatDateISOToBR = (iso: string): string => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  };
+
+  const handleOpenDatePicker = () => {
+    const el = hiddenDateInputRef.current;
+    if (!el) return;
+    if (dataLimite && dataLimite.length === 10) {
+      const [d, m, y] = dataLimite.split('/');
+      el.value = `${y}-${m}-${d}`;
+    }
+    const anyEl = el as any;
+    if (typeof anyEl.showPicker === 'function') {
+      anyEl.showPicker();
+    } else {
+      el.click();
+    }
+  };
+
+  const handleHiddenDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const iso = e.target.value;
+    const br = formatDateISOToBR(iso);
+    setDataLimite(br);
   };
 
   const verificarDataLimite = (dataLimite: string, dataPartida: string): boolean => {
@@ -185,15 +214,47 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
             <br/>
             <div className="form-group">
               <label>Data Limite para Inscrição</label>
-              <input
-                type="text"
-                className="form-control"
-                value={dataLimite}
-                onChange={handleDataLimiteChange}
-                placeholder="DD/MM/AAAA"
-                maxLength={10}
-                required
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={dataLimite}
+                    onChange={handleDataLimiteChange}
+                    placeholder="DD/MM/AAAA"
+                    maxLength={10}
+                    required
+                    onFocus={handleOpenDatePicker}
+                  />
+                  <input
+                    ref={hiddenDateInputRef}
+                    type="date"
+                    onChange={handleHiddenDateChange}
+                    style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-label="Abrir calendário"
+                  onClick={handleOpenDatePicker}
+                  style={{
+                    border: 'none',
+                    background: '#0d47a1',
+                    padding: '6px 10px',
+                    cursor: 'pointer',
+                    color: '#fff',
+                    borderRadius: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 40
+                  }}
+                >
+                  <CalendarMonthIcon fontSize="small" />
+                </button>
+              </div>
             </div>
             <div className="form-row">
               <div className="form-group">

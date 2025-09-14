@@ -6,7 +6,6 @@ import axios from 'axios';
 import CircularProgress from '@mui/material/CircularProgress';
 import ToastComponent from '../../components/Toast/ToastComponent';
 import { format, parse, isValid, isAfter } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
 interface MatchFormData {
@@ -39,7 +38,7 @@ const CreateMatch: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastBg, setToastBg] = useState('');
-  const [cepValido, setCepValido] = useState<boolean | null>(null);
+  // const [cepValido, setCepValido] = useState<boolean | null>(null); // removed unused state
   const [cepErrorMessage, setCepErrorMessage] = useState<string | null>(null);
   const [enderecoCompleto, setEnderecoCompleto] = useState('');
   
@@ -72,65 +71,7 @@ const CreateMatch: React.FC = () => {
     return cep;
   };
 
-  const formatDateToBR = (date: string): string => {
-    if (!date) return '';
-    const [year, month, day] = date.split('-');
-    return `${day}/${month}/${year}`;
-  };
-
-  const formatDateToISO = (date: string): string => {
-    if (!date) return '';
-    const [day, month, year] = date.split('/');
-    return `${year}-${month}-${day}`;
-  };
-
-  const formatTime = (value: string): string => {
-    let time = value.replace(/[^\d:]/g, '');
-    
-    if (time.length > 2 && time.charAt(2) !== ':') {
-      time = time.slice(0, 2) + ':' + time.slice(2);
-    }
-    
-    time = time.slice(0, 5);
-    
-  const hours = parseInt(time.split(':')[0] || '0');
-    if (hours > 23) {
-      time = '23' + time.slice(2);
-    }
-    
-    if (time.length > 2) {
-      const minutes = parseInt(time.split(':')[1] || '0');
-      if (minutes > 59) {
-        time = time.slice(0, 3) + '59';
-      }
-    }
-    
-    return time;
-  };
-
-  const formatDuration = (value: string): string => {
-    let duration = value.replace(/[^\d:]/g, '');
-    
-    if (duration.length > 2 && duration.charAt(2) !== ':') {
-      duration = duration.slice(0, 2) + ':' + duration.slice(2);
-    }
-    
-    duration = duration.slice(0, 5);
-    
-    const hours = parseInt(duration.split(':')[0] || '0');
-    if (hours > 23) {
-      duration = '23' + duration.slice(2);
-    }
-    
-    if (duration.length > 2) {
-      const minutes = parseInt(duration.split(':')[1] || '0');
-      if (minutes > 59) {
-        duration = duration.slice(0, 3) + '59';
-      }
-    }
-    
-    return duration;
-  };
+  // Removed unused helper functions (formatDateToBR, formatDateToISO, formatTime, formatDuration) to clean up file
   const handleSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const { value } = event.target;
     setFormData(prev => ({
@@ -139,23 +80,13 @@ const CreateMatch: React.FC = () => {
     }));
   };
 
-  const isValidDateBR = (date: string): boolean => {
-    const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/(19|20)\d\d$/;
-    if (!regex.test(date)) return false;
-    
-    const [day, month, year] = date.split('/').map(Number);
-    const d = new Date(year, month - 1, day);
-    
-    return d.getDate() === day && 
-           d.getMonth() === month - 1 && 
-           d.getFullYear() === year;
-  };
+  // Removed unused isValidDateBR
 
   const buscarCep = async (cep: string) => {
     try {
       const response = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
       if (response.data.erro) {
-        setCepValido(false);
+  // setCepValido(false); // state removed
         setCepErrorMessage('CEP não encontrado');
         return;
       }
@@ -170,10 +101,10 @@ const CreateMatch: React.FC = () => {
       const endCompleto = `${response.data.logradouro}${formData.number ? `, ${formData.number}` : ''}, ${response.data.localidade} - ${response.data.uf}`;
       setEnderecoCompleto(endCompleto);
       
-      setCepValido(true);
+  // setCepValido(true); // unused
       setCepErrorMessage(null);
     } catch (error) {
-      setCepValido(false);
+  // setCepValido(false); // unused
       setCepErrorMessage('Erro ao buscar CEP');
     }
   };
@@ -237,7 +168,7 @@ const CreateMatch: React.FC = () => {
           city: '',
           UF: ''
         }));
-        setCepValido(null);
+  // setCepValido(null); // state removed
         setCepErrorMessage(null);
       }
       
@@ -497,47 +428,54 @@ const CreateMatch: React.FC = () => {
             />
           </div>
 
-          <div className="form-row">
-            <div className="form-group" style={{ flex: 1, position: 'relative' }}>
+            <div className="form-row">
+            <div className="form-group" style={{ flex: 1 }}>
               <label htmlFor="date">Data *</label>
-              <input
-                type="text"
-                id="date"
-                name="date"
-                value={formData.date}
-                onChange={handleInputChange}
-                required
-                className="form-control"
-                placeholder="DD/MM/AAAA"
-                maxLength={10}
-                style={{ paddingRight: 44 }}
-              />
-              <button
-                type="button"
-                aria-label="Abrir calendário"
-                onClick={handleOpenDatePicker}
-                style={{
-                  position: 'absolute',
-                  right: 10,
-                  top: 60,
-                  transform: 'translateY(-50%)',
-                  border: 'none',
-                  background: 'transparent',
-                  padding: 6,
-                  cursor: 'pointer',
-                  color: '#0d47a1'
-                }}
-              >
-                <CalendarMonthIcon />
-              </button>
-              <input
-                ref={hiddenDateInputRef}
-                type="date"
-                onChange={handleHiddenDateChange}
-                style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
-                aria-hidden="true"
-                tabIndex={-1}
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <input
+                    type="text"
+                    id="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={handleInputChange}
+                    required
+                    className="form-control"
+                    placeholder="DD/MM/AAAA"
+                    maxLength={10}
+                    onFocus={handleOpenDatePicker}
+                  />
+                  <input
+                    ref={hiddenDateInputRef}
+                    type="date"
+                    onChange={handleHiddenDateChange}
+                    style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-label="Abrir calendário"
+                  onClick={handleOpenDatePicker}
+                  style={{
+                    border: 'none',
+                    background: '#0d47a1',
+                    padding: 0,
+                    cursor: 'pointer',
+                    color: '#fff',
+                    borderRadius: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 44,
+                    height: 44,
+                    minWidth: 44
+                  }}
+                >
+                  <CalendarMonthIcon fontSize="medium" style={{ marginRight: 0 }} />
+                </button>
+              </div>
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label htmlFor="time">Horário *</label>

@@ -15,7 +15,6 @@ import { Card } from 'react-bootstrap';
 import ModalTeams from '../../components/Modals/Teams/modelTeams'; // legacy (pode ser removido futuramente)
 import SelectTeamPlayersModal from '../../components/Modals/Teams/SelectTeamPlayersModal';
 import { useAuth } from '../../hooks/useAuth';
-import BackButton from '../../components/BackButton';
 import EditRulesModal from '../../components/Modals/Regras/RegrasFormEditModal';
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -127,9 +126,6 @@ const MatchDetail: React.FC = () => {
   };
   const handleModalClose = () => {
     setModal(false);
-  }
-  const handleModalShow = () => {
-    setModal(true);
   }
   // legacy modal (não utilizado atualmente)
   const handleOpenSelectTeamPlayers = () => {
@@ -334,14 +330,30 @@ const MatchDetail: React.FC = () => {
                 </Button>
               )}     
                 <Button
-                  variant="secondary"
+                  style={{
+                    background: '#1976d2',
+                    border: 'none',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    boxShadow: '0 3px 10px rgba(25,118,210,0.35)'
+                  }}
                   onClick={() => navigate(`/matches/edit/${id}`)}
                 >
                   <EditIcon/> Editar Partida 
                 </Button>
 
                 <Button
-                  variant="secondary"
+                  style={{
+                    background: 'transparent',
+                    border: '2px solid #1976d2',
+                    color: '#1976d2',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}
                   onClick={() => setEditRules(true)}
                 >
                   <EditIcon/> Editar Regras   

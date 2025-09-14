@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { Button, Modal } from 'react-bootstrap';
 import axios from 'axios';
 import './RegrasStyles.css';
-import ToastComponent from '../../Toast/ToastComponent';
-import { format, parse, isValid, isAfter, set } from 'date-fns';
+import { format, parse, isValid, isAfter } from 'date-fns';
 
 
 
@@ -23,7 +23,8 @@ interface RulesData {
 
 const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide, userId, partidaDados,onClose }) => {
   const [dataLimite, setDataLimite] = useState<string>(format(new Date(), 'dd/MM/yyyy'));
-  const [genero, setGenero] = useState<string>("");
+  const hiddenDateInputRef = useRef<HTMLInputElement>(null);
+  // genero control is handled inside formData; separate state removed
   const [error, setError] = useState<string>("");
   const [sucess, setSucess] = useState<string>("");
   const [formData, setFormData] = useState<RulesData>({
@@ -85,7 +86,6 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setGenero(value);
     setFormData((prevData) => ({
       ...prevData,
       [name]: value
@@ -244,17 +244,61 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
             <br/>
             <div className="form-group">
               <label>Data Limite para Inscrição</label>
-               <input
-                type="text"
-                id="dataLimite"
-                name="dataLimite"
-                value={formData.dataLimite}
-                onChange={handleInputChange}
-                required
-                className="form-control"
-                placeholder="DD/MM/AAAA"
-                maxLength={10}
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <input
+                    type="text"
+                    id="dataLimite"
+                    name="dataLimite"
+                    value={formData.dataLimite}
+                    onChange={handleInputChange}
+                    required
+                    className="form-control"
+                    placeholder="DD/MM/AAAA"
+                    maxLength={10}
+                    onFocus={() => {
+                      const el = hiddenDateInputRef.current; if (!el) return;
+                      const v = formData.dataLimite; if (v && v.length===10) { const [d,m,y] = v.split('/'); el.value = `${y}-${m}-${d}`; }
+                      const anyEl:any = el; if(typeof anyEl.showPicker==='function'){ anyEl.showPicker(); } else { el.click(); }
+                    }}
+                  />
+                  <input
+                    ref={hiddenDateInputRef}
+                    type="date"
+                    onChange={(e) => {
+                      const iso = e.target.value; if(!iso) return; const [y,m,d] = iso.split('-');
+                      setDataLimite(`${d}/${m}/${y}`);
+                      setFormData(prev => ({ ...prev, dataLimite: `${d}/${m}/${y}` }));
+                    }}
+                    style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-label="Abrir calendário"
+                  onClick={() => {
+                    const el = hiddenDateInputRef.current; if (!el) return;
+                    const v = formData.dataLimite; if (v && v.length===10) { const [d,m,y] = v.split('/'); el.value = `${y}-${m}-${d}`; }
+                    const anyEl:any = el; if(typeof anyEl.showPicker==='function'){ anyEl.showPicker(); } else { el.click(); }
+                  }}
+                  style={{
+                    border: 'none',
+                    background: '#0d47a1',
+                    padding: '6px 10px',
+                    cursor: 'pointer',
+                    color: '#fff',
+                    borderRadius: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 40
+                  }}
+                >
+                  <CalendarMonthIcon fontSize="small" />
+                </button>
+              </div>
             </div>
             <div className="form-row">
               <div className="form-group">
@@ -310,7 +354,11 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
               >
                 Atualizar Regras
               </button>
-              <Button variant="secondary" onClick={onClose}>
+              <Button
+                variant="danger"
+                onClick={onClose}
+                style={{ fontWeight: 600 }}
+              >
                 Fechar
               </Button>
             </div>
