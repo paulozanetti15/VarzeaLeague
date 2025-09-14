@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './RegrasFormRegisterModal.css';
 import ToastComponent from '../../Toast/ToastComponent';
-import { format, parse, isValid, isAfter } from 'date-fns';
+import { format, parse, isValid, isAfter, startOfDay, isBefore } from 'date-fns';
 
 interface RegrasFormRegisterModalProps {
   show: boolean;
@@ -76,14 +76,32 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({ show,
   const verificarDataLimite = (dataLimite: string, dataPartida: string): boolean => {
     const parsedDataLimite = parse(dataLimite, 'dd/MM/yyyy', new Date());
     const parsedDataPartida = new Date(dataPartida);
+    const hoje = startOfDay(new Date());
 
     if (!isValid(parsedDataLimite)) {
       setError('Data limite inválida. Use o formato DD/MM/AAAA');
       return false;
     }
 
+    // Não permitir data limite no passado
+    if (isBefore(parsedDataLimite, hoje)) {
+      setError('A data limite não pode ser anterior a hoje');
+      return false;
+    }
+
+    // Deve ser estritamente anterior à data da partida
     if (!isAfter(parsedDataPartida, parsedDataLimite)) {
       setError('A data limite deve ser anterior à data da partida');
+      return false;
+    }
+
+    // Também impedir mesma data da partida (caso lógica futura mude o isAfter)
+    const mesmaDataDaPartida =
+      parsedDataLimite.getFullYear() === parsedDataPartida.getFullYear() &&
+      parsedDataLimite.getMonth() === parsedDataPartida.getMonth() &&
+      parsedDataLimite.getDate() === parsedDataPartida.getDate();
+    if (mesmaDataDaPartida) {
+      setError('A data limite não pode ser no mesmo dia da partida');
       return false;
     }
 

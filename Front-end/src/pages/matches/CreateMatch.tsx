@@ -23,7 +23,7 @@ interface MatchFormData {
   category: string;
   number: string;
   modalidade:string;
-  quadra: string;
+  quadra: string; // front-end field representing nomequadra backend
 
 }
 
@@ -61,6 +61,7 @@ const CreateMatch: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{[k:string]: string}>({});
 
   const formatarCep = (cep: string): string => {
     cep = cep.replace(/\D/g, '');
@@ -253,31 +254,73 @@ const CreateMatch: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setFieldErrors({});
 
     try {
+      const newFieldErrors: {[k:string]: string} = {};
+
+      // Title
       if (!formData.title?.trim()) {
-        setError('O título da partida é obrigatório');
+        newFieldErrors.title = 'Informe um título';
+      }
+      // Date
+      if (!formData.date) {
+        newFieldErrors.date = 'Informe a data';
+      } else {
+        const parsedDate = parse(formData.date, 'dd/MM/yyyy', new Date());
+        if (!isValid(parsedDate)) {
+          newFieldErrors.date = 'Data inválida';
+        } else if (!isAfter(parsedDate, new Date())) {
+          newFieldErrors.date = 'Data deve ser futura';
+        }
+      }
+      // Time
+      if (!formData.time) {
+        newFieldErrors.time = 'Informe o horário';
+      } else {
+        const [hours, minutes] = formData.time.split(':').map(Number);
+        if (isNaN(hours) || isNaN(minutes) || hours > 23 || minutes > 59) {
+          newFieldErrors.time = 'Horário inválido';
+        }
+      }
+      // CEP / Location dependencies
+      if (!formData.cep) {
+        newFieldErrors.cep = 'Informe o CEP';
+      } else if (!isValidCep(formData.cep)) {
+        newFieldErrors.cep = 'CEP inválido';
+      }
+      // Location (logradouro preenchido após CEP)
+      if (!formData.location) {
+        newFieldErrors.location = 'Endereço não resolvido pelo CEP';
+      }
+      // Cidade / UF (derivados do CEP)
+      if (!formData.city) newFieldErrors.city = 'Cidade ausente';
+      if (!formData.UF) newFieldErrors.UF = 'UF ausente';
+      // Modalidade (backend armazena)
+      if (!formData.modalidade) newFieldErrors.modalidade = 'Selecione a modalidade';
+      // Quadra (nomequadra) obrigatório no backend
+      if (!formData.quadra?.trim()) {
+        newFieldErrors.quadra = 'Informe o nome da quadra';
+      }
+      // Duração (se houver validação de formato)
+      if (formData.duration) {
+        const durRegex = /^([0-9]{1,2}):([0-5][0-9])$/;
+        if (!durRegex.test(formData.duration)) {
+          newFieldErrors.duration = 'Duração inválida (HH:MM)';
+        }
+      }
+      // Preço (não negativo)
+      if (formData.price && parseFloat(formData.price) < 0) {
+        newFieldErrors.price = 'Preço não pode ser negativo';
+      }
+
+      if (Object.keys(newFieldErrors).length > 0) {
+        setFieldErrors(newFieldErrors);
+        setError('Corrija os campos destacados antes de continuar.');
         return;
       }
 
-      if (!formData.date || !formData.time) {
-        setError('Data e hora são obrigatórios');
-        return;
-      }
-
-      const parsedDate = parse(formData.date, 'dd/MM/yyyy', new Date());
-      if (!isValid(parsedDate)) {
-        setError('Data inválida. Use o formato DD/MM/AAAA');
-        setLoading(false);
-        return;
-      }
-
-      const [hours, minutes] = formData.time.split(':').map(Number);
-      if (isNaN(hours) || isNaN(minutes) || hours > 23 || minutes > 59) {
-        setError('Hora inválida. Use o formato HH:MM');
-        setLoading(false);
-        return;
-      }
+  // Data já validada anteriormente; reutilizamos apenas para montar matchDateTime abaixo.
 
       // Gambiarra: normalizar duração (vazia ou inválida vira 00:00)
       const normalizeDuration = (d: string | undefined): string => {
@@ -304,20 +347,7 @@ const CreateMatch: React.FC = () => {
         new Date()
       );
       
-      if (!isAfter(matchDateTime, new Date())) {
-        setError('A data da partida deve ser futura');
-        return;
-      }
-    
-      if (formData.price && parseFloat(formData.price) < 0) {
-        setError('O valor da quadra não pode ser negativo');
-        return;
-      }
-
-      if (!formData.cep || !isValidCep(formData.cep)) {
-        setError('CEP inválido');
-        return;
-      }
+      // Essas validações já cobertas individualmente acima
 
       const matchData = {
         title: formData.title.trim(),
@@ -329,7 +359,7 @@ const CreateMatch: React.FC = () => {
         price: formData.price ? parseFloat(formData.price) : 0.00,
         city: formData.city.trim(),
         complement: formData.complement?.trim(),
-        namequadra: formData.quadra.trim(),
+        namequadra: formData.quadra.trim(), // controller receives namequadra then maps to nomequadra
         modalidade: formData.modalidade.trim(),
         Uf: formData.UF.trim(),
         Cep: formData.cep.trim(),
@@ -413,7 +443,9 @@ const CreateMatch: React.FC = () => {
               onChange={handleInputChange}
               required
               placeholder="Ex: Pelada de Domingo"
+              style={fieldErrors.title ? { borderColor: '#e53935' } : undefined}
             />
+            {fieldErrors.title && <small style={{ color:'#e53935' }}>{fieldErrors.title}</small>}
           </div>
 
           <div className="form-group">
@@ -444,6 +476,7 @@ const CreateMatch: React.FC = () => {
                     placeholder="DD/MM/AAAA"
                     maxLength={10}
                     onFocus={handleOpenDatePicker}
+                    style={fieldErrors.date ? { borderColor: '#e53935' } : undefined}
                   />
                   <input
                     ref={hiddenDateInputRef}
@@ -476,6 +509,7 @@ const CreateMatch: React.FC = () => {
                   <CalendarMonthIcon fontSize="medium" style={{ marginRight: 0 }} />
                 </button>
               </div>
+              {fieldErrors.date && <small style={{ color:'#e53935' }}>{fieldErrors.date}</small>}
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label htmlFor="time">Horário *</label>
@@ -489,7 +523,9 @@ const CreateMatch: React.FC = () => {
                 className="form-control"
                 placeholder="HH:MM"
                 maxLength={5}
+                style={fieldErrors.time ? { borderColor: '#e53935' } : undefined}
               />
+              {fieldErrors.time && <small style={{ color:'#e53935' }}>{fieldErrors.time}</small>}
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label htmlFor="duration">Duração</label>
@@ -502,7 +538,9 @@ const CreateMatch: React.FC = () => {
                 className="form-control"
                 placeholder="HH:MM"
                 maxLength={5}
+                style={fieldErrors.duration ? { borderColor: '#e53935' } : undefined}
               />
+              {fieldErrors.duration && <small style={{ color:'#e53935' }}>{fieldErrors.duration}</small>}
             </div>
           </div>
 
@@ -518,12 +556,14 @@ const CreateMatch: React.FC = () => {
               onChange={handleInputChange}
               className="form-control"
               required
+              style={fieldErrors.cep ? { borderColor: '#e53935' } : undefined}
             />
             {cepErrorMessage && (
               <div className="error-message">
                 {cepErrorMessage}
               </div>
             )}
+            {fieldErrors.cep && <small style={{ color:'#e53935' }}>{fieldErrors.cep}</small>}
           </div>
 
           <div className="form-group">
@@ -537,7 +577,9 @@ const CreateMatch: React.FC = () => {
               disabled
               placeholder="Ex: Rua das Flores, 123"
               className="form-control"
+              style={fieldErrors.location ? { borderColor: '#e53935' } : undefined}
             />
+            {fieldErrors.location && <small style={{ color:'#e53935' }}>{fieldErrors.location}</small>}
           </div>
 
           <div className="form-row">
@@ -582,7 +624,9 @@ const CreateMatch: React.FC = () => {
                 value={formData.city}
                 disabled
                 className="form-control"
+                style={fieldErrors.city ? { borderColor: '#e53935' } : undefined}
               />
+              {fieldErrors.city && <small style={{ color:'#e53935' }}>{fieldErrors.city}</small>}
             </div>
 
             <div className="form-group" style={{ flex: 1 }}>
@@ -594,7 +638,9 @@ const CreateMatch: React.FC = () => {
                 value={formData.UF}
                 disabled
                 className="form-control"
+                style={fieldErrors.UF ? { borderColor: '#e53935' } : undefined}
               />
+              {fieldErrors.UF && <small style={{ color:'#e53935' }}>{fieldErrors.UF}</small>}
             </div>
           </div>
           
@@ -609,11 +655,23 @@ const CreateMatch: React.FC = () => {
               placeholder="R$"
               min="0"
               step="0.01"
+              style={fieldErrors.price ? { borderColor: '#e53935' } : undefined}
             />
+            {fieldErrors.price && <small style={{ color:'#e53935' }}>{fieldErrors.price}</small>}
           </div>
           <div className="form-group">
-            <label>Nome da Quadra  </label>
-            <input name="quadra" type='text' className='form-control' onChange={handleInputChange} value={formData.quadra} />
+            <label>Nome da Quadra *</label>
+            <input 
+              name="quadra" 
+              type='text' 
+              className='form-control' 
+              onChange={handleInputChange} 
+              value={formData.quadra}
+              style={fieldErrors.quadra ? { borderColor: '#e53935' } : undefined}
+              placeholder="Ex: Arena Central"
+              required
+            />
+            {fieldErrors.quadra && <small style={{ color:'#e53935' }}>{fieldErrors.quadra}</small>}
           </div>
           <div className="form-group">
             <label>Modalidade</label>
@@ -626,12 +684,14 @@ const CreateMatch: React.FC = () => {
               name="modalidade"
               onChange={handleSelect}
               value={formData.modalidade}
+              className={fieldErrors.modalidade ? 'form-control error-select' : undefined}
             >
               <option value="">Selecione a modalidade</option>
               <option value="Fut7">Fut7</option>
               <option value="Futsal">Futsal</option>
               <option value="Futebol campo">Futebol campo</option>
             </select> 
+            {fieldErrors.modalidade && <small style={{ color:'#e53935' }}>{fieldErrors.modalidade}</small>}
           </div>
           <div className="btn-container" ref={btnContainerRef}>
             <button
