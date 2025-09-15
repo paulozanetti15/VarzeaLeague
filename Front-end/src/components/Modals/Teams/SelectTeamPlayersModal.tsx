@@ -45,6 +45,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
   const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
   const [rules, setRules] = useState<Rules | null>(null);
   const [error, setError] = useState<string>('');
+  const [modalidade, setModalidade] = useState<string | null>(null);
 
   const token = useMemo(() => localStorage.getItem('token'), []);
 
@@ -58,6 +59,19 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
       // Se não existem regras, deixa null
       console.warn('[SelectTeamPlayersModal] Nenhuma regra encontrada para partida', matchId);
       setRules(null);
+    }
+  };
+
+  const fetchMatch = async () => {
+    try {
+      const resp = await axios.get(`http://localhost:3001/api/matches/${matchId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const mod = resp?.data?.modalidade as string | undefined;
+      setModalidade(mod || null);
+    } catch (e) {
+      console.warn('[SelectTeamPlayersModal] Não foi possível obter a modalidade da partida', e);
+      setModalidade(null);
     }
   };
 
@@ -121,6 +135,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
       setPlayers([]);
       setSelectedPlayers([]);
       fetchRules();
+      fetchMatch();
       fetchAvailableTeams();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -139,6 +154,36 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
   const eligiblePlayers = useMemo(() => players.filter(playerMatchesRules), [players, rules]);
   const hasEligiblePlayers = eligiblePlayers.length > 0;
 
+  // Modalidade: requisitos mínimos de seleção
+  const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const isGoalkeeper = (p: Player) => {
+    const pos = normalize(p.posicao || '');
+    return pos === 'goleiro' || pos === 'gk' || pos === 'goalkeeper' || pos.includes('goleir');
+  };
+
+  const requirements = useMemo(() => {
+    const mod = modalidade ? normalize(modalidade) : '';
+    if (mod === 'futsal') return { gk: 1, line: 4 };
+    if (mod === 'fut7' || mod === 'fut 7' || mod === 'society' || mod === 'futebol7') return { gk: 1, line: 6 };
+    if (mod === 'futebol campo' || mod === 'futeboldecampo' || mod === 'campo') return { gk: 1, line: 10 };
+    // padrão conservador: exigir ao menos 1 goleiro e 4 de linha
+    return { gk: 1, line: 4 };
+  }, [modalidade]);
+
+  const selectedCounts = useMemo(() => {
+    let gk = 0, line = 0;
+    const map = new Map(players.map(p => [p.id, p] as [number, Player]));
+    selectedPlayers.forEach(id => {
+      const p = map.get(id);
+      if (!p) return;
+      if (!playerMatchesRules(p)) return; // garantir só contar elegíveis
+      if (isGoalkeeper(p)) gk += 1; else line += 1;
+    });
+    return { gk, line };
+  }, [selectedPlayers, players, rules]);
+
+  const compositionMet = selectedCounts.gk >= requirements.gk && selectedCounts.line >= requirements.line;
+
   const toggleSelectPlayer = (id: number) => {
     setSelectedPlayers(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);
   };
@@ -154,6 +199,10 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
     }
     if (selectedPlayers.length === 0) {
       setError('Selecione ao menos um jogador elegível.');
+      return;
+    }
+    if (!compositionMet) {
+      setError(`Seleção insuficiente para a modalidade${modalidade ? ` ${modalidade}` : ''}. Necessário: ${requirements.gk} goleiro(s) e ${requirements.line} jogador(es) de linha. Selecionado: ${selectedCounts.gk} GKs e ${selectedCounts.line} linha.`);
       return;
     }
     try {
@@ -231,6 +280,12 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
 
         <div className="stm-section">
           <h5 className="stm-section-title">2. Jogadores do Time {rules && <small>(Regras: {rules.genero} {rules.idadeMinima}-{rules.idadeMaxima} anos)</small>}</h5>
+          {modalidade && (
+            <div className="stm-hint" style={{ marginBottom: 8 }}>
+              Modalidade: <strong>{modalidade}</strong> • Necessário selecionar no mínimo: <strong>{requirements.gk} goleiro(s)</strong> e <strong>{requirements.line} jogador(es) de linha</strong>.
+              <div style={{ marginTop: 4 }}>Selecionado: {selectedCounts.gk} goleiro(s) • {selectedCounts.line} jogador(es) de linha.</div>
+            </div>
+          )}
           {selectedTeam && (
             playersLoading ? (
               <div className="stm-loading"><Spinner animation="border" size="sm" /> Carregando jogadores...</div>
@@ -269,7 +324,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
         <Button
           variant="primary"
           onClick={handleConfirm}
-          disabled={loading || !selectedTeamId || selectedPlayers.length === 0}
+          disabled={loading || !selectedTeamId || selectedPlayers.length === 0 || !compositionMet}
         >
           {loading ? 'Vinculando...' : 'Vincular Time'}
         </Button>
