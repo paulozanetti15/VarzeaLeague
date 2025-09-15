@@ -5,12 +5,10 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import ptBr from '@fullcalendar/core/locales/pt-br';
 import axios from 'axios';
 import './calendarioPage.css'
-// removed unused imports
-// Removed modal usage; events will navigate directly
+
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 
-// removed unused User interface
 interface Team{
   id:number;
   name:string;

@@ -16,6 +16,130 @@ import ModalTeams from '../../components/Modals/Teams/modelTeams'; // legacy (po
 import SelectTeamPlayersModal from '../../components/Modals/Teams/SelectTeamPlayersModal';
 import { useAuth } from '../../hooks/useAuth';
 import EditRulesModal from '../../components/Modals/Regras/RegrasFormEditModal';
+
+// Subcomponente para avaliações (rating + comentários) com UI aprimorada
+const StarRating: React.FC<{ value: number; onChange: (v:number)=>void; size?: number }> = ({ value, onChange, size = 26 }) => {
+  return (
+    <div className="stars-wrapper" role="radiogroup" aria-label="Nota da partida">
+      {[1,2,3,4,5].map(n => {
+        const active = n <= value;
+        return (
+          <button
+            key={n}
+            type="button"
+            className={`star-btn ${active ? 'active' : ''}`}
+            aria-checked={active}
+            aria-label={`${n} estrela${n>1?'s':''}`}
+            onClick={() => onChange(n)}
+          >
+            <svg width={size} height={size} viewBox="0 0 24 24" fill={active ? '#ffb400' : 'none'} stroke={active ? '#ffb400' : '#cccccc'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+const MatchEvaluationsSection: React.FC<{ matchId: number }> = ({ matchId }) => {
+  const [evaluations, setEvaluations] = useState<any[]>([]);
+  const [summary, setSummary] = useState<{ average: number; count: number } | null>(null);
+  const [myRating, setMyRating] = useState<number>(0);
+  const [myComment, setMyComment] = useState('');
+  const [loading, setLoading] = useState(false);
+  const token = localStorage.getItem('token');
+
+  const fetchAll = async () => {
+    try {
+      const [listRes, sumRes] = await Promise.all([
+        fetch(`http://localhost:3001/api/matches/${matchId}/evaluations`).then(r => r.json()),
+        fetch(`http://localhost:3001/api/matches/${matchId}/evaluations/summary`).then(r => r.json())
+      ]);
+      setEvaluations(Array.isArray(listRes) ? listRes : []);
+      if (sumRes && typeof sumRes.average !== 'undefined') setSummary(sumRes);
+      // Preencher minha avaliação se existir
+      if (Array.isArray(listRes)) {
+        const uid = localStorage.getItem('userId');
+        if (uid) {
+          const mine = listRes.find((e: any) => String(e.evaluator_id) === uid);
+          if (mine) { setMyRating(mine.rating); setMyComment(mine.comment || ''); }
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao carregar avaliações', e);
+    }
+  };
+
+  useEffect(() => { fetchAll(); }, [matchId]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) { toast.error('Não autenticado'); return; }
+    if (myRating < 1 || myRating > 5) { toast.error('Nota deve ser de 1 a 5'); return; }
+    setLoading(true);
+    try {
+      const resp = await fetch(`http://localhost:3001/api/matches/${matchId}/evaluations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ rating: myRating, comment: myComment })
+      });
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        throw new Error(data.message || 'Erro ao salvar avaliação');
+      }
+      toast.success('Avaliação salva');
+      await fetchAll();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="match-evaluations-section">
+      <div className="eval-header-line">
+        <h3 className="eval-title">Avaliações</h3>
+        {summary && (
+          <div className="evaluation-summary-chip" title={`${summary.count} ${summary.count===1?'avaliação':'avaliações'}`}>⭐ {summary.average} <span className="count">({summary.count})</span></div>
+        )}
+      </div>
+      <form className="evaluation-form fancy" onSubmit={handleSubmit}>
+        <div className="rating-input block">
+          <label className="field-label">Sua Nota</label>
+          <StarRating value={myRating} onChange={setMyRating} />
+        </div>
+        <div className="comment-input block">
+          <label className="field-label">Comentário</label>
+            <textarea className="comment-box" value={myComment} onChange={e => setMyComment(e.target.value)} rows={4} placeholder="Compartilhe pontos positivos, organização, fair play..." />
+        </div>
+        <div className="actions-row">
+          <button type="submit" className="submit-eval-btn" disabled={loading || myRating===0}>{loading ? 'Salvando...' : (myRating? 'Salvar Avaliação' : 'Selecione a nota')}</button>
+          {myRating>0 && <span className="edit-hint">Você pode alterar depois.</span>}
+        </div>
+      </form>
+      <div className="evaluation-list modern">
+        {evaluations.length === 0 && <div className="empty">Nenhuma avaliação ainda. Seja o primeiro a opinar!</div>}
+        {evaluations.map(ev => {
+          const mine = localStorage.getItem('userId') && String(ev.evaluator_id) === localStorage.getItem('userId');
+          return (
+            <div key={ev.id} className={`evaluation-item cardish ${mine? 'mine':''}`}>
+              <div className="evaluation-header">
+                <div className="stars-inline" aria-label={`Nota ${ev.rating}`}>
+                  {[1,2,3,4,5].map(n => <span key={n} className={n<=ev.rating? 's filled':'s'}>★</span>)}
+                </div>
+                <span className="date">{new Date(ev.createdAt).toLocaleDateString('pt-BR')}</span>
+              </div>
+              {ev.comment && <div className="comment-body">{ev.comment}</div>}
+              {mine && <div className="badge-mine">Sua avaliação</div>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -29,6 +153,7 @@ const MatchDetail: React.FC = () => {
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [editRules, setEditRules] = useState(false);
   const { user } = useAuth();
+  const [showEvalModal, setShowEvalModal] = useState(false);
 
   const getTimeInscrito = async (matchId: string) => {
     try {
@@ -201,6 +326,8 @@ const MatchDetail: React.FC = () => {
   const isOrganizer = user && match.organizerId === user.id;
   const isAdmin = user && user.userTypeId === 1;
   const canDeleteMatch = isOrganizer || isAdmin;
+  const statusLower = String(match.status || '').toLowerCase();
+  const isCompleted = statusLower === 'completed';
 
   return (
     <div className="match-detail-container">
@@ -345,6 +472,13 @@ const MatchDetail: React.FC = () => {
                     </Button>
                   </>
                 )}
+                <Button
+                  variant='primary'
+                  title='Avaliar / comentar partida'
+                  onClick={() => setShowEvalModal(true)}
+                >
+                  Avaliar / Comentar
+                </Button>
               
             </div>
         </div>
@@ -395,6 +529,21 @@ const MatchDetail: React.FC = () => {
           <Button onClick={handleDeleteMatch} color="primary" autoFocus>
             Excluir
           </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Modal de Avaliações */}
+      <Dialog
+        open={showEvalModal}
+        onClose={() => setShowEvalModal(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Avaliações da Partida</DialogTitle>
+        <DialogContent dividers>
+          <MatchEvaluationsSection matchId={Number(match.id)} />
+        </DialogContent>
+        <DialogActions>
+          <Button variant="secondary" onClick={() => setShowEvalModal(false)}>Fechar</Button>
         </DialogActions>
       </Dialog>
     </div>
