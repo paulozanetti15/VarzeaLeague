@@ -484,7 +484,9 @@
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   margin-top: 1.5rem;
   width: auto;
-  align-self: flex-start;
+  align-self: center; /* centraliza o botão */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .edit-team-btn:hover {
@@ -576,6 +578,109 @@
   background-color: rgba(255, 255, 255, 0.15);
   transform: translateY(-3px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* ================= Team Stats (Mock) Section ================= */
+.team-stats-wrapper {
+  width: 100%;
+  margin-top: 1rem;
+  background: rgba(255,255,255,0.085);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 1.1rem 1.2rem 1.4rem 1.2rem;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.12);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.team-stats-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at top left, rgba(255,255,255,0.18), transparent 60%);
+  opacity: .35;
+  pointer-events: none;
+}
+
+/* Centralização das estatísticas */
+.team-stats-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9rem;
+  width: 100%;
+  margin-top: 0.5rem;
+  max-width: 640px; /* limita largura para melhor centralização */
+}
+
+.team-stat-card {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  padding: 0.75rem 0.6rem 0.85rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  min-height: 105px;
+  backdrop-filter: blur(4px);
+  transition: all .3s ease;
+}
+
+/* Variante wide em layout flex */
+.team-stat-card.wide {
+  flex: 0 1 240px;
+  min-width: 220px;
+}
+
+@media (max-width: 540px) {
+  .team-stat-card.wide { grid-column: span 1; }
+}
+
+.team-stat-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(125deg, rgba(255,255,255,0.08), rgba(255,255,255,0));
+  opacity: 0;
+  transition: opacity .35s ease;
+}
+
+.team-stat-card:hover::after { opacity: 1; }
+.team-stat-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.25);
+}
+
+.team-stat-card .stat-icon {
+  font-size: 1.7rem;
+  margin-bottom: 0.35rem;
+  color: #90caf9;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.team-stat-card .stat-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: .5px;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+
+.team-stat-card .stat-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.75);
+  margin-top: 0.25rem;
 }
 
 /* Cabeçalho do cartão de jogador */

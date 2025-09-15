@@ -5,8 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AddIcon from '@mui/icons-material/Add';
 import GroupIcon from '@mui/icons-material/Group';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import SportsIcon from '@mui/icons-material/Sports';
+import WhatshotIcon from '@mui/icons-material/Whatshot';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import PersonIcon from '@mui/icons-material/Person';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
@@ -99,14 +103,6 @@ const TeamList = () => {
     }
   };
 
-  const handleTeamClick = (teamId: string) => {
-    navigate(`/teams/edit/${teamId}`);
-  };
-
-  const handleBack = () => {
-    navigate('/');
-  };
-
   const togglePlayersList = (e: React.MouseEvent, teamId: string) => {
     e.stopPropagation();
     
@@ -118,20 +114,18 @@ const TeamList = () => {
     setExpandedTeam(expandedTeam === teamId ? null : teamId);
   };
 
-  const teamCardVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: 0.05 * i,
-        duration: 0.3,
-        ease: "easeOut"
-      }
-    })
-  };
-
   const hasTeam = teams.length > 0;
+
+  // Mock de estatísticas (poderia futuramente vir da API)
+  const buildMockStats = (team: Team) => {
+    // Usa alguns campos existentes como base para gerar números coerentes
+    const matches = team.matchCount || Math.floor(Math.random() * 12) + 1;
+    const championships = Math.floor(matches / 4);
+    const wins = Math.max(0, Math.floor(matches * 0.5 + (Math.random() * 0.3 - 0.15) * matches));
+    const losses = Math.max(0, matches - wins - Math.floor(matches * 0.1)); // assume uns empates implícitos
+    const winRate = matches > 0 ? ((wins / matches) * 100).toFixed(1) : '0.0';
+    return { matches, championships, wins, losses, winRate };
+  };
 
   return (
     <div className="teams-container">
@@ -189,7 +183,7 @@ const TeamList = () => {
         <div className="teams-content">
           {hasTeam ? (
             <div className="team-container">
-              {teams.slice(0, 1).map((team, index) => (
+              {teams.slice(0, 1).map((team) => (
                 <div
                   key={team.id}
                   className="team-card team-detail-card"
@@ -324,6 +318,46 @@ const TeamList = () => {
                         </motion.div>
                       )}
                     </AnimatePresence>
+
+                    {/* Estatísticas do time */}
+                    {(() => {
+                      const stats = buildMockStats(team);
+                      return (
+                        <div className="team-stats-wrapper">
+                          <h3 className="team-section-title" style={{ marginTop: '1.4rem' }}>
+                            <BarChartIcon style={{ marginRight: 8, color: team.primaryColor || '#29b6f6' }} />
+                            Estatísticas do Time (mock)
+                          </h3>
+                          <div className="team-stats-grid">
+                            <div className="team-stat-card" title="Partidas disputadas">
+                              <SportsIcon className="stat-icon" />
+                              <div className="stat-value">{stats.matches}</div>
+                              <div className="stat-label">Partidas</div>
+                            </div>
+                            <div className="team-stat-card" title="Campeonatos inscritos">
+                              <MilitaryTechIcon className="stat-icon" />
+                              <div className="stat-value">{stats.championships}</div>
+                              <div className="stat-label">Campeonatos</div>
+                            </div>
+                            <div className="team-stat-card" title="Vitórias">
+                              <TrendingUpIcon className="stat-icon" />
+                              <div className="stat-value" style={{ color: '#4caf50' }}>{stats.wins}</div>
+                              <div className="stat-label">Vitórias</div>
+                            </div>
+                            <div className="team-stat-card" title="Derrotas">
+                              <WhatshotIcon className="stat-icon" />
+                              <div className="stat-value" style={{ color: '#ef5350' }}>{stats.losses}</div>
+                              <div className="stat-label">Derrotas</div>
+                            </div>
+                            <div className="team-stat-card wide" title="% de aproveitamento (vitórias/partidas)">
+                              <TrendingUpIcon className="stat-icon" />
+                              <div className="stat-value">{stats.winRate}%</div>
+                              <div className="stat-label">Aproveitamento</div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
                     
 
                     <button
