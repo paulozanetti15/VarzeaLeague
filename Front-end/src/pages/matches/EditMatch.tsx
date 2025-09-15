@@ -240,6 +240,16 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
         return;
       }
 
+      if (!formData.modalidade || !formData.modalidade.trim()) {
+        setError('Modalidade é obrigatória');
+        return;
+      }
+
+      if (!formData.nomequadra || !formData.nomequadra.trim()) {
+        setError('Nome da quadra é obrigatório');
+        return;
+      }
+
       const parsedDate = parse(formData.date, 'dd/MM/yyyy', new Date());
       if (!isValid(parsedDate)) {
         setError('Data inválida. Use o formato DD/MM/AAAA');
@@ -467,7 +477,15 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
             </div>
             <div className="form-group">
               <label>Nome da Quadra <span className="required-asterisk" aria-hidden="true">*</span></label>
-              <input name="quadra" type='text' className='form-control' onChange={() => setFormData({...formData, nomequadra: formData.nomequadra})} value={formData.nomequadra} />
+              <input
+                name="nomequadra"
+                type='text'
+                className='form-control'
+                value={formData.nomequadra}
+                onChange={(e) => setFormData(prev => ({ ...prev, nomequadra: e.target.value }))}
+                placeholder="Ex: Arena Central"
+                required
+              />
             </div>
             <div className="form-group">
               <label>Modalidade <span className="required-asterisk" aria-hidden="true">*</span></label>
