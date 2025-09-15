@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Grid,
@@ -37,8 +38,25 @@ const defaultStatuses = [
 ];
 
 const MatchCard: React.FC<{ match: Match }> = ({ match }) => {
+  const navigate = useNavigate();
+  const goToDetail = () => {
+    if (match && (match.id || match.id === 0)) {
+      navigate(`/matches/${match.id}`);
+    }
+  };
   return (
-    <Paper sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2, boxShadow: 3 }} elevation={0}>
+    <Paper 
+      sx={{ 
+        p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2, boxShadow: 3,
+        cursor: 'pointer', transition: 'box-shadow 0.2s ease',
+        '&:hover': { boxShadow: 6 }
+      }} 
+      elevation={0}
+      onClick={goToDetail}
+      role="button"
+      aria-label={`Abrir partida ${match?.title ?? ''}`}
+      tabIndex={0}
+    >
       <Avatar sx={{ bgcolor: 'primary.main', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>{(match.title || 'P').charAt(0)}</Avatar>
       <Box sx={{ flex: 1 }}>
         <Typography variant="h6">{match.title || 'Partida sem título'}</Typography>
@@ -59,8 +77,24 @@ const MatchCard: React.FC<{ match: Match }> = ({ match }) => {
 };
 
 const ChampionshipCard: React.FC<{ champ: Championship }> = ({ champ }) => {
+  const navigate = useNavigate();
+  const goToDetail = () => {
+    if (champ && (champ.id || champ.id === 0)) {
+      navigate(`/championships/${champ.id}`);
+    }
+  };
   return (
-    <Paper sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2, boxShadow: 3 }} elevation={0}>
+    <Paper 
+      sx={{ 
+        p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2, boxShadow: 3,
+        cursor: 'pointer', transition: 'box-shadow 0.2s ease', '&:hover': { boxShadow: 6 }
+      }} 
+      elevation={0}
+      onClick={goToDetail}
+      role="button"
+      aria-label={`Abrir campeonato ${champ?.name ?? ''}`}
+      tabIndex={0}
+    >
       <Avatar sx={{ bgcolor: 'warning.main', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>{(champ.name || 'C').charAt(0)}</Avatar>
       <Box sx={{ flex: 1 }}>
         <Typography variant="h6">{champ.name || 'Campeonato sem nome'}</Typography>
