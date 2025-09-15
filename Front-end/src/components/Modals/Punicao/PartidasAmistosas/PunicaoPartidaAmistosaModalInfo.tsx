@@ -164,7 +164,7 @@ const PunicaoPartidaAmistosaModalInfo: React.FC<PunicaoPartidaAmistosaModalProps
                 </>
               )}
               
-              <Button variant="secondary" onClick={onClose}>
+              <Button variant="danger" onClick={onClose}>
                 Fechar
               </Button>
             </div>

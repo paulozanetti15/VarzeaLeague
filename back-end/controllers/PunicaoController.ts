@@ -2,6 +2,7 @@ import { AuthRequest } from "middleware/auth";
 import { Request, Response } from 'express';
 import PunicaoAmitosoMatch from "../models/PunicaoAmitosoMatchModel";
 import TeamModel from "../models/TeamModel"
+import MatchTeams from "../models/MatchTeamsModel";
 export const inserirPunicaoPartidaAmistosa = async(req:AuthRequest,res:Response) =>{
     try {
         const userId = req.user?.id;
@@ -9,12 +10,34 @@ export const inserirPunicaoPartidaAmistosa = async(req:AuthRequest,res:Response)
             res.status(401).json({ error: 'Usuário não autenticado' });
             return;
         }
-     
+        const idMatch = Number(req.params.idAmistosaPartida);
+        const idTime = Number(req.body.idtime);
+        const motivo = req.body.motivo;
+
+        if (!idMatch || !idTime || !motivo) {
+            res.status(400).json({ message: 'Dados inválidos: id da partida, time e motivo são obrigatórios.' });
+            return;
+        }
+
+        // Verifica se já existe punição para esta partida
+        const existing = await PunicaoAmitosoMatch.findOne({ where: { idMatch } });
+        if (existing) {
+            res.status(409).json({ message: 'Já existe uma punição para esta partida.' });
+            return;
+        }
+
+        // Verifica se o time está vinculado à partida
+        const teamInMatch = await MatchTeams.findOne({ where: { matchId: idMatch, teamId: idTime } });
+        if (!teamInMatch) {
+            res.status(400).json({ message: 'O time selecionado não está vinculado a esta partida.' });
+            return;
+        }
+
         await PunicaoAmitosoMatch.create({
-            idTime:Number(req.body.idtime),
-            motivo:req.body.motivo, 
-            idMatch:Number(req.params.idAmistosaPartida)
-        })
+            idTime,
+            motivo, 
+            idMatch
+        });
         res.status(201).json({ message: "Punição criada com sucesso" });
     } catch (error) {
       res.status(500)

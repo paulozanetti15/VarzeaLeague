@@ -185,7 +185,7 @@ const MatchDetail: React.FC = () => {
   const isOrganizer = user?.id === match.organizerId;
   const isAdmin = user?.userTypeId === 1;
   const canDeleteMatch = isOrganizer || isAdmin;
-  const hasTeams = timeCadastrados.length > 0;
+  // const hasTeams = timeCadastrados.length > 0; // não utilizado após remoção de botões duplicados
 
   return (
     <div className="match-detail-container">
@@ -254,53 +254,7 @@ const MatchDetail: React.FC = () => {
               </div>
             )}
           </div>
-            <div className='d-flex gap-2 container justify-content-center'>
-              {canDeleteMatch && (
-                <Button
-                  variant="danger"
-                  onClick={() => {
-                    if (hasTeams) {
-                      toast.error('Remova os times vinculados antes de excluir.');
-                      return;
-                    }
-                    setOpenDeleteConfirm(true);
-                  }}
-                  disabled={hasTeams}
-                >
-                  <DeleteIcon /> Excluir Partida
-                </Button>
-              )}     
-                <Button
-                  style={{
-                    background: '#1976d2',
-                    border: 'none',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    boxShadow: '0 3px 10px rgba(25,118,210,0.35)'
-                  }}
-                  onClick={() => navigate(`/matches/edit/${id}`)}
-                >
-                  <EditIcon/> Editar Partida 
-                </Button>
-
-                <Button
-                  style={{
-                    background: 'transparent',
-                    border: '2px solid #1976d2',
-                    color: '#1976d2',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6
-                  }}
-                  onClick={() => setEditRules(true)}
-                >
-                  <EditIcon/> Editar Regras   
-                </Button>
-              
-            </div>
+            {/* Ações duplicadas removidas: os botões abaixo (role-based) já cobrem estas ações */}
         </div>
 
         {user?.userTypeId==2 ?
