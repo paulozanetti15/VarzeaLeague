@@ -1,5 +1,4 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Header } from '../../components/landing/Header';
 import { Hero } from '../../components/landing/Hero';
 import { Benefits } from '../../components/landing/Benefits';
 import { Testimonials } from '../../components/landing/Testimonials';
@@ -62,13 +61,6 @@ export function Landing({ isLoggedIn, user, onLoginClick, onRegisterClick, onLog
 
   return (
     <div className="landing-page">
-      <Header 
-        isLoggedIn={isLoggedIn}
-        user={user}
-        onLoginClick={onLoginClick}
-        onRegisterClick={onRegisterClick}
-        onLogout={onLogout}
-      />
       <Hero 
         onGetStarted={handleCreateMatch} 
         onViewMatches={handleViewMatches}

@@ -92,7 +92,7 @@ export function useAuth() {
     localStorage.removeItem('user');
     setIsLoggedIn(false);
     setUser(null);
-    window.location.href = '/login';
+    window.location.href = '/';
   };
     // Define your auth object properties or methods here
     return { isLoggedIn, isLoading, user, login, logout };

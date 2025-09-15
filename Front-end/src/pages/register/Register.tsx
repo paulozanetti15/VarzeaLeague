@@ -45,7 +45,7 @@ const Register: React.FC<RegisterProps> = () => {
     sexo: '',
     password: '',
     confirmPassword: '',
-    userTypeId: 4 // Valor padrão como jogador
+    userTypeId: 0 // Valor padrão vazio para forçar seleção
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -197,7 +197,7 @@ const Register: React.FC<RegisterProps> = () => {
     if (!formData.phone.trim()) newErrors.phone = 'Telefone é obrigatório';
     else if (!/^\d{10,11}$/.test(formData.phone.replace(/\D/g, ''))) newErrors.phone = 'Telefone inválido';
     if (!formData.sexo) newErrors.sexo = 'Selecione o sexo';
-    if (!formData.userTypeId) newErrors.userTypeId = 'Selecione o tipo de perfil';
+    if (!formData.userTypeId || formData.userTypeId === 0) newErrors.userTypeId = 'Selecione o tipo de perfil';
     
     // Validação de CPF
     if (!formData.cpf.trim()) {
@@ -284,7 +284,7 @@ const Register: React.FC<RegisterProps> = () => {
                   className={`register-input${errors.userTypeId ? ' register-input-error' : ''}`}
                   disabled={isLoading}
                 >
-                  <option value={4}>Jogador</option>
+                  <option value={0}>Selecione</option>
                   <option value={2}>Organizador de Campeonatos e Partidas</option>
                   <option value={3}>Técnico/Organizador de Times</option>
                 </select>

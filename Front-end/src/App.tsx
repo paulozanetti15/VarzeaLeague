@@ -58,7 +58,7 @@ import CalendarioPage from './components/calendario/calendárioPage'
       return <Loading />;
     }
 
-    const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/reset-password'];
+    const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
 
     const isPublicRoute = publicRoutes.includes(location.pathname);
 
@@ -70,7 +70,7 @@ import CalendarioPage from './components/calendario/calendárioPage'
           component="main"
           sx={{
             flexGrow: 1,
-            pt: !isPublicRoute ? '64px' : 0,
+            pt: !isPublicRoute ? '72px' : 0,
             backgroundColor: 'background.default',
             minHeight: '100vh',
             display: 'flex',
