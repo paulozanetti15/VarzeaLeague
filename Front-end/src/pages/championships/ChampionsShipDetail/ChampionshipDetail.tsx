@@ -5,6 +5,7 @@ import trophy from '../../../assets/championship-trophy.svg';
 import './ChampionshipDetail.css';
 import toast from 'react-hot-toast';
 import { Button, Modal } from 'react-bootstrap';
+import SelectTeamPlayersChampionshipModal from '../../../components/Modals/Teams/SelectTeamPlayersChampionshipModal';
 
 interface Championship {
   id: number;
@@ -26,10 +27,9 @@ const ChampionshipDetail: React.FC = () => {
   const [hasEditPermission, setHasEditPermission] = useState(false);
   const [teams, setTeams] = useState<any[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showTeamSelectModal, setShowTeamSelectModal] = useState(false);
+  const [showTeamSelectModal, setShowTeamSelectModal] = useState(false); // reused to show the new team+players modal
   const [userTeams, setUserTeams] = useState<any[]>([]);
-  const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
-  const [isJoining, setIsJoining] = useState(false);
+  // removed selectedTeamId / isJoining (handled inside the new modal component)
   const [isLeavingTeamId, setIsLeavingTeamId] = useState<number | null>(null);
 
   // Times do usuário já inscritos e disponíveis para inscrição
@@ -121,31 +121,7 @@ const ChampionshipDetail: React.FC = () => {
 
   // Removed join as individual flow (not used here)
 
-  const handleJoinWithTeam = async () => {
-    if (!selectedTeamId) {
-      toast.error('Selecione um time para entrar no campeonato');
-      return;
-    }
-    try {
-      setIsJoining(true);
-      await api.championships.joinWithTeam(Number(id), selectedTeamId);
-      toast.success('Seu time entrou no campeonato com sucesso!');
-      setShowTeamSelectModal(false);
-      // Atualiza o campeonato
-      const updatedChampionship = await api.championships.getById(Number(id));
-      setChampionship(updatedChampionship);
-      // Recarrega a lista de times inscritos
-      await (async () => {
-        try { await (async () => { /* ensure awaited */ })(); } catch (_) {}
-        await (async () => { /* noop */ })();
-        await (async () => loadChampionshipTeams())();
-      })();
-      setIsJoining(false);
-    } catch (err: any) {
-      toast.error(err.message || 'Erro ao entrar no campeonato com o time');
-      setIsJoining(false);
-    }
-  };
+  // Joining now handled inside SelectTeamPlayersChampionshipModal
 
   const handleLeaveWithTeam = async (teamId: number) => {
     try {
@@ -255,10 +231,10 @@ const ChampionshipDetail: React.FC = () => {
               {!hasUserTeamInChampionship ? (
                 <button
                   className="join-team-button"
-                  onClick={() => { setSelectedTeamId(null); setShowTeamSelectModal(true); }}
-                  disabled={isJoining || availableUserTeams.length === 0}
+                  onClick={() => { setShowTeamSelectModal(true); }}
+                  disabled={availableUserTeams.length === 0}
                 >
-                  {isJoining ? 'Entrando...' : 'Entrar com Time'}
+                  Inscrever Time
                 </button>
               ) : (
                 <div style={{ fontSize: 14, color: '#ffffff' }}>
@@ -314,47 +290,21 @@ const ChampionshipDetail: React.FC = () => {
         </Modal.Footer>
       </Modal>
 
-      <Modal show={showTeamSelectModal} onHide={() => setShowTeamSelectModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Selecione um Time</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {availableUserTeams.length > 0 ? (
-            <>
-              <p>Selecione um dos seus times para entrar no campeonato:</p>
-              <div className="team-selection-list">
-                {availableUserTeams.map((team) => (
-                  <div 
-                    key={team.id} 
-                    className={`team-selection-item ${selectedTeamId === team.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedTeamId(team.id)}
-                  >
-                    {team.name}
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <p>
-              {userTeams.length === 0
-                ? 'Você não tem times cadastrados. Crie um time antes de entrar no campeonato.'
-                : 'Todos os seus times já estão inscritos neste campeonato.'}
-            </p>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowTeamSelectModal(false)}>
-            Cancelar
-          </Button>
-          <Button 
-            variant="primary" 
-            onClick={handleJoinWithTeam}
-            disabled={!selectedTeamId || isJoining}
-          >
-            {isJoining ? 'Entrando...' : 'Entrar com o Time'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <SelectTeamPlayersChampionshipModal
+        show={showTeamSelectModal}
+        onHide={() => setShowTeamSelectModal(false)}
+        championshipId={Number(id)}
+        modalidade={championship.modalidade}
+        onSuccess={async () => {
+          // Reload teams list after successful inscription
+            await loadChampionshipTeams();
+            // refresh championship data (in case something changed)
+            try {
+              const updated = await api.championships.getById(Number(id));
+              setChampionship(updated);
+            } catch {}
+        }}
+      />
     </div>
   );
 };

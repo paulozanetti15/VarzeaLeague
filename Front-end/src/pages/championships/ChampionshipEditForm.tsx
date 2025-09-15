@@ -26,10 +26,31 @@ const ChampionshipEditForm: React.FC = () => {
   const hiddenStartRef = useRef<HTMLInputElement>(null);
   const hiddenEndRef = useRef<HTMLInputElement>(null);
 
-  const isoToBR = (iso: string): string => {
-    if (!iso) return '';
-    const [y, m, d] = iso.split('T')[0].split('-');
-    return `${d}/${m}/${y}`;
+  const isoToBR = (raw: string): string => {
+    if (!raw) return '';
+    // Accept formats: "YYYY-MM-DD", "YYYY-MM-DDTHH:MM:SS", "YYYY-MM-DD HH:MM:SS"
+    let datePart = raw.trim();
+    if (datePart.includes('T')) {
+      datePart = datePart.split('T')[0];
+    } else if (datePart.includes(' ')) {
+      // e.g. 2025-09-17 00:00:00
+      datePart = datePart.split(' ')[0];
+    } else if (datePart.includes('/')) {
+      // Already in some unexpected format like '17 00:00:00/09/2025'
+      // Attempt to sanitize by removing time fragments between day and month
+      // Pattern: DD (space) HH:MM:SS/MM/YYYY -> remove everything after first space until first '/'
+      const weirdMatch = datePart.match(/^(\d{1,2})\s+\d{2}:\d{2}:\d{2}\/(\d{2})\/(\d{4})$/);
+      if (weirdMatch) {
+        const [, d, m, y] = weirdMatch;
+        return `${d.padStart(2,'0')}/${m}/${y}`;
+      }
+      return raw; // fallback pass-through
+    }
+    const parts = datePart.split('-');
+    if (parts.length !== 3) return '';
+    const [y, m, d] = parts;
+    if (!y || !m || !d) return '';
+    return `${d.padStart(2,'0')}/${m.padStart(2,'0')}/${y}`;
   };
 
   const brToISO = (br: string): string => {
@@ -147,22 +168,29 @@ const ChampionshipEditForm: React.FC = () => {
         const p = parse(form.start_date, 'dd/MM/yyyy', new Date());
         if (!isValid(p)) {
           errors.start_date = 'Data de início inválida';
-        } else {
-          parsedStart = p;
-        }
+        } else { parsedStart = p; }
       }
       if (form.end_date) {
         const p = parse(form.end_date, 'dd/MM/yyyy', new Date());
         if (!isValid(p)) {
           errors.end_date = 'Data de término inválida';
-        } else {
-          parsedEnd = p;
-        }
+        } else { parsedEnd = p; }
       }
 
-      const today = new Date(); today.setHours(0,0,0,0);
-      if (parsedStart && parsedEnd && !isAfter(parsedEnd, parsedStart)) {
-        errors.end_date = 'Término deve ser após o início';
+      const normalizeDay = (d: Date) => { const c = new Date(d); c.setHours(0,0,0,0); return c; };
+      const today = normalizeDay(new Date());
+      if (parsedStart) {
+        const ns = normalizeDay(parsedStart);
+        if (ns < today) {
+          errors.start_date = 'Data de início não pode ser no passado';
+        }
+      }
+      if (parsedStart && parsedEnd) {
+        const ns = normalizeDay(parsedStart);
+        const ne = normalizeDay(parsedEnd);
+        if (ne <= ns) {
+          errors.end_date = 'Término deve ser depois do início';
+        }
       }
       if (Object.keys(errors).length) {
         setFieldErrors(errors);
@@ -223,7 +251,7 @@ const ChampionshipEditForm: React.FC = () => {
                 value={form.modalidade}
                 onChange={handleChange}
                 required
-                style={fieldErrors.modalidade ? { borderColor: '#e53935' } : undefined}
+                className={`styled-select ${fieldErrors.modalidade ? 'error-select' : ''}`}
                 aria-invalid={!!fieldErrors.modalidade}
               >
                 <option value="">Selecione a modalidade</option>

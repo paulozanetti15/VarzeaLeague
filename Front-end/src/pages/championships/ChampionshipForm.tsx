@@ -90,16 +90,13 @@ const ChampionshipForm: React.FC = () => {
         errors.nomequadra = 'Nome muito longo (máx. 100)';
       }
 
-      // Datas obrigatórias agora
-      if (!form.start_date) {
-        errors.start_date = 'Informe a data de início';
-      }
-      if (!form.end_date) {
-        errors.end_date = 'Informe a data de término';
-      }
+      // Datas: validações
+      if (!form.start_date) errors.start_date = 'Informe a data de início';
+      if (!form.end_date) errors.end_date = 'Informe a data de término';
 
       let parsedStartDate: Date | null = null;
       let parsedEndDate: Date | null = null;
+
       if (form.start_date) {
         const p = parse(form.start_date, 'dd/MM/yyyy', new Date());
         if (!isValid(p)) {
@@ -117,18 +114,20 @@ const ChampionshipForm: React.FC = () => {
         }
       }
 
-      // Regras adicionais: início >= hoje (sem hora), término > início
-      const today = new Date();
-      today.setHours(0,0,0,0);
+      // Normalizar para comparar (sem hora)
+      const normalizeDay = (d: Date) => { const c = new Date(d); c.setHours(0,0,0,0); return c; };
+      const today = normalizeDay(new Date());
       if (parsedStartDate) {
-        const startClone = new Date(parsedStartDate); startClone.setHours(0,0,0,0);
-        if (startClone < today) {
-          errors.start_date = 'Data de início deve ser hoje ou futura';
+        const ns = normalizeDay(parsedStartDate);
+        if (ns < today) {
+          errors.start_date = 'Data de início não pode ser no passado';
         }
       }
       if (parsedStartDate && parsedEndDate) {
-        if (!isAfter(parsedEndDate, parsedStartDate)) {
-          errors.end_date = 'Término deve ser após o início';
+        const ne = normalizeDay(parsedEndDate);
+        const ns = normalizeDay(parsedStartDate);
+        if (ne <= ns) {
+          errors.end_date = 'Término deve ser depois do início';
         }
       }
 
@@ -217,14 +216,14 @@ const ChampionshipForm: React.FC = () => {
           </div>
 
           <div className="form-row">
-            <div className="form-group">
+            <div className="form-group styled-select-wrapper">
               <label>Modalidade <span className="required-asterisk" aria-hidden="true">*</span></label>
               <select
                 name="modalidade"
                 value={form.modalidade}
                 onChange={handleChange}
                 required
-                style={fieldErrors.modalidade ? { borderColor: '#e53935' } : undefined}
+                className={`styled-select ${fieldErrors.modalidade ? 'error-select' : ''}`}
                 aria-invalid={!!fieldErrors.modalidade}
               >
                 <option value="">Selecione a modalidade</option>

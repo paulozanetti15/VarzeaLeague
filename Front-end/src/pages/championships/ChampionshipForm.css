@@ -98,7 +98,8 @@
 }
 
 .championship-form input,
-.championship-form textarea {
+.championship-form textarea,
+.championship-form select {
   width: 100%;
   padding: 0.9rem 1rem;
   border: 2px solid rgba(255,255,255,0.1);
@@ -111,7 +112,8 @@
 }
 
 .championship-form input:focus,
-.championship-form textarea:focus {
+.championship-form textarea:focus,
+.championship-form select:focus {
   outline: none;
   border-color: #2196F3;
   box-shadow: 0 0 15px rgba(33,150,243,0.3);
@@ -120,7 +122,8 @@
 }
 
 .championship-form input:hover,
-.championship-form textarea:hover {
+.championship-form textarea:hover,
+.championship-form select:hover {
   border-color: rgba(255,255,255,0.3);
   background: rgba(255,255,255,0.12);
 }
@@ -129,6 +132,55 @@
 .championship-form textarea::placeholder {
   color: rgba(255,255,255,0.7);
   font-weight: 400;
+}
+
+/* Custom styled select */
+/*.styled-select base visual container*/
+.styled-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  position: relative;
+  padding-right: 2.4rem !important;
+  background: rgba(255,255,255,0.18) linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.05));
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  color: #ffffff;
+}
+
+.styled-select:focus {
+  background: rgba(255,255,255,0.24) linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.07));
+}
+
+.styled-select.error-select {
+  border-color: #e53935 !important;
+}
+
+/* Dropdown arrow */
+.styled-select::-ms-expand { display: none; }
+
+.styled-select-wrapper {
+  position: relative;
+}
+
+/* Remove custom arrow (browser native arrow preserved) */
+.styled-select-wrapper::after { content: none; }
+
+.styled-select-wrapper:focus-within::after {
+  color: #2196F3;
+}
+
+/* High-contrast placeholder for select first option */
+select.styled-select option[value=""] { color: #555; }
+
+/* Force dropdown list (where supported) to have light background & dark text for readability */
+select.styled-select option { color: #111; background: #ffffff; }
+select.styled-select option:checked { background: #1976d2 linear-gradient(#1976d2,#1976d2); color: #fff; }
+select.styled-select:disabled { cursor: not-allowed; opacity: 0.6; }
+
+/* Firefox focus ring inside gradient */
+@-moz-document url-prefix() {
+  .styled-select { background-clip: padding-box; }
 }
 
 .form-row {

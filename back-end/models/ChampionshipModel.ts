@@ -1,7 +1,26 @@
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model, InferAttributes, InferCreationAttributes, CreationOptional } from 'sequelize';
 import sequelize from '../config/database';
+interface ChampionshipModel extends Model<InferAttributes<ChampionshipModel>, InferCreationAttributes<ChampionshipModel>> {
+  id: CreationOptional<number>;
+  name: string;
+  description?: string | null;
+  start_date: Date;
+  end_date: Date;
+  created_by: number;
+  modalidade: string;
+  nomequadra: string;
+}
 
-class Championship extends Model {}
+class Championship extends Model<InferAttributes<ChampionshipModel>, InferCreationAttributes<ChampionshipModel>> implements ChampionshipModel {
+  public id!: CreationOptional<number>;
+  public name!: string;
+  public description!: string | null;
+  public start_date!: Date;
+  public end_date!: Date;
+  public created_by!: number;
+  public modalidade!: string;
+  public nomequadra!: string;
+}
 
 Championship.init({
   id: {
