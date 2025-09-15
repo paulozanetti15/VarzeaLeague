@@ -5,6 +5,9 @@ import trophy from '../../../assets/championship-trophy.svg';
 import './ChampionshipDetail.css';
 import toast from 'react-hot-toast';
 import { Button, Modal } from 'react-bootstrap';
+import axios from 'axios';
+import PunicaoCampeonatoRegisterModal from '../../../components/Modals/Punicao/Campeonatos/PunicaoCampeonatoRegisterModal';
+import PunicaoCampeonatoModalInfo from '../../../components/Modals/Punicao/Campeonatos/PunicaoCampeonatoModalInfo';
 import SelectTeamPlayersChampionshipModal from '../../../components/Modals/Teams/SelectTeamPlayersChampionshipModal';
 
 interface Championship {
@@ -25,12 +28,15 @@ const ChampionshipDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasEditPermission, setHasEditPermission] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [teams, setTeams] = useState<any[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showTeamSelectModal, setShowTeamSelectModal] = useState(false); // reused to show the new team+players modal
   const [userTeams, setUserTeams] = useState<any[]>([]);
   // removed selectedTeamId / isJoining (handled inside the new modal component)
   const [isLeavingTeamId, setIsLeavingTeamId] = useState<number | null>(null);
+  const [showPunicaoRegister, setShowPunicaoRegister] = useState(false);
+  const [showPunicaoInfo, setShowPunicaoInfo] = useState(false);
 
   // Times do usuário já inscritos e disponíveis para inscrição
   const enrolledTeamIds = useMemo(() => new Set((teams || []).map((t) => t.id)), [teams]);
@@ -78,7 +84,8 @@ const ChampionshipDetail: React.FC = () => {
         
         // Verificar permissões do usuário
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const isCreator = user.id === data.created_by;
+  const isCreator = user.id === data.created_by;
+  setIsAdmin(user.userTypeId === 1);
         // Apenas o criador pode editar/excluir
         if (isCreator) {
           setHasEditPermission(true);
@@ -116,6 +123,21 @@ const ChampionshipDetail: React.FC = () => {
       navigate('/championships');
     } catch (err: any) {
       toast.error(err.message || 'Erro ao excluir campeonato');
+    }
+  };
+
+  // Punicao: decide abrir registro ou info
+  const handleOpenPunicao = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token || !id) return;
+      const resp = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${id}/punicao`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const has = Array.isArray(resp.data) && resp.data.length > 0;
+      if (has) setShowPunicaoInfo(true); else setShowPunicaoRegister(true);
+    } catch {
+      setShowPunicaoRegister(true);
     }
   };
 
@@ -225,6 +247,13 @@ const ChampionshipDetail: React.FC = () => {
               >
                 Excluir Campeonato
               </button>
+              <button
+                className="btn btn-warning"
+                onClick={handleOpenPunicao}
+                style={{ marginLeft: 8 }}
+              >
+                Aplicar/Ver Punição
+              </button>
             </>
           ) : (
             <>
@@ -240,6 +269,16 @@ const ChampionshipDetail: React.FC = () => {
                 <div style={{ fontSize: 14, color: '#ffffff' }}>
                   Você já possui um time inscrito neste campeonato.
                 </div>
+              )}
+              {/* Mesmo não sendo criador, admin pode aplicar/visualizar punição */}
+              {isAdmin && (
+                <button
+                  className="btn btn-warning"
+                  onClick={handleOpenPunicao}
+                  style={{ marginLeft: 8 }}
+                >
+                  Aplicar/Ver Punição
+                </button>
               )}
             </>
           )}
@@ -305,6 +344,24 @@ const ChampionshipDetail: React.FC = () => {
             } catch {}
         }}
       />
+
+      {/* Punicao Campeonato */}
+      {(hasEditPermission || isAdmin) && (
+        <>
+          <PunicaoCampeonatoRegisterModal
+            show={showPunicaoRegister}
+            onHide={() => setShowPunicaoRegister(false)}
+            onClose={() => setShowPunicaoRegister(false)}
+            championshipId={Number(id)}
+          />
+          <PunicaoCampeonatoModalInfo
+            show={showPunicaoInfo}
+            onHide={() => setShowPunicaoInfo(false)}
+            onClose={() => setShowPunicaoInfo(false)}
+            championshipId={Number(id)}
+          />
+        </>
+      )}
     </div>
   );
 };

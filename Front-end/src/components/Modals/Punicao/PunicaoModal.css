@@ -4,20 +4,21 @@
   margin: 0 auto;
 }
 
-.modal-dialog {
+/* Escopo apenas para os modais de regras/punição */
+.regras-modal .modal-dialog {
   width: auto !important;
-  max-width: 600px !important;
+  max-width: 900px !important; /* aumentar largura do modal */
   margin-left: auto !important;
   margin-right: auto !important;
 }
 
-.modal-content {
+.regras-modal .modal-content {
   background: linear-gradient(90deg, #0d47a1 0%, #1976d2 100%) !important;
   border: none !important;
   border-radius: 20px !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
   overflow: hidden;
-  width: 50% !important;
+  width: 100% !important; /* ocupar toda a largura disponível do dialog */
 }
 
 .small-modal-content {
@@ -161,7 +162,7 @@
 
 @media (max-width: 768px) {
   .custom-modal-width,
-  .modal-dialog {
+  .regras-modal .modal-dialog {
     width: 95% !important;
   }
 
@@ -205,6 +206,6 @@
   }
 }
 
-.modal-content {
+.regras-modal .modal-content {
   animation: modalFadeIn 0.3s ease-out;
 } 

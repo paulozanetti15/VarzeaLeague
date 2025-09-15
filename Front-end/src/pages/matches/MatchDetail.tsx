@@ -16,6 +16,8 @@ import ModalTeams from '../../components/Modals/Teams/modelTeams'; // legacy (po
 import SelectTeamPlayersModal from '../../components/Modals/Teams/SelectTeamPlayersModal';
 import { useAuth } from '../../hooks/useAuth';
 import EditRulesModal from '../../components/Modals/Regras/RegrasFormEditModal';
+import PunicaoRegisterModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosoRegisterModal';
+import PunicaoInfoModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosaModalInfo';
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -28,6 +30,8 @@ const MatchDetail: React.FC = () => {
   const [showSelectTeamPlayers, setShowSelectTeamPlayers] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [editRules, setEditRules] = useState(false);
+  const [showPunicaoRegister, setShowPunicaoRegister] = useState(false);
+  const [showPunicaoInfo, setShowPunicaoInfo] = useState(false);
   const { user } = useAuth();
 
   const getTimeInscrito = async (matchId: string) => {
@@ -164,6 +168,27 @@ const MatchDetail: React.FC = () => {
 
   const handleCloseDeleteConfirm = () => {
     setOpenDeleteConfirm(false);
+  };
+
+  // Abre fluxo de punição: se já existir punição para a partida, abre Info; senão, abre Register
+  const handleOpenPunicao = async () => {
+    if (!id) return;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const resp = await axios.get(`http://localhost:3001/api/matches/${id}/punicao`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const hasPunicao = Array.isArray(resp.data) && resp.data.length > 0;
+      if (hasPunicao) {
+        setShowPunicaoInfo(true);
+      } else {
+        setShowPunicaoRegister(true);
+      }
+    } catch (e) {
+      // Em caso de erro ao checar, abre o registro por padrão
+      setShowPunicaoRegister(true);
+    }
   };
 
   useEffect(() => {
@@ -329,8 +354,14 @@ const MatchDetail: React.FC = () => {
                   <DeleteIcon /> Excluir Partida
                 </Button>
               )}     
-                {isOrganizer && (
+                {(isOrganizer || isAdmin) && (
                   <>
+                    <Button
+                      variant="warning"
+                      onClick={handleOpenPunicao}
+                    >
+                      Aplicar/Ver Punição
+                    </Button>
                     <Button
                       variant="secondary"
                       onClick={() => navigate(`/matches/edit/${id}`)}
@@ -374,6 +405,27 @@ const MatchDetail: React.FC = () => {
             userId={Number(user?.id)}
             partidaDados={match}
           />
+        )}
+        {/* Punição: registrar ou visualizar/editar */}
+        {(isOrganizer || isAdmin) && (
+          <>
+            <PunicaoRegisterModal
+              show={showPunicaoRegister}
+              onHide={() => setShowPunicaoRegister(false)}
+              onClose={() => {
+                setShowPunicaoRegister(false);
+                getTimeInscrito(id!);
+              }}
+              team={{ id: Number(id) }}
+            />
+            <PunicaoInfoModal
+              show={showPunicaoInfo}
+              onHide={() => setShowPunicaoInfo(false)}
+              onClose={() => setShowPunicaoInfo(false)}
+              team={{ id: Number(id) }}
+              idMatch={Number(id)}
+            />
+          </>
         )}
       </div>
       <Dialog

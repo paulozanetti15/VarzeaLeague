@@ -1,5 +1,6 @@
 import express from 'express';
 import { createChampionship, listChampionships, getChampionship, updateChampionship, deleteChampionship, joinTeamInChampionship, getChampionshipTeams, leaveTeamFromChampionship } from '../controllers/championshipController';
+import { busarPunicaoCampeonato, inserirPunicaoCampeonato, alterarPunicaoCampeonato, deletarPunicaoCampeonato } from '../controllers/PunicaoController';
 import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
@@ -13,5 +14,11 @@ router.delete('/:id', authenticateToken, deleteChampionship);
 router.post('/:id/join-team', authenticateToken, joinTeamInChampionship);
 router.get('/:id/join-team', authenticateToken, getChampionshipTeams);
 router.delete('/:id/join-team/:teamId', authenticateToken, leaveTeamFromChampionship);
+
+// Punição em Campeonato (WO etc.)
+router.get('/:idCampeonato/punicao', authenticateToken, busarPunicaoCampeonato);
+router.post('/:idCampeonato/punicao', authenticateToken, inserirPunicaoCampeonato);
+router.put('/:idCampeonato/punicao', authenticateToken, alterarPunicaoCampeonato);
+router.delete('/:idCampeonato/punicao', authenticateToken, deletarPunicaoCampeonato);
 
 export default router;
