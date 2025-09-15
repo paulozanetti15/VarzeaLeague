@@ -9,11 +9,9 @@ import {
   DialogTitle,
   IconButton,
   InputAdornment,
-  Paper,
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
   TableRow,
   TextField,
@@ -38,11 +36,18 @@ import { styled } from '@mui/material/styles';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon, VisibilityOff as VisibilityOffIcon, ErrorOutline as ErrorOutlineIcon } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../services/api';
-import { useNavigate } from 'react-router-dom';
 import './UserManagement.css';
 
+// Transition helper to pass direction without typing errors
+const TransitionUp = React.forwardRef(function TransitionUp(
+  props: any,
+  ref: React.Ref<unknown>
+) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
 // Modal moderno e profissional
-const CustomDialog = styled(Dialog)(({ theme }) => ({
+const CustomDialog = styled(Dialog)(() => ({
   '& .MuiPaper-root': {
     borderRadius: 20,
     background: '#ffffff',
@@ -62,7 +67,7 @@ const CustomDialog = styled(Dialog)(({ theme }) => ({
 }));
 
 // Avatar moderno e sofisticado
-const StyledAvatar = styled(Avatar)(({ theme }) => ({
+const StyledAvatar = styled(Avatar)(() => ({
   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
   color: 'white',
   width: 72,
@@ -74,7 +79,7 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
 }));
 
 // Input moderno e elegante
-const FancyTextField = styled(TextField)(({ theme }) => ({
+const FancyTextField = styled(TextField)(() => ({
   '& .MuiOutlinedInput-root': {
     borderRadius: 12,
     fontSize: 15,
@@ -108,7 +113,7 @@ const FancyTextField = styled(TextField)(({ theme }) => ({
   },
 }));
 
-const FancyFormControl = styled(FormControl)(({ theme }) => ({
+const FancyFormControl = styled(FormControl)(() => ({
   '& .MuiOutlinedInput-root': {
     borderRadius: 12,
     fontSize: 15,
@@ -142,20 +147,7 @@ const FancyFormControl = styled(FormControl)(({ theme }) => ({
   },
 }));
 
-const FancyTableCell = styled(TableCell)(({ theme }) => ({
-  fontWeight: 700,
-  fontSize: 17,
-  color: theme.palette.primary.dark,
-  background: 'rgba(33,203,243,0.07)',
-  borderBottom: `2px solid ${theme.palette.primary.light}`,
-}));
-
-const FancyTableRow = styled(TableRow)(({ theme }) => ({
-  transition: 'background 0.2s',
-  '&:hover': {
-    background: 'rgba(33,203,243,0.10)',
-  },
-}));
+// (Removed unused FancyTableCell and FancyTableRow)
 
 interface User {
   id: number;
@@ -170,20 +162,11 @@ interface User {
   };
 }
 
-interface UserType {
-  id: number;
-  name: string;
-}
-
 const SEXO_OPTIONS = [
   { value: 'Masculino', label: 'Masculino' },
   { value: 'Feminino', label: 'Feminino' },
   { value: 'N/A', label: 'N/A' },
 ];
-const sexoLabel = (val: string) => {
-  const found = SEXO_OPTIONS.find(opt => opt.value === val || opt.label === val);
-  return found ? found.label : val;
-};
 const sexoValue = (label: string) => {
   const found = SEXO_OPTIONS.find(opt => opt.label === label || opt.value === label);
   return found ? found.value : label;
@@ -253,7 +236,7 @@ const checkPasswordStrength = (password: string) => {
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [userTypes, setUserTypes] = useState<UserType[]>([]);
+  // Removed unused userTypes state (using static USER_TYPE_OPTIONS instead)
   const [openDialog, setOpenDialog] = useState(false);
   const [openDetail, setOpenDetail] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -282,7 +265,6 @@ const UserManagement: React.FC = () => {
   const [passwordStrength, setPasswordStrength] = useState<any>(null);
 
   const { user } = useAuth();
-  const navigate = useNavigate();
   const theme = useTheme();
 
   // MenuProps to force white background for Select dropdowns (overrides global CSS)
@@ -304,7 +286,6 @@ const UserManagement: React.FC = () => {
   useEffect(() => {
     if (user?.userTypeId === 1) {
       fetchUsers();
-      fetchUserTypes();
     } else {
       setInitialLoading(false);
     }
@@ -328,19 +309,7 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const fetchUserTypes = async () => {
-    try {
-      const response = await api.get('/usertypes');
-      setUserTypes(Array.isArray(response) ? response : []);
-    } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: error.message || 'Erro ao buscar tipos de usuário',
-        severity: 'error'
-      });
-      setUserTypes([]);
-    }
-  };
+  // Removed fetchUserTypes (no longer used)
 
   const handleOpenDialog = (user?: User) => {
     if (user) {
@@ -606,7 +575,7 @@ const UserManagement: React.FC = () => {
     setPage(0);
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
@@ -758,8 +727,7 @@ const UserManagement: React.FC = () => {
         maxWidth="sm"
         fullWidth
         className="user-management-modal"
-        TransitionComponent={Slide}
-        TransitionProps={{ direction: 'up' }}
+        TransitionComponent={TransitionUp}
       >
         <DialogTitle className="user-management-modal-title">Detalhes do Usuário</DialogTitle>
         <DialogContent>
@@ -781,7 +749,7 @@ const UserManagement: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      <CustomDialog open={openDialog} onClose={handleCloseDialog} TransitionComponent={Slide} transitionDuration={400}>
+  <CustomDialog open={openDialog} onClose={handleCloseDialog} TransitionComponent={TransitionUp} transitionDuration={400}>
         <DialogTitle sx={{ 
           textAlign: 'center', 
           pb: 4, 
@@ -875,8 +843,9 @@ const UserManagement: React.FC = () => {
                 value={formData.cpf}
                 onChange={handleInputChange}
                 error={!!formErrors.cpf}
-                helperText={formErrors.cpf}
+                helperText={selectedUser ? 'CPF não pode ser alterado' : formErrors.cpf}
                 InputLabelProps={{ shrink: true }}
+                InputProps={{ readOnly: !!selectedUser }}
               />
             </Grid>
             <Grid item xs={12} md={6}>

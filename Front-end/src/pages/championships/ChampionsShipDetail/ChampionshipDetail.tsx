@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { api } from '../../../services/api';
 import trophy from '../../../assets/championship-trophy.svg';
 import './ChampionshipDetail.css';
@@ -46,10 +45,11 @@ const ChampionshipDetail: React.FC = () => {
         // Verificar permissões do usuário
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const isCreator = user.id === data.created_by;
-        const isAdmin = user.userType === 1;
-        
-        if (isCreator || isAdmin) {
+        // Apenas o criador pode editar/excluir
+        if (isCreator) {
           setHasEditPermission(true);
+        } else {
+          setHasEditPermission(false);
         }
         
         setLoading(false);
@@ -82,19 +82,7 @@ const ChampionshipDetail: React.FC = () => {
     }
   };
 
-  const handleJoinAsIndividual = async () => {
-    try {
-      setIsJoining(true);
-      await api.championships.join(Number(id));
-      toast.success('Você entrou no campeonato com sucesso!');
-      const updatedChampionship = await api.championships.getById(Number(id));
-      setChampionship(updatedChampionship);
-      setIsJoining(false);
-    } catch (err: any) {
-      toast.error(err.message || 'Erro ao entrar no campeonato');
-      setIsJoining(false);
-    }
-  };
+  // Removed join as individual flow (not used here)
 
   const handleJoinWithTeam = async () => {
     if (!selectedTeamId) {

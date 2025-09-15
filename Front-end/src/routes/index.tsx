@@ -6,6 +6,7 @@ import { Login } from '../pages/login/Login';
 import UserManagement from '../pages/UserManagement';
 import MatchListing from '../pages/listings/MatchListing';
 import Layout from '../components/Layout';
+import TeamCalendar from '../pages/teams/Calendar';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -68,6 +69,14 @@ const AppRoutes: React.FC = () => {
           <Layout>
             <MatchListing />
           </Layout>
+        } />
+
+        <Route path="/teams/calendar" element={
+          <PrivateRoute requiredUserType={3}>
+            <Layout>
+              <TeamCalendar />
+            </Layout>
+          </PrivateRoute>
         } />
 
         <Route path="*" element={<Navigate to="/" />} />

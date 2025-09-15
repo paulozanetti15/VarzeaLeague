@@ -27,28 +27,19 @@ import {
   Person,
   Notifications,
   ArrowBack,
-  
+  CalendarMonth,
+  Search,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getRoleName } from '../utils/roleUtils';
 import '../components/landing/Header.css';
 
-// Map de páginas com papéis (roles) permitidos
-// roles: 'all' para qualquer usuário autenticado ou array de IDs de userType
-const pages = [
-  { name: 'Dashboard', path: '/dashboard', icon: <Dashboard />, roles: 'all' },
-  { name: 'Meu Time', path: '/teams', icon: <People />, roles: [1, 3] }, // IDs 1 (Admin Sistema) e 3 (Admin Times)
-  { name: 'Partidas', path: '/matches', icon: <SportsSoccer />, roles: [1, 2] }, // IDs 1 e 2
-  { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents />, roles: [1, 2] }, // IDs 1 e 2
-  { name: 'Procurar campeonatos e partidas', path: '/listings', icon: <SportsSoccer />, roles: [3] },
-];
+// Pages are computed per role (see visiblePages below)
 
 const adminPages = [
   { name: 'Usuários', path: '/admin/users', icon: <Person /> },
 ];
-
-// 🔑 Páginas visíveis são filtradas diretamente abaixo com base no userTypeId
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -57,10 +48,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-
-  // Filtra páginas de acordo com o userTypeId
-  const roleId = user?.userTypeId;
-  const visiblePages = pages.filter(p => p.roles === 'all' || (Array.isArray(p.roles) && roleId && p.roles.includes(roleId)));
 
   const showBackButton = location.pathname !== '/';
 
@@ -88,7 +75,40 @@ const Navbar = () => {
     navigate(-1);
   };
 
-  // Drawer lateral (mobile)
+  // Compute role-based visible pages
+  const role = user?.userTypeId;
+  const visiblePages = (() => {
+    const base = [] as { name: string; path: string; icon: JSX.Element }[];
+    if (!role) return base;
+    switch (role) {
+      case 1: // Admin Sistema
+        return [
+          { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
+          { name: 'Times', path: '/teams', icon: <People /> },
+          { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
+          { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
+        ];
+      case 2: // Admin Eventos
+        return [
+          { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
+          { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
+          { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
+        ];
+      case 3: // Admin Times
+        return [
+          { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
+          { name: 'Times', path: '/teams', icon: <People /> },
+          { name: 'Procurar', path: '/listings', icon: <Search /> },
+        ];
+      case 4: // Usuário Comum
+        return [
+          { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
+        ];
+      default:
+        return base;
+    }
+  })();
+
   const drawer = (
     <Box sx={{ textAlign: 'center', p: 2 }}>
       <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: 'primary.main' }}>
@@ -112,17 +132,61 @@ const Navbar = () => {
               },
             }}
           >
-            <ListItemIcon sx={{ color: isActive(page.path) ? 'primary.main' : 'inherit' }}>
-              {page.icon}
-            </ListItemIcon>
+            <ListItemIcon sx={{ color: isActive(page.path) ? 'primary.main' : 'inherit' }}>{page.icon}</ListItemIcon>
             <ListItemText primary={page.name} />
           </ListItem>
         ))}
+        {user?.userTypeId === 3 && (
+          <ListItem
+            component="div"
+            key="Calendário"
+            onClick={() => handleNavigation('/calendario')}
+            sx={{
+              backgroundColor: isActive('/calendario') ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+              color: isActive('/calendario') ? 'primary.main' : 'text.primary',
+              borderRadius: 2,
+              mb: 1,
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: 'rgba(25, 118, 210, 0.04)',
+              },
+            }}
+          >
+            <ListItemIcon sx={{ color: isActive('/calendario') ? 'primary.main' : 'inherit' }}>
+              <CalendarMonth />
+            </ListItemIcon>
+            <ListItemText primary="Calendário" />
+          </ListItem>
+        )}
+        {user?.userTypeId === 1 && (
+          <>
+            <Divider sx={{ my: 1 }} />
+            {adminPages.map((page) => (
+              <ListItem
+                component="div"
+                key={page.name}
+                onClick={() => handleNavigation(page.path)}
+                sx={{
+                  backgroundColor: isActive(page.path) ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+                  color: isActive(page.path) ? 'primary.main' : 'text.primary',
+                  borderRadius: 2,
+                  mb: 1,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ color: isActive(page.path) ? 'primary.main' : 'inherit' }}>{page.icon}</ListItemIcon>
+                <ListItemText primary={page.name} />
+              </ListItem>
+            ))}
+          </>
+        )}
       </List>
     </Box>
   );
 
-  // Drawer do usuário (perfil + logout)
   const userDrawer = (
     <Box
       sx={{
@@ -198,7 +262,10 @@ const Navbar = () => {
   );
 
   return (
-    <AppBar position="fixed" elevation={0}>
+    <AppBar
+      position="fixed"
+      elevation={0}
+    >
       <Box
         sx={{
           background: 'linear-gradient(90deg, #0d47a1 0%, #1976d2 100%)',
@@ -224,8 +291,30 @@ const Navbar = () => {
             <ArrowBack />
           </IconButton>
         )}
-        {/* Logo */}
-        <a href="/" className="navbar-brand" style={{ textDecoration: 'none', color: '#fff', fontWeight: 900, letterSpacing: 2, textTransform: 'uppercase', fontSize: '1.55rem' }}>
+        {/* Logo e nome */}
+        <a
+          href="/"
+          className="navbar-brand"
+          style={{
+            textDecoration: 'none',
+            position: 'relative',
+            display: 'inline-block',
+            color: '#fff',
+            fontWeight: 900,
+            letterSpacing: 2,
+            textTransform: 'uppercase',
+            fontFamily: 'Inter, Montserrat, Arial, sans-serif',
+            fontSize: '1.55rem',
+            lineHeight: 1.1,
+            padding: '0.2rem 0',
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            verticalAlign: 'middle',
+            minWidth: 0,
+            maxWidth: '100%',
+            whiteSpace: 'nowrap',
+          }}
+        >
           VÁRZEA LEAGUE
         </a>
         {/* Menu desktop */}
@@ -242,6 +331,7 @@ const Navbar = () => {
                 letterSpacing: 1,
                 borderRadius: 8,
                 padding: '0.5rem 1.2rem',
+                position: 'relative',
                 transition: 'all 0.3s',
                 '&:hover': {
                   color: '#ffd600',
@@ -252,6 +342,57 @@ const Navbar = () => {
               {page.name}
             </Button>
           ))}
+          {user?.userTypeId === 3 && (
+            <Button
+              key="Calendário"
+              onClick={() => handleNavigation('/calendario')}
+              startIcon={<CalendarMonth />}
+              sx={{
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: 18,
+                letterSpacing: 1,
+                borderRadius: 8,
+                padding: '0.5rem 1.2rem',
+                position: 'relative',
+                transition: 'all 0.3s',
+                '&:hover': {
+                  color: '#ffd600',
+                  background: 'rgba(255,255,255,0.08)',
+                },
+              }}
+            >
+              Calendário
+            </Button>
+          )}
+          {user?.userTypeId === 1 && (
+            <>
+              <Divider orientation="vertical" flexItem sx={{ mx: 2 }} />
+              {adminPages.map((page) => (
+                <Button
+                  key={page.name}
+                  onClick={() => handleNavigation(page.path)}
+                  startIcon={page.icon}
+                  sx={{
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: 18,
+                    letterSpacing: 1,
+                    borderRadius: 8,
+                    padding: '0.5rem 1.2rem',
+                    position: 'relative',
+                    transition: 'all 0.3s',
+                    '&:hover': {
+                      color: '#ffd600',
+                      background: 'rgba(255,255,255,0.08)',
+                    },
+                  }}
+                >
+                  {page.name}
+                </Button>
+              ))}
+            </>
+          )}
         </Box>
         {/* Menu mobile */}
         <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
@@ -274,7 +415,7 @@ const Navbar = () => {
             {drawer}
           </Drawer>
         </Box>
-        {/* Avatar + notificações */}
+        {/* Avatar e notificações */}
         {user && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 2 }}>
             <Tooltip title="Notificações">
@@ -286,7 +427,17 @@ const Navbar = () => {
             </Tooltip>
             <Tooltip title="Abrir menu do usuário">
               <IconButton onClick={() => setDrawerUserOpen(true)} sx={{ p: 0 }}>
-                <Avatar alt={user.name} src={user.avatar} sx={{ bgcolor: 'primary.main', width: 40, height: 40, border: '2px solid #ffd600' }}>
+                <Avatar
+                  alt={user.name}
+                  src={user.avatar}
+                  sx={{
+                    bgcolor: 'primary.main',
+                    width: 40,
+                    height: 40,
+                    border: '2px solid #ffd600',
+                    boxShadow: '0 2px 8px rgba(13,71,161,0.10)',
+                  }}
+                >
                   {user.name?.charAt(0)}
                 </Avatar>
               </IconButton>
