@@ -9,11 +9,13 @@ import TeamUser from '../models/TeamUserModel';
 export const listMatchEvaluations = async (req: Request, res: Response): Promise<void> => {
   try {
     const matchId = Number(req.params.id);
-    const evaluations = await MatchEvaluation.findAll({ where: { match_id: matchId }, order: [['createdAt','DESC']] });
+    // Algumas bases antigas podem não ter as colunas created_at / updated_at.
+    // Para evitar erro de ORDER BY em coluna inexistente, ordenamos por id (sequencial de criação).
+    const evaluations = await MatchEvaluation.findAll({ where: { match_id: matchId }, order: [['id','DESC']] });
     res.json(evaluations);
-  } catch (err) {
-    console.error('Erro ao listar avaliações:', err);
-    res.status(500).json({ message: 'Erro ao listar avaliações' });
+  } catch (err: any) {
+    console.error('Erro ao listar avaliações:', err?.message, err);
+    res.status(500).json({ message: 'Erro ao listar avaliações', detalhe: err?.message });
   }
 };
 

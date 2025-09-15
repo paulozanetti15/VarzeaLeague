@@ -42,7 +42,7 @@ const StarRating: React.FC<{ value: number; onChange: (v:number)=>void; size?: n
   );
 };
 
-const MatchEvaluationsSection: React.FC<{ matchId: number }> = ({ matchId }) => {
+const MatchEvaluationsSection: React.FC<{ matchId: number; readOnly?: boolean }> = ({ matchId, readOnly }) => {
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [summary, setSummary] = useState<{ average: number; count: number } | null>(null);
   const [myRating, setMyRating] = useState<number>(0);
@@ -105,6 +105,7 @@ const MatchEvaluationsSection: React.FC<{ matchId: number }> = ({ matchId }) => 
           <div className="evaluation-summary-chip" title={`${summary.count} ${summary.count===1?'avaliação':'avaliações'}`}>⭐ {summary.average} <span className="count">({summary.count})</span></div>
         )}
       </div>
+      {!readOnly && (
       <form className="evaluation-form fancy" onSubmit={handleSubmit}>
         <div className="rating-input block">
           <label className="field-label">Sua Nota</label>
@@ -119,6 +120,7 @@ const MatchEvaluationsSection: React.FC<{ matchId: number }> = ({ matchId }) => 
           {myRating>0 && <span className="edit-hint">Você pode alterar depois.</span>}
         </div>
       </form>
+      )}
       <div className="evaluation-list modern">
         {evaluations.length === 0 && <div className="empty">Nenhuma avaliação ainda. Seja o primeiro a opinar!</div>}
         {evaluations.map(ev => {
@@ -154,6 +156,7 @@ const MatchDetail: React.FC = () => {
   const [editRules, setEditRules] = useState(false);
   const { user } = useAuth();
   const [showEvalModal, setShowEvalModal] = useState(false);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
 
   const getTimeInscrito = async (matchId: string) => {
     try {
@@ -472,13 +475,22 @@ const MatchDetail: React.FC = () => {
                     </Button>
                   </>
                 )}
-                <Button
-                  variant='primary'
-                  title='Avaliar / comentar partida'
-                  onClick={() => setShowEvalModal(true)}
-                >
-                  Avaliar / Comentar
-                </Button>
+                <div className='d-flex gap-2'>
+                  <Button
+                    variant='primary'
+                    title='Avaliar / comentar partida'
+                    onClick={() => setShowEvalModal(true)}
+                  >
+                    Avaliar / Comentar
+                  </Button>
+                  <Button
+                    variant='outline-light'
+                    title='Ver comentários e notas'
+                    onClick={() => setShowCommentsModal(true)}
+                  >
+                    Ver Comentários
+                  </Button>
+                </div>
               
             </div>
         </div>
@@ -544,6 +556,21 @@ const MatchDetail: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button variant="secondary" onClick={() => setShowEvalModal(false)}>Fechar</Button>
+        </DialogActions>
+      </Dialog>
+      {/* Modal somente leitura de comentários */}
+      <Dialog
+        open={showCommentsModal}
+        onClose={() => setShowCommentsModal(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Comentários da Partida</DialogTitle>
+        <DialogContent dividers>
+          <MatchEvaluationsSection matchId={Number(match.id)} readOnly />
+        </DialogContent>
+        <DialogActions>
+          <Button variant="secondary" onClick={() => setShowCommentsModal(false)}>Fechar</Button>
         </DialogActions>
       </Dialog>
     </div>
