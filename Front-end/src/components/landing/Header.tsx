@@ -1,5 +1,5 @@
 import './Header.css';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: number;
@@ -18,8 +18,6 @@ interface HeaderProps {
 
 export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) {
   const navigate = useNavigate();
-  const location = useLocation();
-  
   
   return (
     <header className="header no-top-margin" style={{ background: '#0d47a1', boxShadow: '0 4px 20px rgba(13,71,161,0.15)' }}>
@@ -43,6 +41,12 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
             <ul className="navbar-nav me-auto">
               {isLoggedIn && user && (
                 <>
+                  {/* Procurar campeonatos e partidas - role 3 */}
+                  {user.userTypeId === 3 && (
+                    <li className="nav-item">
+                      <span className="nav-link" onClick={() => navigate('/listings')}>Procurar campeonatos e partidas</span>
+                    </li>
+                  )}
                   {/* Partidas - roles 1 e 2 */}
                   {(user.userTypeId === 1 || user.userTypeId === 2) && (
                     <li className="nav-item">
@@ -63,16 +67,9 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                   )}
                 </>
               )}
-              <li className="nav-item">
-                <span 
-                  className={`nav-link ${location.pathname === "/dashboard" ? "active" : ""}`}
-                  onClick={() => navigate('/dashboard')}
-                >
-                  Dashboard
-                </span>
-              </li>
-            </ul>
-            <div className="d-flex align-items-center">
+            </ul>             
+          </div>
+           <div className="d-flex align-items-center">
               {isLoggedIn && user ? (
                 <>
                   <div className="dropdown me-3">
@@ -86,6 +83,9 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                       <li><span className="dropdown-item" onClick={() => navigate('/perfil')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Meu perfil</span></li>
                       {user?.userTypeId === 1 && (
                         <li><span className="dropdown-item" onClick={() => navigate('/admin/users')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Gerenciamento de Usuários</span></li>
+                      )}
+                      {user?.userTypeId === 3 && (
+                        <li><span className="dropdown-item" onClick={() => navigate('/listings')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Procurar campeonatos e partidas</span></li>
                       )}
                       <li><hr className="dropdown-divider" /></li>
                       <li><span className="dropdown-item" onClick={onLogout} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Sair</span></li>
@@ -110,7 +110,7 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
               )}
             </div>
           </div>
-        </div>
+
       </nav>
     </header>
   );

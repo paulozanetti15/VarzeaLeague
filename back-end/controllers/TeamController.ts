@@ -594,5 +594,22 @@ export class TeamController {
       res.status(500).json({ error: 'Erro ao remover jogador do time' });
     }
   }
+static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
+  try{
+    const userId = req.user?.id;
+    const { id } = req.params
+    if (!userId) {
+      res.status(401).json({ error: 'Usuário não autenticado' });
+      return;
+    }
+    const team = await Team.findOne({
+      where:{ captainId:id}
+    })
+    res.status(200).json(team)
+    }
+    catch{
+      res.status(500).json({error:'Erro ao buscar dados do time'})
+    }
+  }
 } 
 

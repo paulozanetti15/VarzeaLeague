@@ -123,7 +123,6 @@ export const getMatchTeams = async (req: any, res: any) => {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }
-
     const teams=await MatchTeams.findAll({
       where: { matchId },
     });
@@ -136,7 +135,7 @@ export const getMatchTeams = async (req: any, res: any) => {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }
-    res.json(teamDetails);
+    res.json(teamDetails);  
   } catch (error) {
     console.error('Erro ao obter times da partida:', error);
     res.status(500).json({ message: 'Erro ao obter times da partida' });

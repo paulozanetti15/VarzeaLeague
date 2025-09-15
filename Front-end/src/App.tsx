@@ -29,119 +29,135 @@ import Navbar from './components/Navbar'
 import EditMatch from './pages/matches/EditMatch'
 import { Box, CssBaseline } from '@mui/material'
 import SystemOverview from './components/dashboard/SystemOverview'
+import CalendarioPage from './components/calendario/calendárioPage'
 
 // Componente simples para loading
-const Loading = () => (
-  <div className="loading-container">
-    <div className="loading-spinner"></div>
-    <p>Carregando...</p>
-  </div>
-);
+  const Loading = () => (
+    <div className="loading-container">
+      <div className="loading-spinner"></div>
+      <p>Carregando...</p>
+    </div>
+  );
 
-function AppContent() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { isLoggedIn, isLoading, user, login, logout } = useAuth();
-  
-  const handleLoginSuccess = (userData: { user: any; token: string }) => {
-    login(userData);
-    navigate('/');
-  };
-  
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-  
-  if (isLoading) {
-    return <Loading />;
-  }
+  function AppContent() {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { isLoggedIn, isLoading, user, login, logout } = useAuth();
+    
+    const handleLoginSuccess = (userData: { user: any; token: string }) => {
+      login(userData);
+      navigate('/');
+    };
+    
+    const handleLogout = () => {
+      logout();
+      navigate('/');
+    };
+    
+    if (isLoading) {
+      return <Loading />;
+    }
 
-  const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/reset-password'];
+    const publicRoutes = ['/', '/login', '/register', '/forgot-password', '/reset-password'];
 
-  const isPublicRoute = publicRoutes.includes(location.pathname);
+    const isPublicRoute = publicRoutes.includes(location.pathname);
 
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <CssBaseline />
-      {!isPublicRoute && <Navbar />}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          pt: !isPublicRoute ? '64px' : 0,
-          backgroundColor: 'background.default',
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-      >
-        <Routes>
-          <Route path="/" element={
-            <PageTransition>
-              <Landing 
-                isLoggedIn={isLoggedIn}
-                user={user}
-                onLoginClick={() => navigate('/login')}
-                onRegisterClick={() => navigate('/register')}
-                onLogout={handleLogout}
-              />
-            </PageTransition>
-          } />
-
-          <Route path="/dashboard" element={
-            <PageTransition>
-              <SystemOverview />
-            </PageTransition>
-          } />
-
-          <Route path="/listings" element={
-            <PageTransition>
-              <MatchListing />
-            </PageTransition>
-          } />
-          
-          <Route path="/perfil" element={
-            isLoggedIn ? (
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <CssBaseline />
+        {!isPublicRoute && <Navbar />}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            pt: !isPublicRoute ? '64px' : 0,
+            backgroundColor: 'background.default',
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
+          <Routes>
+            <Route path="/" element={
               <PageTransition>
-                <Profile
+                <Landing 
                   isLoggedIn={isLoggedIn}
+                  user={user}
                   onLoginClick={() => navigate('/login')}
                   onRegisterClick={() => navigate('/register')}
                   onLogout={handleLogout}
                 />
               </PageTransition>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          } />
-          
-          <Route path="/login" element={
-            isLoggedIn ? (
-              <Navigate to="/" replace />
-            ) : (
+            } />
+
+            <Route path="/dashboard" element={
               <PageTransition>
-                <Login 
-                  onRegisterClick={() => navigate('/register')}
-                  onForgotPasswordClick={() => navigate('/forgot-password')}
-                  onLoginSuccess={handleLoginSuccess}
-                />
+                <SystemOverview />
               </PageTransition>
-            )
-          } />
-          
-          <Route path="/register" element={
-            isLoggedIn ? (
-              <Navigate to="/" replace />
-            ) : (
+            } />
+
+            <Route path="/listings" element={
               <PageTransition>
-                <Register 
-                  onLoginClick={() => navigate('/login')}
-                />
+                <MatchListing />
               </PageTransition>
+            } />
+            
+            <Route path="/perfil" element={
+              isLoggedIn ? (
+                <PageTransition>
+                  <Profile
+                    isLoggedIn={isLoggedIn}
+                    onLoginClick={() => navigate('/login')}
+                    onRegisterClick={() => navigate('/register')}
+                    onLogout={handleLogout}
+                  />
+                </PageTransition>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            } />
+            
+            <Route path="/login" element={
+              isLoggedIn ? (
+                <Navigate to="/" replace />
+              ) : (
+                <PageTransition>
+                  <Login 
+                    onRegisterClick={() => navigate('/register')}
+                    onForgotPasswordClick={() => navigate('/forgot-password')}
+                    onLoginSuccess={handleLoginSuccess}
+                  />
+                </PageTransition>
+              )
+            } />
+            
+            <Route path="/register" element={
+              isLoggedIn ? (
+                <Navigate to="/" replace />
+              ) : (
+                <PageTransition>
+                  <Register 
+                    onLoginClick={() => navigate('/login')}
+                  />
+                </PageTransition>
             )
           } />
+          <Route path="/calendario" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_TIMES]}
+                redirectTo="/"
+              >
+                <PageTransition>
+                  <CalendarioPage />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
           
+
           <Route path="/forgot-password" element={
             <PageTransition>
               <ForgotPassword 
@@ -340,6 +356,7 @@ function AppContent() {
               </RoleBasedRoute>
             </PrivateRoute>
           } />
+          
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
