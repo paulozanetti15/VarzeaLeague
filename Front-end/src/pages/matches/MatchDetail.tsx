@@ -136,6 +136,12 @@ const MatchDetail: React.FC = () => {
   }
   const handleDeleteMatch = async () => {
     if (!id) return;
+    // Regra adicional: não permitir exclusão se houver times vinculados
+    if (timeCadastrados.length > 0) {
+      toast.error('Existem times vinculados. Desvincule todos antes de excluir a partida.');
+      setOpenDeleteConfirm(false);
+      return;
+    }
     setLoading(true);
     try {
       const response = await axios.delete(`http://localhost:3001/api/matches/${id}`, {
@@ -145,7 +151,7 @@ const MatchDetail: React.FC = () => {
       });
       if (response.status === 200) {
         toast.success('Partida excluída com sucesso!');
-        navigate('/matches', { state: { filter: 'my' } }); // Redirect to my matches after deletion
+        navigate('/matches', { state: { filter: 'my' } });
       } else {
         toast.error('Erro ao excluir a partida. Tente novamente.');
       }
@@ -201,6 +207,7 @@ const MatchDetail: React.FC = () => {
   const isOrganizer = user && match.organizerId === user.id;
   const isAdmin = user && user.userTypeId === 1;
   const canDeleteMatch = isOrganizer || isAdmin;
+  const hasTeams = timeCadastrados.length > 0;
 
   return (
     <div className="match-detail-container">
@@ -324,7 +331,14 @@ const MatchDetail: React.FC = () => {
               {canDeleteMatch && (
                 <Button
                   variant="danger"
-                  onClick={handleOpenDeleteConfirm}
+                  onClick={() => {
+                    if (hasTeams) {
+                      toast.error('Remova os times vinculados antes de excluir.');
+                      return;
+                    }
+                    handleOpenDeleteConfirm();
+                  }}
+                  disabled={hasTeams}
                 >
                   <DeleteIcon /> Excluir Partida
                 </Button>
