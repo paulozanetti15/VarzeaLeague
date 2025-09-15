@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import {
   Box,
   Grid,
@@ -37,7 +38,7 @@ const defaultStatuses = [
   { value: 'cancelled', label: 'Cancelada' },
 ];
 
-const MatchCard: React.FC<{ match: Match }> = ({ match }) => {
+const MatchCard: React.FC<{ match: Match; clickable: boolean }> = ({ match, clickable }) => {
   const navigate = useNavigate();
   const goToDetail = () => {
     if (match && (match.id || match.id === 0)) {
@@ -48,14 +49,15 @@ const MatchCard: React.FC<{ match: Match }> = ({ match }) => {
     <Paper 
       sx={{ 
         p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2, boxShadow: 3,
-        cursor: 'pointer', transition: 'box-shadow 0.2s ease',
-        '&:hover': { boxShadow: 6 }
+        cursor: clickable ? 'pointer' : 'default', transition: 'box-shadow 0.2s ease',
+        '&:hover': clickable ? { boxShadow: 6 } : undefined,
+        opacity: clickable ? 1 : 0.98,
       }} 
       elevation={0}
-      onClick={goToDetail}
-      role="button"
+      onClick={clickable ? goToDetail : undefined}
+      role={clickable ? 'button' : undefined}
       aria-label={`Abrir partida ${match?.title ?? ''}`}
-      tabIndex={0}
+      tabIndex={clickable ? 0 : -1}
     >
       <Avatar sx={{ bgcolor: 'primary.main', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>{(match.title || 'P').charAt(0)}</Avatar>
       <Box sx={{ flex: 1 }}>
@@ -76,7 +78,7 @@ const MatchCard: React.FC<{ match: Match }> = ({ match }) => {
   );
 };
 
-const ChampionshipCard: React.FC<{ champ: Championship }> = ({ champ }) => {
+const ChampionshipCard: React.FC<{ champ: Championship; clickable: boolean }> = ({ champ, clickable }) => {
   const navigate = useNavigate();
   const goToDetail = () => {
     if (champ && (champ.id || champ.id === 0)) {
@@ -87,13 +89,14 @@ const ChampionshipCard: React.FC<{ champ: Championship }> = ({ champ }) => {
     <Paper 
       sx={{ 
         p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2, boxShadow: 3,
-        cursor: 'pointer', transition: 'box-shadow 0.2s ease', '&:hover': { boxShadow: 6 }
+        cursor: clickable ? 'pointer' : 'default', transition: 'box-shadow 0.2s ease', '&:hover': clickable ? { boxShadow: 6 } : undefined,
+        opacity: clickable ? 1 : 0.98,
       }} 
       elevation={0}
-      onClick={goToDetail}
-      role="button"
+      onClick={clickable ? goToDetail : undefined}
+      role={clickable ? 'button' : undefined}
       aria-label={`Abrir campeonato ${champ?.name ?? ''}`}
-      tabIndex={0}
+      tabIndex={clickable ? 0 : -1}
     >
       <Avatar sx={{ bgcolor: 'warning.main', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>{(champ.name || 'C').charAt(0)}</Avatar>
       <Box sx={{ flex: 1 }}>
@@ -113,6 +116,8 @@ const ChampionshipCard: React.FC<{ champ: Championship }> = ({ champ }) => {
 
 const MatchListing: React.FC = () => {
   const [openFilters, setOpenFilters] = useState(false);
+  const { user } = useAuth();
+  const canClick = user?.userTypeId === 1 || user?.userTypeId === 3;
   const [loading, setLoading] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
   const [champs, setChamps] = useState<Championship[]>([]);
@@ -463,7 +468,11 @@ const MatchListing: React.FC = () => {
 
               return filteredByType.slice(0, 20).map((it, idx) => (
                 <React.Fragment key={it.type + '-' + (it.data.id || idx)}>
-                  {it.type === 'champ' ? <ChampionshipCard champ={it.data} /> : <MatchCard match={it.data} />}
+                  {it.type === 'champ' ? (
+                    <ChampionshipCard champ={it.data} clickable={!!canClick} />
+                  ) : (
+                    <MatchCard match={it.data} clickable={!!canClick} />
+                  )}
                 </React.Fragment>
               ));
             })()}

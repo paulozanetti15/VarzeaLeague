@@ -98,7 +98,6 @@ const Navbar = () => {
         return [
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
           { name: 'Times', path: '/teams', icon: <People /> },
-          { name: 'Procurar', path: '/listings', icon: <Search /> },
         ];
       case 4: // Usuário Comum
         return [
@@ -116,6 +115,26 @@ const Navbar = () => {
       </Typography>
       <Divider sx={{ mb: 1 }} />
       <List>
+        <ListItem
+          component="div"
+          key="Procurar"
+          onClick={() => handleNavigation('/listings')}
+          sx={{
+            backgroundColor: isActive('/listings') ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+            color: isActive('/listings') ? 'primary.main' : 'text.primary',
+            borderRadius: 2,
+            mb: 1,
+            cursor: 'pointer',
+            '&:hover': {
+              backgroundColor: 'rgba(25, 118, 210, 0.04)',
+            },
+          }}
+        >
+          <ListItemIcon sx={{ color: isActive('/listings') ? 'primary.main' : 'inherit' }}>
+            <Search />
+          </ListItemIcon>
+          <ListItemText primary="Procurar" />
+        </ListItem>
         {visiblePages.map((page) => (
           <ListItem
             component="div"
@@ -342,6 +361,27 @@ const Navbar = () => {
               {page.name}
             </Button>
           ))}
+          <Button
+            key="Procurar"
+            onClick={() => handleNavigation('/listings')}
+            startIcon={<Search />}
+            sx={{
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: 18,
+              letterSpacing: 1,
+              borderRadius: 8,
+              padding: '0.5rem 1.2rem',
+              position: 'relative',
+              transition: 'all 0.3s',
+              '&:hover': {
+                color: '#ffd600',
+                background: 'rgba(255,255,255,0.08)',
+              },
+            }}
+          >
+            Procurar
+          </Button>
           {user?.userTypeId === 3 && (
             <Button
               key="Calendário"

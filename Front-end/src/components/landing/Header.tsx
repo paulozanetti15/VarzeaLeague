@@ -66,6 +66,9 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                 </>
               )}
               <li className="nav-item">
+                <span className="nav-link" onClick={() => navigate('/listings')}>Procurar</span>
+              </li>
+              <li className="nav-item">
                 <span 
                   className={`nav-link ${location.pathname === "/dashboard" ? "active" : ""}`}
                   onClick={() => navigate('/dashboard')}
@@ -90,7 +93,10 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                         <li><span className="dropdown-item" onClick={() => navigate('/admin/users')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Gerenciamento de Usuários</span></li>
                       )}
                       {localStorage.getItem('Tipo_usuário:') === '3' && (
-                        <li><span className="dropdown-item" onClick={() => navigate('/calendario')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Calendário</span></li>
+                        <>
+                          <li><span className="dropdown-item" onClick={() => navigate('/calendario')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Calendário</span></li>
+                          <li><span className="dropdown-item" onClick={() => navigate('/listings')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Procurar</span></li>
+                        </>
                       )}
                       <li><hr className="dropdown-divider" /></li>
                       <li><span className="dropdown-item" onClick={onLogout} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Sair</span></li>
