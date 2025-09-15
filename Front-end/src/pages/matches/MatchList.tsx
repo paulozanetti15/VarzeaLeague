@@ -11,9 +11,6 @@ import axios from 'axios';
 import './MatchList.css';
 import { FaFilter, FaCalendarAlt, FaMoneyBillWave, FaTags } from 'react-icons/fa';
 import { IoMdClose } from 'react-icons/io';
-import { fi } from 'date-fns/locale';
-import { set } from 'date-fns';
-import { m } from 'framer-motion';
 import { GiSoccerField } from "react-icons/gi";
 import { canCreateMatch } from '../../utils/roleUtils';
 import { FaFutbol } from 'react-icons/fa';
@@ -464,6 +461,7 @@ const MatchList: React.FC = () => {
         <div className="matches-grid">
           {currentMatches.map((match) => (
             <div
+              className="match-card"
               key={match.id}
               onClick={() => navigate(`/matches/${match.id}`)}
               data-match-id={match.id}
@@ -593,7 +591,7 @@ const MatchList: React.FC = () => {
 
           {canCreateMatch(currentUser.userTypeId) && (
             <button
-              className="create-match-btn"
+              className="create-match-button"
               onClick={() => navigate('/matches/create')}
             >
               <span className="btn-text">Criar Nova Partida</span>
