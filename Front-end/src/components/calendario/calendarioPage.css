@@ -13,3 +13,14 @@
   font-size: 1rem;            
 }
 
+/* Garantir que eventos em dayGrid tenham fundo preenchido e bordas arredondadas */
+.fc .fc-daygrid-event {
+  border-radius: 6px;
+  padding: 2px 4px;
+}
+
+/* Ajuste de contraste do texto dentro do evento */
+.fc .fc-daygrid-event .fc-event-title {
+  font-weight: 600;
+}
+

@@ -243,7 +243,6 @@ export const deleteMatch = async (req: Request, res: Response): Promise<void> =>
   }
 };
 export const getMatchesByTeam = async (req: AuthRequest, res: Response) => {
-  const dadosPartidas=[]
   try {
     const { id } = req.params;
     const userId = req.user?.id;
@@ -251,37 +250,23 @@ export const getMatchesByTeam = async (req: AuthRequest, res: Response) => {
       res.status(401).json({ error: 'Usuário não autenticado' });
       return;
     }
-    const idMatches = await MatchTeamsModel.findAll({
+
+    // Retornar todas as partidas vinculadas a este time, independentemente de haver adversário inscrito
+    const rows = await MatchTeamsModel.findAll({
       where: { teamId: id },
+      include: [
+        {
+          model: MatchModel,
+          as: 'match',
+          attributes: ['id', 'title', 'date', 'location']
+        }
+      ],
+      order: [[{ model: MatchModel as any, as: 'match' } as any, 'date', 'ASC']]
     });
-    for(const dados of idMatches){
-      const Matches = await MatchTeamsModel.findAll({
-        where :{
-          matchId:dados.matchId,
-          teamId: {
-            [Op.notIn]: [id] // id deve estar dentro de um array
-          }
-        },
-        include:
-        [
-          {
-            model:TeamModel,
-            as:"team",
-            attributes:["name"],
-            
-          },
-          {
-            model:MatchModel,
-            as:"match",
-            attributes:["date","location"]
-          }
-        ]
-      })
-      dadosPartidas.push(...Matches)
-    }
-     
-    res.status(200).json(dadosPartidas)
+
+    res.status(200).json(rows);
   } catch (error) {
+    console.error('Erro ao listar partidas por time:', error);
     res.status(500).json({ message: 'Erro ao listar partidas por time' });
   }
 }
