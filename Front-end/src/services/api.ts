@@ -1,8 +1,6 @@
-import { loadPlayersForMatch } from './matchService';
-import { getMatchErrorStatus, clearMatchErrors } from './apiHelpers';
+// Removed unused imports
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-const token = localStorage.getItem('token');
 
 const handleResponse = async (response: Response) => {
   try {
@@ -58,8 +56,7 @@ const simulateError = (matchId: number): boolean => {
 // Cache local temporário para dados de partidas
 const matchesCache: Record<number, { data: any, timestamp: number }> = {};
 
-// Registro de endpoints que retornaram 404 para evitar tentativas repetidas
-const invalidEndpoints: Set<string> = new Set();
+// Removed invalid endpoints tracker (unused)
 
 // Tempo de expiração do cache em ms (2 minutos)
 const CACHE_EXPIRATION = 2 * 60 * 1000;
@@ -101,47 +98,7 @@ const cleanupCache = () => {
 // Limpar o cache a cada 5 minutos
 setInterval(cleanupCache, 5 * 60 * 1000);
 
-// Registro de erros por partida para análise
-const matchErrors: Record<number, {count: number, lastError: string, timestamp: number}> = {};
-
-// Função para registrar um endpoint como inválido
-const markEndpointAsInvalid = (endpoint: string) => {
-  console.warn(`Marcando endpoint como inválido: ${endpoint}`);
-  invalidEndpoints.add(endpoint);
-  
-  // Limpar o registro após 30 minutos para caso o endpoint seja corrigido
-  setTimeout(() => {
-    if (invalidEndpoints.has(endpoint)) {
-      console.log(`Removendo endpoint ${endpoint} da lista de inválidos após 30 minutos`);
-      invalidEndpoints.delete(endpoint);
-    }
-  }, 30 * 60 * 1000);
-};
-
-// Função para verificar se um endpoint é conhecido como inválido
-const isEndpointInvalid = (endpoint: string): boolean => {
-  return invalidEndpoints.has(endpoint);
-};
-
-// Função para registrar erro em uma partida específica
-const registerMatchError = (matchId: number, errorMessage: string) => {
-  if (!matchErrors[matchId]) {
-    matchErrors[matchId] = {
-      count: 0,
-      lastError: '',
-      timestamp: 0
-    };
-  }
-  
-  matchErrors[matchId].count++;
-  matchErrors[matchId].lastError = errorMessage;
-  matchErrors[matchId].timestamp = Date.now();
-  
-  // Log para diagnóstico
-  if (matchErrors[matchId].count > 3) {
-    console.warn(`Partida ${matchId} teve ${matchErrors[matchId].count} erros. Último erro: ${errorMessage}`);
-  }
-};
+// Removed unused error tracking utilities
 
 // Função para verificar se há dados em cache válidos
 const getCachedMatch = (matchId: number) => {
@@ -162,31 +119,7 @@ const getCachedMatch = (matchId: number) => {
   return cachedData.data;
 };
 
-// Função para salvar dados no cache
-const cacheMatch = (matchId: number, data: any) => {
-  // Não armazenar em cache dados com erro
-  if (data._hasPlayerLoadError) {
-    console.log(`Não armazenando partida ${matchId} em cache devido a erros`);
-    return;
-  }
-  
-  // Verificar se há jogadores válidos antes de armazenar em cache
-  if (!data.players || !Array.isArray(data.players)) {
-    console.log(`Não armazenando partida ${matchId} em cache devido a falta de dados de jogadores`);
-    return;
-  }
-  
-  console.log(`Armazenando partida ${matchId} em cache (${data.players.length} jogadores)`);
-  matchesCache[matchId] = {
-    data,
-    timestamp: Date.now()
-  };
-  
-  // Verificar se o cache excedeu o limite
-  if (Object.keys(matchesCache).length > MAX_CACHE_SIZE) {
-    cleanupCache();
-  }
-};
+// Removed unused cache writer (not used currently)
 
 // Adicionar função para gerenciar requisições com timeout e retry
 const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 5000, retries = 2) => {
@@ -522,9 +455,6 @@ export const api = {
         return cachedData;
       }
 
-      let retryCount = 0;
-      const maxRetries = 2;
-
       const tryFetchMatch = async () => {
         try {
           const match = await fetchWithTimeout(
@@ -596,8 +526,6 @@ export const api = {
         });
         
         const allTeams = await handleResponse(allTeamsResponse);
-        
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         
         if (Array.isArray(allTeams)) {        
           const teamsAsCaptain = allTeams.filter(team => 
@@ -739,6 +667,21 @@ export const api = {
       });
       return handleResponse(response);
     },
+    leaveWithTeam: async (champId: number, teamId: number) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await fetch(`${API_URL}/championships/${champId}/join-team/${teamId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return handleResponse(response);
+    },
     leave: async (champId: number) => {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -757,39 +700,7 @@ export const api = {
   },
 };
 
-function calculatePlayerStats(match: any) {
-  if (match.playerStats && typeof match.playerStats === 'object') {
-    console.log(`Usando estatísticas de jogadores existentes para partida ${match.id}`);
-    return;
-  }
-  
-  if (!match.players || !Array.isArray(match.players)) {
-    console.warn(`Não é possível calcular estatísticas: jogadores inválidos para partida ${match.id}`);
-    match.playerStats = {
-      totalIndividualPlayers: 0,
-      totalTeams: 0,
-      totalTeamPlayers: 0,
-      totalPlayers: 0,
-      isEmpty: true
-    };
-    return;
-  }
-  
-  const individualPlayers = match.players.filter((p: any) => !p.isTeam);
-  const teams = match.players.filter((p: any) => p.isTeam);
-  
-  const teamPlayers = teams.reduce((acc: number, team: any) => 
-    acc + (parseInt(team?.playerCount, 10) || 1), 0);
-  
-  match.playerStats = {
-    totalIndividualPlayers: individualPlayers.length,
-    totalTeams: teams.length,
-    totalTeamPlayers: teamPlayers,
-    totalPlayers: individualPlayers.length + teamPlayers,
-    isEmpty: match.players.length === 0
-  };
-  
-}
+// Removed unused calculatePlayerStats helper
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; 

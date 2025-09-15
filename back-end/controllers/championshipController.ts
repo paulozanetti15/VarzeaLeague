@@ -87,3 +87,40 @@ export const joinTeamInChampionship = asyncHandler(async (req: Request, res: Res
   await TeamChampionship.create({ teamId, championshipId: id });
   res.json({ message: 'Time inscrito no campeonato com sucesso' });
 });
+
+// Listar times inscritos em um campeonato
+export const getChampionshipTeams = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const championship = await Championship.findByPk(id);
+  if (!championship) {
+    return res.status(404).json({ message: 'Campeonato não encontrado' });
+  }
+
+  const links = await TeamChampionship.findAll({ where: { championshipId: id } });
+  const teamIds = links.map((l: any) => l.teamId);
+  if (teamIds.length === 0) {
+    return res.json([]);
+  }
+
+  const teams = await Team.findAll({ where: { id: teamIds } });
+  res.json(teams);
+});
+
+// Remover um time do campeonato
+export const leaveTeamFromChampionship = asyncHandler(async (req: Request, res: Response) => {
+  const { id, teamId } = req.params;
+
+  const championship = await Championship.findByPk(id);
+  if (!championship) {
+    return res.status(404).json({ message: 'Campeonato não encontrado' });
+  }
+
+  const link = await TeamChampionship.findOne({ where: { championshipId: id, teamId } });
+  if (!link) {
+    return res.status(404).json({ message: 'O time não está inscrito neste campeonato' });
+  }
+
+  await link.destroy();
+  res.json({ message: 'Time removido do campeonato com sucesso' });
+});

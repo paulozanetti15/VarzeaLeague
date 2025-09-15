@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../../services/api';
 import trophy from '../../../assets/championship-trophy.svg';
@@ -22,12 +22,44 @@ const ChampionshipDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasEditPermission, setHasEditPermission] = useState(false);
-  const [teams] = useState<any[]>([]);
+  const [teams, setTeams] = useState<any[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showTeamSelectModal, setShowTeamSelectModal] = useState(false);
   const [userTeams, setUserTeams] = useState<any[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<number | null>(null);
   const [isJoining, setIsJoining] = useState(false);
+  const [isLeavingTeamId, setIsLeavingTeamId] = useState<number | null>(null);
+
+  // Times do usuário já inscritos e disponíveis para inscrição
+  const enrolledTeamIds = useMemo(() => new Set((teams || []).map((t) => t.id)), [teams]);
+  const hasUserTeamInChampionship = useMemo(
+    () => (userTeams || []).some((ut) => enrolledTeamIds.has(ut.id)),
+    [userTeams, enrolledTeamIds]
+  );
+  const availableUserTeams = useMemo(
+    () => (userTeams || []).filter((ut) => !enrolledTeamIds.has(ut.id)),
+    [userTeams, enrolledTeamIds]
+  );
+
+  const loadChampionshipTeams = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${id}/join-team`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (resp.ok) {
+          const teamsData = await resp.json();
+          setTeams(Array.isArray(teamsData) ? teamsData : []);
+        } else {
+          setTeams([]);
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao buscar times do campeonato', e);
+      setTeams([]);
+    }
+  }, [id]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -51,7 +83,10 @@ const ChampionshipDetail: React.FC = () => {
         } else {
           setHasEditPermission(false);
         }
-        
+
+        // Buscar times já inscritos neste campeonato
+        await loadChampionshipTeams();
+
         setLoading(false);
       } catch (err: any) {
         setError(err.message || 'Erro ao carregar detalhes do campeonato');
@@ -70,7 +105,7 @@ const ChampionshipDetail: React.FC = () => {
 
     fetchChampionshipDetails();
     fetchUserTeams();
-  }, [id, navigate]);
+  }, [id, navigate, loadChampionshipTeams]);
 
   const handleDeleteChampionship = async () => {
     try {
@@ -94,12 +129,32 @@ const ChampionshipDetail: React.FC = () => {
       await api.championships.joinWithTeam(Number(id), selectedTeamId);
       toast.success('Seu time entrou no campeonato com sucesso!');
       setShowTeamSelectModal(false);
+      // Atualiza o campeonato
       const updatedChampionship = await api.championships.getById(Number(id));
       setChampionship(updatedChampionship);
+      // Recarrega a lista de times inscritos
+      await (async () => {
+        try { await (async () => { /* ensure awaited */ })(); } catch (_) {}
+        await (async () => { /* noop */ })();
+        await (async () => loadChampionshipTeams())();
+      })();
       setIsJoining(false);
     } catch (err: any) {
       toast.error(err.message || 'Erro ao entrar no campeonato com o time');
       setIsJoining(false);
+    }
+  };
+
+  const handleLeaveWithTeam = async (teamId: number) => {
+    try {
+      setIsLeavingTeamId(teamId);
+      await api.championships.leaveWithTeam(Number(id), teamId);
+      toast.success('Seu time saiu do campeonato.');
+      await (async () => loadChampionshipTeams())();
+      setIsLeavingTeamId(null);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao sair do campeonato com o time');
+      setIsLeavingTeamId(null);
     }
   };
 
@@ -187,13 +242,19 @@ const ChampionshipDetail: React.FC = () => {
             </>
           ) : (
             <>
-              <button
-                className="join-team-button"
-                onClick={() => setShowTeamSelectModal(true)}
-                disabled={isJoining || userTeams.length === 0}
-              >
-                {isJoining ? 'Entrando...' : 'Entrar com Time'}
-              </button>
+              {!hasUserTeamInChampionship ? (
+                <button
+                  className="join-team-button"
+                  onClick={() => { setSelectedTeamId(null); setShowTeamSelectModal(true); }}
+                  disabled={isJoining || availableUserTeams.length === 0}
+                >
+                  {isJoining ? 'Entrando...' : 'Entrar com Time'}
+                </button>
+              ) : (
+                <div style={{ fontSize: 14, color: '#ffffff' }}>
+                  Você já possui um time inscrito neste campeonato.
+                </div>
+              )}
             </>
           )}
         </div>
@@ -202,11 +263,23 @@ const ChampionshipDetail: React.FC = () => {
           <h3>Times Participantes</h3>
           {teams && teams.length > 0 ? (
             <div className="teams-list">
-              {teams.map((team) => (
-                <div key={team.id} className="team-item">
-                  {team.name}
-                </div>
-              ))}
+              {teams.map((team) => {
+                const isUserTeam = userTeams?.some((ut) => ut.id === team.id);
+                return (
+                  <div key={team.id} className="team-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                    <span>{team.name}</span>
+                    {isUserTeam && (
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => handleLeaveWithTeam(team.id)}
+                        disabled={isLeavingTeamId === team.id}
+                      >
+                        {isLeavingTeamId === team.id ? 'Saindo...' : 'Sair do campeonato'}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <p>Nenhum time inscrito neste campeonato ainda.</p>
@@ -236,11 +309,11 @@ const ChampionshipDetail: React.FC = () => {
           <Modal.Title>Selecione um Time</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {userTeams.length > 0 ? (
+          {availableUserTeams.length > 0 ? (
             <>
               <p>Selecione um dos seus times para entrar no campeonato:</p>
               <div className="team-selection-list">
-                {userTeams.map((team) => (
+                {availableUserTeams.map((team) => (
                   <div 
                     key={team.id} 
                     className={`team-selection-item ${selectedTeamId === team.id ? 'selected' : ''}`}
@@ -252,7 +325,11 @@ const ChampionshipDetail: React.FC = () => {
               </div>
             </>
           ) : (
-            <p>Você não tem times cadastrados. Crie um time antes de entrar no campeonato.</p>
+            <p>
+              {userTeams.length === 0
+                ? 'Você não tem times cadastrados. Crie um time antes de entrar no campeonato.'
+                : 'Todos os seus times já estão inscritos neste campeonato.'}
+            </p>
           )}
         </Modal.Body>
         <Modal.Footer>
