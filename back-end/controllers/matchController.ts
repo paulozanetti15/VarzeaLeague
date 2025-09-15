@@ -285,3 +285,4 @@ export const getMatchesByTeam = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: 'Erro ao listar partidas por time' });
   }
 }
+ 

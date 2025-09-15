@@ -12,6 +12,7 @@ import MatchEvaluation from './MatchEvaluationModel';
 import Championship from './ChampionshipModel';
 import Player from './PlayerModel';
 import MatchTeams from './MatchTeamsModel';
+import PunicaoAmitosoMatch from './PunicaoAmitosoMatchModel';
 
 // User <-> Match associations
 export function associateModels() {
@@ -99,4 +100,5 @@ export function associateModels() {
   User.hasMany(Championship, { foreignKey: 'createdBy' });
   MatchTeams.belongsTo(Match,{foreignKey:"matchId",as:"match"})
   MatchTeams.belongsTo(Team,{foreignKey:"teamId",as:"team"})
+
 }

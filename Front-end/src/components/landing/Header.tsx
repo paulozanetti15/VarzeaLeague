@@ -21,8 +21,9 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
   const pageLinks = [
     { name: 'Times', path: '/teams', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true },
     { name: 'Partidas', path: '/matches', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:true, allowedTeamAdmin:true },
-    { name: 'Campeonatos', path: '/championships', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true},
-    {name: 'Dashboard', path: '/dashboard', allowedCommonUser:false, allowedAdminUser:true, allowedAdminEvent:false, allowedTeamAdmin:false}
+    { name: 'Campeonatos', path: '/championships', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:true, allowedTeamAdmin:true},
+    {name: 'Dashboard', path: '/dashboard', allowedCommonUser:false, allowedAdminUser:true, allowedAdminEvent:false, allowedTeamAdmin:false},
+    { name: 'Calendário', path: '/calendario', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true },
   ];
   const getAccessiblePages=(userTypeId:number)=>{
     switch (userTypeId){

@@ -38,7 +38,7 @@ const pageLinks = [
   { name: 'Dashboard', path: '/dashboard', icon: <Dashboard />, allowedCommonUser:false, allowedAdminUser:true, allowedAdminEvent:false, allowedTeamAdmin:false },
   { name: 'Times', path: '/teams', icon: <People />, allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true },
   { name: 'Partidas', path: '/matches', icon: <SportsSoccer />, allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:true, allowedTeamAdmin:true },
-  { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents />, allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true },
+  { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents />, allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:true, allowedTeamAdmin:true },
   { name: 'Calendário', path: '/calendario', icon: <CalendarMonth />, allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true },
 ];
 
