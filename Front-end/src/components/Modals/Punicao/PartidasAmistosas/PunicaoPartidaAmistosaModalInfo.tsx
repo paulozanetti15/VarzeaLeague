@@ -12,6 +12,7 @@ interface PunicaoPartidaAmistosaModalProps {
   onHide: () => void;
   team: any;
   onClose: () => void;
+  idMatch: number;
 }
 
 interface PunicaoData {
@@ -24,12 +25,12 @@ interface PunicaoData {
   idMatch:number
 }
 
-const PunicaoPartidaAmistosaModalInfo: React.FC<PunicaoPartidaAmistosaModalProps> = ({ 
-  show, 
-  onHide, 
-  team, 
+const PunicaoPartidaAmistosaModalInfo: React.FC<PunicaoPartidaAmistosaModalProps> = ({
+  show,
+  onHide,
+  team,
   onClose,
-  idMatch
+  idMatch,
 }) => {
   const [loading, setLoading] = useState(false);
   const [punicao, setPunicao] = useState<PunicaoData | null>(null);
@@ -67,10 +68,10 @@ const PunicaoPartidaAmistosaModalInfo: React.FC<PunicaoPartidaAmistosaModalProps
   };
 
   useEffect(() => {
-    if (show && team?.id) {
-      fetchPunicao(team.id);
+    if (show && idMatch) {
+      fetchPunicao(idMatch);
     }
-  }, [show, team?.id, token]);
+  }, [show, idMatch, token]);
 
   const handleUpdateClick = () => {
     setModalUpdatePunicao(true);
@@ -83,7 +84,7 @@ const PunicaoPartidaAmistosaModalInfo: React.FC<PunicaoPartidaAmistosaModalProps
   const handleUpdateSuccess = () => {
     setModalUpdatePunicao(false);
     // Recarregar dados após atualização
-    fetchPunicao(team.id);
+    fetchPunicao(idMatch);
   };
 
   const handleDeleteSuccess = () => {
@@ -176,7 +177,7 @@ const PunicaoPartidaAmistosaModalInfo: React.FC<PunicaoPartidaAmistosaModalProps
         show={modalDeletePunicao}
         onHide={() => setModalDeletePunicao(false)}
         onClose={handleDeleteSuccess}
-        idmatch={team.id}
+        idmatch={idMatch}
       />
 
       {/* Modal de Atualizar */}

@@ -129,13 +129,7 @@ const MatchDetail: React.FC = () => {
     }
   };
   // utils duplicados foram removidos abaixo; versões finais estão mais adiante
-  // legacy modal (não utilizado atualmente)
-  const handleOpenSelectTeamPlayers = () => {
-    setShowSelectTeamPlayers(true);
-  }
-  const handleCloseSelectTeamPlayers = () => {
-    setShowSelectTeamPlayers(false);
-  }
+  // legacy modal handlers removidos (não utilizados atualmente)
   const handleDeleteMatch = async () => {
     if (!id) return;
     // Regra adicional: não permitir exclusão se houver times vinculados
