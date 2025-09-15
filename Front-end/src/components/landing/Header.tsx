@@ -1,5 +1,5 @@
 import './Header.css';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: number;
@@ -18,25 +18,7 @@ interface HeaderProps {
 
 export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogout }: HeaderProps) {
   const navigate = useNavigate();
-  const pageLinks = [
-    { name: 'Times', path: '/teams', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true },
-    { name: 'Partidas', path: '/matches', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:true, allowedTeamAdmin:true },
-    { name: 'Campeonatos', path: '/championships', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:true, allowedTeamAdmin:true},
-    {name: 'Dashboard', path: '/dashboard', allowedCommonUser:false, allowedAdminUser:true, allowedAdminEvent:false, allowedTeamAdmin:false},
-    { name: 'Calendário', path: '/calendario', allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true },
-  ];
-  const getAccessiblePages=(userTypeId:number)=>{
-    switch (userTypeId){
-      case 1:
-        return pageLinks.filter(f=>f.allowedAdminUser)
-      case 2:   
-        return pageLinks.filter(f=>f.allowedAdminEvent)
-      case 3:   
-        return pageLinks.filter(f=>f.allowedTeamAdmin)
-      default:
-        return []  
-    }  
-  }
+  
   return (
     <header className="header no-top-margin" style={{ background: '#0d47a1', boxShadow: '0 4px 20px rgba(13,71,161,0.15)' }}>
       <nav className="navbar navbar-expand-lg navbar-dark">
@@ -57,13 +39,28 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
           </button>
           <div className="collapse navbar-collapse" id="navbarNav">
             <ul className="navbar-nav me-auto">
-              {isLoggedIn &&  user && getAccessiblePages(Number(user?.userTypeId)).map((page)=>(
-                  <>
+              {isLoggedIn && user && (
+                <>
+                  {/* Partidas - roles 1 e 2 */}
+                  {(user.userTypeId === 1 || user.userTypeId === 2) && (
                     <li className="nav-item">
-                      <span className="nav-link" onClick={() => navigate(`${page.path}`)}>{page.name}</span>
-                    </li>    
-                  </>
-              ))}
+                      <span className="nav-link" onClick={() => navigate('/matches')}>Partidas</span>
+                    </li>
+                  )}
+                  {/* Campeonatos - roles 1 e 2 */}
+                  {(user.userTypeId === 1 || user.userTypeId === 2) && (
+                    <li className="nav-item">
+                      <span className="nav-link" onClick={() => navigate('/championships')}>Campeonatos</span>
+                    </li>
+                  )}
+                  {/* Meu time - roles 1 e 3 */}
+                  {(user.userTypeId === 1 || user.userTypeId === 3) && (
+                    <li className="nav-item">
+                      <span className="nav-link" onClick={() => navigate('/teams')}>Meu time</span>
+                    </li>
+                  )}
+                </>
+              )}
             </ul>             
           </div>
            <div className="d-flex align-items-center">
@@ -74,7 +71,7 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                       {user.name}
                     </button>
                     <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style={{ background: '#0d47a1', color: '#fff', borderRadius: 12, boxShadow: '0 4px 20px rgba(13,71,161,0.15)', padding: '0.5rem 0' }}>
-                      {(user.userTypeId === 1 ||user.userTypeId === 3) && (
+                      {(user.userTypeId === 1 || user.userTypeId === 3) && (
                         <li><span className="dropdown-item" onClick={() => navigate('/teams')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Meu time</span></li>
                       )}
                       <li><span className="dropdown-item" onClick={() => navigate('/perfil')} style={{ color: '#fff', fontWeight: 600, fontSize: '1rem', borderRadius: 8, padding: '0.5rem 1.2rem', transition: 'all 0.3s' }}>Meu perfil</span></li>

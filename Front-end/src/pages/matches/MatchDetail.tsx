@@ -13,8 +13,8 @@ import axios from 'axios';
 
 import './MatchDetail.css';
 import { useAuth } from '../../hooks/useAuth';
-import RegrasFormInfoModal from '../../components/Modals/Regras/RegrasFormInfoModal';
 import EditRulesModal from '../../components/Modals/Regras/RegrasFormEditModal';
+import RegrasFormInfoModal from '../../components/Modals/Regras/RegrasFormInfoModal';
 import PunicaoRegisterModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosoRegisterModal';
 import PunicaoInfoModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosaModalInfo';
 import SelectTeamPlayersModal from '../../components/Modals/Teams/SelectTeamPlayersModal';
@@ -128,9 +128,22 @@ const MatchDetail: React.FC = () => {
       toast.error('Erro ao sair da partida. Tente novamente.');
     }
   };
-
+  // utils duplicados foram removidos abaixo; versões finais estão mais adiante
+  // legacy modal (não utilizado atualmente)
+  const handleOpenSelectTeamPlayers = () => {
+    setShowSelectTeamPlayers(true);
+  }
+  const handleCloseSelectTeamPlayers = () => {
+    setShowSelectTeamPlayers(false);
+  }
   const handleDeleteMatch = async () => {
-    if (!id || !token) return;
+    if (!id) return;
+    // Regra adicional: não permitir exclusão se houver times vinculados
+    if (timeCadastrados.length > 0) {
+      toast.error('Existem times vinculados. Desvincule todos antes de excluir a partida.');
+      setOpenDeleteConfirm(false);
+      return;
+    }
     setLoading(true);
     try {
       const response = await axios.delete(`http://localhost:3001/api/matches/${id}`, {
@@ -139,7 +152,9 @@ const MatchDetail: React.FC = () => {
       if (response.status === 200) {
         toast.success('Partida excluída com sucesso!');
         navigate('/matches', { state: { filter: 'my' } });
-      } else toast.error('Erro ao excluir a partida. Tente novamente.');
+      } else {
+        toast.error('Erro ao excluir a partida. Tente novamente.');
+      }
     } catch (err: any) {
       console.error('Erro ao excluir partida:', err);
       toast.error(err.response?.data?.message || 'Erro ao excluir partida. Tente novamente.');
@@ -176,6 +191,7 @@ const MatchDetail: React.FC = () => {
   const isOrganizer = user?.id === match.organizerId;
   const isAdmin = user?.userTypeId === 1;
   const canDeleteMatch = isOrganizer || isAdmin;
+  const hasTeams = timeCadastrados.length > 0;
 
   return (
     <div className="match-detail-container">
@@ -244,6 +260,53 @@ const MatchDetail: React.FC = () => {
               </div>
             )}
           </div>
+            <div className='d-flex gap-2 container justify-content-center'>
+              {canDeleteMatch && (
+                <Button
+                  variant="danger"
+                  onClick={() => {
+                    if (hasTeams) {
+                      toast.error('Remova os times vinculados antes de excluir.');
+                      return;
+                    }
+                    setOpenDeleteConfirm(true);
+                  }}
+                  disabled={hasTeams}
+                >
+                  <DeleteIcon /> Excluir Partida
+                </Button>
+              )}     
+                <Button
+                  style={{
+                    background: '#1976d2',
+                    border: 'none',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    boxShadow: '0 3px 10px rgba(25,118,210,0.35)'
+                  }}
+                  onClick={() => navigate(`/matches/edit/${id}`)}
+                >
+                  <EditIcon/> Editar Partida 
+                </Button>
+
+                <Button
+                  style={{
+                    background: 'transparent',
+                    border: '2px solid #1976d2',
+                    color: '#1976d2',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}
+                  onClick={() => setEditRules(true)}
+                >
+                  <EditIcon/> Editar Regras   
+                </Button>
+              
+            </div>
         </div>
 
         {user?.userTypeId==2 ?

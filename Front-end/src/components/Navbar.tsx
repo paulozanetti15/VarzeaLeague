@@ -27,38 +27,27 @@ import {
   Person,
   Notifications,
   ArrowBack,
-  CalendarMonth
+  
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getRoleName } from '../utils/roleUtils';
 import '../components/landing/Header.css';
 
-const pageLinks = [
-  { name: 'Dashboard', path: '/dashboard', icon: <Dashboard />, allowedCommonUser:false, allowedAdminUser:true, allowedAdminEvent:false, allowedTeamAdmin:false },
-  { name: 'Times', path: '/teams', icon: <People />, allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true },
-  { name: 'Partidas', path: '/matches', icon: <SportsSoccer />, allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:true, allowedTeamAdmin:true },
-  { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents />, allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:true, allowedTeamAdmin:true },
-  { name: 'Calendário', path: '/calendario', icon: <CalendarMonth />, allowedCommonUser:false, allowedAdminUser:false, allowedAdminEvent:false, allowedTeamAdmin:true },
+// Map de páginas com papéis (roles) permitidos
+// roles: 'all' para qualquer usuário autenticado ou array de IDs de userType
+const pages = [
+  { name: 'Dashboard', path: '/dashboard', icon: <Dashboard />, roles: 'all' },
+  { name: 'Meu Time', path: '/teams', icon: <People />, roles: [1, 3] }, // IDs 1 (Admin Sistema) e 3 (Admin Times)
+  { name: 'Partidas', path: '/matches', icon: <SportsSoccer />, roles: [1, 2] }, // IDs 1 e 2
+  { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents />, roles: [1, 2] }, // IDs 1 e 2
 ];
 
 const adminPages = [
   { name: 'Usuários', path: '/admin/users', icon: <Person /> },
 ];
 
-// 🔑 Função central para pegar páginas permitidas
-const getAccessiblePages = (userTypeId?: number) => {
-  switch (userTypeId) {
-    case 1:
-      return [...adminPages, ...pageLinks.filter(p => p.allowedAdminUser)];
-    case 2:
-      return pageLinks.filter(p => p.allowedAdminEvent);
-    case 3:
-      return pageLinks.filter(p => p.allowedTeamAdmin);
-    default:
-      return pageLinks.filter(p => p.allowedCommonUser); // aqui pode liberar links "públicos" se quiser
-  }
-};
+// 🔑 Páginas visíveis são filtradas diretamente abaixo com base no userTypeId
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -67,6 +56,10 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  // Filtra páginas de acordo com o userTypeId
+  const roleId = user?.userTypeId;
+  const visiblePages = pages.filter(p => p.roles === 'all' || (Array.isArray(p.roles) && roleId && p.roles.includes(roleId)));
 
   const showBackButton = location.pathname !== '/';
 
@@ -102,7 +95,7 @@ const Navbar = () => {
       </Typography>
       <Divider sx={{ mb: 1 }} />
       <List>
-        {getAccessiblePages(user?.userTypeId).map((page) => (
+        {visiblePages.map((page) => (
           <ListItem
             component="div"
             key={page.name}
@@ -236,7 +229,7 @@ const Navbar = () => {
         </a>
         {/* Menu desktop */}
         <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
-          {getAccessiblePages(user?.userTypeId).map((page) => (
+          {visiblePages.map((page) => (
             <Button
               key={page.name}
               onClick={() => handleNavigation(page.path)}

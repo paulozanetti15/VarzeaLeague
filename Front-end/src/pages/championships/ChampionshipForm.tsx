@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { api } from '../../services/api';
 import trophy from '../../assets/championship-trophy.svg';
 import './ChampionshipForm.css';
 import { format, parse, isValid, isAfter } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
 const initialState = {
   name: '',
@@ -19,7 +18,10 @@ const ChampionshipForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{[k:string]: string}>({});
   const navigate = useNavigate();
+  const hiddenStartRef = useRef<HTMLInputElement>(null);
+  const hiddenEndRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -54,44 +56,78 @@ const ChampionshipForm: React.FC = () => {
     setLoading(true);
     setError('');
     setSuccess('');
+    setFieldErrors({});
 
     try {
-      // Validar datas
+      const errors: {[k:string]: string} = {};
+      const nameTrim = form.name.trim();
+      if (!nameTrim) {
+        errors.name = 'Informe o nome do campeonato';
+      } else if (nameTrim.length < 3) {
+        errors.name = 'Nome muito curto (mín. 3)';
+      } else if (nameTrim.length > 100) {
+        errors.name = 'Nome muito longo (máx. 100)';
+      }
+
+      if (form.description && form.description.length > 1000) {
+        errors.description = 'Descrição excede 1000 caracteres';
+      }
+
+      // Datas obrigatórias agora
+      if (!form.start_date) {
+        errors.start_date = 'Informe a data de início';
+      }
+      if (!form.end_date) {
+        errors.end_date = 'Informe a data de término';
+      }
+
+      let parsedStartDate: Date | null = null;
+      let parsedEndDate: Date | null = null;
       if (form.start_date) {
-        const parsedStartDate = parse(form.start_date, 'dd/MM/yyyy', new Date());
-        if (!isValid(parsedStartDate)) {
-          setError('Data de início inválida. Use o formato DD/MM/AAAA');
-          setLoading(false);
-          return;
+        const p = parse(form.start_date, 'dd/MM/yyyy', new Date());
+        if (!isValid(p)) {
+          errors.start_date = 'Data de início inválida';
+        } else {
+          parsedStartDate = p;
         }
       }
-
       if (form.end_date) {
-        const parsedEndDate = parse(form.end_date, 'dd/MM/yyyy', new Date());
-        if (!isValid(parsedEndDate)) {
-          setError('Data de término inválida. Use o formato DD/MM/AAAA');
-          setLoading(false);
-          return;
+        const p = parse(form.end_date, 'dd/MM/yyyy', new Date());
+        if (!isValid(p)) {
+          errors.end_date = 'Data de término inválida';
+        } else {
+          parsedEndDate = p;
         }
       }
 
-      // Validar se data de término é posterior à data de início
-      if (form.start_date && form.end_date) {
-        const startDate = parse(form.start_date, 'dd/MM/yyyy', new Date());
-        const endDate = parse(form.end_date, 'dd/MM/yyyy', new Date());
-        
-        if (!isAfter(endDate, startDate)) {
-          setError('A data de término deve ser posterior à data de início');
-          setLoading(false);
-          return;
+      // Regras adicionais: início >= hoje (sem hora), término > início
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      if (parsedStartDate) {
+        const startClone = new Date(parsedStartDate); startClone.setHours(0,0,0,0);
+        if (startClone < today) {
+          errors.start_date = 'Data de início deve ser hoje ou futura';
         }
+      }
+      if (parsedStartDate && parsedEndDate) {
+        if (!isAfter(parsedEndDate, parsedStartDate)) {
+          errors.end_date = 'Término deve ser após o início';
+        }
+      }
+
+      if (Object.keys(errors).length) {
+        setFieldErrors(errors);
+        setError('Corrija os campos destacados.');
+        setLoading(false);
+        return;
       }
 
       // Converter datas para o formato ISO antes de enviar
       const formattedData = {
         ...form,
-        start_date: form.start_date ? format(parse(form.start_date, 'dd/MM/yyyy', new Date()), 'yyyy-MM-dd') : '',
-        end_date: form.end_date ? format(parse(form.end_date, 'dd/MM/yyyy', new Date()), 'yyyy-MM-dd') : ''
+        name: nameTrim,
+        start_date: format(parsedStartDate as Date, 'yyyy-MM-dd'),
+        end_date: format(parsedEndDate as Date, 'yyyy-MM-dd')
       };
 
       await api.championships.create(formattedData);
@@ -102,6 +138,25 @@ const ChampionshipForm: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openPicker = (which: 'start' | 'end') => {
+    const ref = which === 'start' ? hiddenStartRef.current : hiddenEndRef.current;
+    if (!ref) return;
+    const current = which === 'start' ? form.start_date : form.end_date;
+    if (current && current.length === 10) {
+      const [d,m,y] = current.split('/');
+      ref.value = `${y}-${m}-${d}`;
+    }
+    const anyEl: any = ref;
+    if (typeof anyEl.showPicker === 'function') { anyEl.showPicker(); } else { ref.click(); }
+  };
+
+  const handleHiddenChange = (e: React.ChangeEvent<HTMLInputElement>, which: 'start' | 'end') => {
+    const iso = e.target.value; if (!iso) return;
+    const [y,m,d] = iso.split('-');
+    const br = `${d}/${m}/${y}`;
+    setForm(prev => ({ ...prev, [which === 'start' ? 'start_date' : 'end_date']: br }));
   };
 
   return (
@@ -116,14 +171,17 @@ const ChampionshipForm: React.FC = () => {
 
         <form className="championship-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Nome do Campeonato *</label>
+            <label>Nome do Campeonato <span className="required-asterisk" aria-hidden="true">*</span></label>
             <input
               name="name"
               value={form.name}
               onChange={handleChange}
               required
               placeholder="Digite o nome do campeonato"
+              style={fieldErrors.name ? { borderColor: '#e53935' } : undefined}
+              aria-invalid={!!fieldErrors.name}
             />
+            {fieldErrors.name && <small style={{ color:'#e53935' }}>{fieldErrors.name}</small>}
           </div>
 
           <div className="form-group">
@@ -134,36 +192,115 @@ const ChampionshipForm: React.FC = () => {
               onChange={handleChange}
               placeholder="Descrição, regras, premiação..."
               rows={4}
+              style={fieldErrors.description ? { borderColor: '#e53935' } : undefined}
+              aria-invalid={!!fieldErrors.description}
             />
+            {fieldErrors.description && <small style={{ color:'#e53935' }}>{fieldErrors.description}</small>}
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label>Data de Início</label>
-              <input
-                type="text"
-                name="start_date"
-                value={form.start_date}
-                onChange={handleChange}
-                placeholder="DD/MM/AAAA"
-                maxLength={10}
-                className="date-input"
-              />
+              <label>Data de Início <span className="required-asterisk" aria-hidden="true">*</span></label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <input
+                    type="text"
+                    name="start_date"
+                    value={form.start_date}
+                    onChange={handleChange}
+                    placeholder="DD/MM/AAAA"
+                    maxLength={10}
+                    className="date-input"
+                    onFocus={() => openPicker('start')}
+                    required
+                    style={fieldErrors.start_date ? { borderColor: '#e53935' } : undefined}
+                    aria-invalid={!!fieldErrors.start_date}
+                  />
+                  <input
+                    ref={hiddenStartRef}
+                    type="date"
+                    onChange={(e) => handleHiddenChange(e, 'start')}
+                    style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-label="Abrir calendário início"
+                  onClick={() => openPicker('start')}
+                  style={{
+                    border: 'none',
+                    background: '#0d47a1',
+                    padding: 0,
+                    cursor: 'pointer',
+                    color: '#fff',
+                    borderRadius: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 44,
+                    height: 44,
+                    minWidth: 44
+                  }}
+                >
+                  <CalendarMonthIcon fontSize="medium" style={{ marginRight: 0 }} />
+                </button>
+              </div>
             </div>
             <div className="form-group">
-              <label>Data de Término</label>
-              <input
-                type="text"
-                name="end_date"
-                value={form.end_date}
-                onChange={handleChange}
-                placeholder="DD/MM/AAAA"
-                maxLength={10}
-                className="date-input"
-              />
+              <label>Data de Término <span className="required-asterisk" aria-hidden="true">*</span></label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <input
+                    type="text"
+                    name="end_date"
+                    value={form.end_date}
+                    onChange={handleChange}
+                    placeholder="DD/MM/AAAA"
+                    maxLength={10}
+                    className="date-input"
+                    onFocus={() => openPicker('end')}
+                    required
+                    style={fieldErrors.end_date ? { borderColor: '#e53935' } : undefined}
+                    aria-invalid={!!fieldErrors.end_date}
+                  />
+                  <input
+                    ref={hiddenEndRef}
+                    type="date"
+                    onChange={(e) => handleHiddenChange(e, 'end')}
+                    style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-label="Abrir calendário término"
+                  onClick={() => openPicker('end')}
+                  style={{
+                    border: 'none',
+                    background: '#0d47a1',
+                    padding: 0,
+                    cursor: 'pointer',
+                    color: '#fff',
+                    borderRadius: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 44,
+                    height: 44,
+                    minWidth: 44
+                  }}
+                >
+                  <CalendarMonthIcon fontSize="medium" style={{ marginRight: 0 }} />
+                </button>
+              </div>
             </div>
           </div>
 
+          {fieldErrors.start_date && <small style={{ color:'#e53935' }}>{fieldErrors.start_date}</small>}
+          {fieldErrors.end_date && <small style={{ color:'#e53935' }}>{fieldErrors.end_date}</small>}
           {error && <div className="form-error">{error}</div>}
           {success && <div className="form-success">{success}</div>}
 
