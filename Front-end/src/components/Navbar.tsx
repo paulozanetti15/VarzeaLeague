@@ -41,6 +41,7 @@ const pages = [
   { name: 'Meu Time', path: '/teams', icon: <People />, roles: [1, 3] }, // IDs 1 (Admin Sistema) e 3 (Admin Times)
   { name: 'Partidas', path: '/matches', icon: <SportsSoccer />, roles: [1, 2] }, // IDs 1 e 2
   { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents />, roles: [1, 2] }, // IDs 1 e 2
+  { name: 'Procurar campeonatos e partidas', path: '/listings', icon: <SportsSoccer />, roles: [3] },
 ];
 
 const adminPages = [
