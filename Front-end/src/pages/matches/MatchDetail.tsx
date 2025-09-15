@@ -185,6 +185,26 @@ const MatchDetail: React.FC = () => {
     }
   };
 
+  const handleDeleteGoal = async (goalId: number) => {
+    if (!id) return;
+    const token = localStorage.getItem('token');
+    try {
+      const resp = await fetch(`http://localhost:3001/api/matches/${id}/goals/${goalId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` }});
+      if (!resp.ok) { toast.error('Erro ao excluir gol'); return; }
+      setGoals(g => g.filter(gl => gl.id !== goalId));
+    } catch (e) { console.error(e); toast.error('Falha ao excluir gol'); }
+  };
+
+  const handleDeleteCard = async (cardId: number) => {
+    if (!id) return;
+    const token = localStorage.getItem('token');
+    try {
+      const resp = await fetch(`http://localhost:3001/api/matches/${id}/cards/${cardId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` }});
+      if (!resp.ok) { toast.error('Erro ao excluir cartão'); return; }
+      setCards(c => c.filter(cd => cd.id !== cardId));
+    } catch (e) { console.error(e); toast.error('Falha ao excluir cartão'); }
+  };
+
   const handleFinalizeMatch = async () => {
     if (!id) return;
     try {
@@ -694,12 +714,22 @@ const MatchDetail: React.FC = () => {
             <hr />
             <h4>Gols ({goals.length})</h4>
             <ul className="list-group mb-3">
-              {goals.map(g => <li key={g.id} className="list-group-item bg-transparent text-light">{g.user_id ? `Jogador #${g.user_id}` : 'Gol'}</li>)}
+              {goals.map(g => (
+                <li key={g.id} className="list-group-item bg-transparent text-light d-flex justify-content-between align-items-center">
+                  <span>{g.user_id ? `Jogador #${g.user_id}` : 'Gol'}</span>
+                  <button type="button" className="btn btn-sm btn-outline-danger" onClick={()=>handleDeleteGoal(g.id)} title="Remover gol">🗑️</button>
+                </li>
+              ))}
               {goals.length === 0 && <li className="list-group-item bg-transparent text-secondary">Nenhum gol registrado</li>}
             </ul>
             <h4>Cartões ({cards.length})</h4>
             <ul className="list-group">
-              {cards.map(c => <li key={c.id} className="list-group-item bg-transparent text-light">{c.card_type === 'yellow' ? '🟨' : '🟥'} {c.user_id ? `Jogador #${c.user_id}` : 'Cartão'}{typeof c.minute === 'number' ? ` (${c.minute}')` : ''}</li>)}
+              {cards.map(c => (
+                <li key={c.id} className="list-group-item bg-transparent text-light d-flex justify-content-between align-items-center">
+                  <span>{c.card_type === 'yellow' ? '🟨' : '🟥'} {c.user_id ? `Jogador #${c.user_id}` : 'Cartão'}{typeof c.minute === 'number' ? ` (${c.minute}')` : ''}</span>
+                  <button type="button" className="btn btn-sm btn-outline-danger" onClick={()=>handleDeleteCard(c.id)} title="Remover cartão">🗑️</button>
+                </li>
+              ))}
               {cards.length === 0 && <li className="list-group-item bg-transparent text-secondary">Nenhum cartão registrado</li>}
             </ul>
           </div>

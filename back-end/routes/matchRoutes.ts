@@ -4,7 +4,7 @@ import {joinMatchByTeam,getMatchTeams, deleteTeamMatch,getTeamsAvailable, checkT
 import { createMatch, listMatches, getMatch, deleteMatch, updateMatch,getMatchesByTeam} from '../controllers/matchController';
 import { listMatchEvaluations, upsertMatchEvaluation, getMatchEvaluationSummary } from '../controllers/matchEvaluationController';
 import {busarPunicaoPartidaAmistosa,alterarPunicaoPartidaAmistosa,deletarPunicaoPartidaAmistosa, inserirPunicaoPartidaAmistosa} from '../controllers/PunicaoController';
-import { finalizeMatch, addGoal, addCard, listEvents } from '../controllers/matchEventsController';
+import { finalizeMatch, addGoal, addCard, listEvents, deleteGoalEvent, deleteCardEvent } from '../controllers/matchEventsController';
 const router = express.Router();
 
 router.get('/:id/available', authenticateToken, getTeamsAvailable);
@@ -27,6 +27,8 @@ router.post('/:id/finalize', authenticateToken, finalizeMatch);
 router.post('/:id/goals', authenticateToken, addGoal);
 router.post('/:id/cards', authenticateToken, addCard);
 router.get('/:id/events', authenticateToken, listEvents);
+router.delete('/:id/goals/:goalId', authenticateToken, deleteGoalEvent);
+router.delete('/:id/cards/:cardId', authenticateToken, deleteCardEvent);
 
 router.get('/:idAmistosaPartida/punicao',authenticateToken,busarPunicaoPartidaAmistosa );
 router.post('/:idAmistosaPartida/punicao',authenticateToken,inserirPunicaoPartidaAmistosa );

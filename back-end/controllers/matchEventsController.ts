@@ -5,7 +5,7 @@ import MatchGoal from '../models/MatchGoalModel';
 import MatchCard from '../models/MatchCardModel';
 import User from '../models/UserModel';
 
-export const finalizeMatch = async (req: AuthRequest, res: Response) => {
+export const finalizeMatch = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const matchId = Number(req.params.id);
     const userId = req.user?.id;
@@ -24,7 +24,7 @@ export const finalizeMatch = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const addGoal = async (req: AuthRequest, res: Response) => {
+export const addGoal = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const matchId = Number(req.params.id);
     const { userId, email } = req.body as { userId?: number; email?: string };
@@ -39,7 +39,7 @@ export const addGoal = async (req: AuthRequest, res: Response) => {
       resolvedUserId = userId;
     } else if (email) {
       const userByEmail = await User.findOne({ where: { email } });
-      if (!userByEmail) { return res.status(400).json({ message: 'Email não encontrado' }); }
+      if (!userByEmail) { res.status(400).json({ message: 'Email não encontrado' }); return; }
       resolvedUserId = (userByEmail as any).id;
     }
     const goal = await MatchGoal.create({ match_id: matchId, user_id: resolvedUserId });
@@ -50,7 +50,7 @@ export const addGoal = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const addCard = async (req: AuthRequest, res: Response) => {
+export const addCard = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const matchId = Number(req.params.id);
     const { userId, email, cardType, minute } = req.body as { userId?: number; email?: string; cardType: 'yellow' | 'red'; minute?: number };
@@ -66,7 +66,7 @@ export const addCard = async (req: AuthRequest, res: Response) => {
       resolvedUserId = userId;
     } else if (email) {
       const userByEmail = await User.findOne({ where: { email } });
-      if (!userByEmail) { return res.status(400).json({ message: 'Email não encontrado' }); }
+      if (!userByEmail) { res.status(400).json({ message: 'Email não encontrado' }); return; }
       resolvedUserId = (userByEmail as any).id;
     }
     const card = await MatchCard.create({ match_id: matchId, user_id: resolvedUserId, card_type: cardType, minute });
@@ -77,7 +77,7 @@ export const addCard = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const listEvents = async (req: AuthRequest, res: Response) => {
+export const listEvents = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const matchId = Number(req.params.id);
     const goals = await MatchGoal.findAll({ where: { match_id: matchId }, order: [['id','ASC']] });
@@ -94,5 +94,45 @@ export const listEvents = async (req: AuthRequest, res: Response) => {
   } catch (err) {
     console.error('Erro ao listar eventos:', err);
     res.status(500).json({ message: 'Erro ao listar eventos' });
+  }
+};
+
+export const deleteGoalEvent = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const matchId = Number(req.params.id);
+    const goalId = Number(req.params.goalId);
+    if (!req.user?.id) { res.status(401).json({ message: 'Não autenticado' }); return; }
+    const match = await Match.findByPk(matchId);
+    if (!match) { res.status(404).json({ message: 'Partida não encontrada' }); return; }
+    const requester = await User.findByPk(req.user.id);
+    const isAdmin = (requester as any)?.userTypeId === 1;
+    if (match.organizerId !== req.user.id && !isAdmin) { res.status(403).json({ message: 'Sem permissão' }); return; }
+    const goal = await MatchGoal.findOne({ where: { id: goalId, match_id: matchId } });
+    if (!goal) { res.status(404).json({ message: 'Gol não encontrado' }); return; }
+    await goal.destroy();
+    res.json({ message: 'Gol removido' });
+  } catch (err) {
+    console.error('Erro ao remover gol:', err);
+    res.status(500).json({ message: 'Erro ao remover gol' });
+  }
+};
+
+export const deleteCardEvent = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const matchId = Number(req.params.id);
+    const cardId = Number(req.params.cardId);
+    if (!req.user?.id) { res.status(401).json({ message: 'Não autenticado' }); return; }
+    const match = await Match.findByPk(matchId);
+    if (!match) { res.status(404).json({ message: 'Partida não encontrada' }); return; }
+    const requester = await User.findByPk(req.user.id);
+    const isAdmin = (requester as any)?.userTypeId === 1;
+    if (match.organizerId !== req.user.id && !isAdmin) { res.status(403).json({ message: 'Sem permissão' }); return; }
+    const card = await MatchCard.findOne({ where: { id: cardId, match_id: matchId } });
+    if (!card) { res.status(404).json({ message: 'Cartão não encontrado' }); return; }
+    await card.destroy();
+    res.json({ message: 'Cartão removido' });
+  } catch (err) {
+    console.error('Erro ao remover cartão:', err);
+    res.status(500).json({ message: 'Erro ao remover cartão' });
   }
 };
