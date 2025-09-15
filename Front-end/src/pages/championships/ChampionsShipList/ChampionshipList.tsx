@@ -11,6 +11,8 @@ interface Championship {
   start_date?: string;
   end_date?: string;
   created_by: number;
+  modalidade?: string;
+  nomequadra?: string;
 }
 
 export default function ChampionshipList() {
@@ -85,6 +87,16 @@ export default function ChampionshipList() {
                     <h2 className="match-title">{champ.name}</h2>
                   </div>
                   <div className="match-info">
+                    {champ.modalidade && (
+                      <div className="info-row">
+                        <span><strong>Modalidade:</strong> {champ.modalidade}</span>
+                      </div>
+                    )}
+                    {champ.nomequadra && (
+                      <div className="info-row">
+                        <span><strong>Quadra:</strong> {champ.nomequadra}</span>
+                      </div>
+                    )}
                     {champ.start_date && (
                       <div className="info-row">
                         <span><strong>Início:</strong> {new Date(champ.start_date).toLocaleDateString()}</span>

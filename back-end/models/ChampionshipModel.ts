@@ -43,6 +43,20 @@ Championship.init({
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  modalidade: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: true,
+    }
+  },
+  nomequadra: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: true,
+    }
+  },
 }, {
   sequelize,
   tableName: 'championships',

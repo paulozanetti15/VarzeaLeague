@@ -11,6 +11,8 @@ const initialState = {
   description: '',
   start_date: '',
   end_date: '',
+  modalidade: '',
+  nomequadra: '',
 };
 
 const ChampionshipForm: React.FC = () => {
@@ -23,7 +25,7 @@ const ChampionshipForm: React.FC = () => {
   const hiddenStartRef = useRef<HTMLInputElement>(null);
   const hiddenEndRef = useRef<HTMLInputElement>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
 
     if (name === 'start_date' || name === 'end_date') {
@@ -71,6 +73,21 @@ const ChampionshipForm: React.FC = () => {
 
       if (form.description && form.description.length > 1000) {
         errors.description = 'Descrição excede 1000 caracteres';
+      }
+
+      // Modalidade obrigatória
+      if (!form.modalidade) {
+        errors.modalidade = 'Selecione a modalidade';
+      }
+
+      // Quadra obrigatória
+      const nomequadraTrim = form.nomequadra.trim();
+      if (!nomequadraTrim) {
+        errors.nomequadra = 'Informe o nome da quadra';
+      } else if (nomequadraTrim.length < 3) {
+        errors.nomequadra = 'Nome muito curto (mín. 3)';
+      } else if (nomequadraTrim.length > 100) {
+        errors.nomequadra = 'Nome muito longo (máx. 100)';
       }
 
       // Datas obrigatórias agora
@@ -126,6 +143,7 @@ const ChampionshipForm: React.FC = () => {
       const formattedData = {
         ...form,
         name: nameTrim,
+        nomequadra: form.nomequadra.trim(),
         start_date: format(parsedStartDate as Date, 'yyyy-MM-dd'),
         end_date: format(parsedEndDate as Date, 'yyyy-MM-dd')
       };
@@ -196,6 +214,41 @@ const ChampionshipForm: React.FC = () => {
               aria-invalid={!!fieldErrors.description}
             />
             {fieldErrors.description && <small style={{ color:'#e53935' }}>{fieldErrors.description}</small>}
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>Modalidade <span className="required-asterisk" aria-hidden="true">*</span></label>
+              <select
+                name="modalidade"
+                value={form.modalidade}
+                onChange={handleChange}
+                required
+                style={fieldErrors.modalidade ? { borderColor: '#e53935' } : undefined}
+                aria-invalid={!!fieldErrors.modalidade}
+              >
+                <option value="">Selecione a modalidade</option>
+                <option value="Fut7">Fut7</option>
+                <option value="Futsal">Futsal</option>
+                <option value="Futebol campo">Futebol campo</option>
+              </select>
+              {fieldErrors.modalidade && <small style={{ color:'#e53935' }}>{fieldErrors.modalidade}</small>}
+            </div>
+
+            <div className="form-group">
+              <label>Nome da Quadra <span className="required-asterisk" aria-hidden="true">*</span></label>
+              <input
+                type="text"
+                name="nomequadra"
+                value={form.nomequadra}
+                onChange={handleChange}
+                placeholder="Ex: Arena Central"
+                required
+                style={fieldErrors.nomequadra ? { borderColor: '#e53935' } : undefined}
+                aria-invalid={!!fieldErrors.nomequadra}
+              />
+              {fieldErrors.nomequadra && <small style={{ color:'#e53935' }}>{fieldErrors.nomequadra}</small>}
+            </div>
           </div>
 
           <div className="form-row">

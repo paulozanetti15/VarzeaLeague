@@ -14,20 +14,34 @@ function asyncHandler(fn: any) {
 }
 
 export const createChampionship = asyncHandler(async (req: Request, res: Response) => {
-  const { name, description, start_date, end_date } = req.body;
+  const { name, description, start_date, end_date, modalidade, nomequadra } = req.body;
+  
   if (!name) {
     return res.status(400).json({ message: 'Nome do campeonato é obrigatório' });
   }
+  
+  if (!modalidade) {
+    return res.status(400).json({ message: 'Modalidade é obrigatória' });
+  }
+  
+  if (!nomequadra) {
+    return res.status(400).json({ message: 'Nome da quadra é obrigatório' });
+  }
+  
   const token = req.headers.authorization?.replace('Bearer ', '');
   const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
   const created_by = decoded.id;
+  
   const championship = await Championship.create({
     name: name.trim(),
     description: description?.trim(),
     start_date,
     end_date,
+    modalidade: modalidade.trim(),
+    nomequadra: nomequadra.trim(),
     created_by
   });
+  
   res.status(201).json(championship);
 });
 
@@ -47,11 +61,35 @@ export const getChampionship = asyncHandler(async (req: Request, res: Response) 
 
 export const updateChampionship = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
+  const { name, description, start_date, end_date, modalidade, nomequadra } = req.body;
+  
   const championship = await Championship.findByPk(id);
   if (!championship) {
     return res.status(404).json({ message: 'Campeonato não encontrado' });
   }
-  await championship.update(req.body);
+  
+  // Validações
+  if (name !== undefined && !name.trim()) {
+    return res.status(400).json({ message: 'Nome do campeonato é obrigatório' });
+  }
+  
+  if (modalidade !== undefined && !modalidade.trim()) {
+    return res.status(400).json({ message: 'Modalidade é obrigatória' });
+  }
+  
+  if (nomequadra !== undefined && !nomequadra.trim()) {
+    return res.status(400).json({ message: 'Nome da quadra é obrigatório' });
+  }
+  
+  const updateData: any = {};
+  if (name !== undefined) updateData.name = name.trim();
+  if (description !== undefined) updateData.description = description?.trim();
+  if (start_date !== undefined) updateData.start_date = start_date;
+  if (end_date !== undefined) updateData.end_date = end_date;
+  if (modalidade !== undefined) updateData.modalidade = modalidade.trim();
+  if (nomequadra !== undefined) updateData.nomequadra = nomequadra.trim();
+  
+  await championship.update(updateData);
   res.json(championship);
 });
 

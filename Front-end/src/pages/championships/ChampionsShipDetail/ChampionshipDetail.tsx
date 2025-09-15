@@ -13,6 +13,8 @@ interface Championship {
   start_date?: string;
   end_date?: string;
   created_by: number;
+  modalidade?: string;
+  nomequadra?: string;
 }
 
 const ChampionshipDetail: React.FC = () => {
@@ -214,6 +216,14 @@ const ChampionshipDetail: React.FC = () => {
           <div className="info-row">
             <span className="info-label">Descrição:</span>
             <span className="info-value">{championship.description || 'Sem descrição'}</span>
+          </div>
+          <div className="info-row">
+            <span className="info-label">Modalidade:</span>
+            <span className="info-value">{championship.modalidade || 'Não especificada'}</span>
+          </div>
+          <div className="info-row">
+            <span className="info-label">Quadra:</span>
+            <span className="info-value">{championship.nomequadra || 'Não especificada'}</span>
           </div>
           <div className="info-row">
             <span className="info-label">Início:</span>
