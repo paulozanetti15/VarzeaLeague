@@ -15,7 +15,7 @@ MatchCard.init({
   },
   user_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true, // opcional
   },
   card_type: {
     type: DataTypes.ENUM('yellow', 'red'),

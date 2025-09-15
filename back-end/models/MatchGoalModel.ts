@@ -15,7 +15,7 @@ MatchGoal.init({
   },
   user_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true, // agora opcional para permitir registro sem jogador
   },
 }, {
   sequelize,

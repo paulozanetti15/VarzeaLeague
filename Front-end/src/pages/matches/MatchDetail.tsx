@@ -157,6 +157,79 @@ const MatchDetail: React.FC = () => {
   const { user } = useAuth();
   const [showEvalModal, setShowEvalModal] = useState(false);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [showEventsModal, setShowEventsModal] = useState(false);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [goals, setGoals] = useState<any[]>([]);
+  const [cards, setCards] = useState<any[]>([]);
+  // Email opcional para associar evento a um atleta
+  const [goalEmail, setGoalEmail] = useState<string>('');
+  const [cardEmail, setCardEmail] = useState<string>('');
+  const [cardType, setCardType] = useState<'yellow'|'red'>('yellow');
+  const [cardMinute, setCardMinute] = useState<number | ''>('');
+
+  const fetchEvents = async () => {
+    if (!id) return;
+    try {
+      setEventsLoading(true);
+      const token = localStorage.getItem('token');
+      const resp = await fetch(`http://localhost:3001/api/matches/${id}/events`, { headers: { Authorization: `Bearer ${token}` }});
+      if (resp.ok) {
+        const data = await resp.json();
+        setGoals(data.goals || []);
+        setCards(data.cards || []);
+      }
+    } catch (e) {
+      console.error('Erro ao buscar eventos', e);
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
+  const handleFinalizeMatch = async () => {
+    if (!id) return;
+    try {
+      const token = localStorage.getItem('token');
+      const resp = await fetch(`http://localhost:3001/api/matches/${id}/finalize`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type':'application/json' }});
+      if (!resp.ok) {
+        const data = await resp.json().catch(()=>({}));
+        toast.error(data.message || 'Erro ao finalizar');
+        return;
+      }
+      toast.success('Partida finalizada');
+      // Atualiza status local
+      setMatch((m: any) => m ? { ...m, status: 'completed' } : m);
+      await fetchEvents();
+      setShowEventsModal(true);
+    } catch (e:any) {
+      toast.error(e.message || 'Falha ao finalizar');
+    }
+  };
+
+  const handleAddGoal = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+  const body: any = {};
+  if (goalEmail.trim()) body.email = goalEmail.trim();
+      const resp = await fetch(`http://localhost:3001/api/matches/${id}/goals`, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(body) });
+      if (!resp.ok) { toast.error('Erro ao adicionar gol'); return; }
+  setGoalEmail('');
+      await fetchEvents();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleAddCard = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+  const payload: any = { cardType, minute: cardMinute === '' ? undefined : Number(cardMinute) };
+  if (cardEmail.trim()) payload.email = cardEmail.trim();
+      const resp = await fetch(`http://localhost:3001/api/matches/${id}/cards`, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(payload) });
+      if (!resp.ok) { toast.error('Erro ao adicionar cartão'); return; }
+  setCardEmail(''); setCardMinute(''); setCardType('yellow');
+      await fetchEvents();
+    } catch (err) { console.error(err); }
+  };
 
   const getTimeInscrito = async (matchId: string) => {
     try {
@@ -273,7 +346,7 @@ const MatchDetail: React.FC = () => {
       });
       if (response.status === 200) {
         toast.success('Partida excluída com sucesso!');
-        navigate('/matches', { state: { filter: 'my' } }); // Redirect to my matches after deletion
+        navigate('/matches', { state: { filter: 'my' } }); // Redirect to my ma
       } else {
         toast.error('Erro ao excluir a partida. Tente novamente.');
       }
@@ -475,7 +548,7 @@ const MatchDetail: React.FC = () => {
                     </Button>
                   </>
                 )}
-                <div className='d-flex gap-2'>
+                <div className='d-flex gap-2 flex-wrap justify-content-center'>
                   <Button
                     variant='primary'
                     title='Avaliar / comentar partida'
@@ -490,6 +563,24 @@ const MatchDetail: React.FC = () => {
                   >
                     Ver Comentários
                   </Button>
+                  {isOrganizer && !isCompleted && (
+                    <Button
+                      variant='warning'
+                      title='Finalizar partida'
+                      onClick={handleFinalizeMatch}
+                    >
+                      Finalizar Partida
+                    </Button>
+                  )}
+                  {isCompleted && (
+                    <Button
+                      variant='outline-warning'
+                      title='Ver / editar eventos (gols e cartões)'
+                      onClick={() => { fetchEvents(); setShowEventsModal(true); }}
+                    >
+                      Eventos da Partida
+                    </Button>
+                  )}
                 </div>
               
             </div>
@@ -571,6 +662,50 @@ const MatchDetail: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button variant="secondary" onClick={() => setShowCommentsModal(false)}>Fechar</Button>
+        </DialogActions>
+      </Dialog>
+      {/* Modal de eventos pós-finalização */}
+      <Dialog
+        open={showEventsModal}
+        onClose={() => setShowEventsModal(false)}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>Eventos da Partida (Gols e Cartões)</DialogTitle>
+        <DialogContent dividers>
+          <div className="events-section">
+            <h4>Registrar Gol</h4>
+            <div className="mb-3 d-flex gap-2 flex-wrap align-items-center">
+              <Button onClick={()=>handleAddGoal()} variant="success">Gol (genérico)</Button>
+              <div className="text-secondary small">(Opcional: email do atleta)</div>
+              <input style={{maxWidth:240}} className="form-control" value={goalEmail} onChange={e=>setGoalEmail(e.target.value)} placeholder="email@exemplo.com (opcional)" />
+              <Button onClick={()=>handleAddGoal()} variant="outline-success" disabled={!goalEmail.trim()}>Gol com Email</Button>
+            </div>
+            <h4>Registrar Cartão</h4>
+            <div className="mb-3 d-flex gap-2 flex-wrap align-items-center">
+              <select className="form-select" style={{maxWidth:130}} value={cardType} onChange={e=>setCardType(e.target.value as any)}>
+                <option value="yellow">Amarelo</option>
+                <option value="red">Vermelho</option>
+              </select>
+              <input style={{maxWidth:110}} className="form-control" type="number" value={cardMinute} onChange={e=>setCardMinute(e.target.value === '' ? '' : Number(e.target.value))} placeholder="Minuto" />
+              <input style={{maxWidth:260}} className="form-control" value={cardEmail} onChange={e=>setCardEmail(e.target.value)} placeholder="email@exemplo.com (opcional)" />
+              <Button onClick={()=>handleAddCard()} variant={cardType==='yellow' ? 'warning':'danger'}>Cartão {cardType==='yellow'?'Amarelo':'Vermelho'}</Button>
+            </div>
+            <hr />
+            <h4>Gols ({goals.length})</h4>
+            <ul className="list-group mb-3">
+              {goals.map(g => <li key={g.id} className="list-group-item bg-transparent text-light">{g.user_id ? `Jogador #${g.user_id}` : 'Gol'}</li>)}
+              {goals.length === 0 && <li className="list-group-item bg-transparent text-secondary">Nenhum gol registrado</li>}
+            </ul>
+            <h4>Cartões ({cards.length})</h4>
+            <ul className="list-group">
+              {cards.map(c => <li key={c.id} className="list-group-item bg-transparent text-light">{c.card_type === 'yellow' ? '🟨' : '🟥'} {c.user_id ? `Jogador #${c.user_id}` : 'Cartão'}{typeof c.minute === 'number' ? ` (${c.minute}')` : ''}</li>)}
+              {cards.length === 0 && <li className="list-group-item bg-transparent text-secondary">Nenhum cartão registrado</li>}
+            </ul>
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="secondary" onClick={() => setShowEventsModal(false)}>Fechar</Button>
         </DialogActions>
       </Dialog>
     </div>

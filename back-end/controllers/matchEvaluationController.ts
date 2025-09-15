@@ -5,12 +5,9 @@ import Match from '../models/MatchModel';
 import MatchTeams from '../models/MatchTeamsModel';
 import TeamUser from '../models/TeamUserModel';
 
-// List evaluations for a match
 export const listMatchEvaluations = async (req: Request, res: Response): Promise<void> => {
   try {
     const matchId = Number(req.params.id);
-    // Algumas bases antigas podem não ter as colunas created_at / updated_at.
-    // Para evitar erro de ORDER BY em coluna inexistente, ordenamos por id (sequencial de criação).
     const evaluations = await MatchEvaluation.findAll({ where: { match_id: matchId }, order: [['id','DESC']] });
     res.json(evaluations);
   } catch (err: any) {
@@ -19,7 +16,6 @@ export const listMatchEvaluations = async (req: Request, res: Response): Promise
   }
 };
 
-// Create or update evaluation
 export const upsertMatchEvaluation = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const matchId = Number(req.params.id);
@@ -30,9 +26,6 @@ export const upsertMatchEvaluation = async (req: AuthRequest, res: Response): Pr
 
   const match = await Match.findByPk(matchId);
   if (!match) { res.status(404).json({ message: 'Partida não encontrada' }); return; }
-  // Removida a restrição de somente partidas concluídas.
-
-    // Participation check
     let participated = match.organizerId === userId;
     if (!participated) {
       const matchTeams = await MatchTeams.findAll({ where: { matchId }, attributes: ['teamId'] });
@@ -59,7 +52,6 @@ export const upsertMatchEvaluation = async (req: AuthRequest, res: Response): Pr
   }
 };
 
-// Summary
 export const getMatchEvaluationSummary = async (req: Request, res: Response): Promise<void> => {
   try {
     const matchId = Number(req.params.id);

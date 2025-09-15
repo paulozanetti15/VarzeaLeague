@@ -4,12 +4,11 @@ import {joinMatchByTeam,getMatchTeams, deleteTeamMatch,getTeamsAvailable, checkT
 import { createMatch, listMatches, getMatch, deleteMatch, updateMatch,getMatchesByTeam} from '../controllers/matchController';
 import { listMatchEvaluations, upsertMatchEvaluation, getMatchEvaluationSummary } from '../controllers/matchEvaluationController';
 import {busarPunicaoPartidaAmistosa,alterarPunicaoPartidaAmistosa,deletarPunicaoPartidaAmistosa, inserirPunicaoPartidaAmistosa} from '../controllers/PunicaoController';
+import { finalizeMatch, addGoal, addCard, listEvents } from '../controllers/matchEventsController';
 const router = express.Router();
 
-// Aplicando middleware de autenticação antes dos controllers
 router.get('/:id/available', authenticateToken, getTeamsAvailable);
 router.post('/', authenticateToken, createMatch);
-// Public read routes so listings and details are accessible to anonymous users
 router.get('/', listMatches);
 router.get('/:id', getMatch);
 router.delete('/:id', authenticateToken, deleteMatch);
@@ -20,10 +19,14 @@ router.get('/:id/check-teams-rule-compliance', authenticateToken, checkTeamsRule
 router.put('/:id', authenticateToken, updateMatch);
 router.get('/teams/:id', authenticateToken, getMatchesByTeam);
 
-// Avaliações da partida
-router.get('/:id/evaluations', listMatchEvaluations); // pública
-router.get('/:id/evaluations/summary', getMatchEvaluationSummary); // pública
-router.post('/:id/evaluations', authenticateToken, upsertMatchEvaluation); // exige auth
+router.get('/:id/evaluations', listMatchEvaluations); 
+router.get('/:id/evaluations/summary', getMatchEvaluationSummary); 
+router.post('/:id/evaluations', authenticateToken, upsertMatchEvaluation); 
+
+router.post('/:id/finalize', authenticateToken, finalizeMatch);
+router.post('/:id/goals', authenticateToken, addGoal);
+router.post('/:id/cards', authenticateToken, addCard);
+router.get('/:id/events', authenticateToken, listEvents);
 
 router.get('/:idAmistosaPartida/punicao',authenticateToken,busarPunicaoPartidaAmistosa );
 router.post('/:idAmistosaPartida/punicao',authenticateToken,inserirPunicaoPartidaAmistosa );
