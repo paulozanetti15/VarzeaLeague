@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { api } from '../../services/api';
-import trophy from '../../assets/championship-trophy.svg';
-import './ChampionshipForm.css';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { api } from '../../../services/api';
+import trophy from '../../../assets/championship-trophy.svg';
+import '../ChampionshipForm.css';
 import { format, parse, isValid, isAfter } from 'date-fns';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
@@ -15,15 +15,39 @@ const initialState = {
   nomequadra: '',
 };
 
-const ChampionshipForm: React.FC = () => {
+const ChampionshipEdit: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [form, setForm] = useState(initialState);
   const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{[k:string]: string}>({});
-  const navigate = useNavigate();
   const hiddenStartRef = useRef<HTMLInputElement>(null);
   const hiddenEndRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const fetchChampionship = async () => {
+      try {
+        const data = await api.championships.getById(Number(id));
+        setForm({
+          name: data.name,
+          description: data.description || '',
+          start_date: data.start_date ? format(new Date(data.start_date), 'dd/MM/yyyy') : '',
+          end_date: data.end_date ? format(new Date(data.end_date), 'dd/MM/yyyy') : '',
+          modalidade: data.modalidade || '',
+          nomequadra: data.nomequadra || '',
+        });
+      } catch (err: any) {
+        setError(err.message || 'Erro ao carregar campeonato');
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchChampionship();
+  }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -90,13 +114,16 @@ const ChampionshipForm: React.FC = () => {
         errors.nomequadra = 'Nome muito longo (máx. 100)';
       }
 
-      // Datas: validações
-      if (!form.start_date) errors.start_date = 'Informe a data de início';
-      if (!form.end_date) errors.end_date = 'Informe a data de término';
+      // Datas obrigatórias
+      if (!form.start_date) {
+        errors.start_date = 'Informe a data de início';
+      }
+      if (!form.end_date) {
+        errors.end_date = 'Informe a data de término';
+      }
 
       let parsedStartDate: Date | null = null;
       let parsedEndDate: Date | null = null;
-
       if (form.start_date) {
         const p = parse(form.start_date, 'dd/MM/yyyy', new Date());
         if (!isValid(p)) {
@@ -114,20 +141,10 @@ const ChampionshipForm: React.FC = () => {
         }
       }
 
-      // Normalizar para comparar (sem hora)
-      const normalizeDay = (d: Date) => { const c = new Date(d); c.setHours(0,0,0,0); return c; };
-      const today = normalizeDay(new Date());
-      if (parsedStartDate) {
-        const ns = normalizeDay(parsedStartDate);
-        if (ns < today) {
-          errors.start_date = 'Data de início não pode ser no passado';
-        }
-      }
+      // Regras adicionais: término > início
       if (parsedStartDate && parsedEndDate) {
-        const ne = normalizeDay(parsedEndDate);
-        const ns = normalizeDay(parsedStartDate);
-        if (ne <= ns) {
-          errors.end_date = 'Término deve ser depois do início';
+        if (!isAfter(parsedEndDate, parsedStartDate)) {
+          errors.end_date = 'Término deve ser após o início';
         }
       }
 
@@ -142,16 +159,16 @@ const ChampionshipForm: React.FC = () => {
       const formattedData = {
         ...form,
         name: nameTrim,
-        nomequadra: form.nomequadra.trim(),
+        nomequadra: nomequadraTrim,
         start_date: format(parsedStartDate as Date, 'yyyy-MM-dd'),
         end_date: format(parsedEndDate as Date, 'yyyy-MM-dd')
       };
 
-      await api.championships.create(formattedData);
-      setSuccess('Campeonato criado com sucesso!');
-      setTimeout(() => navigate('/championships'), 1200);
+      await api.championships.update(Number(id), formattedData);
+      setSuccess('Campeonato atualizado com sucesso!');
+      setTimeout(() => navigate(`/championships/${id}`), 1200);
     } catch (err: any) {
-      setError(err.message || 'Erro ao criar campeonato');
+      setError(err.message || 'Erro ao atualizar campeonato');
     } finally {
       setLoading(false);
     }
@@ -176,14 +193,27 @@ const ChampionshipForm: React.FC = () => {
     setForm(prev => ({ ...prev, [which === 'start' ? 'start_date' : 'end_date']: br }));
   };
 
+  if (loadingData) {
+    return (
+      <div className="championship-form-bg">
+        <div className="championship-form-container">
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Carregando campeonato...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="championship-form-bg">
       
       <div className="championship-form-container">
         <div className="championship-form-header">
           <img src={trophy} alt="Troféu" className="championship-form-trophy" />
-          <h2>Cadastrar Campeonato</h2>
-          <p className="championship-form-subtitle">Preencha os dados para criar um campeonato incrível!</p>
+          <h2>Editar Campeonato</h2>
+          <p className="championship-form-subtitle">Atualize os dados do campeonato</p>
         </div>
 
         <form className="championship-form" onSubmit={handleSubmit}>
@@ -216,14 +246,14 @@ const ChampionshipForm: React.FC = () => {
           </div>
 
           <div className="form-row">
-            <div className="form-group styled-select-wrapper">
+            <div className="form-group">
               <label>Modalidade <span className="required-asterisk" aria-hidden="true">*</span></label>
               <select
                 name="modalidade"
                 value={form.modalidade}
                 onChange={handleChange}
                 required
-                className={`styled-select ${fieldErrors.modalidade ? 'error-select' : ''}`}
+                style={fieldErrors.modalidade ? { borderColor: '#e53935' } : undefined}
                 aria-invalid={!!fieldErrors.modalidade}
               >
                 <option value="">Selecione a modalidade</option>
@@ -361,7 +391,7 @@ const ChampionshipForm: React.FC = () => {
             className="form-btn"
             disabled={loading}
           >
-            {loading ? 'Salvando...' : 'Cadastrar Campeonato'}
+            {loading ? 'Salvando...' : 'Atualizar Campeonato'}
           </button>
         </form>
       </div>
@@ -369,4 +399,4 @@ const ChampionshipForm: React.FC = () => {
   );
 };
 
-export default ChampionshipForm;
+export default ChampionshipEdit;

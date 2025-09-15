@@ -4,7 +4,7 @@ import { api } from '../../services/api';
 import trophy from '../../assets/championship-trophy.svg';
 import './ChampionshipForm.css';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import { parse, format, isValid, isAfter } from 'date-fns';
+import { parse, isValid, isAfter } from 'date-fns';
 
 const ChampionshipEditForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +13,8 @@ const ChampionshipEditForm: React.FC = () => {
     description: '',
     start_date: '',
     end_date: '',
+    modalidade: '',
+    nomequadra: '',
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -24,18 +26,37 @@ const ChampionshipEditForm: React.FC = () => {
   const hiddenStartRef = useRef<HTMLInputElement>(null);
   const hiddenEndRef = useRef<HTMLInputElement>(null);
 
-  const isoToBR = (iso?: string) => {
-    if (!iso) return '';
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return '';
-    return format(d, 'dd/MM/yyyy');
+  const isoToBR = (raw: string): string => {
+    if (!raw) return '';
+    // Accept formats: "YYYY-MM-DD", "YYYY-MM-DDTHH:MM:SS", "YYYY-MM-DD HH:MM:SS"
+    let datePart = raw.trim();
+    if (datePart.includes('T')) {
+      datePart = datePart.split('T')[0];
+    } else if (datePart.includes(' ')) {
+      // e.g. 2025-09-17 00:00:00
+      datePart = datePart.split(' ')[0];
+    } else if (datePart.includes('/')) {
+      // Already in some unexpected format like '17 00:00:00/09/2025'
+      // Attempt to sanitize by removing time fragments between day and month
+      // Pattern: DD (space) HH:MM:SS/MM/YYYY -> remove everything after first space until first '/'
+      const weirdMatch = datePart.match(/^(\d{1,2})\s+\d{2}:\d{2}:\d{2}\/(\d{2})\/(\d{4})$/);
+      if (weirdMatch) {
+        const [, d, m, y] = weirdMatch;
+        return `${d.padStart(2,'0')}/${m}/${y}`;
+      }
+      return raw; // fallback pass-through
+    }
+    const parts = datePart.split('-');
+    if (parts.length !== 3) return '';
+    const [y, m, d] = parts;
+    if (!y || !m || !d) return '';
+    return `${d.padStart(2,'0')}/${m.padStart(2,'0')}/${y}`;
   };
 
-  const brToISO = (br: string) => {
+  const brToISO = (br: string): string => {
     if (!br) return '';
-    const parsed = parse(br, 'dd/MM/yyyy', new Date());
-    if (!isValid(parsed)) return '';
-    return format(parsed, 'yyyy-MM-dd');
+    const [d, m, y] = br.split('/');
+    return `${y}-${m}-${d}`;
   };
 
   const openPicker = (which: 'start' | 'end') => {
@@ -66,6 +87,8 @@ const ChampionshipEditForm: React.FC = () => {
           description: data.description || '',
           start_date: isoToBR(data.start_date),
           end_date: isoToBR(data.end_date),
+          modalidade: data.modalidade || '',
+          nomequadra: data.nomequadra || '',
         });
         setLoading(false);
       } catch (err: any) {
@@ -79,7 +102,7 @@ const ChampionshipEditForm: React.FC = () => {
     }
   }, [id]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === 'start_date' || name === 'end_date') {
       const dateRegex = /^(\d{0,2})\/(\d{0,2})\/(\d{0,4})$/;
@@ -105,35 +128,69 @@ const ChampionshipEditForm: React.FC = () => {
     setError('');
     setSuccess('');
     setFieldErrors({});
+
     try {
       const errors: {[k:string]: string} = {};
       const nameTrim = form.name.trim();
       if (!nameTrim) {
-        errors.name = 'Informe o nome';
+        errors.name = 'Informe o nome do campeonato';
       } else if (nameTrim.length < 3) {
         errors.name = 'Nome muito curto (mín. 3)';
       } else if (nameTrim.length > 100) {
         errors.name = 'Nome muito longo (máx. 100)';
       }
+
       if (form.description && form.description.length > 1000) {
         errors.description = 'Descrição excede 1000 caracteres';
       }
+
+      // Modalidade obrigatória
+      if (!form.modalidade) {
+        errors.modalidade = 'Selecione a modalidade';
+      }
+
+      // Quadra obrigatória
+      const nomequadraTrim = form.nomequadra.trim();
+      if (!nomequadraTrim) {
+        errors.nomequadra = 'Informe o nome da quadra';
+      } else if (nomequadraTrim.length < 3) {
+        errors.nomequadra = 'Nome muito curto (mín. 3)';
+      } else if (nomequadraTrim.length > 100) {
+        errors.nomequadra = 'Nome muito longo (máx. 100)';
+      }
+
       if (!form.start_date) errors.start_date = 'Informe a data de início';
       if (!form.end_date) errors.end_date = 'Informe a data de término';
+
       let parsedStart: Date | null = null;
       let parsedEnd: Date | null = null;
       if (form.start_date) {
         const p = parse(form.start_date, 'dd/MM/yyyy', new Date());
-        if (!isValid(p)) errors.start_date = 'Data de início inválida'; else parsedStart = p;
+        if (!isValid(p)) {
+          errors.start_date = 'Data de início inválida';
+        } else { parsedStart = p; }
       }
       if (form.end_date) {
         const p = parse(form.end_date, 'dd/MM/yyyy', new Date());
-        if (!isValid(p)) errors.end_date = 'Data de término inválida'; else parsedEnd = p;
+        if (!isValid(p)) {
+          errors.end_date = 'Data de término inválida';
+        } else { parsedEnd = p; }
       }
-      const today = new Date(); today.setHours(0,0,0,0);
-      if (parsedStart) { const s0 = new Date(parsedStart); s0.setHours(0,0,0,0); if (s0 < today) errors.start_date = 'Início deve ser hoje ou futuro'; }
-      if (parsedStart && parsedEnd && !isAfter(parsedEnd, parsedStart)) {
-        errors.end_date = 'Término deve ser após o início';
+
+      const normalizeDay = (d: Date) => { const c = new Date(d); c.setHours(0,0,0,0); return c; };
+      const today = normalizeDay(new Date());
+      if (parsedStart) {
+        const ns = normalizeDay(parsedStart);
+        if (ns < today) {
+          errors.start_date = 'Data de início não pode ser no passado';
+        }
+      }
+      if (parsedStart && parsedEnd) {
+        const ns = normalizeDay(parsedStart);
+        const ne = normalizeDay(parsedEnd);
+        if (ne <= ns) {
+          errors.end_date = 'Término deve ser depois do início';
+        }
       }
       if (Object.keys(errors).length) {
         setFieldErrors(errors);
@@ -144,6 +201,7 @@ const ChampionshipEditForm: React.FC = () => {
       const payload = {
         ...form,
         name: nameTrim,
+        nomequadra: nomequadraTrim,
         start_date: brToISO(form.start_date),
         end_date: brToISO(form.end_date)
       };
@@ -180,12 +238,49 @@ const ChampionshipEditForm: React.FC = () => {
           <label>Nome <span className="required-asterisk" aria-hidden="true">*</span></label>
           <input name="name" value={form.name} onChange={handleChange} required placeholder="Nome do campeonato" style={fieldErrors.name ? { borderColor:'#e53935' } : undefined} aria-invalid={!!fieldErrors.name} />
           {fieldErrors.name && <small style={{ color:'#e53935' }}>{fieldErrors.name}</small>}
+          
           <label>Descrição</label>
           <textarea name="description" value={form.description} onChange={handleChange} placeholder="Descrição, regras, premiação..." style={fieldErrors.description ? { borderColor:'#e53935' } : undefined} aria-invalid={!!fieldErrors.description} />
           {fieldErrors.description && <small style={{ color:'#e53935' }}>{fieldErrors.description}</small>}
-          <div className="form-row">
-            <div className="form-group">
-              <label>Data de Início <span className="required-asterisk" aria-hidden="true">*</span></label>
+
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ flex: 1 }}>
+              <label>Modalidade <span className="required-asterisk" aria-hidden="true">*</span></label>
+              <select
+                name="modalidade"
+                value={form.modalidade}
+                onChange={handleChange}
+                required
+                className={`styled-select ${fieldErrors.modalidade ? 'error-select' : ''}`}
+                aria-invalid={!!fieldErrors.modalidade}
+              >
+                <option value="">Selecione a modalidade</option>
+                <option value="Fut7">Fut7</option>
+                <option value="Futsal">Futsal</option>
+                <option value="Futebol campo">Futebol campo</option>
+              </select>
+              {fieldErrors.modalidade && <small style={{ color:'#e53935' }}>{fieldErrors.modalidade}</small>}
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <label>Nome da Quadra <span className="required-asterisk" aria-hidden="true">*</span></label>
+              <input
+                type="text"
+                name="nomequadra"
+                value={form.nomequadra}
+                onChange={handleChange}
+                placeholder="Ex: Arena Central"
+                required
+                style={fieldErrors.nomequadra ? { borderColor: '#e53935' } : undefined}
+                aria-invalid={!!fieldErrors.nomequadra}
+              />
+              {fieldErrors.nomequadra && <small style={{ color:'#e53935' }}>{fieldErrors.nomequadra}</small>}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.8rem', marginBottom: '1rem' }}>
+            <div style={{ flex: 1 }}>
+              <label>Data Início <span className="required-asterisk" aria-hidden="true">*</span></label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ position: 'relative', flex: 1 }}>
                   <input
@@ -195,10 +290,10 @@ const ChampionshipEditForm: React.FC = () => {
                     onChange={handleChange}
                     placeholder="DD/MM/AAAA"
                     maxLength={10}
-                    onFocus={() => openPicker('start')}
                     className="date-input"
+                    onFocus={() => openPicker('start')}
                     required
-                    style={fieldErrors.start_date ? { borderColor:'#e53935' } : undefined}
+                    style={fieldErrors.start_date ? { borderColor: '#e53935' } : undefined}
                     aria-invalid={!!fieldErrors.start_date}
                   />
                   <input
@@ -233,8 +328,8 @@ const ChampionshipEditForm: React.FC = () => {
                 </button>
               </div>
             </div>
-            <div className="form-group">
-              <label>Data de Término <span className="required-asterisk" aria-hidden="true">*</span></label>
+            <div style={{ flex: 1 }}>
+              <label>Data Término <span className="required-asterisk" aria-hidden="true">*</span></label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ position: 'relative', flex: 1 }}>
                   <input
@@ -244,10 +339,10 @@ const ChampionshipEditForm: React.FC = () => {
                     onChange={handleChange}
                     placeholder="DD/MM/AAAA"
                     maxLength={10}
-                    onFocus={() => openPicker('end')}
                     className="date-input"
+                    onFocus={() => openPicker('end')}
                     required
-                    style={fieldErrors.end_date ? { borderColor:'#e53935' } : undefined}
+                    style={fieldErrors.end_date ? { borderColor: '#e53935' } : undefined}
                     aria-invalid={!!fieldErrors.end_date}
                   />
                   <input
@@ -283,6 +378,7 @@ const ChampionshipEditForm: React.FC = () => {
               </div>
             </div>
           </div>
+
           {fieldErrors.start_date && <small style={{ color:'#e53935' }}>{fieldErrors.start_date}</small>}
           {fieldErrors.end_date && <small style={{ color:'#e53935' }}>{fieldErrors.end_date}</small>}
           {error && <div className="form-error">{error}</div>}
