@@ -30,6 +30,7 @@ import EditMatch from './pages/matches/EditMatch'
 import { Box, CssBaseline } from '@mui/material'
 import SystemOverview from './components/dashboard/SystemOverview'
 import CalendarioPage from './components/calendario/calendárioPage'
+import HistoricoPage from './pages/Historico/HistoricoPage'
 
 // Componente simples para loading
   const Loading = () => (
@@ -326,6 +327,21 @@ import CalendarioPage from './components/calendario/calendárioPage'
               </RoleBasedRoute>
             </PrivateRoute>
           } />
+           <Route path="/historico" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_TIMES]}
+                redirectTo="/"
+              >
+                <PageTransition>
+                  <HistoricoPage/>
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
+
 
           <Route path="/championships/:id/edit" element={
             <PrivateRoute isLoggedIn={isLoggedIn}>
