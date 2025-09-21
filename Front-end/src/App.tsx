@@ -30,6 +30,7 @@ import EditMatch from './pages/matches/EditMatch'
 import { Box, CssBaseline } from '@mui/material'
 import SystemOverview from './components/dashboard/SystemOverview'
 import CalendarioPage from './components/calendario/calendárioPage'
+import RankingPlayers from './pages/ranking/RankingPlayers'
 
 // Componente simples para loading
   const Loading = () => (
@@ -337,6 +338,21 @@ import CalendarioPage from './components/calendario/calendárioPage'
               >
                 <PageTransition>
                   <ChampionshipEditForm />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
+
+          <Route path="/ranking/jogadores" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
+                redirectTo="/"
+              >
+                <PageTransition>
+                  <RankingPlayers />
                 </PageTransition>
               </RoleBasedRoute>
             </PrivateRoute>

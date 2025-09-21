@@ -22,6 +22,7 @@ import {
   SportsSoccer,
   People,
   EmojiEvents,
+  Leaderboard,
   Dashboard,
   Logout,
   Person,
@@ -87,21 +88,25 @@ const Navbar = () => {
           { name: 'Times', path: '/teams', icon: <People /> },
           { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
           { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
+          { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
         ];
       case 2: // Admin Eventos
         return [
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
           { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
           { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
+          { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
         ];
       case 3: // Admin Times
         return [
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
           { name: 'Times', path: '/teams', icon: <People /> },
+          { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
         ];
       case 4: // Usuário Comum
         return [
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
+          { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
         ];
       default:
         return base;
