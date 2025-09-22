@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +17,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import WcIcon from '@mui/icons-material/Wc';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { HistoricoContext } from '../../Context/HistoricoContext';
 import './TeamList.css';
 
 interface Player {
@@ -28,7 +29,7 @@ interface Player {
 }
 
 interface Team {
-  id: string;
+  id: number;
   name: string;
   description: string;
   playerCount: number;
@@ -52,10 +53,12 @@ const TeamList = () => {
   const [loadingPlayers, setLoadingPlayers] = useState<{ [key: string]: boolean }>({});
   const [teamPlayers, setTeamPlayers] = useState<{ [key: string]: Player[] }>({});
   const navigate = useNavigate();
-
+  const historico = useContext(HistoricoContext);
+  
   useEffect(() => {
     fetchTeams();
   }, []);
+ 
 
   const fetchTeams = async () => {
     try {
@@ -79,7 +82,7 @@ const TeamList = () => {
       setLoading(false);
     }
   };
-
+  
   const fetchTeamPlayers = async (teamId: string) => {
     try {
       setLoadingPlayers(prev => ({ ...prev, [teamId]: true }));
@@ -113,20 +116,12 @@ const TeamList = () => {
     
     setExpandedTeam(expandedTeam === teamId ? null : teamId);
   };
-
+   useEffect(()=>{
+    teams.slice(0, 1).map((team)=>{
+      historico?.fetchHistorico(Number(team.id))
+    }) 
+  },[teams])
   const hasTeam = teams.length > 0;
-
-  // Mock de estatísticas (poderia futuramente vir da API)
-  const buildMockStats = (team: Team) => {
-    // Usa alguns campos existentes como base para gerar números coerentes
-    const matches = team.matchCount || Math.floor(Math.random() * 12) + 1;
-    const championships = Math.floor(matches / 4);
-    const wins = Math.max(0, Math.floor(matches * 0.5 + (Math.random() * 0.3 - 0.15) * matches));
-    const losses = Math.max(0, matches - wins - Math.floor(matches * 0.1)); // assume uns empates implícitos
-    const winRate = matches > 0 ? ((wins / matches) * 100).toFixed(1) : '0.0';
-    return { matches, championships, wins, losses, winRate };
-  };
-
   return (
     <div className="teams-container">
 
@@ -319,47 +314,50 @@ const TeamList = () => {
                       )}
                     </AnimatePresence>
 
-                    {/* Estatísticas do time */}
-                    {(() => {
-                      const stats = buildMockStats(team);
-                      return (
-                        <div className="team-stats-wrapper">
-                          <h3 className="team-section-title" style={{ marginTop: '1.4rem' }}>
-                            <BarChartIcon style={{ marginRight: 8, color: team.primaryColor || '#29b6f6' }} />
-                            Estatísticas do Time (mock)
-                          </h3>
-                          <div className="team-stats-grid">
-                            <div className="team-stat-card" title="Partidas disputadas">
-                              <SportsIcon className="stat-icon" />
-                              <div className="stat-value">{stats.matches}</div>
-                              <div className="stat-label">Partidas</div>
-                            </div>
-                            <div className="team-stat-card" title="Campeonatos inscritos">
-                              <MilitaryTechIcon className="stat-icon" />
-                              <div className="stat-value">{stats.championships}</div>
-                              <div className="stat-label">Campeonatos</div>
-                            </div>
-                            <div className="team-stat-card" title="Vitórias">
-                              <TrendingUpIcon className="stat-icon" />
-                              <div className="stat-value" style={{ color: '#4caf50' }}>{stats.wins}</div>
-                              <div className="stat-label">Vitórias</div>
-                            </div>
-                            <div className="team-stat-card" title="Derrotas">
-                              <WhatshotIcon className="stat-icon" />
-                              <div className="stat-value" style={{ color: '#ef5350' }}>{stats.losses}</div>
-                              <div className="stat-label">Derrotas</div>
-                            </div>
-                            <div className="team-stat-card wide" title="% de aproveitamento (vitórias/partidas)">
-                              <TrendingUpIcon className="stat-icon" />
-                              <div className="stat-value">{stats.winRate}%</div>
-                              <div className="stat-label">Aproveitamento</div>
-                            </div>
-                          </div>
+                    <div className="team-stats-wrapper">
+                      <h3 className="team-section-title" style={{ marginTop: '1.4rem' }}>
+                        <BarChartIcon style={{ marginRight: 8, color: team.primaryColor || '#29b6f6' }} />
+                        Estatísticas do Time 
+                      </h3>
+                      <div className="team-stats-grid"onClick={()=>window.location.href="/historico"}>
+                        <div className="team-stat-card" title="Partidas disputadas">
+                          <SportsIcon className="stat-icon" />
+                          <div className="stat-value">{historico?.amistosos}</div>
+                          <div className="stat-label">Amistosos participados</div>
                         </div>
-                      );
-                    })()}
-                    
-
+                        <div className="team-stat-card" onClick={()=>window.location.href="/historico"} title="Campeonatos inscritos">
+                          <MilitaryTechIcon className="stat-icon" />
+                          <div className="stat-value">{historico?.campeonatos}</div>
+                          <div className="stat-label">Campeonatos Participados</div>
+                        </div>
+                        <div className="team-stat-card" title="Vitórias" onClick={()=>window.location.href="/historico"}>
+                          <TrendingUpIcon className="stat-icon" />
+                          <div className="stat-value" style={{ color: '#4caf50' }}>{historico?.vitoriasGeral}</div>
+                          <div className="stat-label">Vitórias</div>
+                        </div>
+                        <div className="team-stat-card" onClick={()=>window.location.href="/historico"} title="Derrotas">
+                          <WhatshotIcon className="stat-icon" />
+                          <div className="stat-value" style={{ color: '#ef5350' }}>{historico?.derrotasGeral}</div>
+                          <div className="stat-label">Derrotas</div>
+                        </div>
+                        <div className="team-stat-card" onClick={()=>window.location.href="/historico"} title="Derrotas">
+                          <WhatshotIcon className="stat-icon" />
+                          <div className="stat-value" style={{ color: '#f0eaea65' }}>{historico?.empatesGeral}</div>
+                          <div className="stat-label">Empates</div>
+                        </div>
+                        <div className="team-stat-card wide" onClick={()=>window.location.href="/historico"} title="% de aproveitamento (vitórias/partidas)">
+                          <TrendingUpIcon className="stat-icon" />
+                          <div className="stat-value">{historico?.aproveitamentoCampeonatos}%</div>
+                          <div className="stat-label">Aproveitamento em Campeonatos</div>
+                        </div>
+                        <div className="team-stat-card wide" onClick={()=>window.location.href="/historico"} title="% de aproveitamento (vitórias/partidas)">
+                          <TrendingUpIcon className="stat-icon" />
+                          <div className="stat-value">{historico?.aproveitamentoAmistosos}%</div>
+                          <div className="stat-label">Desempenho em amistosos</div>
+                        </div>
+                      </div>
+                    </div>
+    
                     <button
                       className="edit-team-btn"
                       onClick={() => navigate(`/teams/edit/${team.id}`)}
