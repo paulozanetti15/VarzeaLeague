@@ -23,7 +23,9 @@ if (typeof document !== 'undefined' && !document.getElementById(shimmerStyleId))
 }
 
 interface PlayerRankRow {
-  userId: number;
+  type: 'user' | 'player';
+  userId: number | null;
+  playerId: number | null;
   nome: string;
   time?: string | null;
   gols: number;
@@ -51,7 +53,21 @@ const RankingPlayers: React.FC = () => {
         return;
       }
       const json = await resp.json();
-      setData(json.ranking || []);
+      // Normalizar: se backend antigo, adaptar
+      const ranking = (json.ranking || []).map((r: any) => ({
+        type: r.type || (r.playerId ? 'player' : 'user'),
+        userId: typeof r.userId === 'number' ? r.userId : (r.userId === null ? null : (r.userId ? Number(r.userId) : null)),
+        playerId: typeof r.playerId === 'number' ? r.playerId : (r.playerId ? Number(r.playerId) : null),
+        nome: r.nome,
+        time: r.time,
+        gols: r.gols || 0,
+        amarelos: r.amarelos || 0,
+        vermelhos: r.vermelhos || 0,
+        mediaRating: r.mediaRating || 0,
+        avaliacoes: r.avaliacoes || 0,
+        score: r.score || 0
+      }));
+      setData(ranking);
     } catch (e) {
       console.error(e);
       toast.error('Erro inesperado');
@@ -161,14 +177,14 @@ const RankingPlayers: React.FC = () => {
               const pos = idx + 1;
               const highlight = pos === 1 ? 'rgba(255,215,0,0.18)' : pos === 2 ? 'rgba(192,192,192,0.18)' : pos === 3 ? 'rgba(205,127,50,0.18)' : 'transparent';
               return (
-                <tr key={row.userId} style={{ background: highlight }}>
+                <tr key={(row.type==='player' ? 'p-' + row.playerId : 'u-' + row.userId)} style={{ background: highlight }}>
                   <td className="fw-bold">
                     {pos === 1 && '🥇'}
                     {pos === 2 && '🥈'}
                     {pos === 3 && '🥉'}
                     {pos > 3 && pos}
                   </td>
-                  <td>{row.nome}</td>
+                  <td>{row.nome} {row.type==='player' && <small className="text-info ms-1">(Player)</small>}</td>
                   <td>{row.time || <span className="text-muted">-</span>}</td>
                   <td><Badge bg="success">{row.gols}</Badge></td>
                   <td><Badge bg="warning" text="dark">{row.amarelos}</Badge></td>
