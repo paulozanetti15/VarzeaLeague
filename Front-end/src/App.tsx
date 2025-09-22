@@ -29,8 +29,9 @@ import Navbar from './components/Navbar'
 import EditMatch from './pages/matches/EditMatch'
 import { Box, CssBaseline } from '@mui/material'
 import SystemOverview from './components/dashboard/SystemOverview'
-import CalendarioPage from './components/calendario/calendárioPage'
+import CalendarioPage from './pages/calendario/calendárioPage'
 import HistoricoPage from './pages/Historico/HistoricoPage'
+import { HistoricoProvider } from '../src/Context/HistoricoContext';
 
 // Componente simples para loading
   const Loading = () => (
@@ -327,17 +328,10 @@ import HistoricoPage from './pages/Historico/HistoricoPage'
               </RoleBasedRoute>
             </PrivateRoute>
           } />
-           <Route path="/historico" element={
+          <Route path="/historico" element={
             <PrivateRoute isLoggedIn={isLoggedIn}>
-              <RoleBasedRoute 
-                isLoggedIn={isLoggedIn} 
-                userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_TIMES]}
-                redirectTo="/"
-              >
-                <PageTransition>
-                  <HistoricoPage/>
-                </PageTransition>
+              <RoleBasedRoute isLoggedIn={isLoggedIn} userRole={user?.userTypeId} allowedRoles={[USER_ROLES.ADMIN_TIMES]} redirectTo="/">
+                  <PageTransition><HistoricoPage /></PageTransition>
               </RoleBasedRoute>
             </PrivateRoute>
           } />
@@ -409,7 +403,10 @@ import HistoricoPage from './pages/Historico/HistoricoPage'
 function App() {
   return (
     <BrowserRouter>
+     <HistoricoProvider>
       <AppContent />
+     </HistoricoProvider>
+      
     </BrowserRouter>
   );
 }
