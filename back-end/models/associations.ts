@@ -12,7 +12,9 @@ import MatchEvaluation from './MatchEvaluationModel';
 import Championship from './ChampionshipModel';
 import Player from './PlayerModel';
 import MatchTeams from './MatchTeamsModel';
-import PunicaoAmitosoMatch from './PunicaoAmitosoMatchModel';
+import MatchChampionship from './MatchChampionshipModel';
+import MatchChampionshpReport from './MatchReportChampionshipModel';
+
 
 // User <-> Match associations
 export function associateModels() {
@@ -98,7 +100,15 @@ export function associateModels() {
   // Championship
   Championship.belongsTo(User, { foreignKey: 'createdBy' });
   User.hasMany(Championship, { foreignKey: 'createdBy' });
-  MatchTeams.belongsTo(Match,{foreignKey:"matchId",as:"match"})
-  MatchTeams.belongsTo(Team,{foreignKey:"teamId",as:"team"})
+  MatchTeams.belongsTo(Match,{foreignKey:"matchId",as:"match"});
+  MatchTeams.belongsTo(Team,{foreignKey:"teamId",as:"team"});
+  MatchReport.belongsTo(Match,{foreignKey:"match_id",as:"match"});
+  MatchReport.belongsTo(Team,{foreignKey:"team_home",as:"teamHome"});
+  MatchReport.belongsTo(Team,{foreignKey:"team_away",as:"teamAway"});
+  MatchChampionship.belongsTo(Championship,{foreignKey:"championship_id",as:"championship"});
+  MatchChampionshpReport.belongsTo(MatchChampionship,{foreignKey:"match_id",as:"match"});
+  MatchChampionshpReport.belongsTo(Team,{foreignKey:"team_home",as:"teamHome"});
+  MatchChampionshpReport.belongsTo(Team,{foreignKey:"team_away",as:"teamAway"});
+
 
 }
