@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Header } from '../../components/landing/Header';
 import UpdatePasswordModal from '../../components/Modals/Password/UpdatePasswordModal';
 import ToastSucessComponent from '../../components/Toast/ToastComponent';
 import { useNavigate } from 'react-router-dom';
