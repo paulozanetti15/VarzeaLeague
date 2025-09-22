@@ -158,7 +158,7 @@ const MatchDetail: React.FC = () => {
   const [showEvalModal, setShowEvalModal] = useState(false);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [showEventsModal, setShowEventsModal] = useState(false);
-  const [eventsLoading, setEventsLoading] = useState(false);
+  // const [eventsLoading, setEventsLoading] = useState(false); // loading não utilizado após refatoração
   const [goals, setGoals] = useState<any[]>([]);
   const [cards, setCards] = useState<any[]>([]);
   // Email opcional para associar evento a um atleta
@@ -166,11 +166,16 @@ const MatchDetail: React.FC = () => {
   const [cardEmail, setCardEmail] = useState<string>('');
   const [cardType, setCardType] = useState<'yellow'|'red'>('yellow');
   const [cardMinute, setCardMinute] = useState<number | ''>('');
+  // jogadores carregados para seleção (admin de time ou sistema)
+  const [availablePlayers, setAvailablePlayers] = useState<any[]>([]);
+  const [selectedGoalPlayer, setSelectedGoalPlayer] = useState<string>('');
+  const [selectedCardPlayer, setSelectedCardPlayer] = useState<string>('');
+  const [selectedTeamForEvents, setSelectedTeamForEvents] = useState<string>('');
 
   const fetchEvents = async () => {
     if (!id) return;
     try {
-      setEventsLoading(true);
+  // setEventsLoading(true);
       const token = localStorage.getItem('token');
       const resp = await fetch(`http://localhost:3001/api/matches/${id}/events`, { headers: { Authorization: `Bearer ${token}` }});
       if (resp.ok) {
@@ -181,7 +186,7 @@ const MatchDetail: React.FC = () => {
     } catch (e) {
       console.error('Erro ao buscar eventos', e);
     } finally {
-      setEventsLoading(false);
+  // setEventsLoading(false);
     }
   };
 
@@ -219,6 +224,7 @@ const MatchDetail: React.FC = () => {
       // Atualiza status local
       setMatch((m: any) => m ? { ...m, status: 'completed' } : m);
       await fetchEvents();
+      await fetchMatchPlayers();
       setShowEventsModal(true);
     } catch (e:any) {
       toast.error(e.message || 'Falha ao finalizar');
@@ -229,11 +235,15 @@ const MatchDetail: React.FC = () => {
     if (e) e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-  const body: any = {};
-  if (goalEmail.trim()) body.email = goalEmail.trim();
+      const body: any = {};
+      if (selectedGoalPlayer) {
+        body.playerId = Number(selectedGoalPlayer); // novo fluxo usando playerId
+      } else if (goalEmail.trim()) {
+        body.email = goalEmail.trim(); // fallback legado
+      }
       const resp = await fetch(`http://localhost:3001/api/matches/${id}/goals`, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(body) });
       if (!resp.ok) { toast.error('Erro ao adicionar gol'); return; }
-  setGoalEmail('');
+      setGoalEmail(''); setSelectedGoalPlayer('');
       await fetchEvents();
     } catch (err) { console.error(err); }
   };
@@ -242,11 +252,15 @@ const MatchDetail: React.FC = () => {
     if (e) e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-  const payload: any = { cardType, minute: cardMinute === '' ? undefined : Number(cardMinute) };
-  if (cardEmail.trim()) payload.email = cardEmail.trim();
+      const payload: any = { cardType, minute: cardMinute === '' ? undefined : Number(cardMinute) };
+      if (selectedCardPlayer) {
+        payload.playerId = Number(selectedCardPlayer);
+      } else if (cardEmail.trim()) {
+        payload.email = cardEmail.trim();
+      }
       const resp = await fetch(`http://localhost:3001/api/matches/${id}/cards`, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(payload) });
       if (!resp.ok) { toast.error('Erro ao adicionar cartão'); return; }
-  setCardEmail(''); setCardMinute(''); setCardType('yellow');
+      setCardEmail(''); setCardMinute(''); setCardType('yellow'); setSelectedCardPlayer('');
       await fetchEvents();
     } catch (err) { console.error(err); }
   };
@@ -300,6 +314,23 @@ const MatchDetail: React.FC = () => {
 
     fetchMatchDetails();
   }, [id, navigate]);
+
+  // Carrega jogadores (Players) dos times participantes da partida
+  const fetchMatchPlayers = async (teamId?: string) => {
+    if (!id) return;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const query = teamId ? `?teamId=${teamId}` : '';
+      const resp = await fetch(`http://localhost:3001/api/matches/${id}/roster-players${query}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (resp.ok) {
+        const json = await resp.json();
+        setAvailablePlayers(json.players || []);
+      } else {
+        setAvailablePlayers([]);
+      }
+    } catch (e) { console.error('Erro ao carregar roster de jogadores', e); setAvailablePlayers([]); }
+  };
   
   const handleLeaveMatch = async (matchId: string | undefined, teamId: number) => {
     if (!matchId) return;
@@ -596,7 +627,7 @@ const MatchDetail: React.FC = () => {
                     <Button
                       variant='outline-warning'
                       title='Ver / editar eventos (gols e cartões)'
-                      onClick={() => { fetchEvents(); setShowEventsModal(true); }}
+                      onClick={() => { fetchEvents(); fetchMatchPlayers(); setShowEventsModal(true); }}
                     >
                       Eventos da Partida
                     </Button>
@@ -696,10 +727,25 @@ const MatchDetail: React.FC = () => {
           <div className="events-section">
             <h4>Registrar Gol</h4>
             <div className="mb-3 d-flex gap-2 flex-wrap align-items-center">
+              <select className="form-select" style={{maxWidth:200}} value={selectedTeamForEvents} onChange={e=>{setSelectedTeamForEvents(e.target.value); fetchMatchPlayers(e.target.value || undefined); setSelectedGoalPlayer(''); setSelectedCardPlayer('');}}>
+                <option value="">-- Time (todos) --</option>
+                {timeCadastrados.map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+              <span className="text-secondary small">Filtrar jogadores por time</span>
+            </div>
+            <div className="mb-3 d-flex gap-2 flex-wrap align-items-center">
               <Button onClick={()=>handleAddGoal()} variant="success">Gol (genérico)</Button>
-              <div className="text-secondary small">(Opcional: email do atleta)</div>
-              <input style={{maxWidth:240}} className="form-control" value={goalEmail} onChange={e=>setGoalEmail(e.target.value)} placeholder="email@exemplo.com (opcional)" />
-              <Button onClick={()=>handleAddGoal()} variant="outline-success" disabled={!goalEmail.trim()}>Gol com Email</Button>
+              <select className="form-select" style={{maxWidth:200}} value={selectedGoalPlayer} onChange={e=>setSelectedGoalPlayer(e.target.value)}>
+                <option value="">-- Selecionar Jogador --</option>
+                {availablePlayers.map(p => (
+                  <option key={p.playerId || p.userId} value={p.playerId || p.userId}>{p.nome} ({p.time || 'Sem time'})</option>
+                ))}
+              </select>
+              <span className="text-secondary small">ou email:</span>
+              <input style={{maxWidth:220}} className="form-control" value={goalEmail} onChange={e=>{setGoalEmail(e.target.value); setSelectedGoalPlayer('');}} placeholder="email@exemplo.com" />
+              <Button onClick={()=>handleAddGoal()} variant="outline-success" disabled={!goalEmail.trim() && !selectedGoalPlayer}>Registrar Gol</Button>
             </div>
             <h4>Registrar Cartão</h4>
             <div className="mb-3 d-flex gap-2 flex-wrap align-items-center">
@@ -707,29 +753,42 @@ const MatchDetail: React.FC = () => {
                 <option value="yellow">Amarelo</option>
                 <option value="red">Vermelho</option>
               </select>
-              <input style={{maxWidth:110}} className="form-control" type="number" value={cardMinute} onChange={e=>setCardMinute(e.target.value === '' ? '' : Number(e.target.value))} placeholder="Minuto" />
-              <input style={{maxWidth:260}} className="form-control" value={cardEmail} onChange={e=>setCardEmail(e.target.value)} placeholder="email@exemplo.com (opcional)" />
-              <Button onClick={()=>handleAddCard()} variant={cardType==='yellow' ? 'warning':'danger'}>Cartão {cardType==='yellow'?'Amarelo':'Vermelho'}</Button>
+              <input style={{maxWidth:90}} className="form-control" type="number" value={cardMinute} onChange={e=>setCardMinute(e.target.value === '' ? '' : Number(e.target.value))} placeholder="Min" />
+              <select className="form-select" style={{maxWidth:200}} value={selectedCardPlayer} onChange={e=>setSelectedCardPlayer(e.target.value)}>
+                <option value="">-- Jogador --</option>
+                {availablePlayers.map(p => (
+                  <option key={p.playerId || p.userId} value={p.playerId || p.userId}>{p.nome} ({p.time || 'Sem time'})</option>
+                ))}
+              </select>
+              <span className="text-secondary small">ou email:</span>
+              <input style={{maxWidth:200}} className="form-control" value={cardEmail} onChange={e=>{setCardEmail(e.target.value); setSelectedCardPlayer('');}} placeholder="email@exemplo.com" />
+              <Button onClick={()=>handleAddCard()} variant={cardType==='yellow' ? 'warning':'danger'} disabled={!selectedCardPlayer && !cardEmail.trim()}>Registrar Cartão</Button>
             </div>
             <hr />
             <h4>Gols ({goals.length})</h4>
             <ul className="list-group mb-3">
-              {goals.map(g => (
-                <li key={g.id} className="list-group-item bg-transparent text-light d-flex justify-content-between align-items-center">
-                  <span>{g.user_id ? `Jogador #${g.user_id}` : 'Gol'}</span>
-                  <button type="button" className="btn btn-sm btn-outline-danger" onClick={()=>handleDeleteGoal(g.id)} title="Remover gol">🗑️</button>
-                </li>
-              ))}
+              {goals.map(g => {
+                const label = g.player?.nome ? g.player.nome : (g.user?.name ? g.user.name : (g.player_id ? `Player #${g.player_id}` : (g.user_id ? `Usuario #${g.user_id}` : 'Gol')));
+                return (
+                  <li key={g.id} className="list-group-item bg-transparent text-light d-flex justify-content-between align-items-center">
+                    <span>{label}</span>
+                    <button type="button" className="btn btn-sm btn-outline-danger" onClick={()=>handleDeleteGoal(g.id)} title="Remover gol">🗑️</button>
+                  </li>
+                );
+              })}
               {goals.length === 0 && <li className="list-group-item bg-transparent text-secondary">Nenhum gol registrado</li>}
             </ul>
             <h4>Cartões ({cards.length})</h4>
             <ul className="list-group">
-              {cards.map(c => (
-                <li key={c.id} className="list-group-item bg-transparent text-light d-flex justify-content-between align-items-center">
-                  <span>{c.card_type === 'yellow' ? '🟨' : '🟥'} {c.user_id ? `Jogador #${c.user_id}` : 'Cartão'}{typeof c.minute === 'number' ? ` (${c.minute}')` : ''}</span>
-                  <button type="button" className="btn btn-sm btn-outline-danger" onClick={()=>handleDeleteCard(c.id)} title="Remover cartão">🗑️</button>
-                </li>
-              ))}
+              {cards.map(c => {
+                const base = c.player?.nome ? c.player.nome : (c.user?.name ? c.user.name : (c.player_id ? `Player #${c.player_id}` : (c.user_id ? `Usuario #${c.user_id}` : 'Cartão')));
+                return (
+                  <li key={c.id} className="list-group-item bg-transparent text-light d-flex justify-content-between align-items-center">
+                    <span>{c.card_type === 'yellow' ? '🟨' : '🟥'} {base}{typeof c.minute === 'number' ? ` (${c.minute}')` : ''}</span>
+                    <button type="button" className="btn btn-sm btn-outline-danger" onClick={()=>handleDeleteCard(c.id)} title="Remover cartão">🗑️</button>
+                  </li>
+                );
+              })}
               {cards.length === 0 && <li className="list-group-item bg-transparent text-secondary">Nenhum cartão registrado</li>}
             </ul>
           </div>

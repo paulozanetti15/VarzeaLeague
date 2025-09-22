@@ -25,6 +25,10 @@ MatchCard.init({
     type: DataTypes.INTEGER,
     allowNull: true,
   },
+  player_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true, // novo campo para vincular ao Player
+  },
 }, {
   sequelize,
   tableName: 'match_cards',

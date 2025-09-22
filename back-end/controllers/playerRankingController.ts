@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
-import { Op, fn, col, literal } from 'sequelize';
+import { Op, fn, col } from 'sequelize';
 import MatchGoal from '../models/MatchGoalModel';
 import MatchCard from '../models/MatchCardModel';
 import MatchEvaluation from '../models/MatchEvaluationModel';
 import User from '../models/UserModel';
+import TeamUser from '../models/TeamUserModel';
+import Team from '../models/TeamModel';
 
 export const getPlayerRanking = async (req: Request, res: Response) => {
   try {
@@ -44,6 +46,19 @@ export const getPlayerRanking = async (req: Request, res: Response) => {
     ].filter(id => id)));
 
     const users = await User.findAll({ where: { id: userIds } });
+
+    // Fetch team memberships for these users
+    const teamUsers = await TeamUser.findAll({
+      where: { userId: userIds },
+      include: [{ model: Team, as: 'team', attributes: ['id','name'] }]
+    });
+    const userTeamMap: Record<string, { teamId: number; teamName: string }[]> = {};
+    teamUsers.forEach((tu: any) => {
+      if (!userTeamMap[tu.userId]) userTeamMap[tu.userId] = [];
+      if (tu.team) {
+        userTeamMap[tu.userId].push({ teamId: tu.team.id, teamName: tu.team.name });
+      }
+    });
     const userMap: Record<string, any> = {};
     users.forEach(u => { userMap[(u as any).id] = u; });
 
@@ -54,9 +69,13 @@ export const getPlayerRanking = async (req: Request, res: Response) => {
       const mediaRating = ratingMap[uid]?.media || 0;
       const avaliacoes = ratingMap[uid]?.count || 0;
       const score = (gols * 4) - amarelos - (vermelhos * 3) + (mediaRating * 2);
+      const teams = userTeamMap[uid] || [];
+      const primaryTeam = teams.sort((a,b)=> a.teamName.localeCompare(b.teamName))[0];
       return {
         userId: Number(uid),
         nome: userMap[uid]?.name || 'N/A',
+        teamId: primaryTeam?.teamId || null,
+        time: primaryTeam?.teamName || null,
         gols,
         amarelos,
         vermelhos,

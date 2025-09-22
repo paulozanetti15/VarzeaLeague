@@ -17,6 +17,10 @@ MatchGoal.init({
     type: DataTypes.INTEGER,
     allowNull: true, // agora opcional para permitir registro sem jogador
   },
+  player_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true, // novo campo para vincular ao Player (team_players)
+  },
 }, {
   sequelize,
   tableName: 'match_goals',

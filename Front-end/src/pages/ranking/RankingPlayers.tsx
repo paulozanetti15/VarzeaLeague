@@ -25,6 +25,7 @@ if (typeof document !== 'undefined' && !document.getElementById(shimmerStyleId))
 interface PlayerRankRow {
   userId: number;
   nome: string;
+  time?: string | null;
   gols: number;
   amarelos: number;
   vermelhos: number;
@@ -141,6 +142,7 @@ const RankingPlayers: React.FC = () => {
             <tr>
               <th style={{ width: 50 }}>#</th>
               <th>Nome</th>
+              <th>Time</th>
               <th style={{ cursor:'pointer' }} onClick={()=>setOrder('gols')}>Gols</th>
               <th>A</th>
               <th>V</th>
@@ -152,7 +154,7 @@ const RankingPlayers: React.FC = () => {
           <tbody>
             {loading && (
               <>
-                {Array.from({length:6}).map((_,i)=>(<SkeletonRow key={i} cols={8} />))}
+                {Array.from({length:6}).map((_,i)=>(<SkeletonRow key={i} cols={9} />))}
               </>
             )}
             {!loading && filtered.map((row, idx) => {
@@ -167,6 +169,7 @@ const RankingPlayers: React.FC = () => {
                     {pos > 3 && pos}
                   </td>
                   <td>{row.nome}</td>
+                  <td>{row.time || <span className="text-muted">-</span>}</td>
                   <td><Badge bg="success">{row.gols}</Badge></td>
                   <td><Badge bg="warning" text="dark">{row.amarelos}</Badge></td>
                   <td><Badge bg="danger">{row.vermelhos}</Badge></td>
@@ -178,7 +181,7 @@ const RankingPlayers: React.FC = () => {
             })}
             {!loading && filtered.length === 0 && (
               <tr>
-                <td colSpan={8} className="text-center text-secondary py-4">
+                <td colSpan={9} className="text-center text-secondary py-4">
                   Nenhum jogador encontrado
                 </td>
               </tr>
