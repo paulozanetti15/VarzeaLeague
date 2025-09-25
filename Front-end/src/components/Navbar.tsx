@@ -31,6 +31,8 @@ import {
   CalendarMonth,
   HistoryIcon,
   Search,
+  Login,
+  PersonAdd,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -55,7 +57,7 @@ const Navbar = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const showBackButton = location.pathname !== '/';
+  const showBackButton = location.pathname !== '/' && location.pathname !== '/dashboard';
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -70,7 +72,7 @@ const Navbar = () => {
   const handleLogout = () => {
     logout();
     setDrawerUserOpen(false);
-    navigate('/login');
+    navigate('/');
   };
 
   const isActive = (path: string) => {
@@ -85,7 +87,9 @@ const Navbar = () => {
   const role = user?.userTypeId;
   const visiblePages = (() => {
     const base = [] as { name: string; path: string; icon: JSX.Element }[];
-    if (!role) return base;
+    if (!role) return [
+      { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
+    ];
     switch (role) {
       case 1: // Admin Sistema
         return [
@@ -209,6 +213,52 @@ const Navbar = () => {
             ))}
           </>
         )}
+        {/* Opções para usuários não logados */}
+        {!user && (
+          <>
+            <Divider sx={{ my: 1 }} />
+            <ListItem
+              component="div"
+              key="Login"
+              onClick={() => handleNavigation('/login')}
+              sx={{
+                backgroundColor: isActive('/login') ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+                color: isActive('/login') ? 'primary.main' : 'text.primary',
+                borderRadius: 2,
+                mb: 1,
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: isActive('/login') ? 'primary.main' : 'inherit' }}>
+                <Login />
+              </ListItemIcon>
+              <ListItemText primary="Entrar" />
+            </ListItem>
+            <ListItem
+              component="div"
+              key="Register"
+              onClick={() => handleNavigation('/register')}
+              sx={{
+                backgroundColor: isActive('/register') ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+                color: isActive('/register') ? 'primary.main' : 'text.primary',
+                borderRadius: 2,
+                mb: 1,
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: isActive('/register') ? 'primary.main' : 'inherit' }}>
+                <PersonAdd />
+              </ListItemIcon>
+              <ListItemText primary="Registrar" />
+            </ListItem>
+          </>
+        )}
       </List>
     </Box>
   );
@@ -318,10 +368,10 @@ const Navbar = () => {
           </IconButton>
         )}
         {/* Logo e nome */}
-        <a
-          href="/"
+        <Box
+          onClick={() => handleNavigation('/')}
           className="navbar-brand"
-          style={{
+          sx={{
             textDecoration: 'none',
             position: 'relative',
             display: 'inline-block',
@@ -339,10 +389,13 @@ const Navbar = () => {
             minWidth: 0,
             maxWidth: '100%',
             whiteSpace: 'nowrap',
+            '&:hover': {
+              color: '#ffd600',
+            },
           }}
         >
           VÁRZEA LEAGUE
-        </a>
+        </Box>
         {/* Menu desktop */}
         <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
           {visiblePages.map((page) => (
@@ -462,8 +515,8 @@ const Navbar = () => {
             {drawer}
           </Drawer>
         </Box>
-        {/* Avatar e notificações */}
-        {user && (
+        {/* Avatar e notificações (usuário logado) ou botões de login/register (não logado) */}
+        {user ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 2 }}>
             <Tooltip title="Notificações">
               <IconButton sx={{ color: 'primary.main' }}>
@@ -506,6 +559,51 @@ const Navbar = () => {
             >
               {userDrawer}
             </Drawer>
+          </Box>
+        ) : (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 2 }}>
+            <Button
+              onClick={() => handleNavigation('/login')}
+              startIcon={<Login />}
+              sx={{
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: 16,
+                letterSpacing: 1,
+                borderRadius: 8,
+                padding: '0.5rem 1.2rem',
+                border: '2px solid #fff',
+                transition: 'all 0.3s',
+                '&:hover': {
+                  color: '#0d47a1',
+                  background: '#fff',
+                },
+              }}
+            >
+              Entrar
+            </Button>
+            <Button
+              onClick={() => handleNavigation('/register')}
+              startIcon={<PersonAdd />}
+              sx={{
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: 16,
+                letterSpacing: 1,
+                borderRadius: 8,
+                padding: '0.5rem 1.2rem',
+                background: '#ffd600',
+                border: '2px solid #ffd600',
+                transition: 'all 0.3s',
+                '&:hover': {
+                  color: '#ffd600',
+                  background: 'transparent',
+                  border: '2px solid #ffd600',
+                },
+              }}
+            >
+              Registrar
+            </Button>
           </Box>
         )}
       </Box>
