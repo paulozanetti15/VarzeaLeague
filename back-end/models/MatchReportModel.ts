@@ -25,7 +25,7 @@ MatchReport.init({
     allowNull: false,
     field: 'team_home',
     references: {
-      model: 'Team',
+      model: 'teams',
       key: 'id'
     },
     onDelete: 'CASCADE',
@@ -36,7 +36,7 @@ MatchReport.init({
     allowNull: false,
     field: 'team_away',
     references: {
-      model: 'Team',
+      model: 'teams',
       key: 'id'
     },
     onDelete: 'CASCADE',

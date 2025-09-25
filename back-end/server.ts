@@ -117,7 +117,7 @@ const startServer = async () => {
     await UserModel.sync();
     console.log('Modelo User sincronizado.');
     
-    await TeamModel.sync({alter: true});
+    await TeamModel.sync();
   
     console.log('Modelo Team sincronizado.');
     
