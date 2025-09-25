@@ -153,12 +153,12 @@ const startServer = async () => {
     await MatchReportModel.sync();
     console.log('Modelo MatchReport sincronizado.');
     
-    const { default: MatchGoalModel } = await import('./models/MatchGoalModel');
-    await MatchGoalModel.sync();
+  const { default: MatchGoalModel } = await import('./models/MatchGoalModel');
+  await MatchGoalModel.sync({ alter: true }); // garantir colunas novas (player_id)
     console.log('Modelo MatchGoal sincronizado.');
     
-    const { default: MatchCardModel } = await import('./models/MatchCardModel');
-    await MatchCardModel.sync();
+  const { default: MatchCardModel } = await import('./models/MatchCardModel');
+  await MatchCardModel.sync({ alter: true }); // garantir colunas novas (player_id)
     console.log('Modelo MatchCard sincronizado.');
     
     const { default: MatchEvaluationModel } = await import('./models/MatchEvaluationModel');

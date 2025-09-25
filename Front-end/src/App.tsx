@@ -32,6 +32,7 @@ import SystemOverview from './components/dashboard/SystemOverview'
 import CalendarioPage from './pages/calendario/calendárioPage'
 import HistoricoPage from './pages/Historico/HistoricoPage'
 import { HistoricoProvider } from '../src/Context/HistoricoContext';
+import RankingPlayers from './pages/ranking/RankingPlayers'
 
 // Componente simples para loading
   const Loading = () => (
@@ -347,6 +348,21 @@ import { HistoricoProvider } from '../src/Context/HistoricoContext';
               >
                 <PageTransition>
                   <ChampionshipEditForm />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
+
+          <Route path="/ranking/jogadores" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
+                redirectTo="/"
+              >
+                <PageTransition>
+                  <RankingPlayers />
                 </PageTransition>
               </RoleBasedRoute>
             </PrivateRoute>

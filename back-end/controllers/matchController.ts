@@ -197,7 +197,6 @@ export const updateMatch = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-// Cancelar uma partida
 export const cancelMatch = async (req: Request, res: Response): Promise<void> => {
   try {
     const match = await MatchModel.findByPk(req.params.id);
@@ -223,17 +222,14 @@ export const deleteMatch = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    // Delete associated rules first
     await Rules.destroy({
       where: { partidaId: matchId }
     });
 
-    // Delete associated team entries
     await MatchTeamsModel.destroy({
       where: { matchId: matchId }
     });
 
-    // Finally, delete the match itself
     await match.destroy();
 
     res.status(200).json({ message: 'Partida excluída com sucesso' });
@@ -251,7 +247,6 @@ export const getMatchesByTeam = async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    // Retornar todas as partidas vinculadas a este time, independentemente de haver adversário inscrito
     const rows = await MatchTeamsModel.findAll({
       where: { teamId: id },
       include: [

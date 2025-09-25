@@ -80,16 +80,22 @@ export function associateModels() {
   Match.hasOne(MatchReport, { foreignKey: 'matchId' });
 
   // Match Goals
-  MatchGoal.belongsTo(User, { foreignKey: 'userId' });
-  MatchGoal.belongsTo(Match, { foreignKey: 'matchId' });
-  User.hasMany(MatchGoal, { foreignKey: 'userId' });
-  Match.hasMany(MatchGoal, { foreignKey: 'matchId' });
+  // Goals (usar alias para permitir include: { as: 'user' })
+  MatchGoal.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+  MatchGoal.belongsTo(Player, { foreignKey: 'player_id', as: 'player' });
+  MatchGoal.belongsTo(Match, { foreignKey: 'match_id', as: 'match' });
+  User.hasMany(MatchGoal, { foreignKey: 'user_id', as: 'goals' });
+  Player.hasMany(MatchGoal, { foreignKey: 'player_id', as: 'goals' });
+  Match.hasMany(MatchGoal, { foreignKey: 'match_id', as: 'goals' });
 
   // Match Cards
-  MatchCard.belongsTo(User, { foreignKey: 'userId' });
-  MatchCard.belongsTo(Match, { foreignKey: 'matchId' });
-  User.hasMany(MatchCard, { foreignKey: 'userId' });
-  Match.hasMany(MatchCard, { foreignKey: 'matchId' });
+  // Cards
+  MatchCard.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+  MatchCard.belongsTo(Player, { foreignKey: 'player_id', as: 'player' });
+  MatchCard.belongsTo(Match, { foreignKey: 'match_id', as: 'match' });
+  User.hasMany(MatchCard, { foreignKey: 'user_id', as: 'cards' });
+  Player.hasMany(MatchCard, { foreignKey: 'player_id', as: 'cards' });
+  Match.hasMany(MatchCard, { foreignKey: 'match_id', as: 'cards' });
 
   // Match Evaluations
   MatchEvaluation.belongsTo(User, { foreignKey: 'evaluatorId' });
