@@ -46,6 +46,7 @@ export default function CreateTeam() {
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<PlayerData | null>(null);
   const [editingPlayerIndex, setEditingPlayerIndex] = useState<number | null>(null);
+  const user = localStorage.getItem("user")
 
   const [formData, setFormData] = useState<TeamFormData>({
     name: '',
@@ -271,7 +272,7 @@ export default function CreateTeam() {
       submitFormData.append('estado', formData.estado);
       submitFormData.append('cidade', formData.cidade);
       submitFormData.append('cep', formData.cep);
-
+      
       if (formData.logo) {
         submitFormData.append('banner', formData.logo);
       }
