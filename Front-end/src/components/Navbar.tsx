@@ -17,6 +17,7 @@ import {
   Badge,
   Chip,
 } from '@mui/material';
+
 import {
   Menu as MenuIcon,
   SportsSoccer,
@@ -29,6 +30,7 @@ import {
   Notifications,
   ArrowBack,
   CalendarMonth,
+  HistoryIcon,
   Search,
   Login,
   PersonAdd,
@@ -37,6 +39,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getRoleName } from '../utils/roleUtils';
 import '../components/landing/Header.css';
+import {
+   History
+} from '@mui/icons-material';
+
 
 // Pages are computed per role (see visiblePages below)
 
@@ -106,6 +112,7 @@ const Navbar = () => {
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
           { name: 'Times', path: '/teams', icon: <People /> },
           { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
+          { name: 'Histórico', path: '/historico', icon: <History/> },
         ];
       case 4: // Usuário Comum
         return [

@@ -48,6 +48,12 @@ export function Header({ isLoggedIn, user, onLoginClick, onRegisterClick, onLogo
                       <span className="nav-link" onClick={() => navigate('/calendario')}>Calendário</span>
                     </li>
                   )}
+                  {localStorage.getItem('Tipo_usuário:') === '3' && (
+                    <li className="nav-item">
+                      <span className="nav-link" onClick={() => navigate('/historico')}>Histórico</span>
+                    </li>
+                  )}
+                  
                   {(localStorage.getItem('Tipo_usuário:') === '1' || localStorage.getItem('Tipo_usuário:') === '2') && (
                     <>
                       <li className="nav-item">

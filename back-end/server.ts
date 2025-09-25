@@ -27,9 +27,11 @@ import PunicaoChampionship from './models/PunicaoChampionshipModel';
 import fs from 'fs';
 import { forEachChild } from 'typescript';
 import championshipRoutes from './routes/championshipRoutes';
-// Importando as associações
 import userTypeRoutes from './routes/userTypeRoutes';
 import overviewRoutes from './routes/overviewRoutes';
+import historicoRoutes from './routes/historicoRoutes';
+import MatchChampionship from './models/MatchChampionshipModel';
+import MatchChampionshpReport from './models/MatchReportChampionshipModel';
 dotenv.config();
 
 const app = express();
@@ -61,6 +63,7 @@ app.use('/api/rules', RulesRoutes);
 app.use('/api/championships', championshipRoutes);
 app.use('/api/usertypes', userTypeRoutes);
 app.use('/api/overview', overviewRoutes);
+app.use('/api/historico',historicoRoutes)
 
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API está funcionando!' });
@@ -114,7 +117,7 @@ const startServer = async () => {
     await UserModel.sync();
     console.log('Modelo User sincronizado.');
     
-    await TeamModel.sync({alter: true});
+    await TeamModel.sync();
   
     console.log('Modelo Team sincronizado.');
     
@@ -138,8 +141,9 @@ const startServer = async () => {
      
     await PunicaoAmitosoMatch.sync()
     console.log('Modelo Punicao Partida Amistosa sincronizado.');
-  await PunicaoChampionship.sync();
-  console.log('Modelo Punicao Championship sincronizado.');
+    await PunicaoChampionship.sync();
+    console.log('Modelo Punicao Championship sincronizado.');
+
     // Modelos adicionados na modelagem v2
     const { default: ChampionshipModel } = await import('./models/ChampionshipModel');
     await ChampionshipModel.sync();
@@ -160,8 +164,11 @@ const startServer = async () => {
     const { default: MatchEvaluationModel } = await import('./models/MatchEvaluationModel');
     await MatchEvaluationModel.sync();
     console.log('Modelo MatchEvaluation sincronizado.');
+    await MatchChampionship.sync();
+    console.log('Modelo MatchChampionship sincronizado.');
+    await MatchChampionshpReport.sync();
+    console.log('Modelo MatchChampionshpReport sincronizado.');
     
-    // Inserir os tipos de usuário
     await seedUserTypes();
 
     

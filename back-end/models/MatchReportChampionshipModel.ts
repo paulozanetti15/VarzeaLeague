@@ -1,9 +1,10 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
+import Team from './TeamModel';
 
-class MatchReport extends Model {}
+class MatchChampionshpReport extends Model {}
 
-MatchReport.init({
+MatchChampionshpReport.init({
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -14,29 +15,27 @@ MatchReport.init({
     allowNull: false,
     field: 'match_id',
     references: {
-      model: 'matches',
+      model: 'Match_championship',
       key: 'id'
     },
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE'
   },
-  team_home:{
+   team_home: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    field: 'team_home',
     references: {
-      model: 'teams',
+      model: Team, // aqui também
       key: 'id'
     },
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE'
   },
-  team_away:{
-     type: DataTypes.INTEGER,
+  team_away: {
+    type: DataTypes.INTEGER,
     allowNull: false,
-    field: 'team_away',
     references: {
-      model: 'teams',
+      model: Team, // idem
       key: 'id'
     },
     onDelete: 'CASCADE',
@@ -56,10 +55,10 @@ MatchReport.init({
   },
 }, {
   sequelize,
-  tableName: 'match_reports',
-  modelName: 'MatchReport',
+  tableName: 'match_reports_championship',
+  modelName: 'MatchChampionshpReport',
   underscored: true,
   timestamps: true,
 });
 
-export default MatchReport;
+export default MatchChampionshpReport;
