@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import trophy from '../../assets/championship-trophy.svg';
 import './ChampionshipForm.css';
-import { format, parse, isValid, isAfter } from 'date-fns';
+import { format, parse, isValid } from 'date-fns';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
 const initialState = {

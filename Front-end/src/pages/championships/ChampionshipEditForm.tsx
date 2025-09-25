@@ -4,7 +4,7 @@ import { api } from '../../services/api';
 import trophy from '../../assets/championship-trophy.svg';
 import './ChampionshipForm.css';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import { parse, isValid, isAfter } from 'date-fns';
+import { parse, isValid } from 'date-fns';
 
 const ChampionshipEditForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
