@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   AppBar,
   Box,
@@ -50,11 +50,12 @@ const adminPages = [
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerUserOpen, setDrawerUserOpen] = useState(false);
-  const [hasTeam, setHasTeam] = useState<boolean>(false);
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  const [hasTeam, setHasTeam] = useState<boolean>(false);
 
   useEffect(() => {
     let mounted = true;
@@ -83,8 +84,8 @@ const Navbar = () => {
   };
 
   const handleNavigation = (path: string) => {
-    // guard client-side navigation to ranking when no team
-    if (path.startsWith('/ranking') && !hasTeam) {
+    // Prevent access to Histórico if user has no team
+    if (path.startsWith('/historico') && !hasTeam) {
       navigate('/teams');
       setMobileOpen(false);
       setDrawerUserOpen(false);
@@ -116,36 +117,34 @@ const Navbar = () => {
     if (!role) return [
       { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
     ];
-    const withRanking = (arr: { name: string; path: string; icon: JSX.Element }[]) =>
-      hasTeam ? arr : arr.filter(p => p.path !== '/ranking/jogadores');
     switch (role) {
       case 1: // Admin Sistema
-        return withRanking([
+        return [
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
           { name: 'Times', path: '/teams', icon: <People /> },
           { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
           { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
           { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
-        ]);
+        ];
       case 2: // Admin Eventos
-        return withRanking([
+        return [
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
           { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
           { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
           { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
-        ]);
+        ];
       case 3: // Admin Times
-        return withRanking([
+        return [
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
           { name: 'Times', path: '/teams', icon: <People /> },
           { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
-          { name: 'Histórico', path: '/historico', icon: <History/> },
-        ]);
+          ...(hasTeam ? [{ name: 'Histórico', path: '/historico', icon: <History/> }] : []),
+        ];
       case 4: // Usuário Comum
-        return withRanking([
+        return [
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
           { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
-        ]);
+        ];
       default:
         return base;
     }

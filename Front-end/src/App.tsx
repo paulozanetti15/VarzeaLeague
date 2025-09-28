@@ -334,7 +334,9 @@ import RankingTeams from './pages/ranking/RankingTeams'
           <Route path="/historico" element={
             <PrivateRoute isLoggedIn={isLoggedIn}>
               <RoleBasedRoute isLoggedIn={isLoggedIn} userRole={user?.userTypeId} allowedRoles={[USER_ROLES.ADMIN_TIMES]} redirectTo="/">
-                  <PageTransition><HistoricoPage /></PageTransition>
+                  <TeamRequiredRoute redirectTo="/teams">
+                    <PageTransition><HistoricoPage /></PageTransition>
+                  </TeamRequiredRoute>
               </RoleBasedRoute>
             </PrivateRoute>
           } />
@@ -363,11 +365,9 @@ import RankingTeams from './pages/ranking/RankingTeams'
                 allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
                 redirectTo="/"
               >
-                <TeamRequiredRoute redirectTo="/teams">
-                  <PageTransition>
-                    <RankingPlayers />
-                  </PageTransition>
-                </TeamRequiredRoute>
+                <PageTransition>
+                  <RankingPlayers />
+                </PageTransition>
               </RoleBasedRoute>
             </PrivateRoute>
           } />
