@@ -597,13 +597,13 @@ const Navbar = () => {
                 letterSpacing: 1,
                 borderRadius: 8,
                 padding: '0.5rem 1.2rem',
-                background: '#ffd600',
-                border: '2px solid #ffd600',
+                background: '#7effffff',
+                border: '2px solid #7effffff',
                 transition: 'all 0.3s',
                 '&:hover': {
-                  color: '#ffd600',
-                  background: 'transparent',
-                  border: '2px solid #ffd600',
+                  color: '#7effffff',
+                  background: '#00ffff79',
+                  border: '2px solid #7effffff',
                 },
               }}
             >
