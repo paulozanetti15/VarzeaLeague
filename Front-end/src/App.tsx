@@ -26,6 +26,7 @@ import ChampionshipDetail from './pages/championships/ChampionsShipDetail/Champi
 import ChampionshipEditForm from './pages/championships/ChampionshipEditForm'
 import UserManagement from './pages/UserManagement'
 import Navbar from './components/Navbar'
+import TeamRequiredRoute from './components/TeamRequiredRoute'
 import EditMatch from './pages/matches/EditMatch'
 import { Box, CssBaseline } from '@mui/material'
 import SystemOverview from './components/dashboard/SystemOverview'
@@ -333,7 +334,9 @@ import RankingTeams from './pages/ranking/RankingTeams'
           <Route path="/historico" element={
             <PrivateRoute isLoggedIn={isLoggedIn}>
               <RoleBasedRoute isLoggedIn={isLoggedIn} userRole={user?.userTypeId} allowedRoles={[USER_ROLES.ADMIN_TIMES]} redirectTo="/">
-                  <PageTransition><HistoricoPage /></PageTransition>
+                  <TeamRequiredRoute redirectTo="/teams">
+                    <PageTransition><HistoricoPage /></PageTransition>
+                  </TeamRequiredRoute>
               </RoleBasedRoute>
             </PrivateRoute>
           } />
