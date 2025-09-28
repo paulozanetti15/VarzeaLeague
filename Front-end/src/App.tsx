@@ -26,7 +26,6 @@ import ChampionshipDetail from './pages/championships/ChampionsShipDetail/Champi
 import ChampionshipEditForm from './pages/championships/ChampionshipEditForm'
 import UserManagement from './pages/UserManagement'
 import Navbar from './components/Navbar'
-import TeamRequiredRoute from './components/TeamRequiredRoute'
 import EditMatch from './pages/matches/EditMatch'
 import { Box, CssBaseline } from '@mui/material'
 import SystemOverview from './components/dashboard/SystemOverview'
@@ -363,11 +362,9 @@ import RankingTeams from './pages/ranking/RankingTeams'
                 allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
                 redirectTo="/"
               >
-                <TeamRequiredRoute redirectTo="/teams">
-                  <PageTransition>
-                    <RankingPlayers />
-                  </PageTransition>
-                </TeamRequiredRoute>
+                <PageTransition>
+                  <RankingPlayers />
+                </PageTransition>
               </RoleBasedRoute>
             </PrivateRoute>
           } />

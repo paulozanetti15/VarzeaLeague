@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   AppBar,
   Box,
@@ -39,7 +39,6 @@ import { useAuth } from '../hooks/useAuth';
 import { getRoleName } from '../utils/roleUtils';
 import '../components/landing/Header.css';
 import { History } from '@mui/icons-material';
-import { api } from '../services/api';
 
 // Pages are computed per role (see visiblePages below)
 
@@ -50,31 +49,10 @@ const adminPages = [
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerUserOpen, setDrawerUserOpen] = useState(false);
-  const [hasTeam, setHasTeam] = useState<boolean>(false);
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-
-  useEffect(() => {
-    let mounted = true;
-    const checkTeams = async () => {
-      try {
-        const teams = await api.teams.list();
-        if (!mounted) return;
-        setHasTeam(Array.isArray(teams) && teams.length > 0);
-      } catch (e) {
-        if (!mounted) return;
-        setHasTeam(false);
-      }
-    };
-    if (user) {
-      checkTeams();
-    } else {
-      setHasTeam(false);
-    }
-    return () => { mounted = false; };
-  }, [user]);
 
   const showBackButton = location.pathname !== '/' && location.pathname !== '/dashboard';
 
@@ -83,13 +61,6 @@ const Navbar = () => {
   };
 
   const handleNavigation = (path: string) => {
-    // guard client-side navigation to ranking when no team
-    if (path.startsWith('/ranking') && !hasTeam) {
-      navigate('/teams');
-      setMobileOpen(false);
-      setDrawerUserOpen(false);
-      return;
-    }
     navigate(path);
     setMobileOpen(false);
     setDrawerUserOpen(false);
@@ -116,36 +87,34 @@ const Navbar = () => {
     if (!role) return [
       { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
     ];
-    const withRanking = (arr: { name: string; path: string; icon: JSX.Element }[]) =>
-      hasTeam ? arr : arr.filter(p => p.path !== '/ranking/jogadores');
     switch (role) {
       case 1: // Admin Sistema
-        return withRanking([
+        return [
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
           { name: 'Times', path: '/teams', icon: <People /> },
           { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
           { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
           { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
-        ]);
+        ];
       case 2: // Admin Eventos
-        return withRanking([
+        return [
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
           { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
           { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
           { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
-        ]);
+        ];
       case 3: // Admin Times
-        return withRanking([
+        return [
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
           { name: 'Times', path: '/teams', icon: <People /> },
           { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
           { name: 'Histórico', path: '/historico', icon: <History/> },
-        ]);
+        ];
       case 4: // Usuário Comum
-        return withRanking([
+        return [
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
           { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
-        ]);
+        ];
       default:
         return base;
     }
