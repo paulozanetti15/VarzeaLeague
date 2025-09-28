@@ -61,6 +61,8 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
   const [awayScore, setAwayScore] = useState<number>(0);
   const [nomeHomeTeam,setNomeHomeTeam] = useState<string>('');
   const [nomeAwayTeam,setNomeAwayTeam] = useState<string>('');
+  const [tempGoals, setTempGoals] = useState<Goal[]>([]);
+  const [tempCards, setTempCards] = useState<Card[]>([]);
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
@@ -82,10 +84,7 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
       setError('Times não podem ser iguais.');
       return false;
     }
-    if (attendance === '' || attendance < 0) {
-      setError('Informe um público válido.');
-      return false;
-    }
+    
     setError(null);
     return true;
   };
@@ -172,21 +171,26 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
   // Handlers
   const handleSaveMatch = async (id:number) => {
     if (!validateMatchInfo()) return;
-     if (!validateMatchInfo()) return;
-    
-    // CORREÇÃO 2: A variável 'token' precisa ser definida dentro da função
+
     const token = localStorage.getItem('token');
+    if (!token) {
+        setError('Token de autorização não encontrado.');
+        return;
+    }
+
     const sumula: MatchReport = {
-        match_id  : id ,
-        team_home : homeTeam , 
+        match_id  : id,
+        team_home : homeTeam,
         team_away : awayTeam,
-        team_home_score : homeScore ,
-        team_away_score : awayScore,
+        team_home_score : tempGoals.filter(g => teams.find(t => t.id === g.playerId)?.id === homeTeam).length,
+        team_away_score : tempGoals.filter(g => teams.find(t => t.id === g.playerId)?.id === awayTeam).length,
     };
+
     try {
       setLoading(true);
+      // 1️⃣ Salvar partida
       const adicionarSumula = await axios.post(
-        `http://localhost:3001/api/matches/${id}/cards`,
+        `http://localhost:3001/api/historico/adicionar-sumula`,
         sumula,
         {
           headers: {
@@ -195,102 +199,103 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
           }
         }
       );
-   
-      alert('Partida validada com sucesso!');
-      
+
+      if(adicionarSumula.status===201){
+        // 2️⃣ Enviar gols
+        await Promise.all(tempGoals.map(goal => axios.post(
+          `http://localhost:3001/api/matches/${id}/goals`,
+          {
+              playerId: goal.playerId,
+              minute: goal.minute
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )));
+
+        // 3️⃣ Enviar cartões
+        await Promise.all(tempCards.map(card => axios.post(
+            `http://localhost:3001/api/matches/${id}/cards`,
+            {
+                playerId: card.playerId,
+                cardType: card.type.toLowerCase() === 'amarelo' ? 'yellow' : 'red',
+                minute: card.minute
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+        )));
+
+        // Atualizar estado visual
+        setGoals(tempGoals);
+        setCards(tempCards);
+        setHomeScore(sumula.team_home_score);
+        setAwayScore(sumula.team_away_score);
+
+        // Limpar temporários
+        setTempGoals([]);
+        setTempCards([]);
+        alert('Partida validada com sucesso!');
+        onHide()
+      }
     } catch (error) {
+      console.error(error);
       setError('Erro ao salvar partida.');
     } finally {
       setLoading(false);
     }
   };
-   
+
 
   const handleAddGoal = () => {
-        if (!validateGoal()) return;
+    if (!validateGoal()) return;
 
-        const selectedPlayer = players.find(p => p.playerId.toString() === goalPlayer);
-        if (!selectedPlayer) {
-            setError("Jogador inválido.");
-            return;
-        }
+    const selectedPlayer = players.find(p => p.playerId.toString() === goalPlayer);
+    if (!selectedPlayer) {
+        setError("Jogador inválido.");
+        return;
+    }
 
-        const playerTeam = teams.find(t => t.id === selectedPlayer.teamId);
+    const playerTeam = teams.find(t => t.id === selectedPlayer.teamId);
 
-        const newGoal: Goal = {
-            player: selectedPlayer.nome,
-            minute: Number(goalMinute),
-            team: playerTeam?.name || 'Time não identificado',
-            playerId: selectedPlayer.playerId
-        };
-
-        setGoals([...goals, newGoal]);
-
-        // ✅ Atualiza placar automático
-        if (selectedPlayer.teamId === homeTeam) {
-            setHomeScore(prev => prev + 1);
-        } else if (selectedPlayer.teamId === awayTeam) {
-            setAwayScore(prev => prev + 1);
-        }
-
-        setGoalPlayer('');
-        setGoalMinute('');
-        setError(null);
+    const newGoal: Goal = {
+        player: selectedPlayer.nome,
+        minute: Number(goalMinute),
+        team: playerTeam?.name || 'Time não identificado',
+        playerId: selectedPlayer.playerId
     };
 
+    setGoals([...goals, newGoal]);
 
- 
+    if (selectedPlayer.teamId === homeTeam) {
+        setHomeScore(prev => prev + 1);
+    } else if (selectedPlayer.teamId === awayTeam) {
+        setAwayScore(prev => prev + 1);
+    }
 
-  const handleAddCard = async () => {
+    setGoalPlayer('');
+    setGoalMinute('');
+    setError(null);
+  };
+  const handleAddCard = () => {
     if (!validateCard()) return;
 
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Token de autorização não encontrado.');
-        return;
-      }
+    const selectedPlayer = players.find(p => p.playerId.toString() === cardPlayer);
+    const playerTeam = teams.find(t => t.id === selectedPlayer?.teamId);
 
-      const selectedPlayer = players.find(p => p.playerId.toString() === cardPlayer);
-      const playerTeam = teams.find(t => t.id === selectedPlayer?.teamId);
+    const newCard: Card = {
+        player: selectedPlayer?.nome || cardPlayer,
+        team: playerTeam?.name || 'Time não identificado',
+        type: cardType,
+        minute: Number(cardMinute),
+        playerId: selectedPlayer?.playerId
+    };
 
-      const playerCard = {
-        playerId: Number(cardPlayer),
-        cardType: cardType.toLowerCase() === 'amarelo' ? 'yellow' : 'red',
-        minute: Number(cardMinute)
-      };
-
-      const response = await axios.post(
-        `http://localhost:3001/api/matches/${id}/cards`,
-        playerCard,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-
-      if (response.status === 200 || response.status === 201) {
-        const newCard: Card = {
-          player: selectedPlayer?.nome || cardPlayer,
-          team: playerTeam?.name || 'Time não identificado',
-          type: cardType,
-          minute: Number(cardMinute),
-          playerId: selectedPlayer?.playerId
-        };
-
-        setCards([...cards, newCard]);
-        setCardPlayer('');
-        setCardMinute('');
-        setCardType('Amarelo');
-        setError(null);
-      }
-    } catch (error) {
-      console.error('Erro ao adicionar cartão:', error);
-      setError('Erro ao adicionar cartão.');
-    }
+    setTempCards([...tempCards, newCard]); // adiciona apenas ao temporário
+    setCards([...cards,newCard])
+    setCardPlayer('');
+    setCardMinute('');
+    setCardType('Amarelo');
+    setError(null);
   };
+  
+  
 
   const handleDialogClick = (e: React.MouseEvent) => {
     if (e.target === dialogRef.current) {
@@ -327,21 +332,20 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
 
                 {/* Estatísticas Resumidas */}
                 <div className="summary-stats">
-                <Row className="text-center">
-                    <Col>
-                    <div className="fw-bold">{goals.length}</div>
-                    <small>Gols</small>
-                    </Col>
-                    <Col>
-                    <div className="fw-bold">{cards.filter(c => c.type === 'Amarelo').length}</div>
-                    <small>Cartões Amarelos</small>
-                    </Col>
-                    <Col>
-                    <div className="fw-bold">{cards.filter(c => c.type === 'Vermelho').length}</div>
-                    <small>Cartões Vermelhos</small>
-                    </Col>
-                    
-                </Row>
+                  <Row className="text-center">
+                      <Col>
+                        <div className="fw-bold">{goals.length}</div>
+                        <small>Gols</small>
+                        </Col>
+                        <Col>
+                        <div className="fw-bold">{cards.filter(c => c.type === 'Amarelo').length}</div>
+                        <small>Cartões Amarelos</small>
+                        </Col>
+                        <Col>
+                        <div className="fw-bold">{cards.filter(c => c.type === 'Vermelho').length}</div>
+                        <small>Cartões Vermelhos</small>
+                      </Col>
+                  </Row>
                 </div>
 
               {/* Informações da Partida */}
@@ -381,7 +385,6 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
                             const team = teams.find(t => t.id === selectedId);
                             if (team) setNomeAwayTeam(team.name);
                         }}
-                        disabled={loading}
                         >
                         <option value="">Selecione o time de fora</option>
                         {teams.map((team) => (
@@ -394,8 +397,6 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
                   </Col>
                 </Row>
               </div>
-
-              {/* Seções de Registro */}
               <Row className="g-4 mb-4">
                 {/* Registrar Gol */}
                 <Col lg={6} md={12}>
@@ -408,6 +409,8 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
                           <Form.Select 
                             value={goalPlayer} 
                             onChange={(e) => setGoalPlayer(e.target.value)}
+                            disabled={loading || !homeTeam || !awayTeam}
+
                           >
                             <option value="">Selecione um jogador</option>
                             {players?.map((player) => (
@@ -428,6 +431,7 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
                             placeholder="Digite o minuto (1-120)"
                             value={goalMinute} 
                             onChange={(e) => setGoalMinute(e.target.value === '' ? '' : Number(e.target.value))} 
+                            disabled={loading || !homeTeam || !awayTeam}
                           />
                         </Form.Group>
                       </Col>
@@ -455,6 +459,7 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
                           <Form.Select 
                             value={cardPlayer} 
                             onChange={(e) => setCardPlayer(e.target.value)}
+                            disabled={loading || !homeTeam || !awayTeam}
                           >
                             <option value="">Selecione um jogador</option>
                             {players.map((player) => (
@@ -471,6 +476,7 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
                           <Form.Select 
                             value={cardType} 
                             onChange={(e) => setCardType(e.target.value as 'Amarelo' | 'Vermelho')}
+                            disabled={loading || !homeTeam || !awayTeam}
                           >
                             <option value="Amarelo">Cartão Amarelo</option>
                             <option value="Vermelho">Cartão Vermelho</option>
@@ -616,25 +622,25 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
              <hr></hr>
              <div className="d-flex gap-2 justify-content-end " style={{marginBlock:"1rem"}}>
                 <Button 
-                    variant="primary" 
-                    onClick={() => handleSaveMatch(id)}   // ✅ chama a função passando o id
-                    disabled={loading}
-                    >
-                    {loading ? (
-                        <>
-                        <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                        Salvando...
-                        </>
-                    ) : (
-                        'Salvar Partida'
-                    )}
-                    </Button>
-                    <Button 
-                    variant="outline-secondary" 
-                    onClick={onHide} 
-                    disabled={loading}
-                    >
-                    Fechar
+                  variant="primary" 
+                  onClick={() => handleSaveMatch(id)}   // ✅ chama a função passando o id
+                  disabled={loading}
+                  >
+                  {loading ? (
+                      <>
+                      <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                      Salvando...
+                      </>
+                  ) : (
+                      'Salvar Partida'
+                  )}
+                  </Button>
+                  <Button 
+                  variant="outline-secondary" 
+                  onClick={onHide} 
+                  disabled={loading}
+                  >
+                  Fechar
                 </Button>
             </div>
           </div>

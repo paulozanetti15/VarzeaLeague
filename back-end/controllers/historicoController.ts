@@ -107,12 +107,13 @@ export const adicionarSumulaPartidasAmistosas= async(req:AuthRequest,res:Respons
             res.status(401).json({ error: 'Usuário não autenticado' });
             return;
         }
+        console.log(req.body)
         await MatchReport.create({
             match_id  : req.body.match_id ,
             team_home : req.body.team_home , 
             team_away : req.body.team_away,
-            team_home_score : req.body.team_home_score,
-            team_away_score : req.body.team_away_score,
+            teamHome_score : req.body.team_home_score,
+            teamAway_score : req.body.team_away_score,
             created_by : userId
         })
         res.status(201).json({message : "Súmula adicionada com sucesso"})     
