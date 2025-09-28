@@ -227,11 +227,22 @@
   box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
 }
 
-.join-button, .join-team-button {
+.join-button {
   background: linear-gradient(90deg, #2e7d32 60%, #43a047 100%);
   color: white;
+  padding: 8px 16px;
   box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3);
 }
+.join-team-button {
+  display: inline-block;
+  background-color: green;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+}
+
 
 .join-button:hover, .join-team-button:hover {
   background: linear-gradient(90deg, #1b5e20 60%, #2e7d32 100%);

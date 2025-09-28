@@ -11,4 +11,5 @@ router.put('/:id', authenticateToken, upload.single('banner'), TeamController.up
 router.delete('/:id', authenticateToken, TeamController.deleteTeam);
 router.delete('/:teamId/players/:playerId', authenticateToken, TeamController.removePlayerFromTeam);
 router.get('/:id/teamCaptain', authenticateToken, TeamController.getTeamCaptain);
+router.get('/:id/championship-ranking',authenticateToken,TeamController.getTeamRanking)
 export default router;

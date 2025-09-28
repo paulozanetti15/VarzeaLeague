@@ -31,9 +31,8 @@ const ChampionshipDetail: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [teams, setTeams] = useState<any[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showTeamSelectModal, setShowTeamSelectModal] = useState(false); // reused to show the new team+players modal
+  const [showTeamSelectModal, setShowTeamSelectModal] = useState(false);
   const [userTeams, setUserTeams] = useState<any[]>([]);
-  // removed selectedTeamId / isJoining (handled inside the new modal component)
   const [isLeavingTeamId, setIsLeavingTeamId] = useState<number | null>(null);
   const [showPunicaoRegister, setShowPunicaoRegister] = useState(false);
   const [showPunicaoInfo, setShowPunicaoInfo] = useState(false);
@@ -84,14 +83,10 @@ const ChampionshipDetail: React.FC = () => {
         
         // Verificar permissões do usuário
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const isCreator = user.id === data.created_by;
-  setIsAdmin(user.userTypeId === 1);
+        const isCreator = user.id === data.created_by;
+        setIsAdmin(user.userTypeId === 1);
         // Apenas o criador pode editar/excluir
-        if (isCreator) {
-          setHasEditPermission(true);
-        } else {
-          setHasEditPermission(false);
-        }
+        setHasEditPermission(isCreator);
 
         // Buscar times já inscritos neste campeonato
         await loadChampionshipTeams();
@@ -135,22 +130,29 @@ const ChampionshipDetail: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       const has = Array.isArray(resp.data) && resp.data.length > 0;
-      if (has) setShowPunicaoInfo(true); else setShowPunicaoRegister(true);
+      if (has) {
+        setShowPunicaoInfo(true);
+      } else {
+        setShowPunicaoRegister(true);
+      }
     } catch {
       setShowPunicaoRegister(true);
     }
   };
 
-  // Removed join as individual flow (not used here)
-
-  // Joining now handled inside SelectTeamPlayersChampionshipModal
+  const handleOpenRankingClassificacao = () => {
+    if(championship){
+       navigate(`/championships/${championship.id}/ranking-times`);
+    }
+   
+  };
 
   const handleLeaveWithTeam = async (teamId: number) => {
     try {
       setIsLeavingTeamId(teamId);
       await api.championships.leaveWithTeam(Number(id), teamId);
       toast.success('Seu time saiu do campeonato.');
-      await (async () => loadChampionshipTeams())();
+      await loadChampionshipTeams();
       setIsLeavingTeamId(null);
     } catch (err: any) {
       toast.error(err.message || 'Erro ao sair do campeonato com o time');
@@ -190,7 +192,6 @@ const ChampionshipDetail: React.FC = () => {
       <div className="championship-detail-container">
         <div className="error-container">
           <h2>Campeonato não encontrado</h2>
-          
         </div>
       </div>
     );
@@ -198,7 +199,6 @@ const ChampionshipDetail: React.FC = () => {
 
   return (
     <div className="championship-detail-container">
-
       <div className="detail-content">
         <div className="championship-header">
           <img 
@@ -226,12 +226,12 @@ const ChampionshipDetail: React.FC = () => {
           <div className="info-row">
             <span className="info-label">Início:</span>
             <span className="info-value">{formatDate(championship.start_date)}</span>
-          </div>          <div className="info-row">
+          </div>
+          <div className="info-row">
             <span className="info-label">Término:</span>
             <span className="info-value">{formatDate(championship.end_date)}</span>
           </div>
         </div>
-
         <div className="championship-actions">
           {hasEditPermission ? (
             <>
@@ -254,23 +254,44 @@ const ChampionshipDetail: React.FC = () => {
               >
                 Aplicar/Ver Punição
               </button>
+              <button
+                className="edit-button"
+                onClick={handleOpenRankingClassificacao}
+                style={{ marginLeft: 8 }}
+              >
+                Ranking de Classificação
+              </button>
             </>
           ) : (
             <>
               {!hasUserTeamInChampionship ? (
                 <button
                   className="join-team-button"
-                  onClick={() => { setShowTeamSelectModal(true); }}
+                  onClick={() => setShowTeamSelectModal(true)}
                   disabled={availableUserTeams.length === 0}
                 >
                   Inscrever Time
                 </button>
               ) : (
-                <div style={{ fontSize: 14, color: '#ffffff' }}>
+                <div style={{ fontSize: 14, color: "#ffffff" }}>
                   Você já possui um time inscrito neste campeonato.
                 </div>
               )}
-              {/* Mesmo não sendo criador, admin pode aplicar/visualizar punição */}
+
+              <button
+                className="join-team-button"
+                onClick={handleOpenRankingClassificacao}
+                style={{
+                  marginLeft: 8,
+                  padding: "0.5rem 1rem",   // espaçamento interno (alto/largo)
+                  fontSize: "1rem",         // texto adaptável
+                  maxWidth: "100%",         // nunca ultrapassa o container
+                  width: "auto"             // ajusta ao conteúdo
+                }}
+              >
+                Ranking de times
+              </button>
+
               {isAdmin && (
                 <button
                   className="btn btn-warning"
@@ -283,7 +304,6 @@ const ChampionshipDetail: React.FC = () => {
             </>
           )}
         </div>
-
         <div className="championship-teams-section">
           <h3>Times Participantes</h3>
           {teams && teams.length > 0 ? (
@@ -312,6 +332,7 @@ const ChampionshipDetail: React.FC = () => {
         </div>
       </div>
 
+      {/* Modal de Exclusão */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Confirmar Exclusão</Modal.Title>
@@ -329,23 +350,22 @@ const ChampionshipDetail: React.FC = () => {
         </Modal.Footer>
       </Modal>
 
+      {/* Modal de Seleção de Time */}
       <SelectTeamPlayersChampionshipModal
         show={showTeamSelectModal}
         onHide={() => setShowTeamSelectModal(false)}
         championshipId={Number(id)}
         modalidade={championship.modalidade}
         onSuccess={async () => {
-          // Reload teams list after successful inscription
-            await loadChampionshipTeams();
-            // refresh championship data (in case something changed)
-            try {
-              const updated = await api.championships.getById(Number(id));
-              setChampionship(updated);
-            } catch {}
+          await loadChampionshipTeams();
+          try {
+            const updated = await api.championships.getById(Number(id));
+            setChampionship(updated);
+          } catch {}
         }}
       />
 
-      {/* Punicao Campeonato */}
+      {/* Modais de Punição */}
       {(hasEditPermission || isAdmin) && (
         <>
           <PunicaoCampeonatoRegisterModal

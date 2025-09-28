@@ -33,6 +33,7 @@ import CalendarioPage from './pages/calendario/calendárioPage'
 import HistoricoPage from './pages/Historico/HistoricoPage'
 import { HistoricoProvider } from '../src/Context/HistoricoContext';
 import RankingPlayers from './pages/ranking/RankingPlayers'
+import RankingTeams from './pages/ranking/RankingTeams'
 
 // Componente simples para loading
   const Loading = () => (
@@ -367,7 +368,20 @@ import RankingPlayers from './pages/ranking/RankingPlayers'
               </RoleBasedRoute>
             </PrivateRoute>
           } />
-
+          <Route path='/championships/:id/ranking-times' element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES,USER_ROLES.USUARIO_COMUM]}
+                redirectTo="/"
+              >
+                <PageTransition>
+                  <RankingTeams />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
           {/* Rota para Gerenciamento de Usuários (Apenas Admin do Sistema) */}
           <Route path="/admin/users" element={
             <PrivateRoute isLoggedIn={isLoggedIn}>

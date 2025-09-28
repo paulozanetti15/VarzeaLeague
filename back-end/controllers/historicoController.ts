@@ -99,5 +99,27 @@ export const buscarPartidasCampeonato= async(req:AuthRequest,res:Response)=>{
       console.error(error)
     }    
 }
+export const adicionarSumulaPartidasAmistosas= async(req:AuthRequest,res:Response)=>{
+    try {
+        
+        const userId = req.user?.id;
+        if (!userId) {
+            res.status(401).json({ error: 'Usuário não autenticado' });
+            return;
+        }
+        await MatchReport.create({
+            match_id  : req.body.match_id ,
+            team_home : req.body.team_home , 
+            team_away : req.body.team_away,
+            team_home_score : req.body.team_home_score,
+            team_away_score : req.body.team_away_score,
+            created_by : userId
+        })
+        res.status(201).json({message : "Súmula adicionada com sucesso"})     
+    } catch (error) {
+      res.status(500).json({ message:"Erro para adicionar os dados"})
+      console.error(error)
+    }    
+}
 
    

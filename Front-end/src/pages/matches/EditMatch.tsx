@@ -296,8 +296,8 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
         description: formData.description?.trim(),
         duration: formData.duration,
         price: formData.price ? parseFloat(formData.price) : 0.00,
-  namequadra: (formData.nomequadra ?? '').trim(),
-  modalidade: (formData.modalidade ?? '').trim(),
+        namequadra: (formData.nomequadra ?? '').trim(),
+        modalidade: (formData.modalidade ?? '').trim(),
       };
 
       const response=await axios.put(`http://localhost:3001/api/matches/${dadosPartida.id}`, matchData, {

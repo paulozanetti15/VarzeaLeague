@@ -18,7 +18,7 @@ import { useAuth } from '../../hooks/useAuth';
 import EditRulesModal from '../../components/Modals/Regras/RegrasFormEditModal';
 import PunicaoRegisterModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosoRegisterModal';
 import PunicaoInfoModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosaModalInfo';
-
+import SumulaPartidaAmistosaModal from '../sumula/SumulaPartidasAmistosas';
 // Subcomponente para avaliações (rating + comentários) com UI aprimorada
 const StarRating: React.FC<{ value: number; onChange: (v:number)=>void; size?: number }> = ({ value, onChange, size = 26 }) => {
   return (
@@ -162,10 +162,8 @@ const MatchDetail: React.FC = () => {
   const [showEvalModal, setShowEvalModal] = useState(false);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [showEventsModal, setShowEventsModal] = useState(false);
-  // const [eventsLoading, setEventsLoading] = useState(false); // loading não utilizado após refatoração
   const [goals, setGoals] = useState<any[]>([]);
   const [cards, setCards] = useState<any[]>([]);
-  // Email opcional para associar evento a um atleta
   const [goalEmail, setGoalEmail] = useState<string>('');
   const [cardEmail, setCardEmail] = useState<string>('');
   const [cardType, setCardType] = useState<'yellow'|'red'>('yellow');
@@ -174,7 +172,7 @@ const MatchDetail: React.FC = () => {
   const [availablePlayers, setAvailablePlayers] = useState<any[]>([]);
   const [selectedGoalPlayer, setSelectedGoalPlayer] = useState<string>('');
   const [selectedCardPlayer, setSelectedCardPlayer] = useState<string>('');
-  const [selectedTeamForEvents, setSelectedTeamForEvents] = useState<string>('');
+
 
   const fetchEvents = async () => {
     if (!id) return;
@@ -193,27 +191,6 @@ const MatchDetail: React.FC = () => {
   // setEventsLoading(false);
     }
   };
-
-  const handleDeleteGoal = async (goalId: number) => {
-    if (!id) return;
-    const token = localStorage.getItem('token');
-    try {
-      const resp = await fetch(`http://localhost:3001/api/matches/${id}/goals/${goalId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` }});
-      if (!resp.ok) { toast.error('Erro ao excluir gol'); return; }
-      setGoals(g => g.filter(gl => gl.id !== goalId));
-    } catch (e) { console.error(e); toast.error('Falha ao excluir gol'); }
-  };
-
-  const handleDeleteCard = async (cardId: number) => {
-    if (!id) return;
-    const token = localStorage.getItem('token');
-    try {
-      const resp = await fetch(`http://localhost:3001/api/matches/${id}/cards/${cardId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` }});
-      if (!resp.ok) { toast.error('Erro ao excluir cartão'); return; }
-      setCards(c => c.filter(cd => cd.id !== cardId));
-    } catch (e) { console.error(e); toast.error('Falha ao excluir cartão'); }
-  };
-
   const handleFinalizeMatch = async () => {
     if (!id) return;
     try {
@@ -227,8 +204,7 @@ const MatchDetail: React.FC = () => {
       toast.success('Partida finalizada');
       // Atualiza status local
       setMatch((m: any) => m ? { ...m, status: 'completed' } : m);
-      await fetchEvents();
-      await fetchMatchPlayers();
+     
       setShowEventsModal(true);
     } catch (e:any) {
       toast.error(e.message || 'Falha ao finalizar');
@@ -248,23 +224,6 @@ const MatchDetail: React.FC = () => {
       const resp = await fetch(`http://localhost:3001/api/matches/${id}/goals`, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(body) });
       if (!resp.ok) { toast.error('Erro ao adicionar gol'); return; }
       setGoalEmail(''); setSelectedGoalPlayer('');
-      await fetchEvents();
-    } catch (err) { console.error(err); }
-  };
-
-  const handleAddCard = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      const payload: any = { cardType, minute: cardMinute === '' ? undefined : Number(cardMinute) };
-      if (selectedCardPlayer) {
-        payload.playerId = Number(selectedCardPlayer);
-      } else if (cardEmail.trim()) {
-        payload.email = cardEmail.trim();
-      }
-      const resp = await fetch(`http://localhost:3001/api/matches/${id}/cards`, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(payload) });
-      if (!resp.ok) { toast.error('Erro ao adicionar cartão'); return; }
-      setCardEmail(''); setCardMinute(''); setCardType('yellow'); setSelectedCardPlayer('');
       await fetchEvents();
     } catch (err) { console.error(err); }
   };
@@ -599,73 +558,50 @@ const MatchDetail: React.FC = () => {
               </div>
             )}
           </div>
-            <div className='d-flex gap-2 container justify-content-center'>
-              {canDeleteMatch && (
-                <Button
-                  variant="danger"
-                  onClick={handleOpenDeleteConfirm}
-                >
-                  <DeleteIcon /> Excluir Partida
-                </Button>
-              )}     
+          <div className="match-actions d-flex flex-wrap justify-content-center gap-2 my-3">
+                {/* Grupo de botões administrativos */}
+            {(canDeleteMatch || isOrganizer || isAdmin) && (
+              <div className="action-group d-flex flex-wrap gap-2">
+                {canDeleteMatch && (
+                  <Button className="btn-delete" onClick={handleOpenDeleteConfirm}>
+                    <DeleteIcon /> Excluir Partida
+                  </Button>
+                )}
                 {(isOrganizer || isAdmin) && (
                   <>
-                    <Button
-                      variant="warning"
-                      onClick={handleOpenPunicao}
-                    >
+                    <Button className="btn-edit" onClick={handleOpenPunicao}>
                       Aplicar/Ver Punição
                     </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => navigate(`/matches/edit/${id}`)}
-                    >
-                      <EditIcon/> Editar Partida 
+                    <Button className="btn-edit" onClick={() => navigate(`/matches/edit/${id}`)}>
+                      <EditIcon /> Editar Partida
                     </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => setEditRules(true)}
-                    >
-                      <EditIcon/> Editar Regras   
+                    <Button className="btn-edit" onClick={() => setEditRules(true)}>
+                      <EditIcon /> Editar Regras
                     </Button>
                   </>
                 )}
-                <div className='d-flex gap-2 flex-wrap justify-content-center'>
-                  <Button
-                    variant='primary'
-                    title='Avaliar / comentar partida'
-                    onClick={() => setShowEvalModal(true)}
-                  >
-                    Avaliar / Comentar
-                  </Button>
-                  <Button
-                    variant='outline-light'
-                    title='Ver comentários e notas'
-                    onClick={() => setShowCommentsModal(true)}
-                  >
-                    Ver Comentários
-                  </Button>
-                  {isOrganizer && !isCompleted && (
-                    <Button
-                      variant='warning'
-                      title='Finalizar partida'
-                      onClick={handleFinalizeMatch}
-                    >
-                      Finalizar Partida
-                    </Button>
-                  )}
-                  {isCompleted && (
-                    <Button
-                      variant='outline-warning'
-                      title='Ver / editar eventos (gols e cartões)'
-                      onClick={() => { fetchEvents(); fetchMatchPlayers(); setShowEventsModal(true); }}
-                    >
-                      Eventos da Partida
-                    </Button>
-                  )}
-                </div>
-              
+              </div>
+            )}
+
+            <div className="action-group d-flex flex-wrap gap-2">
+              <Button className="btn-primary-custom" onClick={() => setShowEvalModal(true)}>
+                Avaliar / Comentar
+              </Button>
+              <Button className="btn-secondary-custom" onClick={() => setShowCommentsModal(true)}>
+                Ver Comentários
+              </Button>
+              {isOrganizer && !isCompleted && (
+                <Button className="btn-finalize" onClick={handleFinalizeMatch}>
+                  Finalizar Partida
+                </Button>
+              )}
+              {isCompleted && (
+                <Button className="btn-events" onClick={() => { fetchEvents(); fetchMatchPlayers(); setShowEventsModal(true); }}>
+                  Eventos da Partida
+                </Button>
+              )}
             </div>
+          </div>  
         </div>
         {modal && (
           <ModalTeams
@@ -712,6 +648,15 @@ const MatchDetail: React.FC = () => {
               onClose={() => setShowPunicaoInfo(false)}
               team={{ id: Number(id) }}
               idMatch={Number(id)}
+            />
+          </>
+        )}
+        {showEventsModal &&(
+          <>
+           <SumulaPartidaAmistosaModal 
+              id={Number(match.id)}
+              show={showEventsModal}
+              onHide={() => setShowEventsModal(false)}
             />
           </>
         )}
@@ -767,88 +712,8 @@ const MatchDetail: React.FC = () => {
           <Button variant="secondary" onClick={() => setShowCommentsModal(false)}>Fechar</Button>
         </DialogActions>
       </Dialog>
-      {/* Modal de eventos pós-finalização */}
-      <Dialog
-        open={showEventsModal}
-        onClose={() => setShowEventsModal(false)}
-        fullWidth
-        maxWidth="md"
-      >
-        <DialogTitle>Eventos da Partida (Gols e Cartões)</DialogTitle>
-        <DialogContent dividers>
-          <div className="events-section">
-            <h4>Registrar Gol</h4>
-            <div className="mb-3 d-flex gap-2 flex-wrap align-items-center">
-              <select className="form-select" style={{maxWidth:200}} value={selectedTeamForEvents} onChange={e=>{setSelectedTeamForEvents(e.target.value); fetchMatchPlayers(e.target.value || undefined); setSelectedGoalPlayer(''); setSelectedCardPlayer('');}}>
-                <option value="">-- Time (todos) --</option>
-                {timeCadastrados.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
-              <span className="text-secondary small">Filtrar jogadores por time</span>
-            </div>
-            <div className="mb-3 d-flex gap-2 flex-wrap align-items-center">
-              <Button onClick={()=>handleAddGoal()} variant="success">Gol (genérico)</Button>
-              <select className="form-select" style={{maxWidth:200}} value={selectedGoalPlayer} onChange={e=>setSelectedGoalPlayer(e.target.value)}>
-                <option value="">-- Selecionar Jogador --</option>
-                {availablePlayers.map(p => (
-                  <option key={p.playerId || p.userId} value={p.playerId || p.userId}>{p.nome} ({p.time || 'Sem time'})</option>
-                ))}
-              </select>
-              <span className="text-secondary small">ou email:</span>
-              <input style={{maxWidth:220}} className="form-control" value={goalEmail} onChange={e=>{setGoalEmail(e.target.value); setSelectedGoalPlayer('');}} placeholder="email@exemplo.com" />
-              <Button onClick={()=>handleAddGoal()} variant="outline-success" disabled={!goalEmail.trim() && !selectedGoalPlayer}>Registrar Gol</Button>
-            </div>
-            <h4>Registrar Cartão</h4>
-            <div className="mb-3 d-flex gap-2 flex-wrap align-items-center">
-              <select className="form-select" style={{maxWidth:130}} value={cardType} onChange={e=>setCardType(e.target.value as any)}>
-                <option value="yellow">Amarelo</option>
-                <option value="red">Vermelho</option>
-              </select>
-              <input style={{maxWidth:90}} className="form-control" type="number" value={cardMinute} onChange={e=>setCardMinute(e.target.value === '' ? '' : Number(e.target.value))} placeholder="Min" />
-              <select className="form-select" style={{maxWidth:200}} value={selectedCardPlayer} onChange={e=>setSelectedCardPlayer(e.target.value)}>
-                <option value="">-- Jogador --</option>
-                {availablePlayers.map(p => (
-                  <option key={p.playerId || p.userId} value={p.playerId || p.userId}>{p.nome} ({p.time || 'Sem time'})</option>
-                ))}
-              </select>
-              <span className="text-secondary small">ou email:</span>
-              <input style={{maxWidth:200}} className="form-control" value={cardEmail} onChange={e=>{setCardEmail(e.target.value); setSelectedCardPlayer('');}} placeholder="email@exemplo.com" />
-              <Button onClick={()=>handleAddCard()} variant={cardType==='yellow' ? 'warning':'danger'} disabled={!selectedCardPlayer && !cardEmail.trim()}>Registrar Cartão</Button>
-            </div>
-            <hr />
-            <h4>Gols ({goals.length})</h4>
-            <ul className="list-group mb-3">
-              {goals.map(g => {
-                const label = g.player?.nome ? g.player.nome : (g.user?.name ? g.user.name : (g.player_id ? `Player #${g.player_id}` : (g.user_id ? `Usuario #${g.user_id}` : 'Gol')));
-                return (
-                  <li key={g.id} className="list-group-item bg-transparent text-light d-flex justify-content-between align-items-center">
-                    <span>{label}</span>
-                    <button type="button" className="btn btn-sm btn-outline-danger" onClick={()=>handleDeleteGoal(g.id)} title="Remover gol">🗑️</button>
-                  </li>
-                );
-              })}
-              {goals.length === 0 && <li className="list-group-item bg-transparent text-secondary">Nenhum gol registrado</li>}
-            </ul>
-            <h4>Cartões ({cards.length})</h4>
-            <ul className="list-group">
-              {cards.map(c => {
-                const base = c.player?.nome ? c.player.nome : (c.user?.name ? c.user.name : (c.player_id ? `Player #${c.player_id}` : (c.user_id ? `Usuario #${c.user_id}` : 'Cartão')));
-                return (
-                  <li key={c.id} className="list-group-item bg-transparent text-light d-flex justify-content-between align-items-center">
-                    <span>{c.card_type === 'yellow' ? '🟨' : '🟥'} {base}{typeof c.minute === 'number' ? ` (${c.minute}')` : ''}</span>
-                    <button type="button" className="btn btn-sm btn-outline-danger" onClick={()=>handleDeleteCard(c.id)} title="Remover cartão">🗑️</button>
-                  </li>
-                );
-              })}
-              {cards.length === 0 && <li className="list-group-item bg-transparent text-secondary">Nenhum cartão registrado</li>}
-            </ul>
-          </div>
-        </DialogContent>
-        <DialogActions>
-          <Button variant="secondary" onClick={() => setShowEventsModal(false)}>Fechar</Button>
-        </DialogActions>
-      </Dialog>
+      
+     
     </div>
   );
 }

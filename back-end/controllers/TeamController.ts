@@ -11,6 +11,8 @@ import { AuthRequest } from '../middleware/auth';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv'
 import MatchTeams from '../models/MatchTeamsModel';
+import TeamChampionship from '../models/TeamChampionshipModel';
+import MatchChampionshpReport from '../models/MatchReportChampionshipModel';
 dotenv.config();
 export class TeamController {
   static async create(req: AuthRequest, res: Response): Promise<void> {
@@ -607,9 +609,128 @@ static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
     })
     res.status(200).json(team)
     }
+  catch{
+      res.status(500).json({error:'Erro ao buscar dados do time'})
+    }
+  }
+
+  static async getTeamRanking(req: AuthRequest, res:Response) : Promise<void> {
+    try{
+      let teamsRanking=[]
+      let nameTeam=""
+      const userId = req.user?.id;
+      const { id } = req.params
+      if (!userId) {
+        res.status(401).json({ error: 'Usuário não autenticado' });
+        return;
+      }
+      //Buscar times que disputaram o campeonato
+      let teams=await TeamChampionship.findAll({where:{
+          ChampionshipId:id
+      }})
+      const uniqueTeamIds = [...new Set(teams.map(team => team.dataValues.teamId))];
+      for (const teamId of uniqueTeamIds ){
+        let totalGoalsScore=0
+        let totalGoalsAgainst =0
+        let saldoGoals=0
+        let pontuacaoTeam=0
+        let countVitoria=0
+        let countDerrota=0
+        let countEmpate=0
+        const partidas = await MatchChampionshpReport.findAll({
+          where: {
+            [Op.or]: [
+                { team_home: teamId },
+                { team_away: teamId }
+            ]
+          },
+          include: 
+          [
+            {
+              model: Team,
+              as:'teamHome',
+              attributes: ['name']
+            },
+            {
+              model: Team,
+              as:'teamAway',
+              attributes: ['name']
+            },   
+          ]
+        })   
+        partidas.map((partida)=>{
+          
+          if(partida.dataValues.team_home===teamId)
+          { 
+            const goalsFeitos = partida.dataValues.teamHome_score || 0;
+            const goalsSofridos = partida.dataValues.teamAway_score || 0;   
+            totalGoalsScore += goalsFeitos;
+            totalGoalsAgainst += goalsSofridos;
+            nameTeam = partida.dataValues.teamHome.name;
+            if(goalsFeitos>goalsSofridos){
+              pontuacaoTeam += 3;
+              countVitoria +=1;
+              
+            }
+            else if(goalsSofridos===goalsFeitos){
+              pontuacaoTeam += 1;
+              countEmpate +=1;
+            }
+            else{
+              countDerrota +=1
+            } 
+
+          }
+          else if(partida.dataValues.team_away===teamId)
+          { 
+            const goalsFeitos = partida.dataValues.teamAway_score || 0;
+            const goalsSofridos = partida.dataValues.teamHome_score || 0;
+
+            if(goalsFeitos>goalsSofridos){
+              pontuacaoTeam += 3;
+              countVitoria+=1;
+            }
+            else if(goalsSofridos===goalsFeitos){
+              pontuacaoTeam += 1;
+              countEmpate+=1;
+            }
+            else{
+              countDerrota +=1;
+            }
+            
+            totalGoalsScore += goalsFeitos
+            totalGoalsAgainst += goalsSofridos
+            nameTeam=partida.dataValues.teamAway.name
+          }
+          saldoGoals=totalGoalsScore-totalGoalsAgainst
+          
+        })
+        teamsRanking.push({
+          pontuacaoTime:pontuacaoTeam,
+          nomeTime: nameTeam,
+          goalsScore: totalGoalsScore,
+          againstgoals: totalGoalsAgainst,
+          countVitorias: countVitoria,
+          countDerrotas: countDerrota,
+          countEmpates : countEmpate,
+          saldogoals: saldoGoals
+        });
+      }
+      const sortedteamsRanking=teamsRanking.sort((a,b)=>{
+        if(b.pontuacaoTime!==a.pontuacaoTime){
+          return b.pontuacaoTime- a.pontuacaoTime
+        }
+        else{
+           return b.saldoGoals- a.saldoGoals
+        }
+      })
+      res.status(200).json(sortedteamsRanking)
+    }
     catch{
       res.status(500).json({error:'Erro ao buscar dados do time'})
     }
   }
-} 
+}
+
+
 
