@@ -183,11 +183,12 @@ export const deleteCardEvent = async (req: AuthRequest, res: Response): Promise<
 export const altualizarPlacar = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const matchId = Number(req.params.id);
+    console.log(req.body)
     if (!req.user?.id) { res.status(401).json({ message: 'Não autenticado' }); return; }
     await MatchReport.update(
       {
-        teamHome_score: req.body.teamHome_score,
-        teamAway_score: req.body.teamAway_score,
+        teamHome_score: req.body.team_home_score,
+        teamAway_score: req.body.team_away_score,
       },
       {
         where: {
@@ -195,6 +196,7 @@ export const altualizarPlacar = async (req: AuthRequest, res: Response): Promise
         },
       }
     );
+    console.log("Atualizou")
     res.status(200).json({ message: 'Sumula atualizada com sucesso' });
   } catch (err) {
     console.error('Erro ao remover cartão:', err);

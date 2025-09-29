@@ -36,7 +36,7 @@ router.delete('/:id/goals/:goalId', authenticateToken, deleteGoalEvent);
 router.delete('/:id/cards/:cardId', authenticateToken, deleteCardEvent);
 router.get('/:id/players-for-admin', authenticateToken, getMatchPlayersForAdmin);
 router.get('/:id/roster-players', authenticateToken, getMatchRosterPlayers);
-router.put('/atualizar-sumula/:matchId',authenticateToken,altualizarPlacar)
+router.put('/atualizar-sumula/:id',authenticateToken,altualizarPlacar)
 router.get('/:idAmistosaPartida/punicao',authenticateToken,busarPunicaoPartidaAmistosa );
 router.post('/:idAmistosaPartida/punicao',authenticateToken,inserirPunicaoPartidaAmistosa );
 router.put('/:idAmistosaPartida/punicao',authenticateToken,alterarPunicaoPartidaAmistosa );
