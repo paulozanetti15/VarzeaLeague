@@ -202,6 +202,11 @@ export const deleteTeamMatch= async (req: any, res: any) => {
       const requester = await User.findByPk(requesterId).catch(() => null) as any;
       if (requester && Number(requester.userTypeId) === 1) requesterIsAdmin = true;
   const isTeamCaptain = Number((team as any).captainId) === requesterId;
+      // Se partida finalizada, capitão do time não pode desvincular; apenas organizador/admin do sistema podem
+      const matchStatus = String((match as any).status || '').toLowerCase();
+      if (matchStatus === 'completed' && isTeamCaptain && !isOrganizer && !requesterIsAdmin) {
+        return res.status(403).json({ message: 'Não é permitido desvincular o time de uma partida finalizada' });
+      }
       if (!isTeamCaptain && !isOrganizer && !requesterIsAdmin) {
         return res.status(403).json({ message: 'Sem permissão para remover este time da partida' });
       }

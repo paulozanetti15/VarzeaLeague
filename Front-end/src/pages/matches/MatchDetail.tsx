@@ -298,19 +298,21 @@ const MatchDetail: React.FC = () => {
   const handleLeaveMatch = async (matchId: string | undefined, teamId: number) => {
     if (!matchId) return;
     const numericMatchId = Number(matchId);
-    
-    const response = await axios.delete(`http://localhost:3001/api/matches/${numericMatchId}/join-team/${teamId}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
+    try {
+      const response = await axios.delete(`http://localhost:3001/api/matches/${numericMatchId}/join-team/${teamId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (response.status === 200) {
+        toast.success('Time removido da partida com sucesso!');
+        setTimeout(() => {
+          window.location.reload();
+        }, 800);
       }
-    })
-    if (response.status === 200) {
-      toast.success('Time removido da partida com sucesso!');
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    } else {
-      toast.error('Erro ao sair da partida. Tente novamente.');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Erro ao sair da partida. Tente novamente.';
+      toast.error(msg);
     }
   };
   const formatDate = (dateString: string | undefined): string => {
@@ -535,7 +537,7 @@ const MatchDetail: React.FC = () => {
                       }
                       <div className='d-flex flex-column align-items-center text-center'>
                         <Card.Title>{team.name}</Card.Title>
-                        {(team.captainId === user?.id) && (
+                        {(team.captainId === user?.id && !isCompleted) && (
                           <Button variant="danger" onClick={() => handleLeaveMatch(id, team.id)}>
                             Sair da Partida
                           </Button>
@@ -676,10 +678,11 @@ const MatchDetail: React.FC = () => {
         )}
         {showEventsModal &&(
           <>
-           <SumulaPartidaAmistosaModal 
+        <SumulaPartidaAmistosaModal 
               id={Number(match.id)}
               show={showEventsModal}
               onHide={() => setShowEventsModal(false)}
+          canSave={Boolean(isOrganizer)}
             />
           </>
         )}

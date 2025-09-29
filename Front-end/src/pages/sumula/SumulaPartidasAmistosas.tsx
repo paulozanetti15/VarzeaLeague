@@ -32,6 +32,8 @@ interface SumulaPartidaAmistosaModalProps {
   id: number;
   show: boolean;
   onHide: () => void;
+  // Quando true, exibe botão de salvar; deve ser true apenas para o organizador da partida
+  canSave?: boolean;
 }
 interface MatchReport{
     match_id  : number ,
@@ -41,7 +43,7 @@ interface MatchReport{
     team_away_score : number,
 }
 
-const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaModalProps) => {
+const SumulaPartidaAmistosaModal = ({ id, show, onHide, canSave = false }: SumulaPartidaAmistosaModalProps) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [homeTeam, setHomeTeam] = useState<number>(0);
   const [awayTeam, setAwayTeam] = useState<number>(0);
@@ -621,21 +623,23 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
             </Container>
              <hr></hr>
              <div className="d-flex gap-2 justify-content-end " style={{marginBlock:"1rem"}}>
-                <Button 
-                  variant="primary" 
-                  onClick={() => handleSaveMatch(id)}   // ✅ chama a função passando o id
-                  disabled={loading}
-                  >
-                  {loading ? (
-                      <>
-                      <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                      Salvando...
-                      </>
-                  ) : (
-                      'Salvar Partida'
-                  )}
-                  </Button>
+                {canSave && (
                   <Button 
+                    variant="primary" 
+                    onClick={() => handleSaveMatch(id)}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        Salvando...
+                      </>
+                    ) : (
+                      'Salvar Partida'
+                    )}
+                  </Button>
+                )}
+                <Button 
                   variant="outline-secondary" 
                   onClick={onHide} 
                   disabled={loading}
