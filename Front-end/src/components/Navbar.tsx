@@ -617,19 +617,22 @@ const Navbar = () => {
               onClick={() => handleNavigation('/register')}
               startIcon={<PersonAdd />}
               sx={{
-                color: '#fff',
+                color: '#0d47a1',
                 fontWeight: 700,
                 fontSize: 16,
                 letterSpacing: 1,
                 borderRadius: 8,
                 padding: '0.5rem 1.2rem',
-                background: '#7effffff',
-                border: '2px solid #7effffff',
+                background: '#ffd600',
+                border: '2px solid #ffd600',
                 transition: 'all 0.3s',
+                boxShadow: '0 2px 8px rgba(255, 214, 0, 0.3)',
                 '&:hover': {
-                  color: '#7effffff',
-                  background: '#00ffff79',
-                  border: '2px solid #7effffff',
+                  color: '#ffd600',
+                  background: 'rgba(255, 214, 0, 0.1)',
+                  border: '2px solid #ffd600',
+                  boxShadow: '0 4px 12px rgba(255, 214, 0, 0.4)',
+                  transform: 'translateY(-1px)',
                 },
               }}
             >
