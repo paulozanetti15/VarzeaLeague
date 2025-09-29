@@ -13,10 +13,6 @@ MatchCard.init({
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  user_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true, // opcional
-  },
   card_type: {
     type: DataTypes.ENUM('yellow', 'red'),
     allowNull: false,
@@ -29,6 +25,11 @@ MatchCard.init({
     type: DataTypes.INTEGER,
     allowNull: true, // novo campo para vincular ao Player
   },
+  teamId:{
+     type: DataTypes.INTEGER,
+    allowNull: true,
+  }
+  
 }, {
   sequelize,
   tableName: 'match_cards',

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import React, { useEffect, useState, useRef } from 'react';
 import { Button, Form, Row, Col, Table, Alert, Container, Card } from 'react-bootstrap';
-import "./sumulaPartidasAmistosas.css";
+import "./CriarSumulaPartidasAmistosas.css";
 interface Team {
   id: number;
   name: string;
@@ -18,6 +18,7 @@ interface Goal {
   minute: number;
   team: string;
   playerId?: number;
+  team_id:number;
 }
 
 interface Card {
@@ -26,6 +27,7 @@ interface Card {
   type: 'Amarelo' | 'Vermelho';
   minute: number;
   playerId?: number;
+  team_id:number;
 }
 
 interface SumulaPartidaAmistosaModalProps {
@@ -41,7 +43,7 @@ interface MatchReport{
     team_away_score : number,
 }
 
-const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaModalProps) => {
+const CriarSumulaPartidaAmistosaDialog = ({ id, show, onHide }: SumulaPartidaAmistosaModalProps) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [homeTeam, setHomeTeam] = useState<number>(0);
   const [awayTeam, setAwayTeam] = useState<number>(0);
@@ -63,6 +65,7 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
   const [nomeAwayTeam,setNomeAwayTeam] = useState<string>('');
   const [tempGoals, setTempGoals] = useState<Goal[]>([]);
   const [tempCards, setTempCards] = useState<Card[]>([]);
+ 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
@@ -202,9 +205,11 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
 
       if(adicionarSumula.status===201){
         // 2️⃣ Enviar gols
-        await Promise.all(tempGoals.map(goal => axios.post(
+        await Promise.all(
+          tempGoals.map(goal =>
+             axios.post(
           `http://localhost:3001/api/matches/${id}/goals`,
-          {
+          {   team_id :goal.team_id,
               playerId: goal.playerId,
               minute: goal.minute
           },
@@ -217,7 +222,8 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
             {
                 playerId: card.playerId,
                 cardType: card.type.toLowerCase() === 'amarelo' ? 'yellow' : 'red',
-                minute: card.minute
+                minute: card.minute,
+                team_id:card.team_id
             },
             { headers: { Authorization: `Bearer ${token}` } }
         )));
@@ -258,11 +264,12 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
         player: selectedPlayer.nome,
         minute: Number(goalMinute),
         team: playerTeam?.name || 'Time não identificado',
-        playerId: selectedPlayer.playerId
+        playerId: selectedPlayer.playerId,
+        team_id:selectedPlayer.teamId
     };
 
     setGoals([...goals, newGoal]);
-
+    setTempGoals([...tempGoals, newGoal]);
     if (selectedPlayer.teamId === homeTeam) {
         setHomeScore(prev => prev + 1);
     } else if (selectedPlayer.teamId === awayTeam) {
@@ -284,7 +291,8 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
         team: playerTeam?.name || 'Time não identificado',
         type: cardType,
         minute: Number(cardMinute),
-        playerId: selectedPlayer?.playerId
+        playerId: selectedPlayer?.playerId,
+        team_id: selectedPlayer?.teamId
     };
 
     setTempCards([...tempCards, newCard]); // adiciona apenas ao temporário
@@ -318,7 +326,7 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
                 ×
             </button>
             </div>
-            <div className="scoreboard text-center my-3">
+            <div className="scoreboard text-center my-3 ">
                 <h4 style={{color:"black"}}>
                     {nomeHomeTeam} {homeScore} x {awayScore} {nomeAwayTeam}
                 </h4>
@@ -623,17 +631,17 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
              <div className="d-flex gap-2 justify-content-end " style={{marginBlock:"1rem"}}>
                 <Button 
                   variant="primary" 
-                  onClick={() => handleSaveMatch(id)}   // ✅ chama a função passando o id
+                  onClick={() => handleSaveMatch(id)}   
                   disabled={loading}
                   >
-                  {loading ? (
-                      <>
-                      <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                      Salvando...
-                      </>
-                  ) : (
-                      'Salvar Partida'
-                  )}
+                      {loading ? (
+                          <>
+                          <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                          Salvando...
+                          </>
+                      ) : (
+                          'Salvar Partida'
+                      )}
                   </Button>
                   <Button 
                   variant="outline-secondary" 
@@ -650,4 +658,4 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
   );
 };
 
-export default SumulaPartidaAmistosaModal;
+export default CriarSumulaPartidaAmistosaDialog;
