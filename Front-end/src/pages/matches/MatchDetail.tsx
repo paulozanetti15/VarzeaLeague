@@ -439,6 +439,9 @@ const MatchDetail: React.FC = () => {
   const canDeleteMatch = isOrganizer || isAdmin;
   const statusLower = String(match.status || '').toLowerCase();
   const isCompleted = statusLower === 'completed';
+  // Definir capacidade padrão de 2 times quando não houver regra explicitando maxTeams
+  const effectiveMaxTeams = typeof (match?.maxTeams) === 'number' ? Number(match.maxTeams) : 2;
+  const currentTeamsCount = timeCadastrados.length;
 
   return (
     <div className="match-detail-container">
@@ -532,20 +535,40 @@ const MatchDetail: React.FC = () => {
                       }
                       <div className='d-flex flex-column align-items-center text-center'>
                         <Card.Title>{team.name}</Card.Title>
-                        <Button variant="danger" onClick={() => handleLeaveMatch(id,team.id)}>
-                          Sair da Partida
-                        </Button>
+                        {(team.captainId === user?.id) && (
+                          <Button variant="danger" onClick={() => handleLeaveMatch(id, team.id)}>
+                            Sair da Partida
+                          </Button>
+                        )}
+                        {((isOrganizer || isAdmin) && team.captainId !== user?.id) && (
+                          <Button variant="outline-danger" onClick={() => handleLeaveMatch(id, team.id)}>
+                            Remover time
+                          </Button>
+                        )}
                       </div>  
                     </Card.Body>
                   </Card>
                 ))}
                 {timeCadastrados.length === 1 && <div className="versus-text">X</div>}
+                {/* Permitir que o 2º time entre enquanto houver vaga */}
+                {match.status === 'open' && user?.userTypeId === 3 && (currentTeamsCount < effectiveMaxTeams) && (
+                  <div className="d-flex justify-content-center mt-3">
+                    <Button 
+                      variant="success" 
+                      onClick={handleOpenSelectTeamPlayers} 
+                      className="join-match-btn"
+                    >
+                      <i className="fas fa-link"></i>
+                      Vincular meu Time
+                    </Button>
+                  </div>
+                )}
               </>
 
             ) : (
               <div className="no-teams-wrapper">
                 <div className="no-teams-text">Nenhum time inscrito ainda.</div>
-                {match.status === 'open' && user?.userTypeId === 3 && (typeof match.maxTeams !== 'number' || match.countTeams < match.maxTeams) && (
+                {match.status === 'open' && user?.userTypeId === 3 && (currentTeamsCount < effectiveMaxTeams) && (
                   <Button 
                     variant="success" 
                     onClick={handleOpenSelectTeamPlayers} 
