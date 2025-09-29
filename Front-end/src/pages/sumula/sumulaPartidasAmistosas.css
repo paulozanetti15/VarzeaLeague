@@ -88,6 +88,11 @@
   margin-bottom: 0.5rem;
 }
 
+/* Cores de labels por seção, alinhadas com o título da categoria */
+.section-primary .form-label { color: #0d6efd; }   /* Azul Bootstrap */
+.section-success .form-label { color: #198754; }   /* Verde Bootstrap */
+.section-warning .form-label { color: #ffc107; }   /* Amarelo Bootstrap */
+
 .form-select,
 .form-control {
   font-size: 1rem;

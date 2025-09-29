@@ -349,7 +349,7 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
                 </div>
 
               {/* Informações da Partida */}
-              <div className="form-section">
+              <div className="form-section section-primary">
                 <h5 className="text-primary">Informações da Partida</h5>
                 <Row className="g-3">
                   <Col lg={4} md={6}>
@@ -400,7 +400,7 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
               <Row className="g-4 mb-4">
                 {/* Registrar Gol */}
                 <Col lg={6} md={12}>
-                  <div className="form-section">
+                  <div className="form-section section-success">
                     <h5 className="text-success">Registrar Gol</h5>
                     <Row className="g-3">
                       <Col xs={12}>
@@ -450,7 +450,7 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide }: SumulaPartidaAmistosaM
 
                 {/* Registrar Cartão */}
                 <Col lg={6} md={12}>
-                  <div className="form-section">
+                  <div className="form-section section-warning">
                     <h5 className="text-warning">Registrar Cartão</h5>
                     <Row className="g-3">
                       <Col xs={12}>
