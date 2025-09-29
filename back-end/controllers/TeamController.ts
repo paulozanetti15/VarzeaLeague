@@ -3,7 +3,7 @@ import Team from '../models/TeamModel';
 import User from '../models/UserModel';
 import Player from '../models/PlayerModel';
 import TeamPlayer from '../models/TeamPlayerModel';
-import { Op, Sequelize } from 'sequelize';
+import { Op, Sequelize, fn, col } from 'sequelize';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -728,6 +728,92 @@ static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
     }
     catch{
       res.status(500).json({error:'Erro ao buscar dados do time'})
+    }
+  }
+
+  static async getPlayerStats(req: AuthRequest, res: Response): Promise<void> {
+    try {
+  const { id } = req.params; // team id
+  const teamIdNum = Number(id);
+      const userId = req.user?.id;
+      if (!userId) { res.status(401).json({ error: 'Usuário não autenticado' }); return; }
+
+      // Verificar se o usuário tem acesso ao time (capitão ou membro)
+      const team = await Team.findOne({
+        where: { id, isDeleted: false },
+        include: [
+          { model: User, as: 'users', attributes: ['id'], through: { attributes: [] } },
+          { model: User, as: 'captain', attributes: ['id'] }
+        ]
+      });
+      if (!team) { res.status(404).json({ error: 'Time não encontrado' }); return; }
+      const isCaptain = (team as any).captainId === userId;
+      const isMember = (team as any).users?.some((u: any) => u.id === userId);
+      if (!isCaptain && !isMember) { res.status(403).json({ error: 'Acesso negado a este time' }); return; }
+
+      // Buscar jogadores do time
+      const teamPlayers = await TeamPlayer.findAll({
+        where: { teamId: id },
+        include: [{ model: Player, as: 'player', attributes: ['id','nome','posicao','sexo'] }] as any
+      });
+
+      const playerIds = teamPlayers.map((tp: any) => tp.playerId);
+      if (playerIds.length === 0) { res.json({ teamId: Number(id), total: 0, stats: [] }); return; }
+
+      // Agregar gols e cartões por player_id
+      const goals = await (await import('../models/MatchGoalModel')).default.findAll({
+        attributes: ['player_id', [fn('COUNT', col('id')), 'gols']],
+        where: {
+          player_id: playerIds,
+          match_id: { [Op.in]: Sequelize.literal(`(SELECT match_id FROM match_teams WHERE team_id = ${teamIdNum})`) }
+        },
+        group: ['player_id']
+      });
+      const yellowCards = await (await import('../models/MatchCardModel')).default.findAll({
+        attributes: ['player_id', [fn('COUNT', col('id')), 'amarelos']],
+        where: {
+          player_id: playerIds, card_type: 'yellow',
+          match_id: { [Op.in]: Sequelize.literal(`(SELECT match_id FROM match_teams WHERE team_id = ${teamIdNum})`) }
+        },
+        group: ['player_id']
+      });
+      const redCards = await (await import('../models/MatchCardModel')).default.findAll({
+        attributes: ['player_id', [fn('COUNT', col('id')), 'vermelhos']],
+        where: {
+          player_id: playerIds, card_type: 'red',
+          match_id: { [Op.in]: Sequelize.literal(`(SELECT match_id FROM match_teams WHERE team_id = ${teamIdNum})`) }
+        },
+        group: ['player_id']
+      });
+
+      const gMap: Record<string, number> = {};
+      goals.forEach((g: any) => { gMap[g.player_id] = Number(g.get('gols')); });
+      const yMap: Record<string, number> = {};
+      yellowCards.forEach((c: any) => { yMap[c.player_id] = Number(c.get('amarelos')); });
+      const rMap: Record<string, number> = {};
+      redCards.forEach((c: any) => { rMap[c.player_id] = Number(c.get('vermelhos')); });
+
+      const stats = teamPlayers.map((tp: any) => {
+        const pid = String(tp.playerId);
+        const gols = gMap[pid] || 0;
+        const amarelos = yMap[pid] || 0;
+        const vermelhos = rMap[pid] || 0;
+        return {
+          playerId: tp.playerId,
+          nome: tp.player?.nome || 'N/A',
+          posicao: tp.player?.posicao || null,
+          sexo: tp.player?.sexo || null,
+          gols,
+          amarelos,
+          vermelhos,
+          cartoes: amarelos + vermelhos
+        };
+      }).sort((a: any, b: any) => b.gols - a.gols || b.cartoes - a.cartoes || a.nome.localeCompare(b.nome));
+
+      res.json({ teamId: Number(id), total: stats.length, stats });
+    } catch (error) {
+      console.error('Erro ao gerar estatísticas de jogadores do time:', error);
+      res.status(500).json({ error: 'Erro ao gerar estatísticas' });
     }
   }
 }

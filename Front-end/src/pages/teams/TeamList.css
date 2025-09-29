@@ -500,6 +500,14 @@
   padding: 1rem;
 }
 
+.team-bottom-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
 /* Estilos para o botão de expandir/recolher jogadores */
 .players-toggle-btn {
   display: flex;
@@ -856,4 +864,43 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ===== Estatísticas por jogador (tabela do relatório) ===== */
+.team-stats-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px; /* linhas com espaçamento e efeito de cards */
+  color: #e3f2fd;
+}
+
+.team-stats-table thead th {
+  color: #e3f2fd;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: none;
+  padding: 10px 12px;
+}
+
+.team-stats-table tbody tr {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.team-stats-table tbody td {
+  padding: 10px 12px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.team-stats-table tbody td:first-child {
+  text-align: left;
+  font-weight: 600;
+}
+
+.team-stats-table tbody tr:hover {
+  background: rgba(255,255,255,0.14);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
 }

@@ -3,21 +3,16 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import './CreateTeam.css';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PaletteIcon from '@mui/icons-material/Palette';
 import ImageIcon from '@mui/icons-material/Image';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
 import WarningIcon from '@mui/icons-material/Warning';
-import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import EditIcon from '@mui/icons-material/Edit';
 import './EditTeam.css';
 import PlayerModal from '../../components/teams/PlayerModal';
 import ToastComponent from '../../components/Toast/ToastComponent';
-import BackButton from '../../components/BackButton';
 
 interface PlayerData {
   id?: number;
@@ -62,7 +57,6 @@ export default function EditTeam() {
     index: undefined
   });
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [showPlayersList, setShowPlayersList] = useState(false);
   const [existingPlayers, setExistingPlayers] = useState<ExistingPlayer[]>([]);
   const [teamId, setTeamId] = useState<string | null>(null);
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
@@ -82,20 +76,9 @@ export default function EditTeam() {
     logo: null,
     jogadores: [],
   });
-  const [cidadesDisponiveis, setCidadesDisponiveis] = useState<string[]>([]);
   const [cepValido, setCepValido] = useState<boolean | null>(null);
   const [buscandoCep, setBuscandoCep] = useState(false);
   const [cepErrorMessage, setCepErrorMessage] = useState<string | null>(null);
-  const estadosCidades: Record<string, string[]> = {
-    'MG': ['Belo Horizonte', 'Ouro Preto', 'Uberlândia'],
-    'PR': [
-      'Cascavel', 'Colombo', 'Curitiba', 'Foz do Iguaçu', 'Guarapuava',
-      'Londrina', 'Maringá', 'Paranaguá', 'Ponta Grossa', 'São José dos Pinhais', 'União da Vitória'
-    ],
-    'RJ': ['Niterói', 'Petrópolis', 'Rio de Janeiro'],
-    'SP': ['Campinas', 'Santos', 'São Paulo'],
-  };
-  const estadosOrdem = Object.keys(estadosCidades).sort();
 
   useEffect(() => {
     if (!id) return;
@@ -282,33 +265,7 @@ export default function EditTeam() {
     }
   };
 
-  const handlePlayerChange = (index: number, field: keyof PlayerData, value: string) => {
-    const updated = [...formData.jogadores];
-    
-    // Validação especial para o campo ano
-    if (field === 'ano') {
-      const anoNum = parseInt(value);
-      if (anoNum < 0) {
-        return; // Não permite ano negativo
-      }
-      if (anoNum > 120) {
-        return; // Limite máximo razoável de ano
-      }
-    }
-    
-    updated[index] = {
-      ...updated[index],
-      [field]: value
-    };
-    setFormData({ ...formData, jogadores: updated });
-  };
-
-  const addPlayer = () => {
-    setFormData({
-      ...formData,  
-      jogadores: [...formData.jogadores, { nome: '', sexo: '', ano: '', posicao: '' }],
-    });
-  };
+  
 
   const removePlayer = (index: number) => {
     const updatedPlayers = [...formData.jogadores];
@@ -533,7 +490,7 @@ export default function EditTeam() {
     background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`,
   };
 
-  const cidadesDisponiveisOrdenadas = [...cidadesDisponiveis].sort();
+  
 
   const handleRemoveExistingPlayer = async (playerId: number) => {
     try {
@@ -581,9 +538,7 @@ export default function EditTeam() {
     }
   };
   
-  const togglePlayersList = () => {
-    setShowPlayersList(!showPlayersList);
-  };
+  
 
   // Funções para gerenciar jogadores
   const openPlayerModal = () => {
@@ -874,7 +829,7 @@ export default function EditTeam() {
             </AnimatePresence>
           </motion.div>
           
-          <div className="form-actions">
+          <div className="form-buttons">
             <motion.button 
               type="submit"
               className="submit-btn"
