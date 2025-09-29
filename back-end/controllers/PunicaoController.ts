@@ -7,7 +7,7 @@ import MatchModel from "../models/MatchModel";
 import UserModel from "../models/UserModel";
 import Championship from "../models/ChampionshipModel";
 import TeamChampionship from "../models/TeamChampionshipModel";
-import PunicaoChampionship from "../models/PunicaoChampionshipModel";
+import ChampionshipPenalty from "../models/ChampionshipPenaltyModel";
 export const inserirPunicaoPartidaAmistosa = async(req:AuthRequest,res:Response) =>{
     try {
         const userId = req.user?.id;
@@ -194,13 +194,13 @@ export const inserirPunicaoCampeonato = async (req: AuthRequest, res: Response) 
         const isAdmin = user && (user as any).userTypeId === 1;
         if (!isOrganizer && !isAdmin) { res.status(403).json({ message: 'Permissão negada. Apenas o criador ou admin pode aplicar punição.' }); return; }
 
-        const existing = await PunicaoChampionship.findOne({ where: { idChampionship } });
+        const existing = await ChampionshipPenalty.findOne({ where: { idChampionship } });
         if (existing) { res.status(409).json({ message: 'Já existe uma punição para este campeonato.' }); return; }
 
         const teamInChamp = await TeamChampionship.findOne({ where: { championshipId: idChampionship, teamId: idTime } });
         if (!teamInChamp) { res.status(400).json({ message: 'O time selecionado não está inscrito neste campeonato.' }); return; }
 
-        await PunicaoChampionship.create({ idTime, motivo, idChampionship });
+        await ChampionshipPenalty.create({ idTime, motivo, idChampionship });
         res.status(201).json({ message: 'Punição criada com sucesso' });
     } catch (error) {
         console.error('Erro ao inserir punição (campeonato):', error);
@@ -213,7 +213,7 @@ export const busarPunicaoCampeonato = async (req: AuthRequest, res: Response) =>
         const userId = req.user?.id;
         if (!userId) { res.status(401).json({ error: 'Usuário não autenticado' }); return; }
         const idChampionship = Number(req.params.idCampeonato);
-        const rows = await PunicaoChampionship.findAll({
+        const rows = await ChampionshipPenalty.findAll({
             where: { idChampionship },
             attributes: [ ['idTime','idtime'], 'motivo', ['idChampionship','idchampionship'], 'id' ],
             include: [{ model: TeamModel, as: 'team', attributes: ['id','name'] }]
@@ -240,7 +240,7 @@ export const alterarPunicaoCampeonato = async (req: AuthRequest, res: Response) 
         const isAdmin = user && (user as any).userTypeId === 1;
         if (!isOrganizer && !isAdmin) { res.status(403).json({ message: 'Permissão negada. Apenas o criador ou admin pode alterar a punição.' }); return; }
 
-        const registro = await PunicaoChampionship.findOne({ where: { idChampionship } });
+        const registro = await ChampionshipPenalty.findOne({ where: { idChampionship } });
         if (!registro) { res.status(404).json({ message: 'Punição não encontrada para este campeonato' }); return; }
 
         if (novoIdTime) {
@@ -268,7 +268,7 @@ export const deletarPunicaoCampeonato = async (req: AuthRequest, res: Response) 
         const isOrganizer = Number((championship as any).created_by) === userId;
         const isAdmin = user && (user as any).userTypeId === 1;
         if (!isOrganizer && !isAdmin) { res.status(403).json({ message: 'Permissão negada. Apenas o criador ou admin pode deletar a punição.' }); return; }
-        await PunicaoChampionship.destroy({ where: { idChampionship } });
+        await ChampionshipPenalty.destroy({ where: { idChampionship } });
         res.status(200).json({ message: 'Punição deletada com sucesso' });
     } catch (error) {
         console.error('Erro ao deletar punição (campeonato):', error);

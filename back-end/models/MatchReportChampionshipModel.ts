@@ -1,6 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
 import Team from './TeamModel';
+import MatchChampionship from './MatchChampionshipModel';
 
 class MatchChampionshpReport extends Model {}
 
@@ -15,7 +16,8 @@ MatchChampionshpReport.init({
     allowNull: false,
     field: 'match_id',
     references: {
-      model: 'Match_championship',
+      // Important: reference the actual model/table, not the modelName string
+      model: MatchChampionship,
       key: 'id'
     },
     onDelete: 'CASCADE',

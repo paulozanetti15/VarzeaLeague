@@ -3,21 +3,21 @@ import sequelize from '../config/database';
 import Team from './TeamModel';
 import Championship from './ChampionshipModel';
 
-interface PunicaoChampionshipAttributes {
+interface ChampionshipPenaltyAttributes {
   id: number;
   idTime: number;
   motivo: string;
   idChampionship: number;
 }
 
-class PunicaoChampionship extends Model<PunicaoChampionshipAttributes> {
+class ChampionshipPenalty extends Model<ChampionshipPenaltyAttributes> {
   public id!: number;
   public idTime!: number;
   public motivo!: string;
   public idChampionship!: number;
 }
 
-PunicaoChampionship.init(
+ChampionshipPenalty.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -43,14 +43,14 @@ PunicaoChampionship.init(
   },
   {
     sequelize,
-    modelName: 'PunicaoChampionship',
-    tableName: 'punicao_championships',
+    modelName: 'ChampionshipPenalty',
+    tableName: 'ChampionshipPenalty',
     timestamps: true,
     underscored: true,
   }
 );
 
-PunicaoChampionship.belongsTo(Team, { foreignKey: 'idTime', as: 'team' });
-PunicaoChampionship.belongsTo(Championship, { foreignKey: 'idChampionship', as: 'championship' });
+ChampionshipPenalty.belongsTo(Team, { foreignKey: 'idTime', as: 'team' });
+ChampionshipPenalty.belongsTo(Championship, { foreignKey: 'idChampionship', as: 'championship' });
 
-export default PunicaoChampionship;
+export default ChampionshipPenalty;
