@@ -10,14 +10,14 @@ interface PunicaoAttributes {
 }
 
 
-class PunicaoAmitosoMatch extends Model<PunicaoAttributes> {
+class FriendlyMatchPenalty extends Model<PunicaoAttributes> {
   public id!: number;
   public idTime!: number;
   public motivo!: string;
   public idMatch!: number;
 }
 
-PunicaoAmitosoMatch.init(
+FriendlyMatchPenalty.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -49,22 +49,22 @@ PunicaoAmitosoMatch.init(
   },
   {
     sequelize,
-    modelName: 'punicaoamitosoMatch',
-    tableName: 'punicaoamitosoMatch',
+    modelName: 'FriendlyMatchPenalty',
+    tableName: 'FriendlyMatchPenalty',
     timestamps: true,
     underscored: true,
   }
 );
 
 // As associações permanecem iguais
-PunicaoAmitosoMatch.belongsTo(Team, {
+FriendlyMatchPenalty.belongsTo(Team, {
   foreignKey: "idTime",
   as: "team"
 });
 
-PunicaoAmitosoMatch.belongsTo(Match, {
+FriendlyMatchPenalty.belongsTo(Match, {
   foreignKey: "idMatch", 
   as: "match"
 });
 
-export default PunicaoAmitosoMatch; 
+export default FriendlyMatchPenalty; 

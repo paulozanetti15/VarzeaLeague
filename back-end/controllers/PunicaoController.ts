@@ -1,6 +1,6 @@
 import { AuthRequest } from "middleware/auth";
 import { Request, Response } from 'express';
-import PunicaoAmitosoMatch from "../models/PunicaoAmitosoMatchModel";
+import FriendlyMatchPenalty from "../models/FriendlyMatchPenaltyModel";
 import TeamModel from "../models/TeamModel";
 import MatchTeams from "../models/MatchTeamsModel";
 import MatchModel from "../models/MatchModel";
@@ -39,7 +39,7 @@ export const inserirPunicaoPartidaAmistosa = async(req:AuthRequest,res:Response)
         }
 
         // Verifica se já existe punição para esta partida
-        const existing = await PunicaoAmitosoMatch.findOne({ where: { idMatch } });
+        const existing = await FriendlyMatchPenalty.findOne({ where: { idMatch } });
         if (existing) {
             res.status(409).json({ message: 'Já existe uma punição para esta partida.' });
             return;
@@ -52,7 +52,7 @@ export const inserirPunicaoPartidaAmistosa = async(req:AuthRequest,res:Response)
             return;
         }
 
-        await PunicaoAmitosoMatch.create({
+        await FriendlyMatchPenalty.create({
             idTime,
             motivo, 
             idMatch
@@ -70,7 +70,7 @@ export const busarPunicaoPartidaAmistosa = async(req:AuthRequest,res:Response) =
             res.status(401).json({ error: 'Usuário não autenticado' });
             return;
         }
-        const Punicao=await PunicaoAmitosoMatch.findAll({
+        const Punicao=await FriendlyMatchPenalty.findAll({
             where: {
                 idMatch:Number(req.params.idAmistosaPartida)
             },
@@ -118,7 +118,7 @@ export const alterarPunicaoPartidaAmistosa=async(req:AuthRequest,res:Response) =
             return;
         }
 
-        const registro = await PunicaoAmitosoMatch.findOne({ where: { idMatch } });
+        const registro = await FriendlyMatchPenalty.findOne({ where: { idMatch } });
         if (!registro) {
             res.status(404).json({ message: 'Punição não encontrada para esta partida' });
             return;
@@ -164,7 +164,7 @@ export const deletarPunicaoPartidaAmistosa=async(req:AuthRequest,res:Response) =
             return;
         }
 
-        await PunicaoAmitosoMatch.destroy({ where: { idMatch } });
+        await FriendlyMatchPenalty.destroy({ where: { idMatch } });
         res.status(200).json({ message: "Punição deletada com sucesso" });
 
         

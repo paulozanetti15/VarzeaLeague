@@ -22,7 +22,7 @@ import RulesRoutes from './routes/RulesRoutes';
 import TeamPlayerRoutes from './routes/teamPlayerRoutes';
 import { seedUserTypes } from './seeds/userTypes';
 import { associateModels } from './models/associations'; 
-import PunicaoAmitosoMatch from './models/PunicaoAmitosoMatchModel';
+import FriendlyMatchPenalty from './models/FriendlyMatchPenaltyModel';
 import PunicaoChampionship from './models/PunicaoChampionshipModel';
 import fs from 'fs';
 import { forEachChild } from 'typescript';
@@ -139,7 +139,7 @@ const startServer = async () => {
     await AttendanceModel.sync();
     console.log('Modelo Attendance sincronizado.');
      
-    await PunicaoAmitosoMatch.sync()
+    await FriendlyMatchPenalty.sync()
     console.log('Modelo Punicao Partida Amistosa sincronizado.');
     await PunicaoChampionship.sync();
     console.log('Modelo Punicao Championship sincronizado.');
