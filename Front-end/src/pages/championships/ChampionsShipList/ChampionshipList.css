@@ -19,58 +19,53 @@
 .match-list-container {
   width: 100%;
   min-height: 100vh;
+  background: #f0f2f5;
   position: relative;
   overflow-x: hidden;
+  padding: 2rem;
 }
 
 .match-list-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('../../assets/gerenciamento.png') center/cover no-repeat;
-  opacity: 0.15;
-  z-index: 0;
-  pointer-events: none;
+  content: none;
 }
 
 .content-container {
   width: 100%;
-  max-width: 1600px;
+  max-width: 1400px;
   margin: 0 auto;
   position: relative;
   z-index: 1;
-  background-color: #fff;
-  padding: 1.5rem;
-  min-height: calc(100vh - 2rem);
-  border-radius: var(--border-radius);
-  box-shadow: 0 0 20px rgba(0,0,0,0.1);
-  margin-top: 1rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  padding: 2.5rem;
+  min-height: calc(100vh - 4rem);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(33, 150, 243, 0.1);
+  margin-top: 0;
+  backdrop-filter: blur(10px);
 }
 
 .header-container {
   display: flex;
   flex-direction: column;
-  margin-bottom: 1.5rem;
-  position: sticky;
-  top: 0;
-  background-color: #fff;
-  padding: 1rem;
-  margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+  margin-bottom: 2rem;
+  position: relative;
+  background-color: transparent;
+  padding: 0;
+  margin: 0 0 2rem 0;
   z-index: 5;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .page-title {
-  color: var(--text-primary);
+  color: #333;
   font-size: 2.2rem;
   font-weight: 700;
   margin-bottom: 1.25rem;
   display: flex;
   align-items: center;
+  text-shadow: none;
 }
 
 .create-match-btn {
@@ -78,21 +73,41 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 1rem;
+  padding: 1.2rem 2rem;
   margin-bottom: 2rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #42a5f5 0%, #1976d2 50%, #1565c0 100%);
   color: white;
   border: none;
-  border-radius: var(--border-radius);
-  font-weight: 600;
+  border-radius: 16px;
+  font-weight: 700;
   font-size: 1.1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: var(--card-shadow);
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 8px 25px rgba(33, 150, 243, 0.3), 0 3px 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(10px);
 }
+.create-match-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.create-match-btn:hover::before {
+  left: 100%;
+}
+
 .create-match-btn:hover {
-  background: var(--primary-dark);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 50%, #2196f3 100%);
+  box-shadow: 0 16px 45px rgba(33, 150, 243, 0.5), 0 8px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px) scale(1.03);
 }
 
 .matches-grid {
@@ -206,26 +221,46 @@
   gap: 0.5rem;
   margin-bottom: 2rem;
   position: relative;
-}
-.championship-header-visual {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(33, 150, 243, 0.1);
   z-index: 1;
-  color: white;
+  color: #333;
+  padding: 2.5rem 2rem;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
 }
+.championship-header-visual::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(33, 150, 243, 0.05) 0%, transparent 70%);
+  animation: float 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
 .championship-header-visual h1 {
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: #333;
+  text-shadow: none;
+  position: relative;
+  z-index: 2;
 }
 .championship-trophy-main {
   width: 80px;
   height: 80px;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.8rem;
   filter: drop-shadow(0 4px 16px #ffd70088);
   animation: trophy-pop 0.8s cubic-bezier(.23,1.12,.62,1.01);
+  transition: all 0.3s ease;
+}
+
+.championship-trophy-main:hover {
+  transform: scale(1.05) rotate(3deg);
+  filter: drop-shadow(0 6px 20px #ffd700aa);
 }
 .championship-trophy-btn {
   width: 28px;
@@ -251,24 +286,25 @@
   align-items: center;
   gap: 0.7rem;
   margin-bottom: 0.2rem;
-  border-bottom: 2px solid #daa520;
+  border-bottom: 2px solid #e0e0e0;
 }
 .championship-card-header h2 {
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  color: #333;
+  text-shadow: none;
 }
 .championship-card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 1.2rem;
+  margin-top: 1.5rem;
   font-size: 0.95rem;
-  color: #bfa13a;
-  border-top: 1px solid #ffe082;
-  padding-top: 0.7rem;
-  background: linear-gradient(90deg, #fffde4 60%, #fff8c6 100%);
-  border-radius: 0 0 10px 10px;
-  box-shadow: 0 2px 8px #fffde455;
+  color: #666;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 1rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(5px);
 }
 .championship-id {
   font-weight: 600;
@@ -281,25 +317,25 @@
 .championship-description, 
 .championship-dates span,
 .championship-card-footer span {
-  color: rgba(255, 255, 255, 0.9);
+  color: #666;
 }
 .no-matches-message {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  color: white;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  color: #333;
   padding: 30px;
   z-index: 1;
   position: relative;
+  text-align: center;
 }
 .no-matches-message h3 {
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  color: #333;
+  text-shadow: none;
 }
 .no-matches-message p {
-  color: rgba(255, 255, 255, 0.9);
+  color: #666;
 }
 @keyframes trophy-pop {
   0% { transform: scale(0.7) rotate(-10deg); opacity: 0; }
@@ -307,19 +343,23 @@
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(180deg); }
+}
+
 .back-btn {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  color: #333;
   padding: 0.4rem 0.8rem;
   border-radius: 20px;
   font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
-  backdrop-filter: blur(4px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   font-size: 0.85rem;
   z-index: 10;
@@ -329,7 +369,9 @@
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #f8f9fa;
+  border-color: #2196F3;
+  color: #2196F3;
   transform: translateX(-3px);
 }
 

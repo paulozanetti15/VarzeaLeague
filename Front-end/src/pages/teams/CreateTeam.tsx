@@ -466,142 +466,165 @@ export default function CreateTeam() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        {error && (
-          <div className="error-message">
-            <p>{error}</p>
-          </div>
-        )}
-        
-        <div className="preview-banner" style={bannerStyle}>
-          <div className="logo-preview-container" onClick={handleLogoClick}>
-            {logoPreview ? (
-              <img src={logoPreview} alt="Logo preview" className="logo-preview" />
-            ) : (
-              <div className="logo-placeholder">
-                <ImageIcon />
-                <span>Adicionar Logo</span>
-              </div>
-            )}
-            <input 
-              type="file" 
-              ref={logoInputRef}
-              className="hidden-file-input"
-              name="banner" 
-              onChange={handleLogoChange}
-            />
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          
-          <motion.div 
-            className="form-group"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-          >
-            <label className="form-label" htmlFor="name">Nome do Time</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              className="form-control"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="Digite o nome do time"
-              required
-            />
-          </motion.div>
-
-          <motion.div 
-            className="form-group"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <label className="form-label" htmlFor="description">Descrição</label>
-            <textarea
-              id="description"
-              name="description"
-              className="form-control"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Adicione a história, curiosidades, conquistas do seu time"
-              required
-            />
-          </motion.div>
-
-          <motion.div 
-            className="form-group"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-          >
-            <label className="form-label" htmlFor="cep">CEP</label>
-            <div className={`cep-input-container ${cepValido === true ? 'valid' : cepValido === false ? 'invalid' : ''}`}>
-              <input
-                type="text"
-                id="cep"
-                name="cep"
-                className="form-control"
-                value={formData.cep}
-                onChange={handleInputChange}
-                placeholder="00000-000"
-                maxLength={9}
-                required
+        <div className="form-main-grid">
+          {/* Seção de Upload de Logo - Lado Esquerdo */}
+          <div className="logo-section">
+            <div className="logo-preview-container" onClick={handleLogoClick}>
+              {logoPreview ? (
+                <img src={logoPreview} alt="Logo preview" className="logo-preview" />
+              ) : (
+                <div className="logo-placeholder">
+                  <ImageIcon />
+                  <span>Adicionar Logo</span>
+                </div>
+              )}
+              <input 
+                type="file" 
+                ref={logoInputRef}
+                className="hidden-file-input"
+                name="banner" 
+                onChange={handleLogoChange}
               />
-              {buscandoCep && <span className="cep-loading">Buscando...</span>}
-              {cepValido === true && <span className="cep-valid">✓</span>}
-              {cepValido === false && <span className="cep-invalid">✗</span>}
             </div>
-            {cepErrorMessage && (
-              <div className="cep-error-message">
-                {cepErrorMessage}
+            {formData.logo ? (
+              <button 
+                type="button"
+                className="update-image-btn"
+                onClick={handleLogoClick}
+              >
+                Atualizar Imagem
+              </button>
+            ) : (
+              <div className="file-status">
+                Nenhum arquivo selecionado
               </div>
             )}
-          </motion.div>
-          <motion.div 
-            className="form-group"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-          >
-            <label className="form-label" htmlFor="estado">Estado</label>
-            <input
-              type="text"
-              id="estado"
-              name="estado"
-              className="form-control"
-              value={formData.estado}
-              onChange={handleInputChange}
-              placeholder=""
-              disabled>
-            </input>
-          </motion.div>
-          <motion.div 
-            className="form-group"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <label className="form-label" htmlFor="cidade">Cidade</label>
-            <input
-              type="text"
-              id="cidade"
-              name="cidade"
-              className="form-control"
-              value={formData.cidade}
-              onChange={handleInputChange}
-              placeholder=""
-              disabled></input>
-          </motion.div>
-        
-          <motion.div 
-            className="colors-section"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-          >
+            
+            {/* Campo de Descrição movido para baixo da logo */}
+            <div className="form-group logo-description">
+              <label className="form-label" htmlFor="description">Descrição do Time</label>
+              <textarea
+                id="description"
+                name="description"
+                className="form-control"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="Adicione a história, curiosidades, conquistas do seu time"
+                required
+                rows={11}
+              />
+            </div>
+          </div>
+
+          {/* Seção de Formulário - Lado Direito */}
+          <div className="form-section">
+            {error && (
+              <div className="error-message">
+                <p>{error}</p>
+              </div>
+            )}
+            
+            <form onSubmit={handleSubmit}>
+          
+              {/* Campos básicos em grid 4 colunas */}
+              <div className="form-basic-grid">
+                <motion.div 
+                  className="form-group"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 }}
+                >
+                  <label className="form-label" htmlFor="name">Nome do Time</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    className="form-control"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Digite o nome do time"
+                    required
+                  />
+                </motion.div>
+
+                <motion.div 
+                  className="form-group"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <label className="form-label" htmlFor="cep">CEP</label>
+                  <div className={`cep-input-container ${cepValido === true ? 'valid' : cepValido === false ? 'invalid' : ''}`}>
+                    <input
+                      type="text"
+                      id="cep"
+                      name="cep"
+                      className="form-control"
+                      value={formData.cep}
+                      onChange={handleInputChange}
+                      placeholder="00000-000"
+                      maxLength={9}
+                      required
+                    />
+                    {buscandoCep && <span className="cep-loading">Buscando...</span>}
+                    {cepValido === true && <span className="cep-valid">✓</span>}
+                    {cepValido === false && <span className="cep-invalid">✗</span>}
+                  </div>
+                  {cepErrorMessage && (
+                    <div className="cep-error-message">
+                      {cepErrorMessage}
+                    </div>
+                  )}
+                </motion.div>
+
+                <motion.div 
+                  className="form-group"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  <label className="form-label" htmlFor="estado">Estado</label>
+                  <input
+                    type="text"
+                    id="estado"
+                    name="estado"
+                    className="form-control"
+                    value={formData.estado}
+                    onChange={handleInputChange}
+                    placeholder=""
+                    disabled
+                  />
+                </motion.div>
+
+                <motion.div 
+                  className="form-group"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <label className="form-label" htmlFor="cidade">Cidade</label>
+                  <input
+                    type="text"
+                    id="cidade"
+                    name="cidade"
+                    className="form-control"
+                    value={formData.cidade}
+                    onChange={handleInputChange}
+                    placeholder=""
+                    disabled
+                  />
+                </motion.div>
+              </div>
+
+              {/* Descrição em largura total */}
+
+              {/* Seção de Cores */}
+              <motion.div 
+                className="colors-section"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
             <label className="form-label"> 
               <PaletteIcon style={{ marginRight: '8px', verticalAlign: 'middle' }} />
               Cores do Time
@@ -636,22 +659,23 @@ export default function CreateTeam() {
             </div>
           </motion.div>
 
-          <motion.div 
-            className="form-group"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="players-header">
-              <label className="form-label">Cadastrar Jogadores</label>
-              <button 
-                type="button" 
-                className="add-player-btn"
-                onClick={openPlayerModal}
+              {/* Seção de Jogadores */}
+              <motion.div 
+                className="players-section"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
               >
-                <AddIcon style={{ marginRight: '5px' }} /> Adicionar Jogador
-              </button>
-            </div>
+                <div className="players-header">
+                  <label className="form-label">Cadastrar Jogadores</label>
+                  <button 
+                    type="button" 
+                    className="add-player-btn"
+                    onClick={openPlayerModal}
+                  >
+                    <AddIcon style={{ marginRight: '5px' }} /> Adicionar Jogador
+                  </button>
+                </div>
             
             <AnimatePresence>
               {formData.jogadores.length === 0 ? (
@@ -708,25 +732,27 @@ export default function CreateTeam() {
             </AnimatePresence>
           </motion.div>
 
-          <div className="form-actions">
-            <motion.button 
-              type="submit"
-              className="submit-btn"
-              disabled={loading}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              style={{
-                background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
-              }}
-            >
-              {loading ? (
-                <span className="loading-text">Criando Time</span>
-              ) : (
-                'Criar meu time'
-              )}
-            </motion.button>
+              <div className="form-actions">
+                <motion.button 
+                  type="submit"
+                  className="submit-btn"
+                  disabled={loading}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  style={{
+                    background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`
+                  }}
+                >
+                  {loading ? (
+                    <span className="loading-text">Criando Time</span>
+                  ) : (
+                    'Criar meu time'
+                  )}
+                </motion.button>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       </motion.div>
     </div>
   );
