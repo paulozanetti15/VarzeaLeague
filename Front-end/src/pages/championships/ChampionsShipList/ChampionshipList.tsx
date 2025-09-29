@@ -52,20 +52,25 @@ export default function ChampionshipList() {
   }, []);
 
   return (
-    <div className="match-list-container">
+    <div className="championship-list-container">
       <div className="content-container">
-        <div className="header-container championship-header-visual">
-          <img src={trophy} alt="Troféu Campeonato" className="championship-trophy-main" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-          <h1 className="page-title" style={{ textShadow: 'none' }}>Gerenciar campeonatos criado por você!</h1>
-          {canCreateChampionship && (
-            <button
-              className="create-match-btn"
-              onClick={() => navigate('/championships/create')}
-            >
-              <img src={trophy} alt="Novo Campeonato" className="championship-trophy-btn" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-              Novo Campeonato
-            </button>
-          )}
+        {/* Header com título e botão à direita */}
+        <div className="championship-header">
+          <div className="header-content">
+            <div className="title-section">
+              <img src={trophy} alt="Troféu Campeonato" className="championship-trophy-icon" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <h1 className="page-title">Meus Campeonatos</h1>
+            </div>
+            {canCreateChampionship && (
+              <button
+                className="create-championship-btn"
+                onClick={() => navigate('/championships/create')}
+              >
+                <img src={trophy} alt="Novo Campeonato" className="btn-icon" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                Novo Campeonato
+              </button>
+            )}
+          </div>
         </div>
         {loading ? (
           <div className="loading">Carregando campeonatos...</div>
@@ -78,48 +83,68 @@ export default function ChampionshipList() {
             <p>Cadastre um novo campeonato para começar.</p>
           </div>
         ) : (
-          <div className="matches-grid">
+          <div className="championships-grid">
             {championships.map((champ) => (
-              <div key={champ.id} className="match-card" onClick={() => navigate(`/championships/${champ.id}`)}>
-                <div className="match-card-inner">
-                  <div className="match-card-gradient"></div>
-                  <div className="match-header">
-                    <h2 className="match-title">{champ.name}</h2>
+              <div key={champ.id} className="championship-card" onClick={() => navigate(`/championships/${champ.id}`)}>
+                <div className="championship-card-content">
+                  <div className="championship-header">
+                    <h2 className="championship-title">{champ.name}</h2>
+                    {currentUserId === champ.created_by && (
+                      <div className="organizer-badge">
+                        <span className="badge-text">Organizador</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="match-info">
+                  
+                  <div className="championship-info">
                     {champ.modalidade && (
-                      <div className="info-row">
-                        <span><strong>Modalidade:</strong> {champ.modalidade}</span>
+                      <div className="info-item">
+                        <span className="info-label">Modalidade</span>
+                        <span className="info-value">{champ.modalidade}</span>
                       </div>
                     )}
                     {champ.nomequadra && (
-                      <div className="info-row">
-                        <span><strong>Quadra:</strong> {champ.nomequadra}</span>
+                      <div className="info-item">
+                        <span className="info-label">Quadra</span>
+                        <span className="info-value">{champ.nomequadra}</span>
                       </div>
                     )}
                     {champ.start_date && (
-                      <div className="info-row">
-                        <span><strong>Início:</strong> {new Date(champ.start_date).toLocaleDateString()}</span>
+                      <div className="info-item">
+                        <span className="info-label">Início</span>
+                        <span className="info-value">{new Date(champ.start_date).toLocaleDateString('pt-BR')}</span>
                       </div>
                     )}
                     {champ.end_date && (
-                      <div className="info-row">
-                        <span><strong>Fim:</strong> {new Date(champ.end_date).toLocaleDateString()}</span>
+                      <div className="info-item">
+                        <span className="info-label">Fim</span>
+                        <span className="info-value">{new Date(champ.end_date).toLocaleDateString('pt-BR')}</span>
                       </div>
                     )}
-                    <div className="info-row">
-                      <span><strong>Organizador:</strong> {champ.created_by}</span>
-                    </div>
+                    {champ.tipo && (
+                      <div className="info-item">
+                        <span className="info-label">Tipo</span>
+                        <span className={`championship-type ${champ.tipo.toLowerCase().replace(' ', '-')}`}>
+                          {champ.tipo === 'Mata-Mata' ? '🏆 Mata-Mata' : '⚽ Liga'}
+                        </span>
+                      </div>
+                    )}
+                    {champ.status && (
+                      <div className="info-item">
+                        <span className="info-label">Status</span>
+                        <span className={`championship-status ${champ.status.toLowerCase().replace(' ', '-')}`}>
+                          {champ.status === 'open' ? '🟢 Aberto' : 
+                           champ.status === 'closed' ? '🔴 Fechado' : 
+                           champ.status === 'in-progress' ? '🟡 Em Andamento' : champ.status}
+                        </span>
+                      </div>
+                    )}
                   </div>
+                  
                   {champ.description && (
-                    <div className="match-description">
-                      <h3>Descrição</h3>
-                      <p>{champ.description}</p>
-                    </div>
-                  )}
-                  {currentUserId === champ.created_by && (
-                    <div className="organizer-badge" style={{ marginTop: 'auto' }}>
-                      Você é o organizador
+                    <div className="championship-description">
+                      <h4 className="description-title">Descrição</h4>
+                      <p className="description-text">{champ.description}</p>
                     </div>
                   )}
                 </div>
