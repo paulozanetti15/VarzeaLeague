@@ -761,27 +761,47 @@ static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
       if (playerIds.length === 0) { res.json({ teamId: Number(id), total: 0, stats: [] }); return; }
 
       // Agregar gols e cartões por player_id
+      // Buscar os IDs de partidas nas quais o time participou, para filtrar corretamente
+      const matchTeamRows = await MatchTeams.findAll({
+        where: { teamId: teamIdNum },
+        attributes: ['matchId'],
+        raw: true
+      });
+      const matchIds: number[] = matchTeamRows.map((r: any) => Number(r.matchId)).filter((n) => !Number.isNaN(n));
+      if (matchIds.length === 0) { res.json({ teamId: Number(id), total: teamPlayers.length, stats: teamPlayers.map((tp: any) => ({
+        playerId: tp.playerId,
+        nome: tp.player?.nome || 'N/A',
+        posicao: tp.player?.posicao || null,
+        sexo: tp.player?.sexo || null,
+        gols: 0,
+        amarelos: 0,
+        vermelhos: 0,
+        cartoes: 0,
+      })) }); return; }
+
       const goals = await (await import('../models/MatchGoalModel')).default.findAll({
         attributes: ['player_id', [fn('COUNT', col('id')), 'gols']],
         where: {
           player_id: playerIds,
-          match_id: { [Op.in]: Sequelize.literal(`(SELECT match_id FROM match_teams WHERE team_id = ${teamIdNum})`) }
+          match_id: { [Op.in]: matchIds }
         },
         group: ['player_id']
       });
       const yellowCards = await (await import('../models/MatchCardModel')).default.findAll({
         attributes: ['player_id', [fn('COUNT', col('id')), 'amarelos']],
         where: {
-          player_id: playerIds, card_type: 'yellow',
-          match_id: { [Op.in]: Sequelize.literal(`(SELECT match_id FROM match_teams WHERE team_id = ${teamIdNum})`) }
+          player_id: playerIds,
+          card_type: 'yellow',
+          match_id: { [Op.in]: matchIds }
         },
         group: ['player_id']
       });
       const redCards = await (await import('../models/MatchCardModel')).default.findAll({
         attributes: ['player_id', [fn('COUNT', col('id')), 'vermelhos']],
         where: {
-          player_id: playerIds, card_type: 'red',
-          match_id: { [Op.in]: Sequelize.literal(`(SELECT match_id FROM match_teams WHERE team_id = ${teamIdNum})`) }
+          player_id: playerIds,
+          card_type: 'red',
+          match_id: { [Op.in]: matchIds }
         },
         group: ['player_id']
       });

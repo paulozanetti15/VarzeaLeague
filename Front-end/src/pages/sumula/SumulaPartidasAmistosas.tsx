@@ -18,6 +18,7 @@ interface Goal {
   minute: number;
   team: string;
   playerId?: number;
+  teamId?: number;
 }
 
 interface Card {
@@ -180,13 +181,17 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide, canSave = false }: Sumul
         return;
     }
 
-    const sumula: MatchReport = {
-        match_id  : id,
-        team_home : homeTeam,
-        team_away : awayTeam,
-        team_home_score : tempGoals.filter(g => teams.find(t => t.id === g.playerId)?.id === homeTeam).length,
-        team_away_score : tempGoals.filter(g => teams.find(t => t.id === g.playerId)?.id === awayTeam).length,
-    };
+  // Pontuação com base no time do jogador que marcou (armazenado no goal.teamId)
+  const teamHomeScore = tempGoals.filter(g => g.teamId === homeTeam).length;
+  const teamAwayScore = tempGoals.filter(g => g.teamId === awayTeam).length;
+
+  const sumula: MatchReport = {
+    match_id  : id,
+    team_home : homeTeam,
+    team_away : awayTeam,
+    team_home_score : teamHomeScore,
+    team_away_score : teamAwayScore,
+  };
 
     try {
       setLoading(true);
@@ -256,14 +261,16 @@ const SumulaPartidaAmistosaModal = ({ id, show, onHide, canSave = false }: Sumul
 
     const playerTeam = teams.find(t => t.id === selectedPlayer.teamId);
 
-    const newGoal: Goal = {
+  const newGoal: Goal = {
         player: selectedPlayer.nome,
         minute: Number(goalMinute),
-        team: playerTeam?.name || 'Time não identificado',
-        playerId: selectedPlayer.playerId
+    team: playerTeam?.name || 'Time não identificado',
+    playerId: selectedPlayer.playerId,
+    teamId: selectedPlayer.teamId
     };
 
-    setGoals([...goals, newGoal]);
+  setGoals([...goals, newGoal]);
+  setTempGoals([...tempGoals, newGoal]);
 
     if (selectedPlayer.teamId === homeTeam) {
         setHomeScore(prev => prev + 1);
