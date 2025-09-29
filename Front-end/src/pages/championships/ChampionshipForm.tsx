@@ -89,7 +89,7 @@ const ChampionshipForm: React.FC = () => {
 
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? parseInt(value) || 0 : value
+      [name]: type === 'number' ? (value === '' ? '' : parseInt(value) || 0) : value
     }));
 
     // Limpar erro do campo quando o usuário começar a digitar
@@ -553,7 +553,23 @@ const ChampionshipForm: React.FC = () => {
                     name="max_teams"
                     className="form-control"
                     value={formData.max_teams}
-                    onChange={handleInputChange}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Remove zeros à esquerda e converte para número
+                      const numericValue = value === '' ? '' : parseInt(value, 10);
+                      setFormData(prev => ({
+                        ...prev,
+                        max_teams: numericValue
+                      }));
+                      
+                      // Limpar erro do campo quando o usuário começar a digitar
+                      if (fieldErrors.max_teams) {
+                        setFieldErrors(prev => ({
+                          ...prev,
+                          max_teams: ''
+                        }));
+                      }
+                    }}
                     min="4"
                     max="32"
                     required
@@ -601,7 +617,21 @@ const ChampionshipForm: React.FC = () => {
                       name="num_equipes_liga"
                       className="form-control"
                       value={formData.num_equipes_liga || ''}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const numericValue = value === '' ? '' : parseInt(value, 10);
+                        setFormData(prev => ({
+                          ...prev,
+                          num_equipes_liga: numericValue
+                        }));
+                        
+                        if (fieldErrors.num_equipes_liga) {
+                          setFieldErrors(prev => ({
+                            ...prev,
+                            num_equipes_liga: ''
+                          }));
+                        }
+                      }}
                       min="4"
                       max="20"
                       placeholder="Ex: 8, 10, 12..."
@@ -657,7 +687,21 @@ const ChampionshipForm: React.FC = () => {
                             name="num_grupos"
                             className="form-control"
                             value={formData.num_grupos || ''}
-                            onChange={handleInputChange}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              const numericValue = value === '' ? '' : parseInt(value, 10);
+                              setFormData(prev => ({
+                                ...prev,
+                                num_grupos: numericValue
+                              }));
+                              
+                              if (fieldErrors.num_grupos) {
+                                setFieldErrors(prev => ({
+                                  ...prev,
+                                  num_grupos: ''
+                                }));
+                              }
+                            }}
                             min="2"
                             max="8"
                             placeholder="Ex: 2, 4, 8..."
@@ -678,7 +722,21 @@ const ChampionshipForm: React.FC = () => {
                             name="times_por_grupo"
                             className="form-control"
                             value={formData.times_por_grupo || ''}
-                            onChange={handleInputChange}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              const numericValue = value === '' ? '' : parseInt(value, 10);
+                              setFormData(prev => ({
+                                ...prev,
+                                times_por_grupo: numericValue
+                              }));
+                              
+                              if (fieldErrors.times_por_grupo) {
+                                setFieldErrors(prev => ({
+                                  ...prev,
+                                  times_por_grupo: ''
+                                }));
+                              }
+                            }}
                             min="3"
                             max="6"
                             placeholder="Ex: 3, 4, 5..."
@@ -707,6 +765,28 @@ const ChampionshipForm: React.FC = () => {
                               Os times serão divididos em {formData.num_grupos} grupos de {formData.times_por_grupo} times cada.
                               Os primeiros colocados de cada grupo avançarão para a fase eliminatória.
                             </p>
+                            
+                            {/* Alerta de sobra de times */}
+                            {(() => {
+                              const totalTimes = formData.num_grupos * formData.times_por_grupo;
+                              const sobraTimes = formData.max_teams - totalTimes;
+                              
+                              if (sobraTimes > 0) {
+                                return (
+                                  <div className="alert-card">
+                                    <div className="alert-icon">🏆</div>
+                                    <div className="alert-content">
+                                      <div className="alert-title">Vagas Disponíveis</div>
+                                      <div className="alert-description">
+                                        Com {formData.max_teams} vagas disponíveis e {totalTimes} times nos grupos, 
+                                        restam <strong>{sobraTimes} vaga{sobraTimes > 1 ? 's' : ''}</strong> para times adicionais.
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
                           </div>
                         </div>
                       )}

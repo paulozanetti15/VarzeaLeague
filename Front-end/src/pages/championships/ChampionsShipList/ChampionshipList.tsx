@@ -13,6 +13,12 @@ interface Championship {
   created_by: number;
   modalidade?: string;
   nomequadra?: string;
+  tipo?: string;
+  fase_grupos?: boolean;
+  max_teams?: number;
+  num_grupos?: number;
+  times_por_grupo?: number;
+  status?: string;
 }
 
 export default function ChampionshipList() {
@@ -147,6 +153,36 @@ export default function ChampionshipList() {
                       <p className="description-text">{champ.description}</p>
                     </div>
                   )}
+                  
+                  {/* Alerta de sobra de times */}
+                  {(() => {
+                    // Verificar se é mata-mata com fase de grupos
+                    if (champ.tipo?.toLowerCase() === 'mata-mata' && 
+                        champ.fase_grupos && 
+                        champ.num_grupos && 
+                        champ.times_por_grupo && 
+                        champ.max_teams) {
+                      
+                      const totalTimes = champ.num_grupos * champ.times_por_grupo;
+                      const sobraTimes = champ.max_teams - totalTimes;
+                      
+                      if (sobraTimes > 0) {
+                        return (
+                          <div className="championship-alert-card">
+                            <div className="championship-alert-icon">🏆</div>
+                            <div className="championship-alert-content">
+                              <div className="championship-alert-title">Vagas Disponíveis</div>
+                              <div className="championship-alert-description">
+                                Com {champ.max_teams} vagas disponíveis e {totalTimes} times nos grupos, 
+                                restam <strong>{sobraTimes} vaga{sobraTimes > 1 ? 's' : ''}</strong> para times adicionais.
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+                    }
+                    return null;
+                  })()}
                 </div>
               </div>
             ))}
