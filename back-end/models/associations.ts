@@ -81,9 +81,9 @@ export function associateModels() {
 
   // Match Goals
   // Goals (usar alias para permitir include: { as: 'user' })
-  MatchGoal.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
   MatchGoal.belongsTo(Player, { foreignKey: 'player_id', as: 'player' });
   MatchGoal.belongsTo(Match, { foreignKey: 'match_id', as: 'match' });
+  MatchGoal.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
   User.hasMany(MatchGoal, { foreignKey: 'user_id', as: 'goals' });
   Player.hasMany(MatchGoal, { foreignKey: 'player_id', as: 'goals' });
   Match.hasMany(MatchGoal, { foreignKey: 'match_id', as: 'goals' });
@@ -93,6 +93,7 @@ export function associateModels() {
   MatchCard.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
   MatchCard.belongsTo(Player, { foreignKey: 'player_id', as: 'player' });
   MatchCard.belongsTo(Match, { foreignKey: 'match_id', as: 'match' });
+  MatchCard.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
   User.hasMany(MatchCard, { foreignKey: 'user_id', as: 'cards' });
   Player.hasMany(MatchCard, { foreignKey: 'player_id', as: 'cards' });
   Match.hasMany(MatchCard, { foreignKey: 'match_id', as: 'cards' });

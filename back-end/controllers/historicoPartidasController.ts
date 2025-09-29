@@ -49,6 +49,22 @@ export const buscarPartidasAmistosas= async(req:AuthRequest,res:Response)=>{
       console.error(error)
     }    
 }
+export const buscarPartidasAmistosasByMatch= async(req:AuthRequest,res:Response)=>{
+    try {
+        const { idMatch } = req.params;
+        const userId = req.user?.id;
+        if (!userId) {
+            res.status(401).json({ error: 'Usuário não autenticado' });
+            return;
+        }
+        
+        const sumula=await  MatchReport.findAll({where: {matchId: parseInt(idMatch)}});
+        res.status(200).json(sumula)  
+    } catch (error) {
+      res.status(500).json({ message:"Erro para buscar os dados"})
+      console.error(error)
+    }    
+}
 export const buscarPartidasCampeonato= async(req:AuthRequest,res:Response)=>{
     try {
         const { id } = req.params;

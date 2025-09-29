@@ -18,7 +18,8 @@ import { useAuth } from '../../hooks/useAuth';
 import EditRulesModal from '../../components/Modals/Regras/RegrasFormEditModal';
 import PunicaoRegisterModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosoRegisterModal';
 import PunicaoInfoModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosaModalInfo';
-import SumulaPartidaAmistosaModal from '../sumula/SumulaPartidasAmistosas';
+import CriarSumulaPartidaAmistosaModal from '../sumula/CriarSumulaPartidasAmistosas';
+import VisualizarSumulaDialog from '../sumula/VisualizarSumulaPartidaAmistosa';
 // Subcomponente para avaliações (rating + comentários) com UI aprimorada
 const StarRating: React.FC<{ value: number; onChange: (v:number)=>void; size?: number }> = ({ value, onChange, size = 26 }) => {
   return (
@@ -162,35 +163,9 @@ const MatchDetail: React.FC = () => {
   const [showEvalModal, setShowEvalModal] = useState(false);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [showEventsModal, setShowEventsModal] = useState(false);
-  const [goals, setGoals] = useState<any[]>([]);
-  const [cards, setCards] = useState<any[]>([]);
-  const [goalEmail, setGoalEmail] = useState<string>('');
-  const [cardEmail, setCardEmail] = useState<string>('');
-  const [cardType, setCardType] = useState<'yellow'|'red'>('yellow');
-  const [cardMinute, setCardMinute] = useState<number | ''>('');
-  // jogadores carregados para seleção (admin de time ou sistema)
-  const [availablePlayers, setAvailablePlayers] = useState<any[]>([]);
-  const [selectedGoalPlayer, setSelectedGoalPlayer] = useState<string>('');
-  const [selectedCardPlayer, setSelectedCardPlayer] = useState<string>('');
+  const [existeSumulaCadastrada ,setExisteSumulaCadastrada] = useState(false);
 
-
-  const fetchEvents = async () => {
-    if (!id) return;
-    try {
-  // setEventsLoading(true);
-      const token = localStorage.getItem('token');
-      const resp = await fetch(`http://localhost:3001/api/matches/${id}/events`, { headers: { Authorization: `Bearer ${token}` }});
-      if (resp.ok) {
-        const data = await resp.json();
-        setGoals(data.goals || []);
-        setCards(data.cards || []);
-      }
-    } catch (e) {
-      console.error('Erro ao buscar eventos', e);
-    } finally {
-  // setEventsLoading(false);
-    }
-  };
+ 
   const handleFinalizeMatch = async () => {
     if (!id) return;
     try {
@@ -202,7 +177,7 @@ const MatchDetail: React.FC = () => {
         return;
       }
       toast.success('Partida finalizada');
-      // Atualiza status local
+      
       setMatch((m: any) => m ? { ...m, status: 'completed' } : m);
      
       setShowEventsModal(true);
@@ -210,24 +185,21 @@ const MatchDetail: React.FC = () => {
       toast.error(e.message || 'Falha ao finalizar');
     }
   };
-
-  const handleAddGoal = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    try {
+  useEffect(()=>{
+    const verificarExisteSumulaCriada=async(idMatch:number)=>{
       const token = localStorage.getItem('token');
-      const body: any = {};
-      if (selectedGoalPlayer) {
-        body.playerId = Number(selectedGoalPlayer); // novo fluxo usando playerId
-      } else if (goalEmail.trim()) {
-        body.email = goalEmail.trim(); // fallback legado
+      const responseAmistosos = await axios.get(`http://localhost:3001/api/historico/${idMatch}/verificar-existencia-sumula`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (Array.isArray(responseAmistosos.data) && responseAmistosos.data.length > 0) {
+        setExisteSumulaCadastrada(true);
+      } else {
+        setExisteSumulaCadastrada(false);
       }
-      const resp = await fetch(`http://localhost:3001/api/matches/${id}/goals`, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(body) });
-      if (!resp.ok) { toast.error('Erro ao adicionar gol'); return; }
-      setGoalEmail(''); setSelectedGoalPlayer('');
-      await fetchEvents();
-    } catch (err) { console.error(err); }
-  };
-
+    }  
+    verificarExisteSumulaCriada(Number(id))
+  },[])
+  
   const getTimeInscrito = async (matchId: string) => {
     try {
       const token = localStorage.getItem('token');
@@ -278,22 +250,8 @@ const MatchDetail: React.FC = () => {
     fetchMatchDetails();
   }, [id, navigate]);
 
-  // Carrega jogadores (Players) dos times participantes da partida
-  const fetchMatchPlayers = async (teamId?: string) => {
-    if (!id) return;
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      const query = teamId ? `?teamId=${teamId}` : '';
-      const resp = await fetch(`http://localhost:3001/api/matches/${id}/roster-players${query}`, { headers: { Authorization: `Bearer ${token}` } });
-      if (resp.ok) {
-        const json = await resp.json();
-        setAvailablePlayers(json.players || []);
-      } else {
-        setAvailablePlayers([]);
-      }
-    } catch (e) { console.error('Erro ao carregar roster de jogadores', e); setAvailablePlayers([]); }
-  };
+ 
+
   
   const handleLeaveMatch = async (matchId: string | undefined, teamId: number) => {
     if (!matchId) return;
@@ -596,8 +554,8 @@ const MatchDetail: React.FC = () => {
                 </Button>
               )}
               {isCompleted && (
-                <Button className="btn-events" onClick={() => { fetchEvents(); fetchMatchPlayers(); setShowEventsModal(true); }}>
-                  Eventos da Partida
+                <Button className="btn-events" onClick={() => {setShowEventsModal(true); }}>
+                  {existeSumulaCadastrada ? "Visualizar sumula da Partida" : "Criar Sumula"} 
                 </Button>
               )}
             </div>
@@ -651,15 +609,26 @@ const MatchDetail: React.FC = () => {
             />
           </>
         )}
-        {showEventsModal &&(
-          <>
-           <SumulaPartidaAmistosaModal 
-              id={Number(match.id)}
-              show={showEventsModal}
-              onHide={() => setShowEventsModal(false)}
-            />
-          </>
-        )}
+        
+        {showEventsModal && (
+          existeSumulaCadastrada ? (
+          <VisualizarSumulaDialog
+            matchId={Number(match.id)}
+            show={showEventsModal}
+            onHide={() => setShowEventsModal(false)}
+          />
+        ) : (
+          <CriarSumulaPartidaAmistosaModal
+            id={Number(match.id)}
+            show={showEventsModal}
+            onHide={() => setShowEventsModal(false)}
+          />
+        )
+      )}
+
+
+        
+        
       </div>
       <Dialog
         open={openDeleteConfirm}
