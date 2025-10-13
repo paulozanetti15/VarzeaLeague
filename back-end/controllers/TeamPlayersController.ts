@@ -72,40 +72,6 @@ export const getTeamsPlayers = async (req: Request, res: Response): Promise<void
     }
 }
 
-export const updateTeamPlayer = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { teamId } = req.params;
-        const playersToUpdate = req.body;
-        
-        // Para cada jogador no array, atualize ou crie a associação
-        for (const player of playersToUpdate) {
-            const existingAssociation = await TeamPlayer.findOne({
-                where: {
-                    teamId: teamId,
-                    playerId: player.playerId
-                }
-            });
-            
-            if (existingAssociation) {
-                // Se a associação já existe, você pode atualizá-la se necessário
-                // Neste caso simplificado, não há nada para atualizar além dos IDs
-                continue;
-            } else {
-                // Se não existe, crie uma nova associação
-                await TeamPlayer.create({
-                    teamId: parseInt(teamId),
-                    playerId: player.playerId
-                });
-            }
-        }
-        
-        res.status(200).json({ message: 'Associações de jogadores atualizadas com sucesso' });
-    } catch (error) {
-        console.error('Erro ao atualizar associações de jogadores:', error);
-        res.status(500).json({ message: 'Erro ao atualizar associações de jogadores', error });
-    }
-}
-
 export const deleteTeamPlayer = async (req: Request, res: Response): Promise<void> => {
     try {
         const { teamId, playerId } = req.params;
