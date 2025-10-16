@@ -6,6 +6,3 @@ export { default as MatchDescription } from './MatchDescription';
 export { default as MatchRules } from './MatchRules';
 export { default as TeamCard } from './TeamCard';
 export { default as TeamsList } from './TeamsList';
-export { default as MatchActions } from './MatchActions';
-export { default as DeleteConfirmDialog } from './DeleteConfirmDialog';
-export { default as EvaluationDialogs } from './EvaluationDialogs';
