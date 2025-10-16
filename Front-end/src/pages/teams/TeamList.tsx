@@ -278,34 +278,109 @@ const TeamList = () => {
                       <GroupIcon sx={{ fontSize: 40, color: '#fff' }} />
                     )}
                   </div>
-                  <div className="team-info">
+                    <div className="team-info">
                     <h2 className="team-name">{team.name}</h2>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.2rem', marginBottom: '0.7rem' }}>
-                      <span style={{ color: '#fff', fontWeight: 500, fontSize: '1.05rem', opacity: 0.85 }}>
-                        {team.estado && <>{team.estado}{team.cidade ? ' - ' : ''}</>}{team.cidade}
-                      </span>
+                    
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: '1rem', 
+                      marginBottom: '1.2rem',
+                      flexWrap: 'wrap'
+                    }}>
+                      {(team.estado || team.cidade) && (
+                        <span style={{ 
+                          color: 'rgba(255, 255, 255, 0.9)', 
+                          fontWeight: 500, 
+                          fontSize: '0.95rem',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          padding: '0.4rem 1rem',
+                          borderRadius: '20px',
+                          backdropFilter: 'blur(10px)'
+                        }}>
+                          {team.estado && <>{team.estado}{team.cidade ? ' - ' : ''}</>}{team.cidade}
+                        </span>
+                      )}
                       {(team.primaryColor || team.secondaryColor) && (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          {team.primaryColor && <span title="Cor Primária" style={{ width: 22, height: 22, borderRadius: '50%', background: team.primaryColor, border: '2px solid #fff', display: 'inline-block', boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }}></span>}
-                          {team.secondaryColor && <span title="Cor Secundária" style={{ width: 22, height: 22, borderRadius: '50%', background: team.secondaryColor, border: '2px solid #fff', display: 'inline-block', boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }}></span>}
+                        <span style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.6rem',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          padding: '0.4rem 1rem',
+                          borderRadius: '20px',
+                          backdropFilter: 'blur(10px)'
+                        }}>
+                          {team.primaryColor && (
+                            <span 
+                              title="Cor Primária" 
+                              style={{ 
+                                width: 24, 
+                                height: 24, 
+                                borderRadius: '50%', 
+                                background: team.primaryColor, 
+                                border: '2px solid rgba(255, 255, 255, 0.9)', 
+                                display: 'inline-block', 
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.2)' 
+                              }}
+                            />
+                          )}
+                          {team.secondaryColor && (
+                            <span 
+                              title="Cor Secundária" 
+                              style={{ 
+                                width: 24, 
+                                height: 24, 
+                                borderRadius: '50%', 
+                                background: team.secondaryColor, 
+                                border: '2px solid rgba(255, 255, 255, 0.9)', 
+                                display: 'inline-block', 
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.2)' 
+                              }}
+                            />
+                          )}
                         </span>
                       )}
                     </div>
-                    <p className="team-description">
+                    
+                    <p className="team-description" style={{ 
+                      maxWidth: '600px', 
+                      margin: '0 auto 1.5rem',
+                      fontSize: '1rem',
+                      lineHeight: '1.6'
+                    }}>
                       {team.description || "Sem descrição disponível"}
                     </p>
-                    <div className="team-stats">
-                      <div className="stat">
-                        <GroupIcon sx={{ fontSize: 20, color: '#2196F3' }} />
-                        <span>{team.players?.length || 0} Jogadores</span>
-                      </div>
-                      <div className="stat">
-                        <EmojiEventsIcon sx={{ fontSize: 20, color: '#FFD700' }} />
-                        <span>{team.matchCount || 0} Partidas</span>
-                      </div>
-                    </div>
                     
-                    {/* Botão para expandir/recolher lista de jogadores */}
+                    <div className="team-stats" style={{ 
+                      display: 'flex', 
+                      gap: '1rem', 
+                      justifyContent: 'center',
+                      flexWrap: 'wrap',
+                      marginBottom: '1.5rem'
+                    }}>
+                      <div className="stat" style={{
+                        background: 'rgba(33, 150, 243, 0.15)',
+                        border: '1px solid rgba(33, 150, 243, 0.3)',
+                        padding: '0.8rem 1.5rem',
+                        borderRadius: '25px',
+                        backdropFilter: 'blur(10px)'
+                      }}>
+                        <GroupIcon sx={{ fontSize: 22, color: '#64b5f6' }} />
+                        <span style={{ fontWeight: 600 }}>{team.players?.length || 0} Jogadores</span>
+                      </div>
+                      <div className="stat" style={{
+                        background: 'rgba(255, 193, 7, 0.15)',
+                        border: '1px solid rgba(255, 193, 7, 0.3)',
+                        padding: '0.8rem 1.5rem',
+                        borderRadius: '25px',
+                        backdropFilter: 'blur(10px)'
+                      }}>
+                        <EmojiEventsIcon sx={{ fontSize: 22, color: '#FFD54F' }} />
+                        <span style={{ fontWeight: 600 }}>{team.matchCount || 0} Partidas</span>
+                      </div>
+                    </div>                    {/* Botão para expandir/recolher lista de jogadores */}
                     <button 
                       className="players-toggle-btn" 
                       onClick={(e) => togglePlayersList(e, team.id)}
@@ -361,14 +436,14 @@ const TeamList = () => {
                                 >
                                   <div className="player-name-position">
                                     <div className="player-name-container">
-                                      <PersonIcon style={{ fontSize: '1.2rem', marginRight: '6px', color: team.primaryColor || '#2196F3', flexShrink: 0 }} />
+                                      <PersonIcon style={{ fontSize: '1.2rem', marginRight: '6px', color: '#ffffff', flexShrink: 0 }} />
                                       <span className="player-name" title={player.nome}>{player.nome}</span>
                                     </div>
                                     <span 
                                       className="player-position"
                                       style={{
-                                        backgroundColor: `${team.primaryColor || '#2196F3'}20`,
-                                        color: team.primaryColor || '#64b5f6',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                                        color: '#ffffff',
                                         flexShrink: 0
                                       }}
                                     >
