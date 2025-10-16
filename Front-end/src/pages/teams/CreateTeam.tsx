@@ -328,10 +328,6 @@ export default function CreateTeam() {
 
   const handleSubmitPlayer = async (id: number): Promise<void> => {
     const token = localStorage.getItem('token');
-    const headers = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    };
 
     const promises = formData.jogadores.map(async (jogador) => {
       try {
@@ -339,32 +335,40 @@ export default function CreateTeam() {
           nome: jogador.nome,
           sexo: jogador.sexo,
           ano: jogador.ano,
-          posicao: jogador.posicao
+          posicao: jogador.posicao,
+          teamId: id
         }, { headers :{ Authorization: `Bearer ${token}` } });
-        if (playerResponse.status === 200) {
-          setToastMessage(`Jogador ${jogador.nome} criado com sucesso!`);
+        
+        if (playerResponse.status === 201) {
+          setToastMessage(`Jogador ${jogador.nome} adicionado com sucesso!`);
           setToastBg('success');
-          setShowToast(true);
-        }
-        if (playerResponse.status === 400) {
-          setToastMessage(`${jogador.nome} já cadastrado!`);
-          setToastBg('warning');
-          setShowToast(true);
-        }
-        else {
-          setToastMessage(`Erro ao criar jogador: ${jogador.nome}`);
-          setToastBg('danger');
           setShowToast(true);
         }
 
         const playerId = playerResponse?.data?.id;
         if (playerId) {
-          axios.post(`http://localhost:3001/api/players/${id}`, [{ playerId, teamId: id }], 
+          await axios.post(`http://localhost:3001/api/players/${id}`, [{ playerId, teamId: id }], 
             { headers :{ Authorization: `Bearer ${token}` } });
         }
         return Promise.resolve();
-      } catch (err) {
+      } catch (err: any) {
         console.error('Erro ao criar jogador:', err);
+        
+        if (err.response?.status === 409) {
+          setToastMessage(`⚠️ O jogador "${jogador.nome}" já está cadastrado e vinculado a outro time`);
+          setToastBg('warning');
+          setShowToast(true);
+        } else if (err.response?.status === 400) {
+          const errorMsg = err.response?.data?.error || 'Dados inválidos';
+          setToastMessage(`⚠️ Erro ao adicionar ${jogador.nome}: ${errorMsg}`);
+          setToastBg('warning');
+          setShowToast(true);
+        } else {
+          setToastMessage(`❌ Erro ao criar jogador: ${jogador.nome}`);
+          setToastBg('danger');
+          setShowToast(true);
+        }
+        
         return Promise.resolve();
       }
     });

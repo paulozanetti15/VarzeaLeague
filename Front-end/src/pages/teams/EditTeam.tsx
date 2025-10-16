@@ -465,7 +465,13 @@ export default function EditTeam() {
       let errorMsg = 'Erro ao atualizar time. Tente novamente.';
       
       if (err.response && err.response.data) {
-        if (typeof err.response.data.error === 'string') {
+        if (err.response.status === 409) {
+          errorMsg = '⚠️ Jogador duplicado: ' + (err.response.data.error || 'Um ou mais jogadores já estão cadastrados em outro time');
+        } else if (err.response.status === 400 && err.response.data.errors) {
+          const errors = err.response.data.errors;
+          errorMsg = '⚠️ Alguns jogadores não puderam ser processados:\n' + 
+                     errors.map((e: any) => `• ${e.jogador?.nome || 'Desconhecido'}: ${e.erro}`).join('\n');
+        } else if (typeof err.response.data.error === 'string') {
           errorMsg = err.response.data.error;
         } else if (typeof err.response.data.message === 'string') {
           errorMsg = err.response.data.message;
