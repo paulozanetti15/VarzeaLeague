@@ -1,7 +1,7 @@
 import React from 'react';
 import { Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { Button } from 'react-bootstrap';
-import { MatchEvaluations } from '../MatchEvaluations/MatchEvaluations';
+import { MatchEvaluations } from '../features/matches/MatchEvaluations/MatchEvaluations';
 import './MatchDialogs.css';
 
 interface EvaluationDialogProps {
