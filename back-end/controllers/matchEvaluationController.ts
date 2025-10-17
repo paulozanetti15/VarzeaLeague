@@ -4,11 +4,20 @@ import MatchEvaluation from '../models/MatchEvaluationModel';
 import Match from '../models/MatchModel';
 import MatchTeams from '../models/MatchTeamsModel';
 import TeamUser from '../models/TeamUserModel';
+import User from '../models/UserModel';
 
 export const listMatchEvaluations = async (req: Request, res: Response): Promise<void> => {
   try {
     const matchId = Number(req.params.id);
-    const evaluations = await MatchEvaluation.findAll({ where: { match_id: matchId }, order: [['id','DESC']] });
+    const evaluations = await MatchEvaluation.findAll({ 
+      where: { match_id: matchId }, 
+      include: [{
+        model: User,
+        as: 'evaluator',
+        attributes: ['id', 'name']
+      }],
+      order: [['id','DESC']] 
+    });
     res.json(evaluations);
   } catch (err: any) {
     console.error('Erro ao listar avaliações:', err?.message, err);
