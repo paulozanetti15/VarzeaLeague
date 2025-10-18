@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import TeamCard from './TeamCard';
 
 interface TeamsListProps {
@@ -29,6 +30,7 @@ const TeamsList: React.FC<TeamsListProps> = ({
   onLeaveMatch,
   onOpenSelectTeamPlayers
 }) => {
+  const navigate = useNavigate();
   const currentTeamsCount = teams.length;
   
   const userHasTeamInMatch = teams.some(team => team.captainId === userId);
@@ -56,6 +58,8 @@ const TeamsList: React.FC<TeamsListProps> = ({
   
   const isCancelled = match.status === 'cancelada';
   
+  const canEditMatch = (userTypeId === 1 || userTypeId === 2 || isOrganizer) && !isCompleted;
+  
   const getCancelReason = () => {
     if (currentTeamsCount === 0) {
       return 'Nenhum time inscrito após prazo de inscrição';
@@ -63,6 +67,10 @@ const TeamsList: React.FC<TeamsListProps> = ({
       return 'Apenas um time inscrito após prazo de inscrição';
     }
     return 'Esta partida foi cancelada';
+  };
+
+  const handleEditMatch = () => {
+    navigate(`/matches/edit/${matchId}`);
   };
 
   return (
@@ -98,6 +106,27 @@ const TeamsList: React.FC<TeamsListProps> = ({
           }}>
             {getCancelReason()}
           </p>
+        </div>
+      )}
+      
+      {canEditMatch && (
+        <div className="d-flex justify-content-center mb-3">
+          <Button
+            variant="primary"
+            onClick={handleEditMatch}
+            style={{
+              background: 'linear-gradient(135deg, #1976d2 0%, #0d47a1 100%)',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              fontWeight: 600,
+              boxShadow: '0 3px 10px rgba(25, 118, 210, 0.3)',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <i className="fas fa-edit" style={{ marginRight: '8px' }}></i>
+            Editar Partida
+          </Button>
         </div>
       )}
       
