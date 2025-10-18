@@ -6,9 +6,15 @@ import './MatchActions.css';
 
 interface MatchActionsProps {
   canDelete: boolean;
+  matchId: number;
   canEdit: boolean;
   isCompleted: boolean;
   canApplyPunishment: boolean;
+  canDeleteMatch?: boolean;
+  userTypeId?: number;
+  teamsCount: number;
+  registrationDeadline?: string | Date;
+  matchStatus?: string;
   onDelete: () => void;
   onEdit: () => void;
   onEditRules: () => void;
@@ -24,6 +30,10 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
   canEdit,
   isCompleted,
   canApplyPunishment,
+  userTypeId,
+  teamsCount,
+  registrationDeadline,
+  matchStatus,
   onDelete,
   onEdit,
   onEditRules,
@@ -33,9 +43,18 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
   onFinalize,
   onViewEvents
 }) => {
+  const canFinalizeMatch = userTypeId === 1 || userTypeId === 2;
+  const canEditMatchAndRules = userTypeId === 1 || userTypeId === 2;
+  const isCancelled = matchStatus === 'cancelada';
+  
+  const hasMinimumTeams = teamsCount >= 2;
+  const isPastDeadline = registrationDeadline 
+    ? new Date() > new Date(registrationDeadline) 
+    : false;
+  const canShowPunishment = canApplyPunishment && hasMinimumTeams && isPastDeadline;
+
   return (
     <div className="match-actions d-flex flex-wrap justify-content-center gap-2 my-3">
-      {/* Grupo de botões administrativos */}
       {(canDelete || canEdit) && (
         <div className="action-group d-flex flex-wrap gap-2">
           {canDelete && (
@@ -44,14 +63,14 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
             </Button>
           )}
           
-          {canEdit && (
+          {canEdit && canShowPunishment && (
+            <Button className="btn-edit" onClick={onPunishment}>
+              Aplicar/Ver Punição
+            </Button>
+          )}
+          
+          {canEdit && canEditMatchAndRules && (
             <>
-              {canApplyPunishment && (
-                <Button className="btn-edit" onClick={onPunishment}>
-                  Aplicar/Ver Punição
-                </Button>
-              )}
-              
               <Button className="btn-edit" onClick={onEdit}>
                 <EditIcon /> Editar Partida
               </Button>
@@ -64,17 +83,20 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
         </div>
       )}
 
-      {/* Grupo de ações do usuário */}
       <div className="action-group d-flex flex-wrap gap-2">
-        <Button className="btn-primary-custom" onClick={onEvaluate}>
-          Avaliar / Comentar
-        </Button>
+        {isCompleted && (
+          <>
+            <Button className="btn-primary-custom" onClick={onEvaluate}>
+              Avaliar / Comentar
+            </Button>
+            
+            <Button className="btn-secondary-custom" onClick={onViewComments}>
+              Ver Comentários
+            </Button>
+          </>
+        )}
         
-        <Button className="btn-secondary-custom" onClick={onViewComments}>
-          Ver Comentários
-        </Button>
-        
-        {onFinalize && !isCompleted && (
+        {onFinalize && !isCompleted && !isCancelled && canFinalizeMatch && (
           <Button className="btn-finalize" onClick={onFinalize}>
             Finalizar Partida
           </Button>
