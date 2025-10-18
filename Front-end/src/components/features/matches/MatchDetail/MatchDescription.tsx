@@ -8,10 +8,14 @@ interface MatchDescriptionProps {
 const MatchDescription: React.FC<MatchDescriptionProps> = ({ description }) => {
   if (!description) return null;
 
+  const cleanDescription = description.replace(/\[CANCELADA:.*?\]\s*/g, '').trim();
+  
+  if (!cleanDescription) return null;
+
   return (
-    <div className="match-description">
+    <div className="match-description" style={{ textAlign: 'center' }}>
       <h3>Descrição</h3>
-      <p>{description}</p>
+      <p>{cleanDescription}</p>
     </div>
   );
 };
