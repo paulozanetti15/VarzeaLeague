@@ -22,6 +22,12 @@ export const joinMatchByTeam = async (req: any, res: any) => {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }
+    
+    if (match.status === 'cancelada') {
+      res.status(400).json({ message: 'Esta partida foi cancelada e não aceita mais inscrições' });
+      return;
+    }
+    
     const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
     const userId = decoded.id
     if (!userId) {
@@ -29,10 +35,26 @@ export const joinMatchByTeam = async (req: any, res: any) => {
       return;
     }
 
-    if (match.status !== 'open') {
+    if (match.status !== 'aberta') {
       res.status(400).json({ message: 'Esta partida não está aberta para inscrições' });
       return;
     }
+    
+    const regras = await RulesModel.findOne({where : { partidaId: matchId }});
+    
+    if (regras?.dataValues?.dataLimite) {
+      const now = new Date();
+      now.setHours(23, 59, 59, 999);
+      
+      const deadline = new Date(regras.dataValues.dataLimite);
+      deadline.setHours(23, 59, 59, 999);
+      
+      if (now > deadline) {
+        res.status(400).json({ message: 'O prazo de inscrição para esta partida já encerrou' });
+        return;
+      }
+    }
+    
     const team = await Team.findOne({
       where: {
         id: teamId,
@@ -49,7 +71,6 @@ export const joinMatchByTeam = async (req: any, res: any) => {
       res.status(404).json({ message: 'Time não encontrado ou foi removido' });
       return;
     }
-    const regras = await RulesModel.findOne({where : { partidaId: matchId }});
     const teamIsAlreadyInMatch = await MatchTeams.findOne({ where: { matchId, teamId } });
     if(teamIsAlreadyInMatch){
       return res.status(400).json({ message: 'Time já está inscrito nesta partida' });
@@ -202,9 +223,8 @@ export const deleteTeamMatch= async (req: any, res: any) => {
       const requester = await User.findByPk(requesterId).catch(() => null) as any;
       if (requester && Number(requester.userTypeId) === 1) requesterIsAdmin = true;
   const isTeamCaptain = Number((team as any).captainId) === requesterId;
-      // Se partida finalizada, capitão do time não pode desvincular; apenas organizador/admin do sistema podem
       const matchStatus = String((match as any).status || '').toLowerCase();
-      if (matchStatus === 'completed' && isTeamCaptain && !isOrganizer && !requesterIsAdmin) {
+      if (matchStatus === 'finalizada' && isTeamCaptain && !isOrganizer && !requesterIsAdmin) {
         return res.status(403).json({ message: 'Não é permitido desvincular o time de uma partida finalizada' });
       }
       if (!isTeamCaptain && !isOrganizer && !requesterIsAdmin) {
