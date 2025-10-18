@@ -7,15 +7,83 @@ import jwt from 'jsonwebtoken';
 import Playermodel from "../models/PlayerModel";
 import TeamPlayer from "../models/TeamPlayerModel";
 import User from "../models/UserModel";
+import { Op } from 'sequelize';
 require('dotenv').config(); 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
+
+const checkScheduleConflict = async (teamId: number, matchId: number): Promise<{ hasConflict: boolean; conflictDetails?: string }> => {
+  const newMatch = await Match.findByPk(matchId);
+  if (!newMatch) {
+    return { hasConflict: false };
+  }
+
+  const newMatchDate = new Date(newMatch.date);
+  const newMatchDuration = (newMatch as any).duration || '01:30';
+  const [hours, minutes] = newMatchDuration.split(':').map(Number);
+  const durationInMinutes = (hours * 60) + minutes;
+  
+  const newMatchEnd = new Date(newMatchDate.getTime() + (durationInMinutes * 60000));
+
+  const existingMatches = await MatchTeams.findAll({
+    where: { teamId },
+    include: [{
+      model: Match,
+      as: 'match',
+      where: {
+        id: { [Op.ne]: matchId },
+        status: { [Op.in]: ['aberta', 'confirmada'] }
+      }
+    }]
+  });
+
+  for (const matchTeam of existingMatches) {
+    const existingMatch = (matchTeam as any).match;
+    const existingMatchDate = new Date(existingMatch.date);
+    
+    const sameDay = 
+      newMatchDate.getFullYear() === existingMatchDate.getFullYear() &&
+      newMatchDate.getMonth() === existingMatchDate.getMonth() &&
+      newMatchDate.getDate() === existingMatchDate.getDate();
+
+    if (!sameDay) continue;
+
+    const existingDuration = existingMatch.duration || '01:30';
+    const [exHours, exMinutes] = existingDuration.split(':').map(Number);
+    const exDurationInMinutes = (exHours * 60) + exMinutes;
+    const existingMatchEnd = new Date(existingMatchDate.getTime() + (exDurationInMinutes * 60000));
+
+    const hasOverlap = 
+      (newMatchDate >= existingMatchDate && newMatchDate < existingMatchEnd) ||
+      (newMatchEnd > existingMatchDate && newMatchEnd <= existingMatchEnd) ||
+      (newMatchDate <= existingMatchDate && newMatchEnd >= existingMatchEnd);
+
+    if (hasOverlap) {
+      const formatDateTime = (date: Date) => {
+        return date.toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      };
+
+      return {
+        hasConflict: true,
+        conflictDetails: `Conflito de horário com a partida "${existingMatch.title}" em ${formatDateTime(existingMatchDate)}`
+      };
+    }
+  }
+
+  return { hasConflict: false };
+};
 
 export const joinMatchByTeam = async (req: any, res: any) => {
 
   try {
     const { teamId,matchId } = req.body; 
     const match = await Match.findByPk(matchId, {
-      attributes: [ 'title', 'date', 'location', 'status', 'description', 'price', 'organizerId']
+      attributes: [ 'title', 'date', 'location', 'status', 'description', 'price', 'organizerId', 'duration']
     })
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!match) {
@@ -53,6 +121,14 @@ export const joinMatchByTeam = async (req: any, res: any) => {
         res.status(400).json({ message: 'O prazo de inscrição para esta partida já encerrou' });
         return;
       }
+    }
+
+    const scheduleCheck = await checkScheduleConflict(teamId, matchId);
+    if (scheduleCheck.hasConflict) {
+      res.status(409).json({ 
+        message: scheduleCheck.conflictDetails || 'Time já possui outra partida agendada neste horário' 
+      });
+      return;
     }
     
     const team = await Team.findOne({
