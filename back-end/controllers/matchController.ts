@@ -18,6 +18,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
 export const checkAndCancelMatchesWithInsufficientTeams = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
     
     const matches = await MatchModel.findAll({
       where: {
@@ -48,10 +49,7 @@ export const checkAndCancelMatchesWithInsufficientTeams = async (req: AuthReques
           : 'Apenas um time inscrito após prazo de inscrição';
         
         await match.update({ 
-          status: 'cancelada',
-          description: match.description 
-            ? `${match.description}\n\n[CANCELADA: ${cancelReason}]`
-            : `[CANCELADA: ${cancelReason}]`
+          status: 'cancelada'
         });
         
         cancelledMatches.push({
@@ -233,20 +231,21 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
     });
 
     const now = new Date();
-    const isPastDeadline = MaxTeams?.dataValues?.dataLimite 
-      ? new Date(MaxTeams.dataValues.dataLimite) < now 
-      : false;
+    now.setHours(23, 59, 59, 999);
+    
+    const deadline = MaxTeams?.dataValues?.dataLimite 
+      ? new Date(MaxTeams.dataValues.dataLimite)
+      : null;
+    
+    if (deadline) {
+      deadline.setHours(23, 59, 59, 999);
+    }
+    
+    const isPastDeadline = deadline ? now > deadline : false;
 
     if (isPastDeadline && countTeams < 2 && match.status === 'aberta') {
-      const cancelReason = countTeams === 0 
-        ? 'Nenhum time inscrito após prazo de inscrição'
-        : 'Apenas um time inscrito após prazo de inscrição';
-      
       await match.update({ 
-        status: 'cancelada',
-        description: match.description 
-          ? `${match.description}\n\n[CANCELADA: ${cancelReason}]`
-          : `[CANCELADA: ${cancelReason}]`
+        status: 'cancelada'
       });
       await match.reload();
     }
