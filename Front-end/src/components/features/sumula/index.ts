@@ -1,4 +1,4 @@
 export * from './types';
-export * from './SumulaForm';
-export * from './SumulaDisplay';
-export * from './SumulaActions';
+export { TeamSelector, GoalRegistration, CardRegistration } from './SumulaForm';
+export { SumulaHeader, SumulaStats, GoalsTable, CardsTable } from './SumulaDisplay';
+export { SumulaActions } from './SumulaActions';
