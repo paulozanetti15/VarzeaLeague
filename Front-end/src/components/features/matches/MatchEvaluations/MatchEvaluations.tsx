@@ -145,6 +145,21 @@ export const MatchEvaluations: React.FC<MatchEvaluationsProps> = ({
         {evaluations.map(ev => {
           const userId = localStorage.getItem('userId');
           const isMine = userId && String(ev.evaluator_id) === userId;
+          const evaluatorName = ev.evaluator?.name || 'Usuário';
+          
+          const formatDate = (dateString: string) => {
+            try {
+              const date = new Date(dateString);
+              if (isNaN(date.getTime())) return 'Data inválida';
+              return date.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              });
+            } catch {
+              return 'Data inválida';
+            }
+          };
           
           return (
             <div key={ev.id} className={`evaluation-item cardish ${isMine ? 'mine' : ''}`}>
@@ -154,9 +169,14 @@ export const MatchEvaluations: React.FC<MatchEvaluationsProps> = ({
                     <span key={n} className={n <= ev.rating ? 's filled' : 's'}>★</span>
                   ))}
                 </div>
-                <span className="date">
-                  {new Date(ev.createdAt).toLocaleDateString('pt-BR')}
-                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                  <span className="evaluator-name" style={{ fontSize: '14px', fontWeight: 500 }}>
+                    {evaluatorName}
+                  </span>
+                  <span className="date" style={{ fontSize: '12px', opacity: 0.7 }}>
+                    {formatDate(ev.created_at || ev.createdAt)}
+                  </span>
+                </div>
               </div>
               
               {ev.comment && <div className="comment-body">{ev.comment}</div>}
