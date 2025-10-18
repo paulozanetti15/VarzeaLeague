@@ -223,18 +223,38 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
     }
     try {
       setLoading(true);
+      setError('');
+      
       const resp = await axios.post(`http://localhost:3001/api/matches/${matchId}/join-team`, {
         teamId: selectedTeamId,
         matchId
       }, { headers: { Authorization: `Bearer ${token}` }});
+      
       if (resp.status === 201 || resp.status === 200) {
         toast.success('Time vinculado à partida!');
+        dialogRef.current?.close();
         onHide();
         onSuccess && onSuccess();
         setTimeout(() => window.location.reload(), 1200);
       }
     } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Erro ao vincular time');
+      console.error('[SelectTeamPlayersDialog] Erro ao vincular time:', e);
+      
+      const errorMessage = e.response?.data?.message;
+      
+      if (e.response?.status === 409) {
+        toast.error(errorMessage || 'Time já possui outra partida agendada neste horário');
+        setError(errorMessage || 'Conflito de horário: Este time já está inscrito em outra partida no mesmo dia e horário');
+      } else if (e.response?.status === 400) {
+        toast.error(errorMessage || 'Não foi possível vincular o time');
+        setError(errorMessage || 'Erro ao vincular time. Verifique se todos os requisitos foram atendidos');
+      } else if (e.response?.status === 403) {
+        toast.error('Você não tem permissão para inscrever este time');
+        setError('Apenas o capitão do time pode inscrevê-lo na partida');
+      } else {
+        toast.error(errorMessage || 'Erro ao vincular time');
+        setError(errorMessage || 'Erro ao vincular time. Tente novamente mais tarde');
+      }
     } finally {
       setLoading(false);
     }
@@ -250,7 +270,20 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
       </div>
 
       <div className="modal-body">
-        {error && <div className="stm-alert-error">{error}</div>}
+        {error && (
+          <div className="stm-alert-error" style={{
+            background: 'linear-gradient(135deg, #fee 0%, #fdd 100%)',
+            border: '1px solid #fcc',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            color: '#c00',
+            fontSize: '14px',
+            lineHeight: '1.5'
+          }}>
+            <strong>⚠️ Atenção:</strong> {error}
+          </div>
+        )}
 
         <div className="stm-section">
           <h5 className="stm-section-title">Selecione o Time</h5>
