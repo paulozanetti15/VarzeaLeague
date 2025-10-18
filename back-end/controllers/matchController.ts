@@ -266,12 +266,55 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
 
 export const updateMatch = async (req: Request, res: Response): Promise<void> => {
   try {
-    const match = await MatchModel.findByPk(req.params.id);
+    const { id } = req.params;
+    const match = await MatchModel.findByPk(id);
+    
     if (!match) {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }
+
+    if (req.body.date) {
+      const newMatchDate = new Date(req.body.date);
+      if (newMatchDate <= new Date()) {
+        res.status(400).json({ message: 'A data da partida deve ser futura' });
+        return;
+      }
+    }
+
     await match.update(req.body);
+
+    const rules = await Rules.findOne({ where: { partidaId: id } });
+    
+    if (rules && rules.dataValues?.dataLimite) {
+      const now = new Date();
+      now.setHours(23, 59, 59, 999);
+      
+      const deadline = new Date(rules.dataValues.dataLimite);
+      deadline.setHours(23, 59, 59, 999);
+      
+      const teamsCount = await MatchTeamsModel.count({
+        where: { matchId: id }
+      });
+
+      await match.reload();
+
+      if (now > deadline) {
+        if (teamsCount < 2 && (match.status === 'aberta' || match.status === 'pendente')) {
+          await match.update({ 
+            status: 'cancelada'
+          });
+        }
+      } else {
+        if (match.status === 'cancelada') {
+          await match.update({ 
+            status: 'aberta'
+          });
+        }
+      }
+    }
+
+    await match.reload();
     res.json(match);
   } catch (error) {
     console.error('Erro ao atualizar partida:', error);
