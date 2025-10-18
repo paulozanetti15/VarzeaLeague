@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from 'react-bootstrap';
-import RegrasFormInfoModal from '../../../Modals/Regras/RegrasFormInfoModal';
+import RegrasFormInfoModal from '../../../Modals/Rules/RegrasFormInfoModal';
 
 interface MatchRulesProps {
   match: any;
