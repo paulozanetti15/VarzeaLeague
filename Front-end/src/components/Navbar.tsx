@@ -120,21 +120,23 @@ const Navbar = () => {
           { name: 'Usuários', path: '/admin/users', icon: <Person /> },
           { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
           { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
+           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
         ];
       case 2:
         return [
           { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
           { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
+           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
         ];
       case 3:
         return [
           { name: 'Times', path: '/teams', icon: <People /> },
           ...(hasTeam ? [{ name: 'Histórico', path: '/historico', icon: <History/> }] : []),
           ...(hasTeam ? [{ name: 'Calendário', path: '/calendario', icon: <CalendarMonth/> }] : []),
+          { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
         ];
       case 4:
         return [
-          { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
           { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
         ];
       default:
