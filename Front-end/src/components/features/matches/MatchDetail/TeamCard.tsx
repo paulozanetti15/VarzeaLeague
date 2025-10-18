@@ -6,8 +6,8 @@ interface TeamCardProps {
   userId?: number;
   isOrganizer: boolean;
   isAdmin: boolean;
-  isCompleted: boolean;
   matchId: string | undefined;
+  canLeaveMatch: boolean;
   onLeaveMatch: (matchId: string | undefined, teamId: number) => void;
 }
 
@@ -16,8 +16,8 @@ const TeamCard: React.FC<TeamCardProps> = ({
   userId,
   isOrganizer,
   isAdmin,
-  isCompleted,
   matchId,
+  canLeaveMatch,
   onLeaveMatch
 }) => {
   return (
@@ -31,12 +31,12 @@ const TeamCard: React.FC<TeamCardProps> = ({
         )}
         <div className='d-flex flex-column align-items-center text-center'>
           <Card.Title>{team.name}</Card.Title>
-          {(team.captainId === userId && !isCompleted) && (
+          {(team.captainId === userId && canLeaveMatch) && (
             <Button variant="danger" onClick={() => onLeaveMatch(matchId, team.id)}>
               Sair da Partida
             </Button>
           )}
-          {((isOrganizer || isAdmin) && team.captainId !== userId) && (
+          {((isOrganizer || isAdmin) && team.captainId !== userId && canLeaveMatch) && (
             <Button variant="outline-danger" onClick={() => onLeaveMatch(matchId, team.id)}>
               Remover time
             </Button>
