@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Modal } from 'react-bootstrap';
 import toast from 'react-hot-toast';
-import {
-  SumulaHeader,
-  SumulaStats,
-  GoalsTable,
-  CardsTable,
-  SumulaActions
-} from '../../../components/features/sumula';
-import { useSumulaData, useSumulaPDF } from '../hooks';
+import { SumulaHeader } from '../../components/features/sumula/SumulaDisplay/SumulaHeader';
+import { SumulaStats } from '../../components/features/sumula/SumulaDisplay/SumulaStats';
+import { GoalsTable } from '../../components/features/sumula/SumulaDisplay/GoalsTable';
+import { CardsTable } from '../../components/features/sumula/SumulaDisplay/CardsTable';
+import { SumulaActions } from '../../components/features/sumula/SumulaActions/SumulaActions';
+import { useSumulaData } from './hooks/useSumulaData';
+import { useSumulaPDF } from './hooks/useSumulaPDF';
 
 interface SumulaViewProps {
   matchId: number;

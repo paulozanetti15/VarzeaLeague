@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Modal } from 'react-bootstrap';
 import toast from 'react-hot-toast';
-import {
-  TeamSelector,
-  GoalRegistration,
-  CardRegistration,
-  SumulaHeader,
-  SumulaStats,
-  GoalsTable,
-  CardsTable,
-  SumulaActions
-} from '../../../components/features/sumula';
-import { useSumulaData, useSumulaForm, useSumulaPDF } from '../hooks';
+import { TeamSelector } from '../../components/features/sumula/SumulaForm/TeamSelector';
+import { GoalRegistration } from '../../components/features/sumula/SumulaForm/GoalRegistration';
+import { CardRegistration } from '../../components/features/sumula/SumulaForm/CardRegistration';
+import { SumulaHeader } from '../../components/features/sumula/SumulaDisplay/SumulaHeader';
+import { SumulaStats } from '../../components/features/sumula/SumulaDisplay/SumulaStats';
+import { GoalsTable } from '../../components/features/sumula/SumulaDisplay/GoalsTable';
+import { CardsTable } from '../../components/features/sumula/SumulaDisplay/CardsTable';
+import { SumulaActions } from '../../components/features/sumula/SumulaActions/SumulaActions';
+import { useSumulaData } from './hooks/useSumulaData';
+import { useSumulaForm } from './hooks/useSumulaForm';
+import { useSumulaPDF } from './hooks/useSumulaPDF';
 
 interface SumulaEditProps {
   matchId: number;
