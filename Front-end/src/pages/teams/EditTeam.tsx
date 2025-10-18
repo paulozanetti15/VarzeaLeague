@@ -11,7 +11,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import WarningIcon from '@mui/icons-material/Warning';
 import EditIcon from '@mui/icons-material/Edit';
 import './EditTeam.css';
-import PlayerModal from '../../components/teams/PlayerModal';
+import MangageTeamPlayersModal from '../../components/Modals/Players/ManageTeamPlayersModal';
 import ToastComponent from '../../components/Toast/ToastComponent';
 
 interface PlayerData {

@@ -9,8 +9,7 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import EditIcon from '@mui/icons-material/Edit';
 import ToastComponent from '../../components/Toast/ToastComponent';
-import PlayerModal from '../../components/teams/PlayerModal';
-
+import ManageTeamPlayersModal from '../../components/Modals/Players/ManageTeamPlayersModal.tsx'
 
 interface PlayerData {
   id?: number;
