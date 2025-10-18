@@ -74,25 +74,7 @@ export class TeamController {
             banner: bannerFilename
           });
           
-          // Adicionar jogadores
-          if (jogadores && jogadores.length > 0) {
-            for (const jogador of jogadores) {
-              // Criar o jogador
-              const newPlayer = await Player.create({
-                nome: jogador.nome,
-                sexo: jogador.sexo,
-                ano: jogador.ano,
-                posicao: jogador.posicao,
-                isDeleted: false
-              });
-              
-              // Associar ao time
-              await TeamPlayer.create({
-                teamId: existingDeletedTeam.id,
-                playerId: newPlayer.id
-              });
-            }
-          }
+         
           
           // Adicionar o usuário ao time (se já não for capitão)
           await existingDeletedTeam.addUser(captainId);
@@ -124,27 +106,7 @@ export class TeamController {
         cep
       });
       
-      // Adicionar jogadores
-      if (jogadores && jogadores.length > 0) {
-        for (const jogador of jogadores) {
-          // Criar o jogador
-          const newPlayer = await Player.create({
-            nome: jogador.nome,
-            sexo: jogador.sexo,
-            ano: jogador.ano,
-            posicao: jogador.posicao,
-            isDeleted: false
-          });
-          
-          // Associar ao time
-          await TeamPlayer.create({
-            teamId: team.id,
-            playerId: newPlayer.id
-          });
-        }
-      }
-      
-      // Adicionar o usuário ao time (para estabelecer a relação entre usuário e time)
+      // Adicionar o capitão como usuário do time
       await team.addUser(captainId);
       
       const teamWithPlayers = await Team.findByPk(team.id, {
@@ -406,66 +368,9 @@ export class TeamController {
       await team.update(updateData);
       console.log('Time atualizado com sucesso');
 
-      // Atualizar jogadores
-      if (jogadoresUpdate && jogadoresUpdate.length > 0) {
-        // Obter os jogadores atuais do time
-        const currentPlayers = await Player.findAll({
-          include: [
-            {
-              model: Team,
-              as: 'teams',
-              where: { id: id },
-              through: { attributes: [] }
-            }
-          ]
-        });
-
-        // Para jogadores existentes que foram atualizados
-        for (const jogadorData of jogadoresUpdate) {
-          if (jogadorData.id) {
-            // Atualizar jogador existente
-            const existingPlayer = currentPlayers.find(p => p.id === jogadorData.id);
-            if (existingPlayer) {
-              await existingPlayer.update({
-                nome: jogadorData.nome,
-                sexo: jogadorData.sexo,
-                ano: jogadorData.ano,
-                posicao: jogadorData.posicao
-              });
-            }
-          } else {
-            // Criar novo jogador e associar ao time
-            const newPlayer = await Player.create({
-              nome: jogadorData.nome,
-              sexo: jogadorData.sexo,
-              ano: jogadorData.ano,
-              posicao: jogadorData.posicao,
-              isDeleted: false
-            });
-            
-            await TeamPlayer.create({
-              teamId: parseInt(id),
-              playerId: newPlayer.id
-            });
-          }
-        }
-
-        // Remover jogadores que não estão mais na lista
-        const updatedPlayerIds = jogadoresUpdate
-          .filter(j => j.id)
-          .map(j => j.id);
-        
-        for (const player of currentPlayers) {
-          if (!updatedPlayerIds.includes(player.id)) {
-            // Remover a associação entre o jogador e o time
-            await TeamPlayer.destroy({
-              where: {
-                teamId: parseInt(id),
-                playerId: player.id
-              }
-            });
-          }
-        }
+      // Atualizar associações de jogadores (apenas associar/desassociar, não criar/editar)
+      if (jogadoresUpdate) {
+        await TeamController.handlePlayersAssociations(parseInt(id), jogadoresUpdate);
       }
       
       const updatedTeam = await Team.findOne({
@@ -836,7 +741,45 @@ static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
       res.status(500).json({ error: 'Erro ao gerar estatísticas' });
     }
   }
+
+  // Helper privado para gerenciar associações de jogadores com o time
+  // NÃO cria nem atualiza jogadores - apenas associa/desassocia jogadores já existentes
+  private static async handlePlayersAssociations(teamId: number, jogadoresUpdate: any[]): Promise<void> {
+    // Buscar jogadores atualmente associados ao time
+    const currentPlayers = await Player.findAll({
+      include: [
+        {
+          model: Team,
+          as: 'teams',
+          where: { id: teamId },
+          through: { attributes: [] }
+        }
+      ]
+    });
+
+    // IDs dos jogadores que devem permanecer associados
+    const playerIdsToKeep = jogadoresUpdate
+      .filter((j: any) => j.id) // Apenas jogadores que já existem
+      .map((j: any) => j.id);
+
+    // Adicionar novos jogadores ao time (apenas associação, jogadores já devem existir)
+    for (const playerId of playerIdsToKeep) {
+      const alreadyAssociated = currentPlayers.some(p => p.id === playerId);
+      
+      if (!alreadyAssociated) {
+        // Verificar se o jogador existe
+        const playerExists = await Player.findByPk(playerId);
+        if (playerExists && !playerExists.isDeleted) {
+          await TeamPlayer.create({ teamId: teamId, playerId: playerId });
+        }
+      }
+    }
+
+    // Remover associações de jogadores que não estão mais na lista
+    for (const player of currentPlayers) {
+      if (!playerIdsToKeep.includes(player.id)) {
+        await TeamPlayer.destroy({ where: { teamId: teamId, playerId: player.id } });
+      }
+    }
+  }
 }
-
-
-

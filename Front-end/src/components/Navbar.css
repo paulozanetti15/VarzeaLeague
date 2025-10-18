@@ -1,0 +1,429 @@
+/* ============================================
+   NAVBAR STYLES - Várzea League
+   ============================================ */
+
+/* AppBar Container */
+.navbar-appbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  max-width: 100vw;
+  min-height: 72px;
+  background: linear-gradient(90deg, #0d47a1 0%, #1976d2 100%);
+  box-shadow: 0 4px 20px rgba(33, 150, 243, 0.10);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 0;
+  z-index: 1100;
+}
+
+@media (min-width: 960px) {
+  .navbar-appbar {
+    padding: 12px 32px;
+  }
+}
+
+/* Logo/Brand */
+.navbar-brand {
+  text-decoration: none !important;
+  position: relative;
+  display: inline-block;
+  color: #fff !important;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: 'Inter', 'Montserrat', Arial, sans-serif;
+  font-size: 1.55rem;
+  line-height: 1.1;
+  padding: 0.2rem 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  vertical-align: middle;
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.navbar-brand:hover {
+  color: #ffd600 !important;
+}
+
+/* Desktop Navigation Buttons */
+.navbar-desktop-menu {
+  display: none;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (min-width: 960px) {
+  .navbar-desktop-menu {
+    display: flex;
+  }
+}
+
+.navbar-menu-button {
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 1px;
+  border-radius: 8px;
+  padding: 0.5rem 1.2rem;
+  position: relative;
+  transition: all 0.3s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar-menu-button:hover {
+  color: #ffd600;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Mobile Menu */
+.navbar-mobile-menu {
+  display: flex;
+  align-items: center;
+}
+
+@media (min-width: 960px) {
+  .navbar-mobile-menu {
+    display: none;
+  }
+}
+
+.navbar-mobile-toggle {
+  color: #fff;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+/* Drawer/Sidebar */
+.navbar-drawer {
+  width: 260px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  padding: 16px;
+  text-align: center;
+}
+
+.navbar-drawer-title {
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #1976d2;
+  font-size: 1.25rem;
+}
+
+.navbar-drawer-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.navbar-drawer-item {
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navbar-drawer-item:hover {
+  background: rgba(25, 118, 210, 0.04);
+}
+
+.navbar-drawer-item.active {
+  background: rgba(25, 118, 210, 0.08);
+  color: #1976d2;
+}
+
+.navbar-drawer-item-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-drawer-item.active .navbar-drawer-item-icon {
+  color: #1976d2;
+}
+
+.navbar-drawer-section-title {
+  padding: 0 16px;
+  font-weight: 700;
+  color: #757575;
+  font-size: 0.75rem;
+  margin: 16px 0 8px;
+  text-align: left;
+}
+
+/* User Drawer */
+.navbar-user-drawer {
+  width: 270px;
+  padding: 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  color: #1976d2;
+  box-shadow: 0 8px 32px 0 rgba(25, 118, 210, 0.15);
+  border-top-left-radius: 24px;
+  border-bottom-left-radius: 24px;
+}
+
+@media (min-width: 600px) {
+  .navbar-user-drawer {
+    width: 320px;
+  }
+}
+
+.navbar-user-avatar {
+  width: 90px;
+  height: 90px;
+  border: 3px solid #1976d2;
+  border-radius: 50%;
+  color: #1976d2;
+  font-weight: 700;
+  font-size: 36px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e3f2fd;
+}
+
+.navbar-user-name {
+  font-weight: 700;
+  margin-bottom: 4px;
+  font-size: 1.25rem;
+}
+
+.navbar-user-email {
+  color: #757575;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+}
+
+.navbar-user-role-chip {
+  margin-bottom: 24px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  padding: 4px 12px;
+  border: 1px solid #1976d2;
+  border-radius: 16px;
+  color: #1976d2;
+  background: transparent;
+}
+
+.navbar-user-button {
+  width: 100%;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  text-transform: none;
+  padding: 10px 16px;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.navbar-user-button:hover {
+  background: #2196f3;
+}
+
+.navbar-user-footer {
+  margin-top: auto;
+  color: #757575;
+  font-size: 0.75rem;
+  padding-top: 32px;
+}
+
+/* User Actions (Avatar & Notifications) */
+.navbar-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: 16px;
+}
+
+.navbar-notification-button {
+  color: #fff;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  position: relative;
+}
+
+.navbar-notification-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #f44336;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 2px 6px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.navbar-avatar-button {
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.navbar-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #ffd600;
+  box-shadow: 0 2px 8px rgba(13, 71, 161, 0.10);
+  background: #1976d2;
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Auth Buttons (Login/Register) */
+.navbar-auth-buttons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: 16px;
+}
+
+.navbar-login-button {
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 1px;
+  border-radius: 8px;
+  padding: 0.5rem 1.2rem;
+  border: 2px solid #fff;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar-login-button:hover {
+  color: #0d47a1;
+  background: #fff;
+}
+
+.navbar-register-button {
+  color: #0d47a1;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 1px;
+  border-radius: 8px;
+  padding: 0.5rem 1.2rem;
+  background: #ffd600;
+  border: 2px solid #ffd600;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(255, 214, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar-register-button:hover {
+  color: #f4f3ef;
+  background: rgba(251, 251, 251, 0.1);
+  border: 2px solid #ffd600;
+  box-shadow: 0 4px 12px rgba(255, 214, 0, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Back Button */
+.navbar-back-button {
+  margin-right: 16px;
+  color: #fff;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  transition: all 0.3s;
+}
+
+.navbar-back-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+/* Divider */
+.navbar-divider {
+  margin: 8px 0;
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+/* Utilities */
+.flex-grow {
+  flex-grow: 1;
+}
+
+/* Dropdown Menu (Gerenciar) */
+.navbar-manage-dropdown {
+  position: relative;
+}
+
+.navbar-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+  margin-top: 8px;
+  padding: 8px 0;
+  z-index: 1200;
+}
+
+.navbar-dropdown-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #333;
+  text-decoration: none;
+}
+
+.navbar-dropdown-item:hover {
+  background: rgba(25, 118, 210, 0.04);
+  color: #1976d2;
+}

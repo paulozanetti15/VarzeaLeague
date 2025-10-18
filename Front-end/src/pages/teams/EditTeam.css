@@ -259,6 +259,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
   align-self: flex-start;
   outline: none !important;
+  appearance: none !important;
   -webkit-appearance: none !important;
   -webkit-tap-highlight-color: transparent !important;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
@@ -806,6 +807,47 @@ input[type="email"].form-control {
   margin-bottom: 1rem;
   font-size: 1.1rem;
   line-height: 1.6;
+}
+
+/* Classes added to replace inline styles from EditTeam.tsx */
+.icon-inline {
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.icon-small-right {
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.warning-icon {
+  margin-right: 8px;
+}
+
+.large-warning-icon {
+  font-size: 48px;
+  color: #dc3545;
+}
+
+.delete-modal-title {
+  color: #dc3545;
+  font-weight: 800;
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.warning-text {
+  color: #fff;
+  opacity: 0.7;
+  margin-bottom: 24px;
+}
+
+.text-warning {
+  color: #ffc107;
+}
+
+.button-icon {
+  margin-right: 8px;
 }
 
 .warning-text {

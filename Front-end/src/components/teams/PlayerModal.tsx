@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './PlayerModal.css';
 import CloseIcon from '@mui/icons-material/Close';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
+
 
 interface PlayerData {
   id?: number;
@@ -51,15 +50,9 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ isOpen, onClose, onSave, edit
     if (name === 'ano') {
       // Remove qualquer caractere não numérico
       const numericValue = value.replace(/\D/g, '');
-      
-      // Validação opcional do ano completo
+
       if (numericValue.length === 4) {
         const ano = parseInt(numericValue);
-        
-        if (ano < 1925 || ano > 2019) {
-          // Aqui você pode adicionar alguma lógica de validação/feedback
-          // mas não impede a digitação
-        }
       }
       
       setPlayer({ ...player, [name]: numericValue });

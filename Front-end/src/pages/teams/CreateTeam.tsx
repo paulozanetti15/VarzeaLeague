@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './CreateTeam.css';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import axios from 'axios'; 
 import PaletteIcon from '@mui/icons-material/Palette';
 import ImageIcon from '@mui/icons-material/Image';
 import AddIcon from '@mui/icons-material/Add';
@@ -11,7 +10,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import EditIcon from '@mui/icons-material/Edit';
 import ToastComponent from '../../components/Toast/ToastComponent';
 import PlayerModal from '../../components/teams/PlayerModal';
-import BackButton from '../../components/BackButton';
+
 
 interface PlayerData {
   id?: number;
@@ -42,11 +41,9 @@ export default function CreateTeam() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastBg, setToastBg] = useState('');
-  const [valido, setValido] = useState(false);
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<PlayerData | null>(null);
   const [editingPlayerIndex, setEditingPlayerIndex] = useState<number | null>(null);
-  const user = localStorage.getItem("user")
 
   const [formData, setFormData] = useState<TeamFormData>({
     name: '',
@@ -66,7 +63,7 @@ export default function CreateTeam() {
 
   const formatarCep = (cep: string): string => {
     cep = cep.replace(/\D/g, '');
-    
+
     if (cep.length > 5) {
       return `${cep.substring(0, 5)}-${cep.substring(5, 8)}`;
     }
@@ -250,8 +247,6 @@ export default function CreateTeam() {
       setError('Adicione pelo menos um jogador ao time.');
       return false;
     }
-    
-    setValido(true);
     return true;
   }
 
@@ -272,7 +267,7 @@ export default function CreateTeam() {
       submitFormData.append('estado', formData.estado);
       submitFormData.append('cidade', formData.cidade);
       submitFormData.append('cep', formData.cep);
-      
+  
       if (formData.logo) {
         submitFormData.append('banner', formData.logo);
       }
@@ -287,38 +282,22 @@ export default function CreateTeam() {
           },
         }
       );
-      
-      console.log('Resposta da API:', resposta.data);
-      
-      // Verifica qual campo da resposta contém o ID do time
-      let teamId = null;
-      if (resposta.data.id) {
-        teamId = resposta.data.id;
-      } else if (resposta.data.plainTeam && resposta.data.plainTeam.id) {
-        teamId = resposta.data.plainTeam.id;
-      } else if (resposta.data.team && resposta.data.team.id) {
-        teamId = resposta.data.team.id;
-      }
-      
+      const teamId = resposta.data?.id || resposta.data?.plainTeam?.id || resposta.data?.team?.id;
+
       if (teamId) {
         try {
           await handleSubmitPlayer(teamId);
           setToastMessage('Time criado com sucesso!');
           setToastBg('success');
           setShowToast(true);
-          
-          // Redireciona para a página de times após 1.5 segundos
           setTimeout(() => {
             navigate('/teams');
           }, 1500);
         } catch (playerErr) {
           console.error('Erro ao adicionar jogadores:', playerErr);
-          // Mesmo se houver erro ao adicionar jogadores, consideramos que o time foi criado
           setToastMessage('Time criado, mas houve um problema ao adicionar alguns jogadores.');
           setToastBg('warning');
           setShowToast(true);
-          
-          // Ainda redireciona
           setTimeout(() => {
             navigate('/teams');
           }, 1500);
@@ -332,7 +311,6 @@ export default function CreateTeam() {
       console.error('Erro completo:', err);
       setLoading(false);
       let errorMsg = 'Erro ao criar time. Tente novamente.';
-      
       if (err.response && err.response.data) {
         if (typeof err.response.data.error === 'string') {
           errorMsg = err.response.data.error;
@@ -349,92 +327,54 @@ export default function CreateTeam() {
   };
 
   const handleSubmitPlayer = async (id: number): Promise<void> => {
-    // Convertendo para uma função que retorna uma Promise para poder ser await
-    return new Promise(async (resolve, reject) => {
+    const token = localStorage.getItem('token');
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    };
+
+    const promises = formData.jogadores.map(async (jogador) => {
       try {
-        const createPlayerPromises = formData.jogadores.map(async (jogador) => {
-          try {
-            const playerResponse = await axios.post(
-              'http://localhost:3001/api/players',
-              {
-                nome: jogador.nome,
-                sexo: jogador.sexo,
-                ano: jogador.ano,
-                posicao: jogador.posicao
-              },
-              {
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
-              }
-            );
-            
-            if (playerResponse.data && playerResponse.data.id) {
-              return axios.post(
-                `http://localhost:3001/api/teamplayers/${id}`,
-                [{
-                  playerId: playerResponse.data.id,
-                  teamId: id
-                }],
-                {
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                  },
-                }
-              );
-            }
-          } catch (err) {
-            console.error('Erro ao criar jogador:', err);
-            // Não rejeitamos a promise aqui para permitir que outros jogadores sejam processados
-          }
-        });
-        
-        await Promise.all(createPlayerPromises.filter(p => p !== undefined));
-        resolve();
-      } catch (err: any) {
-        console.error('Erro ao adicionar jogadores:', err);
-        reject(err);
+        const playerResponse = await axios.post('http://localhost:3001/api/players', {
+          nome: jogador.nome,
+          sexo: jogador.sexo,
+          ano: jogador.ano,
+          posicao: jogador.posicao
+        }, { headers :{ Authorization: `Bearer ${token}` } });
+        if (playerResponse.status === 200) {
+          setToastMessage(`Jogador ${jogador.nome} criado com sucesso!`);
+          setToastBg('success');
+          setShowToast(true);
+        }
+        if (playerResponse.status === 400) {
+          setToastMessage(`${jogador.nome} já cadastrado!`);
+          setToastBg('warning');
+          setShowToast(true);
+        }
+        else {
+          setToastMessage(`Erro ao criar jogador: ${jogador.nome}`);
+          setToastBg('danger');
+          setShowToast(true);
+        }
+
+        const playerId = playerResponse?.data?.id;
+        if (playerId) {
+          axios.post(`http://localhost:3001/api/players/${id}`, [{ playerId, teamId: id }], 
+            { headers :{ Authorization: `Bearer ${token}` } });
+        }
+        return Promise.resolve();
+      } catch (err) {
+        console.error('Erro ao criar jogador:', err);
+        return Promise.resolve();
       }
     });
+
+    await Promise.all(promises);
   };
 
   const bannerStyle = {
     background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`,
   };
-
-  const estadosCidades: {[key: string]: string[]} = {
-    'MG': ['Belo Horizonte', 'Ouro Preto', 'Uberlândia'],
-    'PR': [
-      'Cascavel',
-      'Colombo',
-      'Curitiba',
-      'Foz do Iguaçu',
-      'Guarapuava',
-      'Londrina',
-      'Maringá',
-      'Paranaguá',
-      'Ponta Grossa',
-      'São José dos Pinhais',
-      'União da Vitória'
-    ],
-    'RJ': ['Niterói', 'Petrópolis', 'Rio de Janeiro'],
-    'SP': ['Campinas', 'Santos', 'São Paulo'],
-  };
-  const [cidadesDisponiveis, setCidadesDisponiveis] = useState<string[]>([]);
-
-  const handleEstadoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const estado = e.target.value;
-    setFormData({ ...formData, estado, cidade: '' });
-    setCidadesDisponiveis(estadosCidades[estado] || []);
-  };
-  const handleCidadeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFormData({ ...formData, cidade: e.target.value });
-  };
-
-  const estadosOrdem = Object.keys(estadosCidades).sort();
-  const cidadesDisponiveisOrdenadas = [...cidadesDisponiveis].sort();
 
   return (
     <div className="create-team-container">
