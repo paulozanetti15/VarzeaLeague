@@ -105,7 +105,7 @@ export const updateRules = async (req, res) => {
             });
 
             if (now > deadline) {
-                if (teamsCount < 2 && match.status === 'aberta') {
+                if (teamsCount < 2 && (match.status === 'aberta' || match.status === 'pendente')) {
                     await match.update({ 
                         status: 'cancelada'
                     });
