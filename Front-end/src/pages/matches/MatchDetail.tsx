@@ -23,85 +23,115 @@ import { EvaluationDialog } from '../../components/Dialogs/EvaluationDialog';
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+
   const [match, setMatch] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [timeCadastrados, setTimeCadastrados] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  
+  const [timeCadastrados, setTimeCadastrados] = useState<any[]>([]);
+  const [availablePlayers, setAvailablePlayers] = useState<any[]>([]);
+  
   const [showRulesModal, setShowRulesModal] = useState(false);
-  const [modal, setModal] = useState(false); // legacy
   const [showSelectTeamPlayers, setShowSelectTeamPlayers] = useState(false);
-  const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
-  const [editRules, setEditRules] = useState(false);
-  const [showPunicaoRegister, setShowPunicaoRegister] = useState(false);
-  const [showPunicaoInfo, setShowPunicaoInfo] = useState(false);
-  const { user } = useAuth();
   const [showEvalModal, setShowEvalModal] = useState(false);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [showEventsModal, setShowEventsModal] = useState(false);
+  const [showPunicaoRegister, setShowPunicaoRegister] = useState(false);
+  const [showPunicaoInfo, setShowPunicaoInfo] = useState(false);
+  const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
+  const [editRules, setEditRules] = useState(false);
+  const [modal, setModal] = useState(false);
+  
   const [goals, setGoals] = useState<any[]>([]);
   const [cards, setCards] = useState<any[]>([]);
   const [goalEmail, setGoalEmail] = useState<string>('');
   const [cardEmail, setCardEmail] = useState<string>('');
   const [cardType, setCardType] = useState<'yellow'|'red'>('yellow');
   const [cardMinute, setCardMinute] = useState<number | ''>('');
-  // jogadores carregados para seleção (admin de time ou sistema)
-  const [availablePlayers, setAvailablePlayers] = useState<any[]>([]);
   const [selectedGoalPlayer, setSelectedGoalPlayer] = useState<string>('');
   const [selectedCardPlayer, setSelectedCardPlayer] = useState<string>('');
 
 
   const fetchEvents = async () => {
     if (!id) return;
+    
     try {
-  // setEventsLoading(true);
       const token = localStorage.getItem('token');
-      const resp = await fetch(`http://localhost:3001/api/matches/${id}/events`, { headers: { Authorization: `Bearer ${token}` }});
-      if (resp.ok) {
-        const data = await resp.json();
+      const response = await fetch(`http://localhost:3001/api/matches/${id}/events`, { 
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
         setGoals(data.goals || []);
         setCards(data.cards || []);
       }
-    } catch (e) {
-      console.error('Erro ao buscar eventos', e);
-    } finally {
-  // setEventsLoading(false);
-    }
-  };
-  const handleFinalizeMatch = async () => {
-    if (!id) return;
-    try {
-      const token = localStorage.getItem('token');
-      const resp = await fetch(`http://localhost:3001/api/matches/${id}/finalize`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type':'application/json' }});
-      if (!resp.ok) {
-        const data = await resp.json().catch(()=>({}));
-        toast.error(data.message || 'Erro ao finalizar');
-        return;
-      }
-      toast.success('Partida finalizada');
-      // Atualiza status local
-      setMatch((m: any) => m ? { ...m, status: 'completed' } : m);
-     
-      setShowEventsModal(true);
-    } catch (e:any) {
-      toast.error(e.message || 'Falha ao finalizar');
+    } catch (error) {
+      console.error('Erro ao buscar eventos', error);
     }
   };
 
-  const handleAddGoal = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleFinalizeMatch = async () => {
+    if (!id) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3001/api/matches/${id}/finalize`, { 
+        method: 'POST', 
+        headers: { 
+          Authorization: `Bearer ${token}`, 
+          'Content-Type':'application/json' 
+        }
+      });
+      
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        toast.error(data.message || 'Erro ao finalizar');
+        return;
+      }
+      
+      toast.success('Partida finalizada');
+      setMatch((previousMatch: any) => previousMatch ? { ...previousMatch, status: 'completed' } : previousMatch);
+      setShowEventsModal(true);
+    } catch (error: any) {
+      toast.error(error.message || 'Falha ao finalizar');
+    }
+  };
+
+  const handleAddGoal = async (event?: React.FormEvent) => {
+    if (event) event.preventDefault();
+    
     try {
       const token = localStorage.getItem('token');
       const body: any = {};
+      
       if (selectedGoalPlayer) {
-        body.playerId = Number(selectedGoalPlayer); // novo fluxo usando playerId
+        body.playerId = Number(selectedGoalPlayer);
       } else if (goalEmail.trim()) {
-        body.email = goalEmail.trim(); // fallback legado
+        body.email = goalEmail.trim();
       }
-      const resp = await fetch(`http://localhost:3001/api/matches/${id}/goals`, { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` }, body: JSON.stringify(body) });
-      if (!resp.ok) { toast.error('Erro ao adicionar gol'); return; }
-      setGoalEmail(''); setSelectedGoalPlayer('');
+      
+      const response = await fetch(`http://localhost:3001/api/matches/${id}/goals`, { 
+        method:'POST', 
+        headers:{ 
+          'Content-Type':'application/json', 
+          Authorization:`Bearer ${token}` 
+        }, 
+        body: JSON.stringify(body) 
+      });
+      
+      if (!response.ok) { 
+        toast.error('Erro ao adicionar gol'); 
+        return; 
+      }
+      
+      setGoalEmail(''); 
+      setSelectedGoalPlayer('');
       await fetchEvents();
-    } catch (err) { console.error(err); }
+    } catch (error) { 
+      console.error(error); 
+    }
   };
 
   const getTimeInscrito = async (matchId: string) => {
@@ -154,21 +184,29 @@ const MatchDetail: React.FC = () => {
     fetchMatchDetails();
   }, [id, navigate]);
 
-  // Carrega jogadores (Players) dos times participantes da partida
   const fetchMatchPlayers = async (teamId?: string) => {
     if (!id) return;
+    
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
+      
       const query = teamId ? `?teamId=${teamId}` : '';
-      const resp = await fetch(`http://localhost:3001/api/matches/${id}/roster-players${query}`, { headers: { Authorization: `Bearer ${token}` } });
-      if (resp.ok) {
-        const json = await resp.json();
-        setAvailablePlayers(json.players || []);
+      const response = await fetch(
+        `http://localhost:3001/api/matches/${id}/roster-players${query}`, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        setAvailablePlayers(data.players || []);
       } else {
         setAvailablePlayers([]);
       }
-    } catch (e) { console.error('Erro ao carregar roster de jogadores', e); setAvailablePlayers([]); }
+    } catch (error) { 
+      console.error('Erro ao carregar roster de jogadores', error); 
+      setAvailablePlayers([]);
+    }
   };
   
   const handleLeaveMatch = async (matchId: string | undefined, teamId: number) => {
@@ -235,23 +273,25 @@ const MatchDetail: React.FC = () => {
     setOpenDeleteConfirm(false);
   };
 
-  // Abre fluxo de punição: se já existir punição para a partida, abre Info; senão, abre Register
   const handleOpenPunicao = async () => {
     if (!id) return;
+    
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const resp = await axios.get(`http://localhost:3001/api/matches/${id}/punicao`, {
+      
+      const response = await axios.get(`http://localhost:3001/api/matches/${id}/punicao`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const hasPunicao = Array.isArray(resp.data) && resp.data.length > 0;
+      
+      const hasPunicao = Array.isArray(response.data) && response.data.length > 0;
+      
       if (hasPunicao) {
         setShowPunicaoInfo(true);
       } else {
         setShowPunicaoRegister(true);
       }
-    } catch (e) {
-      // Em caso de erro ao checar, abre o registro por padrão
+    } catch (error) {
       setShowPunicaoRegister(true);
     }
   };
@@ -292,8 +332,7 @@ const MatchDetail: React.FC = () => {
   const isAdmin = user && user.userTypeId === 1;
   const canDeleteMatch = isOrganizer || isAdmin;
   const statusLower = String(match.status || '').toLowerCase();
-  const isCompleted = statusLower === 'completed';
-  // Definir capacidade padrão de 2 times quando não houver regra explicitando maxTeams
+  const isCompleted = statusLower === 'finalizada';
   const effectiveMaxTeams = typeof (match?.maxTeams) === 'number' ? Number(match.maxTeams) : 2;
   const currentTeamsCount = timeCadastrados.length;
 
@@ -330,20 +369,29 @@ const MatchDetail: React.FC = () => {
         />
 
         <MatchActions
-          matchId={id}
-          canDeleteMatch={canDeleteMatch}
-          isOrganizer={isOrganizer}
-          isAdmin={isAdmin}
+          canDelete={canDeleteMatch || false}
+          matchId={Number(id)}
+          canEdit={isOrganizer || false}
           isCompleted={isCompleted}
-          onDeleteMatch={handleOpenDeleteConfirm}
-          onOpenPunicao={handleOpenPunicao}
+          canApplyPunishment={isOrganizer || isAdmin || false}
+          userTypeId={user?.userTypeId}
+          teamsCount={timeCadastrados.length}
+          registrationDeadline={match.registrationDeadline}
+          matchStatus={match?.status}
+          onDelete={handleOpenDeleteConfirm}
+          onEdit={() => navigate(`/matches/edit/${id}`)}
           onEditRules={() => setEditRules(true)}
-          onShowEvalModal={() => setShowEvalModal(true)}
-          onShowCommentsModal={() => setShowCommentsModal(true)}
-          onFinalizeMatch={handleFinalizeMatch}
-          onShowEventsModal={() => setShowEventsModal(true)}
-          onFetchEvents={fetchEvents}
-          onFetchMatchPlayers={fetchMatchPlayers}
+          onPunishment={handleOpenPunicao}
+          onEvaluate={() => {
+            console.log('Abrindo modal de avaliação');
+            setShowEvalModal(true);
+          }}
+          onViewComments={() => {
+            console.log('Abrindo modal de comentários');
+            setShowCommentsModal(true);
+          }}
+          onFinalize={handleFinalizeMatch}
+          onViewEvents={() => setShowEventsModal(true)}
         />
       </div>
 
@@ -413,20 +461,24 @@ const MatchDetail: React.FC = () => {
         onConfirm={handleDeleteMatch}
       />
 
-      <EvaluationDialog
-        open={showEvalModal}
-        onClose={() => setShowEvalModal(false)}
-        matchId={Number(match.id)}
-        readOnly={false}
-      />
-      
-      <EvaluationDialog
-        open={showCommentsModal}
-        onClose={() => setShowCommentsModal(false)}
-        matchId={Number(match.id)}
-        readOnly={true}
-        title="Comentários da Partida"
-      />
+      {match && (
+        <>
+          <EvaluationDialog
+            open={showEvalModal}
+            onClose={() => setShowEvalModal(false)}
+            matchId={Number(match.id)}
+            readOnly={false}
+          />
+          
+          <EvaluationDialog
+            open={showCommentsModal}
+            onClose={() => setShowCommentsModal(false)}
+            matchId={Number(match.id)}
+            readOnly={true}
+            title="Comentários da Partida"
+          />
+        </>
+      )}
     </div>
   );
 }
