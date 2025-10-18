@@ -55,7 +55,6 @@ const TeamsList: React.FC<TeamsListProps> = ({
   const canLeaveMatch = !isPastDeadline && !isCompleted;
   
   const isCancelled = match.status === 'cancelada';
-  const willBeCancelled = !isPastDeadline && currentTeamsCount < 2 && !isCancelled && match.status === 'aberta';
   
   const getCancelReason = () => {
     if (currentTeamsCount === 0) {
@@ -98,38 +97,6 @@ const TeamsList: React.FC<TeamsListProps> = ({
             lineHeight: '1.5'
           }}>
             {getCancelReason()}
-          </p>
-        </div>
-      )}
-      
-      {willBeCancelled && (
-        <div 
-          className="alert mb-3" 
-          style={{
-            background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
-            border: 'none',
-            color: '#ffffff',
-            borderRadius: '12px',
-            padding: '1.5rem',
-            boxShadow: '0 4px 12px rgba(255, 152, 0, 0.4)',
-            textAlign: 'center'
-          }}
-        >
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            gap: '12px',
-            marginBottom: '8px'
-          }}>
-            <i className="fas fa-exclamation-triangle" style={{ fontSize: '28px' }}></i>
-            <strong style={{ fontSize: '18px', fontWeight: 600 }}>Atenção!</strong>
-          </div>
-          <p className="mb-0" style={{ 
-            fontSize: '15px',
-            lineHeight: '1.5'
-          }}>
-            Esta partida será cancelada automaticamente por não ter times suficientes após o prazo de inscrição.
           </p>
         </div>
       )}
