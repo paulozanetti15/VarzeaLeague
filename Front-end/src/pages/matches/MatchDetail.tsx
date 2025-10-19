@@ -6,10 +6,10 @@ import axios from 'axios';
 import { useAuth } from '../../hooks/useAuth';
 import ModalTeams from '../../components/Modals/Teams/modelTeams';
 import SelectTeamPlayersModal from '../../components/Dialogs/SelectTeamPlayersDialog';
-import EditRulesModal from '../../components/Modals/Regras/RegrasFormEditModal';
+import EditRulesModal from '../../components/Modals/Rules/RegrasFormEditModal';
 import PunicaoRegisterModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosoRegisterModal';
 import PunicaoInfoModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosaModalInfo';
-import SumulaPartidaAmistosaModal from '../sumula/SumulaPartidasAmistosas';
+import { SumulaCreate, SumulaView } from '../sumula';
 import {
   MatchHeader,
   MatchInfoSection,
@@ -42,6 +42,7 @@ const MatchDetail: React.FC = () => {
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [editRules, setEditRules] = useState(false);
   const [modal, setModal] = useState(false);
+  const [hasSumula, setHasSumula] = useState(false);
   
   const [goals, setGoals] = useState<any[]>([]);
   const [cards, setCards] = useState<any[]>([]);
@@ -69,6 +70,27 @@ const MatchDetail: React.FC = () => {
       }
     } catch (error) {
       console.error('Erro ao buscar eventos', error);
+    }
+  };
+
+  const checkSumulaExists = async () => {
+    if (!id) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3001/api/matches/${id}/events`, { 
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const hasEvents = (data.goals && data.goals.length > 0) || (data.cards && data.cards.length > 0);
+        setHasSumula(hasEvents);
+        return hasEvents;
+      }
+    } catch (error) {
+      setHasSumula(false);
+      return false;
     }
   };
 
@@ -169,6 +191,7 @@ const MatchDetail: React.FC = () => {
         });
         setMatch(response.data);
         await getTimeInscrito(id!);
+        await checkSumulaExists();
       } catch (err: any) {
         console.error('Erro ao carregar detalhes:', err);
         if (err.response?.status === 401) {
@@ -446,12 +469,24 @@ const MatchDetail: React.FC = () => {
         </>
       )}
 
-      {showEventsModal && (
-        <SumulaPartidaAmistosaModal
-          id={Number(match.id)}
+      {showEventsModal && !hasSumula && isOrganizer && (
+        <SumulaCreate
+          matchId={Number(match.id)}
+          isChampionship={false}
           show={showEventsModal}
-          onHide={() => setShowEventsModal(false)}
-          canSave={Boolean(isOrganizer)}
+          onClose={() => {
+            setShowEventsModal(false);
+            checkSumulaExists();
+          }}
+        />
+      )}
+
+      {showEventsModal && hasSumula && (
+        <SumulaView
+          matchId={Number(match.id)}
+          isChampionship={false}
+          show={showEventsModal}
+          onClose={() => setShowEventsModal(false)}
         />
       )}
 
