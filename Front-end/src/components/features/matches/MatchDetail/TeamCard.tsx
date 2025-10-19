@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Card } from 'react-bootstrap';
+import './ParticipantTeamCard.css';
 
 interface TeamCardProps {
   team: any;
@@ -22,13 +23,18 @@ const TeamCard: React.FC<TeamCardProps> = ({
 }) => {
   return (
     <Card className="team-card">
+      {team.banner ? (
+        <Card.Img
+          src={`http://localhost:3001/uploads/teams/${team.banner}`}
+          variant='top'
+          alt={team.name}
+        />
+      ) : (
+        <div className="team-card-no-image">
+          <i className="fas fa-shield-alt team-card-no-image-icon"></i>
+        </div>
+      )}
       <Card.Body>
-        {team.banner && (
-          <Card.Img
-            src={`http://localhost:3001/uploads/teams/${team.banner}`}
-            variant='top'
-          />
-        )}
         <div className='d-flex flex-column align-items-center text-center'>
           <Card.Title>{team.name}</Card.Title>
           {(team.captainId === userId && canLeaveMatch) && (
