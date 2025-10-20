@@ -8,6 +8,7 @@ interface ChampionshipPenaltyAttributes {
   idTime: number;
   motivo: string;
   idChampionship: number;
+  idMatchChampionship?: number;
 }
 
 class ChampionshipPenalty extends Model<ChampionshipPenaltyAttributes> {
@@ -15,6 +16,7 @@ class ChampionshipPenalty extends Model<ChampionshipPenaltyAttributes> {
   public idTime!: number;
   public motivo!: string;
   public idChampionship!: number;
+  public idMatchChampionship?: number;
 }
 
 ChampionshipPenalty.init(
@@ -35,6 +37,12 @@ ChampionshipPenalty.init(
       field: 'id_championship',
       allowNull: false,
       references: { model: 'championships', key: 'id' },
+    },
+    idMatchChampionship: {
+      type: DataTypes.INTEGER,
+      field: 'id_match_championship',
+      allowNull: true,
+      references: { model: 'match_championships', key: 'id' },
     },
     motivo: {
       type: DataTypes.STRING,
