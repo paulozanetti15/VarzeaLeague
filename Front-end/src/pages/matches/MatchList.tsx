@@ -259,17 +259,17 @@ const MatchList: React.FC = () => {
                 <div className="filter-option">
                   <input 
                     type="checkbox" 
-                    id="status-open" 
-                    checked={tempStatusFilter.includes('open')}
+                    id="status-aberta" 
+                    checked={tempStatusFilter.includes('aberta')}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setTempStatusFilter([...tempStatusFilter, 'open']);
+                        setTempStatusFilter([...tempStatusFilter, 'aberta']);
                       } else {
-                        setTempStatusFilter(tempStatusFilter.filter(s => s !== 'open'));
+                        setTempStatusFilter(tempStatusFilter.filter(s => s !== 'aberta'));
                       }
                     }}
                   />
-                  <label htmlFor="status-open">
+                  <label htmlFor="status-aberta">
                     <span className="status-indicator open"></span>
                     Abertas
                   </label>
@@ -278,19 +278,19 @@ const MatchList: React.FC = () => {
                 <div className="filter-option">
                   <input 
                     type="checkbox" 
-                    id="status-full" 
-                    checked={tempStatusFilter.includes('full')}
+                    id="status-finalizada" 
+                    checked={tempStatusFilter.includes('finalizada')}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setTempStatusFilter([...tempStatusFilter, 'full']);
+                        setTempStatusFilter([...tempStatusFilter, 'finalizada']);
                       } else {
-                        setTempStatusFilter(tempStatusFilter.filter(s => s !== 'full'));
+                        setTempStatusFilter(tempStatusFilter.filter(s => s !== 'finalizada'));
                       }
                     }}
                   />
-                  <label htmlFor="status-full">
+                  <label htmlFor="status-finalizada">
                     <span className="status-indicator full"></span>
-                    Completas
+                    Finalizadas
                   </label>
                 </div>
               </div>
@@ -519,7 +519,7 @@ const MatchList: React.FC = () => {
                 
                 <div className="match-action-container">
                   {!isPastMatch(match.date) && 
-                   (match.status === 'open' || match.status === 'full') && 
+                   (match.status === 'aberta' || match.status === 'finalizada') && 
                    match.organizerId !== currentUser?.id && (
                     <div className="match-full-message">
                       
@@ -602,20 +602,20 @@ const MatchList: React.FC = () => {
             <div className="active-filters-summary">
               <p>Filtros ativos:</p>
               <div className="active-filters-chips">
-                {statusFilter.length > 0 && (
-                  <div className="filter-chip">
-                    <span className="chip-label">Status:</span> {statusFilter.map(s => {
-                      switch(s) {
-                        case 'open': return 'Aberta';
-                        case 'full': return 'Finalizadas';
-                        case 'in_progress': return 'Em andamento';
-                        case 'completed': return 'Finalizada';
-                        case 'cancelled': return 'Cancelada';
-                        default: return s;
-                      }
-                    }).join(', ')}
-                  </div>
-                )}
+                    {statusFilter.length > 0 && (
+                      <div className="filter-chip">
+                        <span className="chip-label">Status:</span> {statusFilter.map(s => {
+                          switch(s) {
+                            case 'aberta': return 'Aberta';
+                            case 'finalizada': return 'Finalizada';
+                            case 'pendente': return 'Pendente';
+                            case 'confirmada': return 'Em andamento';
+                            case 'cancelada': return 'Cancelada';
+                            default: return s;
+                          }
+                        }).join(', ')}
+                      </div>
+                    )}
                 
                 {priceFilter.length > 0 && (
                   <div className="filter-chip">

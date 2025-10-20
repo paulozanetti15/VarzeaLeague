@@ -8,8 +8,8 @@ import ModalTeams from '../../components/Modals/Teams/modelTeams';
 import SelectTeamPlayersModal from '../../components/Dialogs/SelectTeamPlayersDialog';
 import EditRulesModal from '../../components/Modals/Rules/RegrasFormEditModal';
 import PunicaoRegisterModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosoRegisterModal';
-import PunicaoInfoModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosaModalInfo';
-import { SumulaCreate, SumulaView } from '../sumula';
+import PunicaoViewModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosaViewModal';
+import { SumulaCreate, SumulaView, SumulaEdit } from '../sumula';
 import {
   MatchHeader,
   MatchInfoSection,
@@ -30,8 +30,6 @@ const MatchDetail: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   
   const [timeCadastrados, setTimeCadastrados] = useState<any[]>([]);
-  const [availablePlayers, setAvailablePlayers] = useState<any[]>([]);
-  
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showSelectTeamPlayers, setShowSelectTeamPlayers] = useState(false);
   const [showEvalModal, setShowEvalModal] = useState(false);
@@ -43,34 +41,34 @@ const MatchDetail: React.FC = () => {
   const [editRules, setEditRules] = useState(false);
   const [modal, setModal] = useState(false);
   const [hasSumula, setHasSumula] = useState(false);
+  const [isWo, setIsWo] = useState(false);
+  const [isEditingSumula, setIsEditingSumula] = useState(false);
+  const [punishment, setPunishment] = useState<any>(null);
   
-  const [goals, setGoals] = useState<any[]>([]);
-  const [cards, setCards] = useState<any[]>([]);
-  const [goalEmail, setGoalEmail] = useState<string>('');
-  const [cardEmail, setCardEmail] = useState<string>('');
-  const [cardType, setCardType] = useState<'yellow'|'red'>('yellow');
-  const [cardMinute, setCardMinute] = useState<number | ''>('');
-  const [selectedGoalPlayer, setSelectedGoalPlayer] = useState<string>('');
-  const [selectedCardPlayer, setSelectedCardPlayer] = useState<string>('');
 
 
-  const fetchEvents = async () => {
-    if (!id) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/matches/${id}/events`, { 
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setGoals(data.goals || []);
-        setCards(data.cards || []);
-      }
-    } catch (error) {
-      console.error('Erro ao buscar eventos', error);
+
+  const checkIfWo = (data: any) => {
+    if (!data) {
+      setIsWo(false);
+      return false;
     }
+
+    const status = String(data.status || '').toLowerCase();
+    if (status === 'wo' || status === 'walkover' || data.isWO) {
+      setIsWo(true);
+      return true;
+    }
+
+    if (typeof data.homeScore === 'number' && typeof data.awayScore === 'number') {
+      if ((data.homeScore === 0 && data.awayScore > 0) || (data.awayScore === 0 && data.homeScore > 0)) {
+        setIsWo(true);
+        return true;
+      }
+    }
+
+    setIsWo(false);
+    return false;
   };
 
   const checkSumulaExists = async () => {
@@ -113,49 +111,15 @@ const MatchDetail: React.FC = () => {
         return;
       }
       
-      toast.success('Partida finalizada');
-      setMatch((previousMatch: any) => previousMatch ? { ...previousMatch, status: 'completed' } : previousMatch);
+  window.alert('Partida finalizada');
+  setMatch((previousMatch: any) => previousMatch ? { ...previousMatch, status: 'finalizada' } : previousMatch);
       setShowEventsModal(true);
     } catch (error: any) {
       toast.error(error.message || 'Falha ao finalizar');
     }
   };
 
-  const handleAddGoal = async (event?: React.FormEvent) => {
-    if (event) event.preventDefault();
-    
-    try {
-      const token = localStorage.getItem('token');
-      const body: any = {};
-      
-      if (selectedGoalPlayer) {
-        body.playerId = Number(selectedGoalPlayer);
-      } else if (goalEmail.trim()) {
-        body.email = goalEmail.trim();
-      }
-      
-      const response = await fetch(`http://localhost:3001/api/matches/${id}/goals`, { 
-        method:'POST', 
-        headers:{ 
-          'Content-Type':'application/json', 
-          Authorization:`Bearer ${token}` 
-        }, 
-        body: JSON.stringify(body) 
-      });
-      
-      if (!response.ok) { 
-        toast.error('Erro ao adicionar gol'); 
-        return; 
-      }
-      
-      setGoalEmail(''); 
-      setSelectedGoalPlayer('');
-      await fetchEvents();
-    } catch (error) { 
-      console.error(error); 
-    }
-  };
-
+ 
   const getTimeInscrito = async (matchId: string) => {
     try {
       const token = localStorage.getItem('token');
@@ -174,6 +138,32 @@ const MatchDetail: React.FC = () => {
     }
   };
 
+  const fetchPunishment = async (matchId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      const response = await axios.get(`http://localhost:3001/api/matches/${matchId}/punicao`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      let fetched = null;
+      if (response.data) {
+        if (Array.isArray(response.data)) {
+          fetched = response.data.length > 0 ? response.data[0] : null;
+        } else {
+          fetched = response.data;
+        }
+      }
+
+      setPunishment(fetched);
+      return fetched;
+    } catch (error) {
+      setPunishment(null);
+      return null;
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -189,9 +179,12 @@ const MatchDetail: React.FC = () => {
             Authorization: `Bearer ${token}`
           }
         });
-        setMatch(response.data);
-        await getTimeInscrito(id!);
-        await checkSumulaExists();
+  setMatch(response.data);
+  checkIfWo(response.data);
+  // fetch punishment early so actions (comments/buttons) can react immediately
+  await fetchPunishment(id!);
+  await getTimeInscrito(id!);
+  await checkSumulaExists();
       } catch (err: any) {
         console.error('Erro ao carregar detalhes:', err);
         if (err.response?.status === 401) {
@@ -207,30 +200,30 @@ const MatchDetail: React.FC = () => {
     fetchMatchDetails();
   }, [id, navigate]);
 
-  const fetchMatchPlayers = async (teamId?: string) => {
-    if (!id) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      
-      const query = teamId ? `?teamId=${teamId}` : '';
-      const response = await fetch(
-        `http://localhost:3001/api/matches/${id}/roster-players${query}`, 
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        setAvailablePlayers(data.players || []);
-      } else {
-        setAvailablePlayers([]);
-      }
-    } catch (error) { 
-      console.error('Erro ao carregar roster de jogadores', error); 
-      setAvailablePlayers([]);
+  const handleViewEvents = async () => {
+    // refresh punishment and sumula before deciding
+    const latestPunishment = id ? await fetchPunishment(id) : null;
+    const sumulaExists = await checkSumulaExists();
+
+    if (latestPunishment || isWo) {
+      // open SumulaView first (view mode) and allow edit
+      setIsEditingSumula(false);
+      setShowEventsModal(true);
+      return;
     }
+
+    if (sumulaExists) {
+      // if sumula exists open view by default
+      setIsEditingSumula(false);
+      setShowEventsModal(true);
+      return;
+    }
+
+    // default: no sumula and no punishment - open create
+    setIsEditingSumula(true);
+    setShowEventsModal(true);
   };
+
   
   const handleLeaveMatch = async (matchId: string | undefined, teamId: number) => {
     if (!matchId) return;
@@ -319,6 +312,28 @@ const MatchDetail: React.FC = () => {
     }
   };
 
+  
+
+  const handlePunishmentModalClose = async () => {
+    setShowPunicaoInfo(false);
+    setShowPunicaoRegister(false);
+    if (id) {
+      await fetchPunishment(id);
+      await getTimeInscrito(id);
+      // Re-fetch match details to get updated status
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          const resp = await axios.get(`http://localhost:3001/api/matches/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+          setMatch(resp.data);
+          checkIfWo(resp.data);
+        }
+      } catch (err) {
+        console.error('Erro ao atualizar detalhes da partida após manipular punição', err);
+      }
+    }
+  };
+
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
@@ -357,7 +372,6 @@ const MatchDetail: React.FC = () => {
   const statusLower = String(match.status || '').toLowerCase();
   const isCompleted = statusLower === 'finalizada';
   const effectiveMaxTeams = typeof (match?.maxTeams) === 'number' ? Number(match.maxTeams) : 2;
-  const currentTeamsCount = timeCadastrados.length;
 
   return (
     <div className="match-detail-container">
@@ -377,13 +391,15 @@ const MatchDetail: React.FC = () => {
           onShowRulesModal={setShowRulesModal}
         />
 
+       
+
         <TeamsList
           teams={timeCadastrados}
           match={match}
           userId={user?.id}
           userTypeId={user?.userTypeId}
-          isOrganizer={isOrganizer}
-          isAdmin={isAdmin}
+          isOrganizer={!!isOrganizer}
+          isAdmin={!!isAdmin}
           isCompleted={isCompleted}
           matchId={id}
           effectiveMaxTeams={effectiveMaxTeams}
@@ -397,6 +413,9 @@ const MatchDetail: React.FC = () => {
           canEdit={isOrganizer || false}
           isCompleted={isCompleted}
           canApplyPunishment={isOrganizer || isAdmin || false}
+          isWo={isWo}
+          hasPunishment={!!punishment}
+          disableComments={isWo || !!punishment}
           userTypeId={user?.userTypeId}
           teamsCount={timeCadastrados.length}
           registrationDeadline={match.registrationDeadline}
@@ -414,7 +433,7 @@ const MatchDetail: React.FC = () => {
             setShowCommentsModal(true);
           }}
           onFinalize={handleFinalizeMatch}
-          onViewEvents={() => setShowEventsModal(true)}
+          onViewEvents={handleViewEvents}
         />
       </div>
 
@@ -453,23 +472,22 @@ const MatchDetail: React.FC = () => {
           <PunicaoRegisterModal
             show={showPunicaoRegister}
             onHide={() => setShowPunicaoRegister(false)}
-            onClose={() => {
-              setShowPunicaoRegister(false);
-              getTimeInscrito(id!);
-            }}
+            onClose={handlePunishmentModalClose}
             team={{ id: Number(id) }}
-          />
-          <PunicaoInfoModal
-            show={showPunicaoInfo}
-            onHide={() => setShowPunicaoInfo(false)}
-            onClose={() => setShowPunicaoInfo(false)}
-            team={{ id: Number(id) }}
-            idMatch={Number(id)}
           />
         </>
       )}
+      {(isOrganizer || isAdmin) && punishment && (
+        <PunicaoViewModal
+          show={showPunicaoInfo}
+          onHide={() => setShowPunicaoInfo(false)}
+          onClose={handlePunishmentModalClose}
+          team={{ id: Number(id) }}
+          idMatch={Number(id)}
+        />
+      )}
 
-      {showEventsModal && !hasSumula && isOrganizer && (
+      {showEventsModal && !hasSumula && !punishment && isOrganizer && (
         <SumulaCreate
           matchId={Number(match.id)}
           isChampionship={false}
@@ -481,12 +499,29 @@ const MatchDetail: React.FC = () => {
         />
       )}
 
-      {showEventsModal && hasSumula && (
+      {showEventsModal && !isEditingSumula && (hasSumula || punishment) && (
         <SumulaView
           matchId={Number(match.id)}
           isChampionship={false}
           show={showEventsModal}
-          onClose={() => setShowEventsModal(false)}
+          onClose={() => {
+            setShowEventsModal(false);
+            setIsEditingSumula(false);
+          }}
+          onEdit={() => setIsEditingSumula(true)}
+        />
+      )}
+
+      {showEventsModal && isEditingSumula && (hasSumula) && (
+        <SumulaEdit
+          matchId={Number(match.id)}
+          isChampionship={false}
+          show={showEventsModal}
+          onClose={() => {
+            setShowEventsModal(false);
+            setIsEditingSumula(false);
+            checkSumulaExists();
+          }}
         />
       )}
 
