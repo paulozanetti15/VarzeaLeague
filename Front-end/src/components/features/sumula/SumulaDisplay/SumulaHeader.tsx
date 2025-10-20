@@ -5,26 +5,19 @@ interface SumulaHeaderProps {
   awayTeamName: string;
   homeScore: number;
   awayScore: number;
-  isSaved: boolean;
 }
 
 export const SumulaHeader: React.FC<SumulaHeaderProps> = ({
   homeTeamName,
   awayTeamName,
   homeScore,
-  awayScore,
-  isSaved
+  awayScore
 }) => {
   return (
-    <div className="scoreboard text-center my-3">
-      <h4 style={{ color: "black" }}>
+    <div className="scoreboard text-center text-white bg-primary" style={{ backgroundColor: '#1976d2 !important', color: 'white !important' }}>
+      <h4 className="text-white" style={{ color: 'white !important', margin: 0 }}>
         {homeTeamName} {homeScore} x {awayScore} {awayTeamName}
       </h4>
-      {isSaved && (
-        <div className="text-success mt-2">
-          <strong>✓ Súmula validada e salva</strong>
-        </div>
-      )}
     </div>
   );
 };
