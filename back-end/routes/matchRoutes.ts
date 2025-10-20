@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import {joinMatchByTeam,getMatchTeams, deleteTeamMatch,getTeamsAvailable, checkTeamsRuleCompliance} from '../controllers/MatchTeamsController';
-import { createMatch, listMatches, getMatch, deleteMatch, updateMatch,getMatchesByTeam} from '../controllers/matchController';
+import { createMatch, listMatches, getMatch, deleteMatch, updateMatch,getMatchesByTeam, checkAndCancelMatchesWithInsufficientTeams} from '../controllers/matchController';
 import { listMatchEvaluations, upsertMatchEvaluation, getMatchEvaluationSummary } from '../controllers/matchEvaluationController';
 import {busarPunicaoPartidaAmistosa,alterarPunicaoPartidaAmistosa,deletarPunicaoPartidaAmistosa, inserirPunicaoPartidaAmistosa} from '../controllers/PunicaoController';
 import { finalizeMatch, addGoal, addCard, listEvents, deleteGoalEvent, deleteCardEvent } from '../controllers/matchEventsController';
@@ -10,9 +10,9 @@ import { getMatchRosterPlayers } from '../controllers/matchRosterController';
 import { getPlayerRanking } from '../controllers/playerRankingController';
 const router = express.Router();
 
-// Colocar rotas específicas (strings fixas após /matches) antes de rotas com :id para evitar colisão
 router.get('/ranking/jogadores', authenticateToken, getPlayerRanking);
 router.get('/teams/:id', authenticateToken, getMatchesByTeam);
+router.post('/check-cancelled', authenticateToken, checkAndCancelMatchesWithInsufficientTeams);
 
 router.get('/:id/available', authenticateToken, getTeamsAvailable);
 router.post('/', authenticateToken, createMatch);

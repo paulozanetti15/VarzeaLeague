@@ -120,12 +120,21 @@
   margin-top: 0.5rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.login-btn:hover {
+.login-btn:hover:not(:disabled) {
   background: linear-gradient(90deg, #7c3aed 0%, #6366f1 100%);
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(99, 102, 241, 0.25);
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .login-divider {
@@ -205,13 +214,48 @@
 }
 
 .login-error {
-  color: var(--red-500);
+  color: #dc2626;
   font-size: 0.875rem;
   margin-bottom: 1.5rem;
-  padding: 0.75rem 1rem;
-  background-color: rgba(254, 226, 226, 1);
-  border: 1px solid rgba(254, 202, 202, 1);
-  border-radius: 6px;
+  padding: 0.875rem 1rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  line-height: 1.5;
+  animation: slideDown 0.3s ease-out;
+}
+
+.login-error svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animação de loading no botão */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+  display: inline-block;
 }
 
 @media (max-width: 576px) {

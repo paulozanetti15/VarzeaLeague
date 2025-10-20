@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import axios from 'axios';
-import { Modal, Button, Spinner } from 'react-bootstrap';
+import { Button, Spinner } from 'react-bootstrap';
 import toast from 'react-hot-toast';
-import { useAuth } from '../../../hooks/useAuth';
-import './SelectTeamPlayersModal.css';
+import { useAuth } from '../../hooks/useAuth';
+import './SelectTeamPlayersDialog.css';
 
 interface SelectTeamPlayersModalProps {
   show: boolean;
@@ -23,7 +23,7 @@ interface Player {
   id: number;
   nome: string;
   sexo: string;
-  ano: string; // ano de nascimento
+  ano: string;
   posicao: string;
 }
 
@@ -31,7 +31,7 @@ interface Rules {
   dataLimite: string;
   idadeMinima: number;
   idadeMaxima: number;
-  genero: string; // Masculino | Feminino | Ambos
+  genero: string;
 }
 
 const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, onHide, matchId, onSuccess }) => {
@@ -47,6 +47,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
   const [error, setError] = useState<string>('');
   const [modalidade, setModalidade] = useState<string | null>(null);
 
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
   const token = useMemo(() => localStorage.getItem('token'), []);
 
   const fetchRules = async () => {
@@ -56,8 +57,6 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
       });
       setRules(resp.data);
     } catch {
-      // Se não existem regras, deixa null
-      console.warn('[SelectTeamPlayersModal] Nenhuma regra encontrada para partida', matchId);
       setRules(null);
     }
   };
@@ -70,14 +69,11 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
       const mod = resp?.data?.modalidade as string | undefined;
       setModalidade(mod || null);
     } catch (e) {
-      console.warn('[SelectTeamPlayersModal] Não foi possível obter a modalidade da partida', e);
       setModalidade(null);
     }
   };
 
   const fetchAvailableTeams = async () => {
-    // Não retornar cedo se user ainda não carregou; o backend identifica pelo token
-    console.debug('[SelectTeamPlayersModal] fetchAvailableTeams start', { matchId, hasUser: !!user });
     setTeamsLoading(true);
     try {
       const [myTeamsResp, registeredResp, availableResp] = await Promise.all([
@@ -92,19 +88,14 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
       const registeredIds = new Set(alreadyRegistered.map(t => t.id));
       const availableIds = new Set(available.map(t => t.id));
 
-      // Exibir TODOS os meus times, desativando os que já estão inscritos ou não retornaram em available
       const decorated = myTeams.map(t => ({
         ...t,
         __disabled: registeredIds.has(t.id),
-        __notInAvailable: !availableIds.has(t.id) // para debug se necessário
+        __notInAvailable: !availableIds.has(t.id)
       }));
 
-      if (decorated.length === 0) {
-        console.info('[SelectTeamPlayersModal] Usuário não possui times.');
-      }
       setTeams(decorated as any);
     } catch (e: any) {
-      console.error('[SelectTeamPlayersModal] Erro carregando times:', e);
       setError(e.response?.data?.message || 'Erro ao carregar times');
     } finally {
       setTeamsLoading(false);
@@ -129,7 +120,6 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
 
   useEffect(() => {
     if (show) {
-      console.debug('[SelectTeamPlayersModal] Modal aberto, iniciando carregamentos');
       setError('');
       setSelectedTeamId(null);
       setPlayers([]);
@@ -138,11 +128,39 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
       fetchMatch();
       fetchAvailableTeams();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, user]);
 
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (show) {
+      // showModal centers automatically in browsers that support it; CSS fallback provided
+      try { dialog.showModal(); } catch { /* ignore if already open or not supported */ }
+    } else {
+      try { dialog.close(); } catch { /* ignore */ }
+    }
+  }, [show]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const handleCancel = (e: Event) => {
+      // prevent closing via ESC or backdrop when loading
+      if (loading) e.preventDefault();
+    };
+    const handleClose = () => {
+      if (!loading) onHide();
+    };
+    dialog.addEventListener('cancel', handleCancel as EventListener);
+    dialog.addEventListener('close', handleClose as EventListener);
+    return () => {
+      dialog.removeEventListener('cancel', handleCancel as EventListener);
+      dialog.removeEventListener('close', handleClose as EventListener);
+    };
+  }, [loading, onHide]);
+
   const playerMatchesRules = (player: Player): boolean => {
-    if (!rules) return true; // sem regras, todos
+    if (!rules) return true;
     const currentYear = new Date().getFullYear();
     const age = currentYear - parseInt(player.ano, 10);
     if (isNaN(age)) return false;
@@ -154,7 +172,6 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
   const eligiblePlayers = useMemo(() => players.filter(playerMatchesRules), [players, rules]);
   const hasEligiblePlayers = eligiblePlayers.length > 0;
 
-  // Modalidade: requisitos mínimos de seleção
   const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
   const isGoalkeeper = (p: Player) => {
     const pos = normalize(p.posicao || '');
@@ -166,7 +183,6 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
     if (mod === 'futsal') return { gk: 1, line: 4 };
     if (mod === 'fut7' || mod === 'fut 7' || mod === 'society' || mod === 'futebol7') return { gk: 1, line: 6 };
     if (mod === 'futebol campo' || mod === 'futeboldecampo' || mod === 'campo') return { gk: 1, line: 10 };
-    // padrão conservador: exigir ao menos 1 goleiro e 4 de linha
     return { gk: 1, line: 4 };
   }, [modalidade]);
 
@@ -176,7 +192,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
     selectedPlayers.forEach(id => {
       const p = map.get(id);
       if (!p) return;
-      if (!playerMatchesRules(p)) return; // garantir só contar elegíveis
+      if (!playerMatchesRules(p)) return;
       if (isGoalkeeper(p)) gk += 1; else line += 1;
     });
     return { gk, line };
@@ -207,18 +223,38 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
     }
     try {
       setLoading(true);
+      setError('');
+      
       const resp = await axios.post(`http://localhost:3001/api/matches/${matchId}/join-team`, {
         teamId: selectedTeamId,
         matchId
       }, { headers: { Authorization: `Bearer ${token}` }});
+      
       if (resp.status === 201 || resp.status === 200) {
         toast.success('Time vinculado à partida!');
+        dialogRef.current?.close();
         onHide();
         onSuccess && onSuccess();
         setTimeout(() => window.location.reload(), 1200);
       }
     } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Erro ao vincular time');
+      console.error('[SelectTeamPlayersDialog] Erro ao vincular time:', e);
+      
+      const errorMessage = e.response?.data?.message;
+      
+      if (e.response?.status === 409) {
+        toast.error(errorMessage || 'Time já possui outra partida agendada neste horário');
+        setError(errorMessage || 'Conflito de horário: Este time já está inscrito em outra partida no mesmo dia e horário');
+      } else if (e.response?.status === 400) {
+        toast.error(errorMessage || 'Não foi possível vincular o time');
+        setError(errorMessage || 'Erro ao vincular time. Verifique se todos os requisitos foram atendidos');
+      } else if (e.response?.status === 403) {
+        toast.error('Você não tem permissão para inscrever este time');
+        setError('Apenas o capitão do time pode inscrevê-lo na partida');
+      } else {
+        toast.error(errorMessage || 'Erro ao vincular time');
+        setError(errorMessage || 'Erro ao vincular time. Tente novamente mais tarde');
+      }
     } finally {
       setLoading(false);
     }
@@ -227,23 +263,32 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
   const selectedTeam = teams.find(t => t.id === selectedTeamId);
 
   return (
-    <Modal
-      show={show}
-      onHide={() => !loading && onHide()}
-      centered
-      backdrop="static"
-      keyboard={!loading}
-      className="select-team-players-modal"
-    >
-      <Modal.Header closeButton={!loading}>
-        <Modal.Title>Vincular meu time à partida</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        {error && <div className="stm-alert-error">{error}</div>}
+    <dialog ref={dialogRef} className="select-team-players-modal dialog-centered">
+      <div className="modal-header">
+        <h5 className="modal-title">Vincular meu time à partida</h5>
+        {!loading && <button type="button" className="btn-close" aria-label="Fechar" onClick={() => dialogRef.current?.close()} />}
+      </div>
+
+      <div className="modal-body">
+        {error && (
+          <div className="stm-alert-error" style={{
+            background: 'linear-gradient(135deg, #fee 0%, #fdd 100%)',
+            border: '1px solid #fcc',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            color: '#c00',
+            fontSize: '14px',
+            lineHeight: '1.5'
+          }}>
+            <strong>⚠️ Atenção:</strong> {error}
+          </div>
+        )}
+
         <div className="stm-section">
-          <h5 className="stm-section-title">1. Selecione o Time</h5>
+          <h5 className="stm-section-title">Selecione o Time</h5>
           {teamsLoading ? (
-            <div className="stm-loading"><Spinner animation="border" size="sm" /> Carregando times...</div>
+            <div className="stm-loading"><Spinner animation="border" /> Carregando times...</div>
           ) : teams.length === 0 ? (
             <div className="stm-empty">Você não tem times disponíveis para esta partida.</div>
           ) : (
@@ -279,11 +324,18 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
         </div>
 
         <div className="stm-section">
-          <h5 className="stm-section-title">2. Jogadores do Time {rules && <small>(Regras: {rules.genero} {rules.idadeMinima}-{rules.idadeMaxima} anos)</small>}</h5>
+          <h5 className="stm-section-title">
+            Jogadores do Time {rules && <small>(Regras: {rules.genero} {rules.idadeMinima}-{rules.idadeMaxima} anos)</small>}
+          </h5>
           {modalidade && (
-            <div className="stm-hint" style={{ marginBottom: 8 }}>
-              Modalidade: <strong>{modalidade}</strong> • Necessário selecionar no mínimo: <strong>{requirements.gk} goleiro(s)</strong> e <strong>{requirements.line} jogador(es) de linha</strong>.
-              <div style={{ marginTop: 4 }}>Selecionado: {selectedCounts.gk} goleiro(s) • {selectedCounts.line} jogador(es) de linha.</div>
+            <div className="stm-requirements-info">
+              <div className="stm-requirements-header">
+                Modalidade: <strong>{modalidade}</strong>
+              </div>
+              <div className="stm-requirements-body">
+                <div>Necessário selecionar no mínimo: <strong>{requirements.gk} goleiro(s)</strong> e <strong>{requirements.line} jogador(es) de linha</strong></div>
+                <div className="stm-requirements-count">Selecionado: <strong>{selectedCounts.gk} goleiro(s)</strong> • <strong>{selectedCounts.line} jogador(es) de linha</strong></div>
+              </div>
             </div>
           )}
           {selectedTeam && (
@@ -300,14 +352,22 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
                       className={`stm-player-item ${selectedPlayers.includes(p.id) ? 'checked' : ''} ${!eligible ? 'ineligible' : ''}`}
                       title={!eligible ? 'Não atende às regras' : ''}
                     >
-                      <input
-                        type="checkbox"
-                        checked={selectedPlayers.includes(p.id)}
-                        onChange={() => eligible && toggleSelectPlayer(p.id)}
-                        disabled={loading || !eligible}
-                      />
-                      <span className="stm-player-name">{p.nome}</span>
-                      <span className="stm-player-meta">{p.sexo} • {age} anos • {p.posicao}{!eligible ? ' • Inapto' : ''}</span>
+                      <div className='stm-player-info-container'>
+                        <input
+                          type="checkbox"
+                          checked={selectedPlayers.includes(p.id)}
+                          onChange={() => eligible && toggleSelectPlayer(p.id)}
+                          disabled={loading || !eligible}
+                        />
+                        <div>
+                          <span className="stm-player-name">{p.nome}</span>
+                          <div className="stm-player-meta">
+                            <span>{p.sexo} • {age} anos</span>
+                            <span className="player-position">{p.posicao}</span>
+                            {!eligible && <span className="player-status">Inapto</span>}
+                          </div>
+                        </div>
+                      </div>
                     </label>
                   );
                 })}
@@ -318,18 +378,27 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
           )}
           {!selectedTeam && <div className="stm-hint">Selecione um time para listar jogadores.</div>}
         </div>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={onHide} disabled={loading}>Cancelar</Button>
+      </div>
+
+      <div className="modal-footer">
+        <Button 
+          variant="secondary" 
+          className='btn-cancelar' 
+          onClick={() => dialogRef.current?.close()} 
+          disabled={loading}
+        >
+          Cancelar
+        </Button>
         <Button
           variant="primary"
+          className='btn-vincular'
           onClick={handleConfirm}
           disabled={loading || !selectedTeamId || selectedPlayers.length === 0 || !compositionMet}
         >
           {loading ? 'Vinculando...' : 'Vincular Time'}
         </Button>
-      </Modal.Footer>
-    </Modal>
+      </div>
+    </dialog>
   );
 };
 

@@ -3,7 +3,7 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import axios from 'axios';
 import { useEffect } from 'react';
-import './RegrasStyles.css';
+import './RegrasFormInfoModal.css';
 
 interface AthleteFormModalProps {
     idpartida: number;
@@ -60,30 +60,29 @@ export default function InfoRulesModal({ idpartida, show, onHide }: AthleteFormM
             show={show}
             onHide={onHide}
             centered
-            dialogClassName="custom-modal-width"
-            contentClassName="small-modal-content"
+            dialogClassName="rules-info-modal"
         >
             <Modal.Header closeButton>
                 <Modal.Title>Regras da Partida</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <div className="rules-info">
-                    <div className="rules-grid">
-                        <div className="rule-item">
-                            <h6 className="rule-title">Idade Mínima</h6>
-                            <p className="rule-value">{idadeMinima} anos</p>
+                <div className="rules-info-container">
+                    <div className="rules-info-grid">
+                        <div className="rule-info-card">
+                            <div className="rule-info-label">Idade Mínima</div>
+                            <div className="rule-info-value">{idadeMinima} anos</div>
                         </div>
-                        <div className="rule-item">
-                            <h6 className="rule-title">Idade Máxima</h6>
-                            <p className="rule-value">{idadeMaxima} anos</p>
+                        <div className="rule-info-card">
+                            <div className="rule-info-label">Idade Máxima</div>
+                            <div className="rule-info-value">{idadeMaxima} anos</div>
                         </div>
-                        <div className="rule-item">
-                            <h6 className="rule-title">Gênero</h6>
-                            <p className="rule-value">{genero}</p>
+                        <div className="rule-info-card">
+                            <div className="rule-info-label">Gênero</div>
+                            <div className="rule-info-value">{genero}</div>
                         </div>
-                        <div className="rule-item">
-                            <h6 className="rule-title">Data Limite para Inscrição</h6>
-                            <p className="rule-value">{dataLimite}</p>
+                        <div className="rule-info-card">
+                            <div className="rule-info-label">Data Limite para Inscrição</div>
+                            <div className="rule-info-value">{dataLimite}</div>
                         </div>
                     </div>
                 </div>

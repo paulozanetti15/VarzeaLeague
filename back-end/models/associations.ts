@@ -73,6 +73,26 @@ export function associateModels() {
     otherKey: 'teamId'
   });
 
+  Player.hasMany(TeamPlayer, {
+    foreignKey: 'playerId',
+    as: 'teamPlayers'
+  });
+
+  TeamPlayer.belongsTo(Player, {
+    foreignKey: 'playerId',
+    as: 'player'
+  });
+
+  Team.hasMany(TeamPlayer, {
+    foreignKey: 'teamId',
+    as: 'teamPlayers'
+  });
+
+  TeamPlayer.belongsTo(Team, {
+    foreignKey: 'teamId',
+    as: 'team'
+  });
+
   // Match Reports
   MatchReport.belongsTo(User, { foreignKey: 'createdBy' });
   MatchReport.belongsTo(Match, { foreignKey: 'matchId' });
@@ -98,10 +118,10 @@ export function associateModels() {
   Match.hasMany(MatchCard, { foreignKey: 'match_id', as: 'cards' });
 
   // Match Evaluations
-  MatchEvaluation.belongsTo(User, { foreignKey: 'evaluatorId' });
-  MatchEvaluation.belongsTo(Match, { foreignKey: 'matchId' });
-  User.hasMany(MatchEvaluation, { foreignKey: 'evaluatorId' });
-  Match.hasMany(MatchEvaluation, { foreignKey: 'matchId' });
+  MatchEvaluation.belongsTo(User, { foreignKey: 'evaluator_id', as: 'evaluator' });
+  MatchEvaluation.belongsTo(Match, { foreignKey: 'match_id', as: 'match' });
+  User.hasMany(MatchEvaluation, { foreignKey: 'evaluator_id', as: 'evaluations' });
+  Match.hasMany(MatchEvaluation, { foreignKey: 'match_id', as: 'evaluations' });
 
   // Championship
   Championship.belongsTo(User, { foreignKey: 'createdBy' });

@@ -68,11 +68,22 @@ export const login: RequestHandler = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validações básicas
+    if (!email || !password) {
+      res.status(400).json({ 
+        message: 'Email e senha são obrigatórios' 
+      });
+      return;
+    }
+
     // Buscar usuário
     const user = await UserModel.findOne({ where: { email } });
 
     if (!user) {
-      res.status(401).json({ message: 'Email ou senha inválidos' });
+      // Não revela se o email existe ou não (segurança)
+      res.status(401).json({ 
+        message: 'Email ou senha incorretos' 
+      });
       return;
     }
 
@@ -81,14 +92,20 @@ export const login: RequestHandler = async (req, res) => {
     // Verificar senha
     const isValidPassword = await bcrypt.compare(password, userJson.password);
     if (!isValidPassword) {
-      res.status(401).json({ message: 'Email ou senha inválidos' });
+      res.status(401).json({ 
+        message: 'Email ou senha incorretos' 
+      });
       return;
     }
+
+    // Gerar token
     const token = jwt.sign({ id: userJson.id }, JWT_SECRET, {
       expiresIn: '24h',
     });
+
     const findIduserType = await UserModel.findOne({ where: { id: userJson.id } });
     const userWithType = findIduserType?.toJSON() as UserAttributes;
+
     res.status(200).json({
       message: 'Login realizado com sucesso',
       token,
@@ -101,7 +118,9 @@ export const login: RequestHandler = async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao fazer login:', error);
-    res.status(500).json({ message: 'Erro ao fazer login' });
+    res.status(500).json({ 
+      message: 'Estamos com problemas técnicos. Por favor, tente novamente em alguns instantes.' 
+    });
   }
 };
 

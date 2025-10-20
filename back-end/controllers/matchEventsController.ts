@@ -16,8 +16,8 @@ export const finalizeMatch = async (req: AuthRequest, res: Response): Promise<vo
     const user = await User.findByPk(userId);
     const isAdmin = (user as any)?.userTypeId === 1;
     if (match.organizerId !== userId && !isAdmin) { res.status(403).json({ message: 'Sem permissão para finalizar' }); return; }
-    if (match.status === 'completed') { res.status(400).json({ message: 'Partida já finalizada' }); return; }
-    await match.update({ status: 'completed' });
+    if (match.status === 'finalizada') { res.status(400).json({ message: 'Partida já finalizada' }); return; }
+    await match.update({ status: 'finalizada' });
     res.json({ message: 'Partida finalizada', match });
   } catch (err) {
     console.error('Erro ao finalizar partida:', err);

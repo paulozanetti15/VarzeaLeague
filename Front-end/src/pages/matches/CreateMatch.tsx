@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CreateMatch.css';
-import RegrasFormRegisterModal from '../../components/Modals/Regras/RegrasFormRegisterModal';
+import RegrasFormRegisterModal from '../../components/Modals/Rules/RegrasFormRegisterModal';
 import axios from 'axios';
 import CircularProgress from '@mui/material/CircularProgress';
 import ToastComponent from '../../components/Toast/ToastComponent';

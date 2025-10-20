@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { getErrorMessage, validateEmail, validatePassword } from '../../utils/errorHandler';
 import './Login.css';
 
 interface LoginProps {
@@ -26,13 +27,30 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
     setIsLoading(true);
     setLoginError('');
 
+    // Validações básicas antes de enviar
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.valid) {
+      setLoginError(emailValidation.message || 'Email inválido');
+      setIsLoading(false);
+      return;
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      setLoginError(passwordValidation.message || 'Senha inválida');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await axios.post('http://localhost:3001/api/auth/login', {
-        email,
-        password
-      });
+      const response = await axios.post(
+        'http://localhost:3001/api/auth/login',
+        { email: email.trim(), password },
+        { timeout: 10000 } // Timeout de 10 segundos
+      );
 
       const data = response.data;
+
       if (response.status !== 200) {
         throw new Error(data.message || 'Erro ao fazer login');
       }
@@ -40,6 +58,7 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
       // Salvar token e dados do usuário
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('Tipo_usuário:', data.user.userTypeId);
 
       // Chamar callback de sucesso
       if (onLoginSuccess) {
@@ -48,14 +67,12 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
 
       // Redirecionar para a página principal
       navigate('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro no login:', error);
-      // Verifica se é um erro 404 (servidor não encontrado) para dar uma mensagem mais útil
-      if (error && (error as any).response && (error as any).response.status === 404) {
-        setLoginError('Servidor não encontrado. Verifique se o backend está funcionando corretamente.');
-      } else {
-        setLoginError(error instanceof Error ? error.message : 'Erro ao fazer login');
-      }
+      
+      // Usar a função que mapeia erros técnicos em mensagens amigáveis
+      const friendlyMessage = getErrorMessage(error);
+      setLoginError(friendlyMessage);
     } finally {
       setIsLoading(false);
     }
@@ -94,6 +111,22 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
         <div className="login-body">
           {loginError && (
             <div className="login-error" role="alert">
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+                style={{ marginRight: '8px', flexShrink: 0 }}
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
               {loginError}
             </div>
           )}
@@ -109,6 +142,8 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Seu email"
                 required
+                disabled={isLoading}
+                autoComplete="email"
               />
             </div>
 
@@ -122,14 +157,29 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Sua senha"
                 required
+                disabled={isLoading}
+                autoComplete="current-password"
                 style={{ paddingRight: '3rem' }}
               />
               <button 
                 type="button" 
                 onClick={togglePasswordVisibility}
                 style={passwordToggleStyle}
+                disabled={isLoading}
                 tabIndex={-1}
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
               >
+                {showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                )}
               </button>
               <a 
                 href="#" 
@@ -148,7 +198,34 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
               className="login-btn"
               disabled={isLoading}
             >
-              {isLoading ? 'Entrando...' : 'Entrar'}
+              {isLoading ? (
+                <>
+                  <svg 
+                    className="animate-spin" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24"
+                    style={{ width: '20px', height: '20px', marginRight: '8px' }}
+                  >
+                    <circle 
+                      className="opacity-25" 
+                      cx="12" 
+                      cy="12" 
+                      r="10" 
+                      stroke="currentColor" 
+                      strokeWidth="4"
+                    ></circle>
+                    <path 
+                      className="opacity-75" 
+                      fill="currentColor" 
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Entrando...
+                </>
+              ) : (
+                'Entrar'
+              )}
             </button>
             
             <div className="login-signup">

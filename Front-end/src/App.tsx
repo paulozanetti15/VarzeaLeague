@@ -96,9 +96,18 @@ import RankingTeams from './pages/ranking/RankingTeams'
             } />
 
             <Route path="/dashboard" element={
-              <PageTransition>
-                <SystemOverview />
-              </PageTransition>
+              <PrivateRoute isLoggedIn={isLoggedIn}>
+                <RoleBasedRoute 
+                  isLoggedIn={isLoggedIn} 
+                  userRole={user?.userTypeId} 
+                  allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
+                  redirectTo="/"
+                >
+                  <PageTransition>
+                    <SystemOverview />
+                  </PageTransition>
+                </RoleBasedRoute>
+              </PrivateRoute>
             } />
 
             <Route path="/listings" element={
@@ -275,7 +284,7 @@ import RankingTeams from './pages/ranking/RankingTeams'
               <RoleBasedRoute 
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA,USER_ROLES.ADMIN_EVENTOS,USER_ROLES.ADMIN_TIMES]}
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA,USER_ROLES.ADMIN_EVENTOS]}
                 redirectTo="/"
               >
                 <PageTransition>

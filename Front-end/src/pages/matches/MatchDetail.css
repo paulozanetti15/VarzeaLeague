@@ -1158,41 +1158,6 @@
     margin: 2rem 0;
   }
   
-  .team-card {
-    flex: 0 0 200px;
-    text-align: center;
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 10px;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-    margin: 0;
-    height: fit-content;
-    background: transparent !important; /* remove bg */
-    backdrop-filter: blur(4px) brightness(1.05);
-    box-shadow: 0 6px 20px -4px rgba(0,0,0,0.35);
-  }
-  
-  .team-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 10px 28px -4px rgba(0,0,0,0.5);
-    border-color: #ffffff88;
-  }
-  
-  .team-card .card-body {
-    padding: 1.5rem;
-  }
-  
-  .team-card .card-title {
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
-    color: #fff;
-    font-weight: 600;
-  }
-  
-  .team-card .btn {
-    width: 100%;
-    margin-top: 1rem;
-  }
-  
   .join-match-btn {
     width: 200px !important;
     height: 200px !important;
@@ -1225,26 +1190,62 @@
   
   .teams-list {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
-    gap: 2rem;
+    gap: 1.5rem;
     flex-wrap: wrap;
     margin: 2rem 0;
+    width: 100%;
   }
 
-  .teams-list p { white-space: nowrap; }
-  .no-teams-wrapper { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.25rem; width:auto; min-height:240px; }
-  .no-teams-text { font-size:0.95rem; font-weight:500; color:#fff; opacity:0.9; text-align:center; }
-  /* Centralização robusta quando há apenas o estado vazio */
-  .teams-list { width:100%; justify-content:center !important; align-items:center !important; flex-direction:row; }
-  /* Força display flex mesmo se alguma regra anterior setar grid */
-  .match-detail-container .teams-list { display:flex !important; }
-  .match-detail-container .teams-list.no-teams { flex-direction:column !important; }
-  .teams-list .no-teams-wrapper { margin:0 auto; max-width:340px; }
-  .join-match-btn { margin:0 auto !important; }
-  .no-teams-wrapper .join-match-btn { width:180px !important; height:180px !important; }
+  .teams-list p { 
+    white-space: nowrap; 
+  }
+  
+  .no-teams-wrapper { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 1.25rem; 
+    width: auto; 
+    min-height: 240px; 
+  }
+  
+  .no-teams-text { 
+    font-size: 0.95rem; 
+    font-weight: 500; 
+    color: #fff; 
+    opacity: 0.9; 
+    text-align: center; 
+  }
+  
+  .match-detail-container .teams-list { 
+    display: flex !important; 
+  }
+  
+  .match-detail-container .teams-list.no-teams { 
+    flex-direction: column !important; 
+  }
+  
+  .teams-list .no-teams-wrapper { 
+    margin: 0 auto; 
+    max-width: 340px; 
+  }
+  
+  .join-match-btn { 
+    margin: 0 auto !important; 
+  }
+  
+  .no-teams-wrapper .join-match-btn { 
+    width: 180px !important; 
+    height: 180px !important; 
+  }
+  
   @media (min-width: 600px){
-    .no-teams-wrapper { max-width:380px; }
+    .no-teams-wrapper { 
+      max-width: 380px; 
+    }
   }
   
   .versus-text {
@@ -1571,6 +1572,6 @@
     }
   
     .teams-list {
-      grid-template-columns: 1fr;
+      gap: 1rem;
     }
   } 
