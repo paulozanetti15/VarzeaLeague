@@ -14,6 +14,9 @@ import Player from './PlayerModel';
 import MatchTeams from './MatchTeamsModel';
 import MatchChampionship from './MatchChampionshipModel';
 import MatchChampionshpReport from './MatchReportChampionshipModel';
+import Rules from './RulesModel';
+import FriendlyMatchPenalty from './FriendlyMatchPenaltyModel';
+import ChampionshipPenalty from './ChampionshipPenaltyModel';
 
 
 // User <-> Match associations
@@ -126,15 +129,21 @@ export function associateModels() {
   // Championship
   Championship.belongsTo(User, { foreignKey: 'createdBy' });
   User.hasMany(Championship, { foreignKey: 'createdBy' });
+  
   MatchTeams.belongsTo(Match,{foreignKey:"matchId",as:"match"});
   MatchTeams.belongsTo(Team,{foreignKey:"teamId",as:"team"});
+  
   MatchReport.belongsTo(Match,{foreignKey:"match_id",as:"match"});
   MatchReport.belongsTo(Team,{foreignKey:"team_home",as:"teamHome"});
   MatchReport.belongsTo(Team,{foreignKey:"team_away",as:"teamAway"});
+  
   MatchChampionship.belongsTo(Championship,{foreignKey:"championship_id",as:"championship"});
+  
   MatchChampionshpReport.belongsTo(MatchChampionship,{foreignKey:"match_id",as:"match"});
   MatchChampionshpReport.belongsTo(Team,{foreignKey:"team_home",as:"teamHome"});
   MatchChampionshpReport.belongsTo(Team,{foreignKey:"team_away",as:"teamAway"});
 
+  Match.hasOne(Rules, { foreignKey: 'partidaId', as: 'rules' });
+  Rules.belongsTo(Match, { foreignKey: 'partidaId', as: 'match' });
 
 }
