@@ -247,10 +247,11 @@ const Navbar = () => {
         <div className="navbar-desktop-menu">
           {user?.userTypeId === 1 && (
             <div className="navbar-manage-dropdown">
-              <SplitButton id="dropdown-basic-button" title="Gerenciar">
+              <SplitButton id="dropdown-basic-button" title={<><Person className="navbar-manage-icon"/> Gerenciar</>}>
                 {visiblePages.map((page, index) => (
                   <Dropdown.Item key={index} href={page.path} className="navbar-dropdown-item">
-                    {page.icon}{page.name}
+                    <span className="navbar-dropdown-icon">{page.icon}</span>
+                    <span className="navbar-dropdown-text">{page.name}</span>
                   </Dropdown.Item>
                 ))}
               </SplitButton>
@@ -258,10 +259,11 @@ const Navbar = () => {
           )}
           {user?.userTypeId === 2 && (
             <div className="navbar-manage-dropdown">
-              <SplitButton id="dropdown-basic-button" title="Gerenciar">
+              <SplitButton id="dropdown-basic-button" title={<><Person className="navbar-manage-icon"/> Gerenciar</>}>
                 {visiblePages.map((page, index) => (
                   <Dropdown.Item key={index} href={page.path} className="navbar-dropdown-item">
-                    {page.icon}{page.name}
+                    <span className="navbar-dropdown-icon">{page.icon}</span>
+                    <span className="navbar-dropdown-text">{page.name}</span>
                   </Dropdown.Item>
                 ))}
               </SplitButton>
