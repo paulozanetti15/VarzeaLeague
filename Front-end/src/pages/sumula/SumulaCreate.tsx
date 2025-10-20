@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { Modal } from 'react-bootstrap';
+import React, { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { TeamSelector } from '../../components/features/sumula/SumulaForm/TeamSelector';
 import { GoalRegistration } from '../../components/features/sumula/SumulaForm/GoalRegistration';
@@ -12,6 +11,7 @@ import { SumulaActions } from '../../components/features/sumula/SumulaActions/Su
 import { useSumulaData } from './hooks/useSumulaData';
 import { useSumulaForm } from './hooks/useSumulaForm';
 import { useSumulaPDF } from './hooks/useSumulaPDF';
+import './Sumula.css';
 
 interface SumulaCreateProps {
   matchId: number;
@@ -26,6 +26,7 @@ export const SumulaCreate: React.FC<SumulaCreateProps> = ({
   onClose,
   show 
 }) => {
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [matchDate, setMatchDate] = useState('');
   const [matchLocation, setMatchLocation] = useState('');
@@ -65,6 +66,7 @@ export const SumulaCreate: React.FC<SumulaCreateProps> = ({
     addGoal,
     addCard,
     removeGoal,
+    removeCard,
     resetForm
   } = useSumulaForm();
 
@@ -76,12 +78,23 @@ export const SumulaCreate: React.FC<SumulaCreateProps> = ({
       fetchPlayers(matchId, isChampionship);
       fetchMatchDetails(matchId, isChampionship).then(details => {
         if (details) {
-          setMatchDate(details.matchDate);
-          setMatchLocation(details.matchLocation);
+          setMatchDate(details.matchDate ?? '');
+          setMatchLocation(details.matchLocation ?? '');
         }
       });
     }
   }, [show, matchId, isChampionship, fetchTeams, fetchPlayers, fetchMatchDetails]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    if (show) {
+      dialog.showModal();
+    } else {
+      dialog.close();
+    }
+  }, [show]);
 
   useEffect(() => {
     if (dataError) {
@@ -92,7 +105,7 @@ export const SumulaCreate: React.FC<SumulaCreateProps> = ({
 
   const handleSave = async () => {
     if (!isFormValid) {
-      toast.error('Selecione os times da casa e visitante.');
+      alert('⚠️ Selecione os times da casa e visitante.');
       return;
     }
 
@@ -113,13 +126,20 @@ export const SumulaCreate: React.FC<SumulaCreateProps> = ({
       matchLocation
     };
 
+    const loadingToast = toast.loading('Salvando súmula...');
     const success = await saveSumula(sumulaData, isChampionship);
     
+    toast.dismiss(loadingToast);
+    
     if (success) {
-      toast.success('Súmula salva com sucesso!');
+      handleClose();
+      toast.success('✅ Súmula criada com sucesso!', {
+        duration: 4000,
+      });
       setIsSaved(true);
     } else {
-      toast.error('Erro ao salvar súmula.');
+      toast.dismiss();
+      alert('❌ Erro ao salvar súmula. Tente novamente.');
     }
   };
 
@@ -146,6 +166,30 @@ export const SumulaCreate: React.FC<SumulaCreateProps> = ({
     toast.success('PDF exportado com sucesso!');
   };
 
+  const handleAddGoal = () => {
+    const error = addGoal(teams, players);
+    
+    if (error) {
+      alert(`❌ ${error}`);
+    }
+  };
+
+  const handleAddCard = () => {
+    const error = addCard(teams, players);
+    
+    if (error) {
+      alert(`❌ ${error}`);
+    }
+  };
+
+  const handleRemoveGoal = (index: number) => {
+    removeGoal(index);
+  };
+
+  const handleRemoveCard = (index: number) => {
+    removeCard(index);
+  };
+
   const handleClose = () => {
     resetForm();
     setIsSaved(false);
@@ -156,96 +200,121 @@ export const SumulaCreate: React.FC<SumulaCreateProps> = ({
   const awayTeamName = teams.find(t => t.id === awayTeam)?.name || '';
 
   return (
-    <Modal show={show} onHide={handleClose} size="lg" centered>
-      <Modal.Header closeButton>
-        <Modal.Title>
+    <dialog ref={dialogRef} className="sumula-dialog" onClose={handleClose}>
+      <div className="dialog-header">
+        <h2 className="dialog-title">
+          <i className="fas fa-clipboard-list me-2"></i>
           {isSaved ? 'Súmula Validada' : 'Criar Súmula'}
-        </Modal.Title>
-      </Modal.Header>
+        </h2>
+        <button className="dialog-close" onClick={handleClose} type="button">
+          <i className="bi bi-x"></i>
+        </button>
+      </div>
 
-      <Modal.Body>
-        {!isSaved ? (
-          <>
-            <TeamSelector
-              homeTeam={homeTeam}
-              awayTeam={awayTeam}
-              teams={teams}
-              onHomeTeamChange={setHomeTeam}
-              onAwayTeamChange={setAwayTeam}
-              disabled={dataLoading}
-            />
+      <div className="dialog-body">
+        <div className="container-fluid p-4">
+          {!isSaved ? (
+            <>
+              <SumulaHeader
+                homeTeamName={homeTeamName}
+                awayTeamName={awayTeamName}
+                homeScore={homeScore}
+                awayScore={awayScore}
+              />
 
-            <hr />
+              <div className="form-section">
+                <h5>
+                  <i className="fas fa-users me-2"></i>
+                  Seleção de Times
+                </h5>
+                <TeamSelector
+                  homeTeam={homeTeam}
+                  awayTeam={awayTeam}
+                  teams={teams}
+                  onHomeTeamChange={setHomeTeam}
+                  onAwayTeamChange={setAwayTeam}
+                  disabled={dataLoading}
+                />
+              </div>
 
-            <GoalRegistration
-              players={players}
-              teams={teams}
-              selectedPlayer={selectedGoalPlayer}
-              minute={selectedGoalMinute}
-              onPlayerChange={setSelectedGoalPlayer}
-              onMinuteChange={setSelectedGoalMinute}
-              onAddGoal={() => addGoal(teams, players)}
-            />
+              <div className="form-section">
+                <h5>
+                  <i className="fas fa-futbol me-2"></i>
+                  Registro de Gols
+                </h5>
+                <GoalRegistration
+                  players={players}
+                  teams={teams}
+                  selectedPlayer={selectedGoalPlayer}
+                  minute={selectedGoalMinute}
+                  onPlayerChange={setSelectedGoalPlayer}
+                  onMinuteChange={setSelectedGoalMinute}
+                  onAddGoal={handleAddGoal}
+                />
+              </div>
 
-            <hr />
+              <div className="form-section">
+                <h5>
+                  <i className="fas fa-exclamation-triangle me-2"></i>
+                  Registro de Cartões
+                </h5>
+                <CardRegistration
+                  players={players}
+                  teams={teams}
+                  selectedPlayer={selectedCardPlayer}
+                  cardType={selectedCardType}
+                  minute={selectedCardMinute}
+                  onPlayerChange={setSelectedCardPlayer}
+                  onCardTypeChange={setSelectedCardType}
+                  onMinuteChange={setSelectedCardMinute}
+                  onAddCard={handleAddCard}
+                />
+              </div>
 
-            <CardRegistration
-              players={players}
-              teams={teams}
-              selectedPlayer={selectedCardPlayer}
-              cardType={selectedCardType}
-              minute={selectedCardMinute}
-              onPlayerChange={setSelectedCardPlayer}
-              onCardTypeChange={setSelectedCardType}
-              onMinuteChange={setSelectedCardMinute}
-              onAddCard={() => addCard(teams, players)}
-            />
-
-            <hr />
-
-            {(goals.length > 0 || cards.length > 0) && (
-              <>
+              {(goals.length > 0 || cards.length > 0) && (
                 <SumulaStats goals={goals} cards={cards} />
-                <hr />
-              </>
-            )}
+              )}
 
-            {goals.length > 0 && (
-              <>
-                <GoalsTable goals={goals} editable onRemoveGoal={removeGoal} />
-                <hr />
-              </>
-            )}
+              {goals.length > 0 && (
+                <div className="mb-4">
+                  <GoalsTable goals={goals} editable onRemoveGoal={handleRemoveGoal} />
+                </div>
+              )}
 
-            {cards.length > 0 && <CardsTable cards={cards} />}
-          </>
-        ) : (
-          <>
-            <SumulaHeader
-              homeTeamName={homeTeamName}
-              awayTeamName={awayTeamName}
-              homeScore={homeScore}
-              awayScore={awayScore}
-              isSaved={isSaved}
-            />
+              {cards.length > 0 && (
+                <div className="mb-4">
+                  <CardsTable cards={cards} editable onRemoveCard={handleRemoveCard} />
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <SumulaHeader
+                homeTeamName={homeTeamName}
+                awayTeamName={awayTeamName}
+                homeScore={homeScore}
+                awayScore={awayScore}
+              />
 
-            <SumulaStats goals={goals} cards={cards} />
+              <SumulaStats goals={goals} cards={cards} />
 
-            <hr />
+              {goals.length > 0 && (
+                <div className="mb-4">
+                  <GoalsTable goals={goals} />
+                </div>
+              )}
 
-            {goals.length > 0 && (
-              <>
-                <GoalsTable goals={goals} />
-                <hr />
-              </>
-            )}
+              {cards.length > 0 && (
+                <div className="mb-4">
+                  <CardsTable cards={cards} />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
 
-            {cards.length > 0 && <CardsTable cards={cards} />}
-          </>
-        )}
-      </Modal.Body>
-
-      <Modal.Footer>
+      <div className="dialog-footer">
         <SumulaActions
           isSaved={isSaved}
           canSave={isFormValid}
@@ -255,7 +324,7 @@ export const SumulaCreate: React.FC<SumulaCreateProps> = ({
           onExportPDF={handleExportPDF}
           onClose={handleClose}
         />
-      </Modal.Footer>
-    </Modal>
+      </div>
+    </dialog>
   );
 };

@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { Modal } from 'react-bootstrap';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { TeamSelector } from '../../components/features/sumula/SumulaForm/TeamSelector';
 import { GoalRegistration } from '../../components/features/sumula/SumulaForm/GoalRegistration';
@@ -12,6 +11,7 @@ import { SumulaActions } from '../../components/features/sumula/SumulaActions/Su
 import { useSumulaData } from './hooks/useSumulaData';
 import { useSumulaForm } from './hooks/useSumulaForm';
 import { useSumulaPDF } from './hooks/useSumulaPDF';
+import './Sumula.css';
 
 interface SumulaEditProps {
   matchId: number;
@@ -26,6 +26,7 @@ export const SumulaEdit: React.FC<SumulaEditProps> = ({
   onClose,
   show 
 }) => {
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const [isSaved, setIsSaved] = useState(true);
   const [matchDate, setMatchDate] = useState('');
   const [matchLocation, setMatchLocation] = useState('');
@@ -38,7 +39,8 @@ export const SumulaEdit: React.FC<SumulaEditProps> = ({
     fetchTeams,
     fetchPlayers,
     fetchMatchDetails,
-    saveSumula,
+    updateSumula,
+    deleteSumula,
     setError
   } = useSumulaData();
 
@@ -65,6 +67,7 @@ export const SumulaEdit: React.FC<SumulaEditProps> = ({
     addGoal,
     addCard,
     removeGoal,
+    removeCard,
     resetForm,
     loadExistingData
   } = useSumulaForm();
@@ -73,23 +76,39 @@ export const SumulaEdit: React.FC<SumulaEditProps> = ({
 
   useEffect(() => {
     if (show && matchId) {
-      fetchTeams(matchId, isChampionship);
-      fetchPlayers(matchId, isChampionship);
+      const loadData = async () => {
+        await Promise.all([
+          fetchTeams(matchId, isChampionship),
+          fetchPlayers(matchId, isChampionship),
+          fetchMatchDetails(matchId, isChampionship).then(details => {
+            if (details) {
+              setMatchDate(details.matchDate || '');
+              setMatchLocation(details.matchLocation || '');
+              loadExistingData(
+                details.homeTeam,
+                details.awayTeam,
+                details.goals,
+                details.cards
+              );
+            }
+          })
+        ]);
+      };
       
-      fetchMatchDetails(matchId, isChampionship).then(details => {
-        if (details) {
-          setMatchDate(details.matchDate);
-          setMatchLocation(details.matchLocation);
-          loadExistingData(
-            details.homeTeam,
-            details.awayTeam,
-            details.goals,
-            details.cards
-          );
-        }
-      });
+      loadData();
     }
   }, [show, matchId, isChampionship, fetchTeams, fetchPlayers, fetchMatchDetails, loadExistingData]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    if (show) {
+      dialog.showModal();
+    } else {
+      dialog.close();
+    }
+  }, [show]);
 
   useEffect(() => {
     if (dataError) {
@@ -100,9 +119,11 @@ export const SumulaEdit: React.FC<SumulaEditProps> = ({
 
   const handleSave = async () => {
     if (!isFormValid) {
-      toast.error('Selecione os times da casa e visitante.');
+      alert('⚠️ Selecione os times da casa e visitante.');
       return;
     }
+
+    const loadingToast = toast.loading('Atualizando súmula...');
 
     const homeTeamName = teams.find(t => t.id === homeTeam)?.name || '';
     const awayTeamName = teams.find(t => t.id === awayTeam)?.name || '';
@@ -121,13 +142,19 @@ export const SumulaEdit: React.FC<SumulaEditProps> = ({
       matchLocation
     };
 
-    const success = await saveSumula(sumulaData, isChampionship);
+    const success = await updateSumula(sumulaData, isChampionship);
+    
+    toast.dismiss(loadingToast);
     
     if (success) {
-      toast.success('Súmula atualizada com sucesso!');
+      handleClose();
+      toast.success('✅ Súmula atualizada com sucesso!', {
+        duration: 4000,
+      });
       setIsSaved(true);
     } else {
-      toast.error('Erro ao atualizar súmula.');
+      toast.dismiss();
+      alert('❌ Erro ao atualizar súmula. Tente novamente.');
     }
   };
 
@@ -160,81 +187,153 @@ export const SumulaEdit: React.FC<SumulaEditProps> = ({
     onClose();
   };
 
-  const homeTeamName = teams.find(t => t.id === homeTeam)?.name || '';
-  const awayTeamName = teams.find(t => t.id === awayTeam)?.name || '';
+  const handleAddGoal = () => {
+    const error = addGoal(teams, players);
+    
+    if (error) {
+      alert(`❌ ${error}`);
+    }
+  };
+
+  const handleAddCard = () => {
+    const error = addCard(teams, players);
+    
+    if (error) {
+      alert(`❌ ${error}`);
+    }
+  };
+
+  const handleRemoveGoal = (index: number) => {
+    removeGoal(index);
+  };
+
+  const handleRemoveCard = (index: number) => {
+    removeCard(index);
+  };
+
+  const homeTeamName = useMemo(() => 
+    teams.find(t => t.id === homeTeam)?.name || '', 
+    [teams, homeTeam]
+  );
+  
+  const awayTeamName = useMemo(() => 
+    teams.find(t => t.id === awayTeam)?.name || '', 
+    [teams, awayTeam]
+  );
 
   return (
-    <Modal show={show} onHide={handleClose} size="lg" centered>
-      <Modal.Header closeButton>
-        <Modal.Title>Editar Súmula</Modal.Title>
-      </Modal.Header>
+    <dialog ref={dialogRef} className="sumula-dialog" onClose={handleClose}>
+      <div className="dialog-header">
+        <h2 className="dialog-title">
+          <i className="fas fa-edit me-2"></i>
+          Editar Súmula
+        </h2>
+        <button className="dialog-close" onClick={handleClose} type="button">
+          <i className="bi bi-x"></i>
+        </button>
+      </div>
 
-      <Modal.Body>
-        <TeamSelector
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          teams={teams}
-          onHomeTeamChange={setHomeTeam}
-          onAwayTeamChange={setAwayTeam}
-          disabled={dataLoading}
-        />
+      <div className="dialog-body">
+        <div className="container-fluid p-4">
+          {homeTeam > 0 && awayTeam > 0 && (
+            <div className="mb-4">
+              <SumulaHeader
+                key={`${homeScore}-${awayScore}-${goals.length}`}
+                homeTeamName={homeTeamName}
+                awayTeamName={awayTeamName}
+                homeScore={homeScore}
+                awayScore={awayScore}
+              />
+            </div>
+          )}
 
-        <hr />
+          <div className="form-section">
+            <h5>
+              <i className="fas fa-users me-2"></i>
+              Seleção de Times
+            </h5>
+            <TeamSelector
+              homeTeam={homeTeam}
+              awayTeam={awayTeam}
+              teams={teams}
+              onHomeTeamChange={setHomeTeam}
+              onAwayTeamChange={setAwayTeam}
+              disabled={dataLoading}
+            />
+          </div>
 
-        <GoalRegistration
-          players={players}
-          teams={teams}
-          selectedPlayer={selectedGoalPlayer}
-          minute={selectedGoalMinute}
-          onPlayerChange={setSelectedGoalPlayer}
-          onMinuteChange={setSelectedGoalMinute}
-          onAddGoal={() => addGoal(teams, players)}
-        />
+          <div className="form-section">
+            <h5>
+              <i className="fas fa-futbol me-2"></i>
+              Registro de Gols
+            </h5>
+            <GoalRegistration
+              players={players}
+              teams={teams}
+              selectedPlayer={selectedGoalPlayer}
+              minute={selectedGoalMinute}
+              onPlayerChange={setSelectedGoalPlayer}
+              onMinuteChange={setSelectedGoalMinute}
+              onSubmit={handleAddGoal}
+            />
+          </div>
 
-        <hr />
+          <div className="form-section">
+            <h5>
+              <i className="fas fa-exclamation-triangle me-2"></i>
+              Registro de Cartões
+            </h5>
+            <CardRegistration
+              players={players}
+              teams={teams}
+              selectedPlayer={selectedCardPlayer}
+              cardType={selectedCardType}
+              minute={selectedCardMinute}
+              onPlayerChange={setSelectedCardPlayer}
+              onCardTypeChange={setSelectedCardType}
+              onMinuteChange={setSelectedCardMinute}
+              onSubmit={handleAddCard}
+            />
+          </div>
 
-        <CardRegistration
-          players={players}
-          teams={teams}
-          selectedPlayer={selectedCardPlayer}
-          cardType={selectedCardType}
-          minute={selectedCardMinute}
-          onPlayerChange={setSelectedCardPlayer}
-          onCardTypeChange={setSelectedCardType}
-          onMinuteChange={setSelectedCardMinute}
-          onAddCard={() => addCard(teams, players)}
-        />
-
-        <hr />
-
-        {(goals.length > 0 || cards.length > 0) && (
-          <>
+          {(goals.length > 0 || cards.length > 0) && (
             <SumulaStats goals={goals} cards={cards} />
-            <hr />
-          </>
-        )}
+          )}
 
-        {goals.length > 0 && (
-          <>
-            <GoalsTable goals={goals} editable onRemoveGoal={removeGoal} />
-            <hr />
-          </>
-        )}
+          {goals.length > 0 && (
+            <div className="mb-4">
+              <GoalsTable goals={goals} editable onRemoveGoal={handleRemoveGoal} />
+            </div>
+          )}
 
-        {cards.length > 0 && <CardsTable cards={cards} />}
-      </Modal.Body>
+          {cards.length > 0 && (
+            <div className="mb-4">
+              <CardsTable cards={cards} editable onRemoveCard={handleRemoveCard} />
+            </div>
+          )}
+        </div>
+      </div>
 
-      <Modal.Footer>
-        <SumulaActions
-          isSaved={isSaved}
-          canSave={isFormValid}
-          loading={dataLoading}
-          isFormValid={isFormValid}
-          onSave={handleSave}
-          onExportPDF={handleExportPDF}
-          onClose={handleClose}
-        />
-      </Modal.Footer>
-    </Modal>
+      <div className="dialog-footer">
+        <div className="d-flex justify-content-end gap-2 w-100">
+          <button
+            className="btn btn-secondary"
+            onClick={handleClose}
+            disabled={dataLoading}
+          >
+            <i className="fas fa-times me-2"></i>
+            Cancelar
+          </button>
+          <button
+            className="btn btn-success"
+            onClick={handleSave}
+            disabled={!isFormValid || dataLoading}
+          >
+            <i className="fas fa-save me-2"></i>
+            {dataLoading ? 'Salvando...' : 'Salvar Alterações'}
+          </button>
+        </div>
+      </div>
+    </dialog>
   );
 };
