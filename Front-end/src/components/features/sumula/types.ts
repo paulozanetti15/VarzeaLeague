@@ -23,6 +23,7 @@ export interface Card {
   type: 'Amarelo' | 'Vermelho';
   minute: number;
   playerId?: number;
+  teamId?: number;
 }
 
 export interface SumulaData {
