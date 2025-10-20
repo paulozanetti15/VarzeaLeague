@@ -22,28 +22,19 @@ const TeamCard: React.FC<TeamCardProps> = ({
   onLeaveMatch
 }) => {
   return (
-    <Card className="team-card">
-      {team.banner ? (
-        <Card.Img
-          src={`http://localhost:3001/uploads/teams/${team.banner}`}
-          variant='top'
-          alt={team.name}
-        />
-      ) : (
-        <div className="team-card-no-image">
-          <i className="fas fa-shield-alt team-card-no-image-icon"></i>
-        </div>
-      )}
-      <Card.Body>
-        <div className='d-flex flex-column align-items-center text-center'>
-          <Card.Title>{team.name}</Card.Title>
+    <Card className="team-card simple">
+      <Card.Body className="d-flex flex-column align-items-center justify-content-center text-center py-4">
+        <div className="team-name" title={team.name}>{team.name}</div>
+
+        <div className="mt-3 action-buttons">
           {(team.captainId === userId && canLeaveMatch) && (
-            <Button variant="danger" onClick={() => onLeaveMatch(matchId, team.id)}>
-              Sair da Partida
+            <Button size="sm" variant="danger" onClick={() => onLeaveMatch(matchId, team.id)}>
+              Sair da partida
             </Button>
           )}
+
           {((isOrganizer || isAdmin) && team.captainId !== userId && canLeaveMatch) && (
-            <Button variant="outline-danger" onClick={() => onLeaveMatch(matchId, team.id)}>
+            <Button size="sm" variant="outline-danger" onClick={() => onLeaveMatch(matchId, team.id)} className="ms-2">
               Remover time
             </Button>
           )}
