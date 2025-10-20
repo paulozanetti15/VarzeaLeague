@@ -421,12 +421,14 @@ import RankingTeams from './pages/ranking/RankingTeams'
           style: {
             background: '#363636',
             color: '#fff',
+            zIndex: 999999,
           },
           success: {
             duration: 3000,
             style: {
               background: '#28a745',
               color: '#fff',
+              zIndex: 999999,
             },
           },
           error: {
@@ -434,8 +436,12 @@ import RankingTeams from './pages/ranking/RankingTeams'
             style: {
               background: '#dc3545',
               color: '#fff',
+              zIndex: 999999,
             },
           },
+        }}
+        containerStyle={{
+          zIndex: 999999,
         }}
       />
     </Box>
