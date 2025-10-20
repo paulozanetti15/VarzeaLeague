@@ -4,7 +4,7 @@ import {joinMatchByTeam,getMatchTeams, deleteTeamMatch,getTeamsAvailable, checkT
 import { createMatch, listMatches, getMatch, deleteMatch, updateMatch,getMatchesByTeam, checkAndCancelMatchesWithInsufficientTeams} from '../controllers/matchController';
 import { listMatchEvaluations, upsertMatchEvaluation, getMatchEvaluationSummary } from '../controllers/matchEvaluationController';
 import {busarPunicaoPartidaAmistosa,alterarPunicaoPartidaAmistosa,deletarPunicaoPartidaAmistosa, inserirPunicaoPartidaAmistosa} from '../controllers/PunicaoController';
-import { finalizeMatch, addGoal, addCard, listEvents, deleteGoalEvent, deleteCardEvent } from '../controllers/matchEventsController';
+import { finalizeMatch, addGoal, addCard, listEvents, deleteGoalEvent, deleteCardEvent, clearGoals, clearCards } from '../controllers/matchEventsController';
 import { getMatchPlayersForAdmin } from '../controllers/matchPlayersController';
 import { getMatchRosterPlayers } from '../controllers/matchRosterController';
 import { getPlayerRanking } from '../controllers/playerRankingController';
@@ -35,6 +35,8 @@ router.post('/:id/cards', authenticateToken, addCard);
 router.get('/:id/events', authenticateToken, listEvents);
 router.delete('/:id/goals/:goalId', authenticateToken, deleteGoalEvent);
 router.delete('/:id/cards/:cardId', authenticateToken, deleteCardEvent);
+router.delete('/:id/goals', authenticateToken, clearGoals);
+router.delete('/:id/cards', authenticateToken, clearCards);
 router.get('/:id/players-for-admin', authenticateToken, getMatchPlayersForAdmin);
 router.get('/:id/roster-players', authenticateToken, getMatchRosterPlayers);
 

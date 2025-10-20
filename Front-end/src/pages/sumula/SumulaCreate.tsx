@@ -7,6 +7,7 @@ import { SumulaHeader } from '../../components/features/sumula/SumulaDisplay/Sum
 import { SumulaStats } from '../../components/features/sumula/SumulaDisplay/SumulaStats';
 import { GoalsTable } from '../../components/features/sumula/SumulaDisplay/GoalsTable';
 import { CardsTable } from '../../components/features/sumula/SumulaDisplay/CardsTable';
+import { EventsTimeline } from '../../components/features/sumula/SumulaDisplay/EventsTimeline';
 import { SumulaActions } from '../../components/features/sumula/SumulaActions/SumulaActions';
 import { useSumulaData } from './hooks/useSumulaData';
 import { useSumulaForm } from './hooks/useSumulaForm';
@@ -249,7 +250,7 @@ export const SumulaCreate: React.FC<SumulaCreateProps> = ({
                   minute={selectedGoalMinute}
                   onPlayerChange={setSelectedGoalPlayer}
                   onMinuteChange={setSelectedGoalMinute}
-                  onAddGoal={handleAddGoal}
+                  onSubmit={handleAddGoal}
                 />
               </div>
 
@@ -267,7 +268,7 @@ export const SumulaCreate: React.FC<SumulaCreateProps> = ({
                   onPlayerChange={setSelectedCardPlayer}
                   onCardTypeChange={setSelectedCardType}
                   onMinuteChange={setSelectedCardMinute}
-                  onAddCard={handleAddCard}
+                  onSubmit={handleAddCard}
                 />
               </div>
 
@@ -275,17 +276,19 @@ export const SumulaCreate: React.FC<SumulaCreateProps> = ({
                 <SumulaStats goals={goals} cards={cards} />
               )}
 
-              {goals.length > 0 && (
+              {(goals.length > 0 || cards.length > 0) && (
                 <div className="mb-4">
-                  <GoalsTable goals={goals} editable onRemoveGoal={handleRemoveGoal} />
+                  <EventsTimeline goals={goals} cards={cards} />
                 </div>
               )}
 
-              {cards.length > 0 && (
-                <div className="mb-4">
-                  <CardsTable cards={cards} editable onRemoveCard={handleRemoveCard} />
-                </div>
-              )}
+              <div className="mb-4">
+                <GoalsTable goals={goals} editable onRemoveGoal={handleRemoveGoal} />
+              </div>
+
+              <div className="mb-4">
+                <CardsTable cards={cards} editable onRemoveCard={handleRemoveCard} />
+              </div>
             </>
           ) : (
             <>
@@ -298,17 +301,19 @@ export const SumulaCreate: React.FC<SumulaCreateProps> = ({
 
               <SumulaStats goals={goals} cards={cards} />
 
-              {goals.length > 0 && (
+              {(goals.length > 0 || cards.length > 0) && (
                 <div className="mb-4">
-                  <GoalsTable goals={goals} />
+                  <EventsTimeline goals={goals} cards={cards} />
                 </div>
               )}
 
-              {cards.length > 0 && (
-                <div className="mb-4">
-                  <CardsTable cards={cards} />
-                </div>
-              )}
+              <div className="mb-4">
+                <GoalsTable goals={goals} />
+              </div>
+
+              <div className="mb-4">
+                <CardsTable cards={cards} />
+              </div>
             </>
           )}
         </div>
