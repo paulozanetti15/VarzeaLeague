@@ -27,7 +27,7 @@ FriendlyMatchPenalty.init(
     idTime: {
       type: DataTypes.INTEGER,
       field: 'id_time', // Especifica o nome real da coluna
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'teams',
         key: 'id'
@@ -56,15 +56,15 @@ FriendlyMatchPenalty.init(
   }
 );
 
-// As associações permanecem iguais
+// Associações corrigidas para snake_case
 FriendlyMatchPenalty.belongsTo(Team, {
-  foreignKey: "idTime",
+  foreignKey: "id_time",
   as: "team"
 });
 
 FriendlyMatchPenalty.belongsTo(Match, {
-  foreignKey: "idMatch", 
+  foreignKey: "id_match", 
   as: "match"
 });
 
-export default FriendlyMatchPenalty; 
+export default FriendlyMatchPenalty;
