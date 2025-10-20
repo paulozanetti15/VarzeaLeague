@@ -15,6 +15,9 @@ interface MatchActionsProps {
   teamsCount: number;
   registrationDeadline?: string | Date;
   matchStatus?: string;
+  isWo?: boolean;
+  hasPunishment?: boolean;
+  disableComments?: boolean;
   onDelete: () => void;
   onEdit: () => void;
   onEditRules: () => void;
@@ -30,6 +33,9 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
   canEdit,
   isCompleted,
   canApplyPunishment,
+  isWo,
+  hasPunishment,
+  disableComments,
   userTypeId,
   teamsCount,
   registrationDeadline,
@@ -52,6 +58,7 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
     ? new Date() > new Date(registrationDeadline) 
     : false;
   const canShowPunishment = canApplyPunishment && hasMinimumTeams && isPastDeadline;
+  const showPunishmentButton = canEdit && canShowPunishment && !(matchStatus === 'finalizada' && !hasPunishment && !isWo);
 
   return (
     <div className="match-actions d-flex flex-wrap justify-content-center gap-2 my-3">
@@ -63,7 +70,7 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
             </Button>
           )}
           
-          {canEdit && canShowPunishment && (
+          {showPunishmentButton && (
             <Button className="btn-edit" onClick={onPunishment}>
               Aplicar/Ver Punição
             </Button>
@@ -84,7 +91,10 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
       )}
 
       <div className="action-group d-flex flex-wrap gap-2">
-        {isCompleted && (
+        {(() => {
+            if (disableComments !== undefined) return isCompleted && !disableComments;
+            return isCompleted && !isWo && !hasPunishment;
+          })() && (
           <>
             <Button className="btn-primary-custom" onClick={onEvaluate}>
               Avaliar / Comentar
