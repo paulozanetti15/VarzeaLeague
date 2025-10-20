@@ -4,9 +4,11 @@ import { Card } from '../types';
 
 interface CardsTableProps {
   cards: Card[];
+  editable?: boolean;
+  onRemoveCard?: (index: number) => void;
 }
 
-export const CardsTable: React.FC<CardsTableProps> = ({ cards }) => {
+export const CardsTable: React.FC<CardsTableProps> = ({ cards, editable = false, onRemoveCard }) => {
   return (
     <BootstrapCard className="h-100">
       <BootstrapCard.Header className="bg-warning text-dark">
@@ -20,37 +22,44 @@ export const CardsTable: React.FC<CardsTableProps> = ({ cards }) => {
           <Table hover className="mb-0" size="sm">
             <thead>
               <tr>
-                <th>Jogador</th>
-                <th>Time</th>
-                <th>Tipo</th>
-                <th>Minuto</th>
+                <th className="text-center">Jogador</th>
+                <th className="text-center">Time</th>
+                <th className="text-center">Tipo</th>
+                <th className="text-center">Minuto</th>
+                {editable && <th className="text-center" style={{ width: '60px' }}>Ações</th>}
               </tr>
             </thead>
             <tbody>
               {cards.length > 0 ? cards.map((card, index) => (
                 <tr key={index}>
-                  <td className="fw-semibold">
-                    <div className="text-truncate" title={card.player}>
-                      {card.player}
-                    </div>
+                  <td className="fw-semibold text-center" title={card.player}>
+                    {card.player}
                   </td>
-                  <td>
-                    <div className="text-truncate" title={card.team}>
-                      {card.team}
-                    </div>
+                  <td className="text-center" title={card.team}>
+                    {card.team}
                   </td>
-                  <td>
+                  <td className="text-center">
                     <span className={`badge ${card.type === 'Amarelo' ? 'bg-warning text-dark' : 'bg-danger'}`}>
                       {card.type}
                     </span>
                   </td>
-                  <td>
+                  <td className="text-center">
                     <span className="badge bg-secondary">{card.minute}'</span>
                   </td>
+                  {editable && (
+                    <td className="text-center">
+                      <i 
+                        className="bi bi-trash text-danger" 
+                        onClick={() => onRemoveCard?.(index)}
+                        title="Remover cartão"
+                        style={{ cursor: 'pointer', fontSize: '1rem' }}
+                      ></i>
+                    </td>
+                  )}
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={4} className="text-center text-muted py-3">
+                  <td colSpan={editable ? 5 : 4} className="text-center text-muted py-3">
                     Nenhum cartão registrado
                   </td>
                 </tr>
