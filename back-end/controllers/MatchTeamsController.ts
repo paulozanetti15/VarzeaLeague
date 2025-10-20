@@ -175,6 +175,11 @@ export const joinMatchByTeam = async (req: any, res: any) => {
           matchId: matchId,
           teamId: teamId
         });
+        // After creating, check if match is full and update status
+        const newCount = await MatchTeams.count({ where: { matchId } });
+        if (newCount >= maxTimes) {
+          await Match.update({ status: 'sem_vagas' }, { where: { id: matchId } as any });
+        }
         res.status(201).json({ message: 'Time inscrito na partida com sucesso' });
       }
     }
@@ -187,6 +192,10 @@ export const joinMatchByTeam = async (req: any, res: any) => {
           matchId: matchId,
           teamId: teamId
         });
+        const newCount = await MatchTeams.count({ where: { matchId } });
+        if (newCount >= maxTimes) {
+          await Match.update({ status: 'sem_vagas' }, { where: { id: matchId } as any });
+        }
         res.status(201).json({ message: 'Time inscrito na partida com sucesso' });
       }  
     }
@@ -315,6 +324,19 @@ export const deleteTeamMatch= async (req: any, res: any) => {
         teamId,
       }
     });
+    // Recount teams and reopen match if it was 'sem_vagas' and now has vacancies
+    try {
+      const remainingCount = await MatchTeams.count({ where: { matchId: id } });
+      const regras = await RulesModel.findOne({ where: { partidaId: id } });
+      const maxTimes = (regras && Number((regras as any).quantidade_times)) ? Number((regras as any).quantidade_times) : 2;
+      if (String((match as any).status) === 'sem_vagas' && remainingCount < maxTimes) {
+        await match.update({ status: 'aberta' });
+      }
+    } catch (e) {
+      // don't block the successful removal if status update fails
+      console.error('Erro ao atualizar status da partida após remoção de time:', e);
+    }
+
     res.status(200).json({ message: 'Time removido da partida com sucesso' });
   }
   catch (error) {

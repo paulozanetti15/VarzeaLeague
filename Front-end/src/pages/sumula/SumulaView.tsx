@@ -15,6 +15,8 @@ interface SumulaViewProps {
   onClose: () => void;
   onEdit?: () => void;
   show: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 export const SumulaView: React.FC<SumulaViewProps> = ({ 
@@ -22,7 +24,9 @@ export const SumulaView: React.FC<SumulaViewProps> = ({
   isChampionship = false, 
   onClose,
   onEdit,
-  show 
+  show,
+  canEdit,
+  canDelete
 }) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [matchDate, setMatchDate] = useState('');
@@ -228,7 +232,7 @@ export const SumulaView: React.FC<SumulaViewProps> = ({
 
       <div className="dialog-footer">
         <div className="d-flex justify-content-between w-100">
-          {!isWO && (
+          {!isWO && canDelete !== false && (
             <button
               className="btn btn-danger"
               onClick={handleDelete}
@@ -248,7 +252,7 @@ export const SumulaView: React.FC<SumulaViewProps> = ({
               <i className="fas fa-times me-2"></i>
               Fechar
             </button>
-            {!isWO && onEdit && (
+            {!isWO && onEdit && canEdit !== false && (
               <button
                 className="btn btn-warning"
                 onClick={onEdit}

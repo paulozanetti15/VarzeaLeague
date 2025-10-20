@@ -1,5 +1,5 @@
-import { AuthRequest } from "middleware/auth";
-import { Response } from "express-serve-static-core";
+import { AuthRequest } from '../middleware/auth';
+import { Response } from 'express';
 import MatchReport from "../models/MatchReportModel";
 import { Op } from "sequelize";
 import MatchModel from "../models/MatchModel";
@@ -157,6 +157,8 @@ export const buscarSumulaPartidaAmistosa = async(req: AuthRequest, res: Response
             return;
         }
 
+        // No further server-side authorization; frontend enforces visibility/export rules
+
         const goals = await MatchGoal.findAll({
             where: { match_id: parseInt(matchId) },
             include: [
@@ -264,6 +266,8 @@ export const buscarSumulaPartidaCampeonato = async(req: AuthRequest, res: Respon
             return;
         }
 
+        // No frontend-only validation here
+
         const goals = await MatchGoal.findAll({
             where: { match_id: parseInt(matchId) },
             include: [
@@ -359,6 +363,8 @@ export const deletarSumulaPartidaAmistosa = async(req: AuthRequest, res: Respons
             return;
         }
 
+        // Permission checks moved to frontend per project decision; backend requires only authentication
+
         await MatchGoal.destroy({
             where: { match_id: parseInt(matchId) }
         });
@@ -430,6 +436,8 @@ export const atualizarSumulaPartidaAmistosa = async(req: AuthRequest, res: Respo
             res.status(404).json({ message: 'Súmula não encontrada' });
             return;
         }
+
+        // Permission checks moved to frontend per project decision; backend requires only authentication
 
         await sumula.update({
             team_home: req.body.team_home,

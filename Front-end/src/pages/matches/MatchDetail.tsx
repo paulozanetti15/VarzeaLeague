@@ -111,14 +111,16 @@ const MatchDetail: React.FC = () => {
         return;
       }
       
-  window.alert('Partida finalizada');
-  setMatch((previousMatch: any) => previousMatch ? { ...previousMatch, status: 'finalizada' } : previousMatch);
+      window.alert('Partida finalizada');
+      setMatch((previousMatch: any) => previousMatch ? { ...previousMatch, status: 'finalizada' } : previousMatch);
       setShowEventsModal(true);
     } catch (error: any) {
       toast.error(error.message || 'Falha ao finalizar');
     }
   };
-
+  const handleCreateSumula = async () => {     
+    setShowEventsModal(true);
+  };
  
   const getTimeInscrito = async (matchId: string) => {
     try {
@@ -179,12 +181,11 @@ const MatchDetail: React.FC = () => {
             Authorization: `Bearer ${token}`
           }
         });
-  setMatch(response.data);
-  checkIfWo(response.data);
-  // fetch punishment early so actions (comments/buttons) can react immediately
-  await fetchPunishment(id!);
-  await getTimeInscrito(id!);
-  await checkSumulaExists();
+        setMatch(response.data);
+        checkIfWo(response.data);
+        await fetchPunishment(id!);
+        await getTimeInscrito(id!);
+        await checkSumulaExists();
       } catch (err: any) {
         console.error('Erro ao carregar detalhes:', err);
         if (err.response?.status === 401) {
@@ -204,24 +205,39 @@ const MatchDetail: React.FC = () => {
     // refresh punishment and sumula before deciding
     const latestPunishment = id ? await fetchPunishment(id) : null;
     const sumulaExists = await checkSumulaExists();
+    // Sumula should only be visible after the match is finalized
+    const statusLower = String(match?.status || '').toLowerCase();
+    const isCompletedLocal = statusLower === 'finalizada';
+    if (!isCompletedLocal) {
+      toast.error('Súmula só disponível após a partida ser finalizada.');
+      return;
+    }
+
+    // Frontend-only permission: admins, team captains or organizer can view/export the sumula
+    const isTeamCaptain = user && timeCadastrados.some(t => Number(t.captainId) === Number(user.id));
+    const isViewOnlyUser = user && (Number(user.userTypeId) === 1 || Number(user.userTypeId) === 3);
+    const isOrganizerLocal = Boolean(user && match && Number(match.organizerId) === Number(user.id));
+    const isAdminLocal = Boolean(user && Number(user.userTypeId) === 1);
+    const canView = Boolean(isAdminLocal || isTeamCaptain || isOrganizerLocal || isViewOnlyUser);
+
+    if (!canView) {
+      toast.error('Sem permissão para visualizar a súmula.');
+      return;
+    }
 
     if (latestPunishment || isWo) {
-      // open SumulaView first (view mode) and allow edit
       setIsEditingSumula(false);
       setShowEventsModal(true);
       return;
     }
 
     if (sumulaExists) {
-      // if sumula exists open view by default
       setIsEditingSumula(false);
       setShowEventsModal(true);
       return;
     }
 
-    // default: no sumula and no punishment - open create
-    setIsEditingSumula(true);
-    setShowEventsModal(true);
+    // default: no sumula and no punishment - only organizer can create
   };
 
   
@@ -366,16 +382,23 @@ const MatchDetail: React.FC = () => {
     return <div className="match-detail-container error">Partida não encontrada.</div>;
   }
 
-  const isOrganizer = user && match.organizerId === user.id;
   const isAdmin = user && user.userTypeId === 1;
-  const canDeleteMatch = isOrganizer || isAdmin;
-  const statusLower = String(match.status || '').toLowerCase();
+  const isEventAdmin = user && user.userTypeId === 2;
+  const isTeamAdmin = user && user.userTypeId === 3;
+  const isOrganizer = user && match.organizerId === user.id;
+  // compute statusLower and completion
+  const statusLower = String(match?.status || '').toLowerCase();
   const isCompleted = statusLower === 'finalizada';
+  // Só admin do time pode criar sumula, e apenas após finalização
+  const canCreateSumula = Boolean(isTeamAdmin && isCompleted && !hasSumula);
+  // Admin do sistema e admin do time só veem sumula se já existir e partida finalizada
+  const canViewSumula = Boolean((isAdmin || isTeamAdmin) && hasSumula && isCompleted);
+  const canDeleteMatch = isOrganizer || isAdmin;
   const effectiveMaxTeams = typeof (match?.maxTeams) === 'number' ? Number(match.maxTeams) : 2;
 
   return (
     <div className="match-detail-container">
-      <div className="detail-content">
+      <div className="detail-content">  
         <MatchHeader
           title={match.title}
           organizerName={match.organizer.name}
@@ -424,6 +447,7 @@ const MatchDetail: React.FC = () => {
           onEdit={() => navigate(`/matches/edit/${id}`)}
           onEditRules={() => setEditRules(true)}
           onPunishment={handleOpenPunicao}
+          hasSumula={hasSumula}
           onEvaluate={() => {
             console.log('Abrindo modal de avaliação');
             setShowEvalModal(true);
@@ -433,6 +457,7 @@ const MatchDetail: React.FC = () => {
             setShowCommentsModal(true);
           }}
           onFinalize={handleFinalizeMatch}
+          onCreateSumula = {()=>setShowEventsModal(true)}
           onViewEvents={handleViewEvents}
         />
       </div>
@@ -499,20 +524,26 @@ const MatchDetail: React.FC = () => {
         />
       )}
 
-      {showEventsModal && !isEditingSumula && (hasSumula || punishment) && (
-        <SumulaView
-          matchId={Number(match.id)}
-          isChampionship={false}
-          show={showEventsModal}
-          onClose={() => {
-            setShowEventsModal(false);
-            setIsEditingSumula(false);
-          }}
-          onEdit={() => setIsEditingSumula(true)}
-        />
+      {showEventsModal && !isEditingSumula && (hasSumula || punishment) && isCompleted && (
+        // Admin do sistema e admin do time só veem se já existir
+        ((isAdmin || isTeamAdmin) ? hasSumula : true) && (
+          <SumulaView
+            matchId={Number(match.id)}
+            isChampionship={false}
+            show={showEventsModal}
+            showDeleteConfirm={() => {}}
+            canEdit={isEventAdmin && hasSumula}
+            canDelete={isEventAdmin && hasSumula}
+            onClose={() => {
+              setShowEventsModal(false);
+              setIsEditingSumula(false);
+            }}
+            onEdit={() => setIsEditingSumula(true)}
+          />
+        )
       )}
 
-      {showEventsModal && isEditingSumula && (hasSumula) && (
+      {showEventsModal && isEditingSumula && (hasSumula) && isEventAdmin && isCompleted && (
         <SumulaEdit
           matchId={Number(match.id)}
           isChampionship={false}

@@ -9,6 +9,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import axios from 'axios';
 import './MatchList.css';
+import { getStatusLabel } from '../../utils/statusLabels';
 import { FaFilter, FaCalendarAlt, FaMoneyBillWave, FaTags } from 'react-icons/fa';
 import { IoMdClose } from 'react-icons/io';
 import { GiSoccerField } from "react-icons/gi";
@@ -608,7 +609,7 @@ const MatchList: React.FC = () => {
                           switch(s) {
                             case 'aberta': return 'Aberta';
                             case 'finalizada': return 'Finalizada';
-                            case 'pendente': return 'Pendente';
+                            case 'sem_vagas': return getStatusLabel('sem_vagas');
                             case 'confirmada': return 'Em andamento';
                             case 'cancelada': return 'Cancelada';
                             default: return s;

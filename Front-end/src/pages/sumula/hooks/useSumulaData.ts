@@ -119,14 +119,18 @@ export const useSumulaData = (): UseSumulaDataReturn => {
           isPenalty = sumula.is_penalty || false;
           goals = (sumula.goals || []).map((goal: any) => ({
             player: goal.playerName || '',
+            playerName: goal.playerName || '',
             team: goal.teamName || 'Time não identificado',
+            teamName: goal.teamName || 'Time não identificado',
             minute: goal.minute || 0,
             playerId: goal.playerId || 0,
             teamId: goal.teamId || 0
           }));
           cards = (sumula.cards || []).map((card: any) => ({
             player: card.playerName || '',
+            playerName: card.playerName || '',
             team: card.teamName || 'Time não identificado',
+            teamName: card.teamName || 'Time não identificado',
             type: card.type || '',
             minute: card.minute || 0,
             playerId: card.playerId || 0,
@@ -186,10 +190,30 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       });
 
       if (response.status === 201) {
+        // Limpar goals e cards existentes antes de adicionar novos
         const goalsEndpoint = isChampionship
           ? `http://localhost:3001/api/championships/${data.matchId}/goals`
           : `http://localhost:3001/api/matches/${data.matchId}/goals`;
 
+        const cardsEndpoint = isChampionship
+          ? `http://localhost:3001/api/championships/${data.matchId}/cards`
+          : `http://localhost:3001/api/matches/${data.matchId}/cards`;
+
+        // Remover todos os goals existentes
+        try {
+          await axios.delete(`${goalsEndpoint}`, { headers: { Authorization: `Bearer ${token}` } });
+        } catch (err) {
+          // Ignorar erro se não houver goals para remover
+        }
+
+        // Remover todos os cards existentes
+        try {
+          await axios.delete(`${cardsEndpoint}`, { headers: { Authorization: `Bearer ${token}` } });
+        } catch (err) {
+          // Ignorar erro se não houver cards para remover
+        }
+
+        // Adicionar novos goals
         await Promise.all(data.goals.map(goal => 
           axios.post(goalsEndpoint, {
             playerId: goal.playerId,
@@ -197,10 +221,7 @@ export const useSumulaData = (): UseSumulaDataReturn => {
           }, { headers: { Authorization: `Bearer ${token}` } })
         ));
 
-        const cardsEndpoint = isChampionship
-          ? `http://localhost:3001/api/championships/${data.matchId}/cards`
-          : `http://localhost:3001/api/matches/${data.matchId}/cards`;
-
+        // Adicionar novos cards
         await Promise.all(data.cards.map(card =>
           axios.post(cardsEndpoint, {
             playerId: card.playerId,
