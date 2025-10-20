@@ -26,8 +26,28 @@ const PunicaoPartidaAmistosaDeletarModal: React.FC<PunicaoPartidaAmistosaModalPr
       });
       
       if (response.status === 200) {
+        try {
+          // Após excluir a punição, verificar o status atual da partida
+          const matchResp = await axios.get(`http://localhost:3001/api/matches/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          const matchData = matchResp.data;
+          const status = String(matchData?.status || '').toLowerCase();
+          const isWOFlag = !!matchData?.isWO || status === 'wo' || status === 'walkover';
+
+          if (isWOFlag) {
+            // atualizar status da partida para 'aberta'
+            await axios.put(`http://localhost:3001/api/matches/${id}`, { status: 'aberta' }, {
+              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+            });
+          }
+        } catch (err) {
+          // se falhar em atualizar o status, não bloqueia a remoção da punição
+          console.error('Erro ao atualizar status da partida após remover punição:', err);
+        }
+
         onClose(); // Fecha o modal
-        // Você pode adicionar um callback para atualizar a lista/estado parent
       }
     } catch (error: any) {
       console.error('Erro ao deletar punição:', error);
