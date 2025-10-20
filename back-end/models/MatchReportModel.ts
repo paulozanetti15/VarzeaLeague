@@ -54,6 +54,11 @@ MatchReport.init({
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  is_penalty: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
 }, {
   sequelize,
   tableName: 'match_reports',
