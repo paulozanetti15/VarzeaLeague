@@ -1,0 +1,122 @@
+/* Timeline de Eventos */
+.timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, #e0e0e0, #f5f5f5);
+}
+
+.timeline-item {
+  position: relative;
+  padding: 1rem 0;
+  border-left: 3px solid transparent;
+  margin-left: -3px;
+  transition: all 0.3s ease;
+}
+
+.timeline-item:hover {
+  background-color: #f8f9fa;
+  border-left-color: inherit !important;
+}
+
+.timeline-item.border-success {
+  border-left-color: #28a745;
+}
+
+.timeline-item.border-warning {
+  border-left-color: #ffc107;
+}
+
+.timeline-item.border-danger {
+  border-left-color: #dc3545;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -2.3rem;
+  top: 1.2rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e0e0e0;
+  z-index: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.timeline-item:hover .timeline-marker {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.timeline-marker i {
+  font-size: 0.875rem;
+}
+
+.timeline-content {
+  padding: 0.5rem 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.timeline-item:hover .timeline-content {
+  border-color: #cbd5e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.timeline-content .fw-bold {
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.timeline-content .text-muted {
+  font-size: 0.85rem;
+}
+
+/* Empty state */
+.text-center.text-muted i {
+  opacity: 0.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .timeline {
+    padding-left: 1.5rem;
+  }
+
+  .timeline-marker {
+    left: -1.8rem;
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .timeline-marker i {
+    font-size: 0.75rem;
+  }
+
+  .timeline-content {
+    padding: 0.5rem;
+  }
+
+  .timeline-content .fw-bold {
+    font-size: 0.875rem;
+  }
+
+  .timeline-content .text-muted {
+    font-size: 0.8rem;
+  }
+}
