@@ -232,13 +232,25 @@ const CreateMatch: React.FC = () => {
           <div className="create-match-icon">
             ⚽
           </div>
-          <div className="header-content">
-            <h1 className="create-match-title">Criar Nova Partida</h1>
-            <p className="create-match-subtitle">Organize sua partida e convide outros times</p>
-          </div>
+          <h1 className="create-match-title">Criar Nova Partida</h1>
+          <p className="create-match-subtitle">Organize sua partida e convide outros times</p>
         </div>
 
         <div className="form-main-grid">
+          {/* Seção lateral com ícone */}
+          <div className="logo-section">
+            <div className="logo-preview-container">
+              <span>⚽</span>
+              <span>Tipo de Partida</span>
+            </div>
+            
+            <div className="logo-description">
+              <h3>Informações da Partida</h3>
+              <p>Configure os detalhes da sua partida de futebol</p>
+            </div>
+          </div>
+
+          {/* Seção de formulário */}
           <div className="form-section">
             {error && (
               <div className="error-message">
@@ -247,249 +259,199 @@ const CreateMatch: React.FC = () => {
             )}
 
             <form onSubmit={handleSubmit} className="create-match-form">
+              {/* Campos básicos em grid 2 colunas */}
               <div className="form-basic-grid">
-                {/* Seção: Informações Básicas */}
-                <div className="form-section-header">
-                  <h3 className="section-title">Informações Básicas</h3>
-                  <p className="section-description">Dados essenciais da partida</p>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="title">Título da Partida</label>
+                  <input
+                    ref={titleInputRef}
+                    type="text"
+                    id="title"
+                    name="title"
+                    className="form-control"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    placeholder="Digite o título da partida"
+                    required
+                    style={fieldErrors.title ? { borderColor: '#e53935' } : undefined}
+                  />
+                  {fieldErrors.title && <span className="field-error">{fieldErrors.title}</span>}
                 </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">
-                      Título da Partida 
-                      <span className="required-asterisk">*</span>
-                    </label>
-                    <input
-                      ref={titleInputRef}
-                      type="text"
-                      className="form-control"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="Ex: Pelada de Domingo"
-                      style={fieldErrors.title ? { borderColor: '#e53935' } : undefined}
-                    />
-                    {fieldErrors.title && <small className="error-text">{fieldErrors.title}</small>}
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Descrição</label>
-                    <textarea
-                      className="form-control"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      rows={4}
-                      placeholder="Descreva os detalhes da partida, regras especiais, nível de competição, etc..."
-                    />
-                  </div>
-                </div>
-
-                {/* Seção: Data e Horário */}
-                <div className="form-section-header">
-                  <h3 className="section-title">Data e Horário</h3>
-                  <p className="section-description">Quando a partida acontecerá</p>
-                </div>
-
-                <div className="form-row three-columns">
-                  <div className="form-group">
-                    <label className="form-label">
-                      Data 
-                      <span className="required-asterisk">*</span>
-                    </label>
-                    <div className="date-input-container">
-                      <input
-                        type="text"
-                        name="date"
-                        value={formData.date}
-                        onChange={handleInputChange}
-                        required
-                        className="form-control date-input"
-                        placeholder="DD/MM/AAAA"
-                        maxLength={10}
-                        onFocus={handleOpenDatePicker}
-                        style={fieldErrors.date ? { borderColor: '#e53935' } : undefined}
-                      />
-                      <input
-                        ref={hiddenDateInputRef}
-                        type="date"
-                        onChange={handleHiddenDateChange}
-                        style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
-                        aria-hidden="true"
-                        tabIndex={-1}
-                      />
-                      <button
-                        type="button"
-                        onClick={handleOpenDatePicker}
-                        className="date-icon"
-                      >
-                        <CalendarMonthIcon />
-                      </button>
-                    </div>
-                    {fieldErrors.date && <small className="error-text">{fieldErrors.date}</small>}
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">
-                      Horário 
-                      <span className="required-asterisk">*</span>
-                    </label>
-                    <input
-                      type="time"
-                      className="form-control"
-                      name="time"
-                      value={formData.time}
-                      onChange={handleInputChange}
-                      required
-                      style={fieldErrors.time ? { borderColor: '#e53935' } : undefined}
-                    />
-                    {fieldErrors.time && <small className="error-text">{fieldErrors.time}</small>}
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">
-                      Duração (min) 
-                      <span className="required-asterisk">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="duration"
-                      value={formData.duration}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="90"
-                      min="30"
-                      max="180"
-                      style={fieldErrors.duration ? { borderColor: '#e53935' } : undefined}
-                    />
-                    {fieldErrors.duration && <small className="error-text">{fieldErrors.duration}</small>}
-                  </div>
-                </div>
-
-                {/* Seção: Modalidade e Local */}
-                <div className="form-section-header">
-                  <h3 className="section-title">Modalidade e Local</h3>
-                  <p className="section-description">Onde e como será a partida</p>
-                </div>
-
-                <div className="form-row two-columns">
-                  <div className="form-group">
-                    <label className="form-label">
-                      Modalidade 
-                      <span className="required-asterisk">*</span>
-                    </label>
-                    <select 
-                      name="modalidade"
-                      onChange={handleSelect}
-                      value={formData.modalidade}
-                      className="form-control"
-                      style={fieldErrors.modalidade ? { borderColor: '#e53935' } : undefined}
-                    >
-                      <option value="">Selecione a modalidade</option>
-                      <option value="Fut7">Fut7</option>
-                      <option value="Futsal">Futsal</option>
-                      <option value="Futebol campo">Futebol campo</option>
-                    </select> 
-                    {fieldErrors.modalidade && <small className="error-text">{fieldErrors.modalidade}</small>}
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">
-                      Nome da Quadra 
-                      <span className="required-asterisk">*</span>
-                    </label>
-                    <input 
-                      name="quadra" 
-                      type='text' 
-                      className='form-control' 
-                      onChange={handleInputChange} 
-                      value={formData.quadra}
-                      style={fieldErrors.quadra ? { borderColor: '#e53935' } : undefined}
-                      placeholder="Ex: Arena Central"
-                      required
-                    />
-                    {fieldErrors.quadra && <small className="error-text">{fieldErrors.quadra}</small>}
-                  </div>
-                </div>
-
-                {/* Seção: Preço e Localização */}
-                <div className="form-section-header">
-                  <h3 className="section-title">Preço e Localização</h3>
-                  <p className="section-description">Valor da partida e local exato</p>
-                </div>
-
-                <div className="form-row two-columns">
-                  <div className="form-group">
-                    <label className="form-label">
-                      Preço por Jogador (R$) 
-                      <span className="required-asterisk">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="0,00"
-                      min="0"
-                      step="0.01"
-                      style={fieldErrors.price ? { borderColor: '#e53935' } : undefined}
-                    />
-                    {fieldErrors.price && <small className="error-text">{fieldErrors.price}</small>}
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">
-                      CEP 
-                      <span className="required-asterisk">*</span>
-                    </label>
-                    <input 
-                      type="text"
-                      name="cep"
-                      pattern='[0-9]{5}-?[0-9]{3}'
-                      maxLength={9}
-                      value={formData.cep}
-                      onChange={handleInputChange}
-                      className="form-control"
-                      required
-                      placeholder="00000-000"
-                      style={fieldErrors.cep ? { borderColor: '#e53935' } : undefined}
-                    />
-                    {fieldErrors.cep && <small className="error-text">{fieldErrors.cep}</small>}
-                    {cepErrorMessage && (
-                      <div className="error-message">
-                        {cepErrorMessage}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Botão de Submit */}
-                <div className="btn-container" ref={btnContainerRef}>
-                  <button
-                    type="submit"
-                    className="submit-btn"
-                    disabled={loading}
+                <div className="form-group">
+                  <label className="form-label" htmlFor="modalidade">Modalidade</label>
+                  <select
+                    id="modalidade"
+                    name="modalidade"
+                    className="form-control"
+                    value={formData.modalidade}
+                    onChange={handleSelect}
+                    required
+                    style={fieldErrors.modalidade ? { borderColor: '#e53935' } : undefined}
                   >
-                    {loading ? (
-                      <>
-                        <CircularProgress size={20} color="inherit" />
-                        <span>Criando...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>⚽</span>
-                        <span>Criar Partida</span>
-                      </>
-                    )}
-                  </button>
+                    <option value="">Selecione a modalidade</option>
+                    <option value="Fut7">Fut7</option>
+                    <option value="Futsal">Futsal</option>
+                    <option value="Futebol campo">Futebol campo</option>
+                  </select>
+                  {fieldErrors.modalidade && <span className="field-error">{fieldErrors.modalidade}</span>}
                 </div>
+              </div>
+
+              {/* Campos de data em grid 2 colunas */}
+              <div className="form-basic-grid">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="date">Data</label>
+                  <div className="date-input-container">
+                    <input
+                      type="text"
+                      id="date"
+                      name="date"
+                      className="form-control date-input"
+                      value={formData.date}
+                      onChange={handleInputChange}
+                      placeholder="Selecione a data"
+                      required
+                      maxLength={10}
+                      onFocus={handleOpenDatePicker}
+                      style={fieldErrors.date ? { borderColor: '#e53935' } : undefined}
+                    />
+                    <input
+                      ref={hiddenDateInputRef}
+                      type="date"
+                      onChange={handleHiddenDateChange}
+                      style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                      aria-hidden="true"
+                      tabIndex={-1}
+                    />
+                    <CalendarMonthIcon className="date-icon" onClick={handleOpenDatePicker} />
+                  </div>
+                  {fieldErrors.date && <span className="field-error">{fieldErrors.date}</span>}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="time">Horário</label>
+                  <input
+                    type="time"
+                    id="time"
+                    name="time"
+                    className="form-control"
+                    value={formData.time}
+                    onChange={handleInputChange}
+                    required
+                    style={fieldErrors.time ? { borderColor: '#e53935' } : undefined}
+                  />
+                  {fieldErrors.time && <span className="field-error">{fieldErrors.time}</span>}
+                </div>
+              </div>
+
+              {/* Campos de configuração em grid 2 colunas */}
+              <div className="form-basic-grid">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="duration">Duração (min)</label>
+                  <input
+                    type="number"
+                    id="duration"
+                    name="duration"
+                    className="form-control"
+                    value={formData.duration}
+                    onChange={handleInputChange}
+                    placeholder="90"
+                    min="30"
+                    max="180"
+                    required
+                    style={fieldErrors.duration ? { borderColor: '#e53935' } : undefined}
+                  />
+                  {fieldErrors.duration && <span className="field-error">{fieldErrors.duration}</span>}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="quadra">Nome da Quadra</label>
+                  <input
+                    type="text"
+                    id="quadra"
+                    name="quadra"
+                    className="form-control"
+                    value={formData.quadra}
+                    onChange={handleInputChange}
+                    placeholder="Nome da quadra/campo"
+                    required
+                    style={fieldErrors.quadra ? { borderColor: '#e53935' } : undefined}
+                  />
+                  {fieldErrors.quadra && <span className="field-error">{fieldErrors.quadra}</span>}
+                </div>
+              </div>
+
+              {/* Campos de preço e localização em grid 2 colunas */}
+              <div className="form-basic-grid">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="price">Preço por Jogador (R$)</label>
+                  <input
+                    type="number"
+                    id="price"
+                    name="price"
+                    className="form-control"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    placeholder="0,00"
+                    min="0"
+                    step="0.01"
+                    required
+                    style={fieldErrors.price ? { borderColor: '#e53935' } : undefined}
+                  />
+                  {fieldErrors.price && <span className="field-error">{fieldErrors.price}</span>}
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="cep">CEP</label>
+                  <input
+                    type="text"
+                    id="cep"
+                    name="cep"
+                    pattern='[0-9]{5}-?[0-9]{3}'
+                    maxLength={9}
+                    value={formData.cep}
+                    onChange={handleInputChange}
+                    className="form-control"
+                    placeholder="00000-000"
+                    required
+                    style={fieldErrors.cep ? { borderColor: '#e53935' } : undefined}
+                  />
+                  {fieldErrors.cep && <span className="field-error">{fieldErrors.cep}</span>}
+                  {cepErrorMessage && (
+                    <div className="error-message">
+                      {cepErrorMessage}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Campo de descrição */}
+              <div className="form-group">
+                <label className="form-label" htmlFor="description">Descrição</label>
+                <textarea
+                  id="description"
+                  name="description"
+                  className="form-control"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Descreva os detalhes da partida, regras especiais, nível de competição, etc..."
+                  rows={4}
+                />
+              </div>
+
+              <div className="btn-container">
+                <button
+                  type="submit"
+                  className="submit-btn"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="loading-text">Criando...</span>
+                  ) : (
+                    'Criar Partida'
+                  )}
+                </button>
               </div>
             </form>
           </div>
