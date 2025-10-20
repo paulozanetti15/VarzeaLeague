@@ -121,7 +121,7 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
         });
         
         try {
-          await axios.put(`http://localhost:3001/api/matches/${idMatch}`, { status: 'cancelada' }, {
+          await axios.put(`http://localhost:3001/api/matches/${idMatch}`, { status: 'finalizada' }, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`
             }
