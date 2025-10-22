@@ -141,6 +141,7 @@ const TeamList = () => {
       const teamId = teams[0].id;
       const data = await api.teams.getPlayerStats(teamId);
       setPlayerStats(data?.stats || []);
+      alert('Relatório da súmula gerado com sucesso!');
     } catch (e) {
       console.error('Erro ao gerar relatório de jogadores:', e);
     } finally {

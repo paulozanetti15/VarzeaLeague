@@ -62,7 +62,7 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
     ? new Date() > new Date(registrationDeadline) 
     : false;
   const canShowPunishment = canApplyPunishment && hasMinimumTeams && isPastDeadline;
-  const showPunishmentButton = canEdit && canShowPunishment && !(matchStatus === 'finalizada' && !hasPunishment && !isWo);
+  const showPunishmentButton = canEdit && canShowPunishment && (isCompleted || !(matchStatus === 'finalizada' && !hasPunishment && !isWo));
   const canCreateSumula = userTypeId === 2
   const canViewEvents =userTypeId === 1 || userTypeId === 3;
 

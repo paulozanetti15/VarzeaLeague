@@ -318,6 +318,8 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
     await checkAndConfirmFullMatches();
   // Start confirmed matches when their start time arrives
   await checkAndStartConfirmedMatches();
+    // Check and set matches to 'sem_vagas' when they reach maximum teams
+    await checkAndSetSemVagas();
     const matches = await MatchModel.findAll({
       include: [
         {
@@ -368,6 +370,8 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
     await checkAndSetMatchesInProgress();
     await checkAndConfirmFullMatches();
   await checkAndStartConfirmedMatches();
+    // Check and set matches to 'sem_vagas' when they reach maximum teams
+    await checkAndSetSemVagas();
     const match = await MatchModel.findByPk(req.params.id,{
       include: [
         {
