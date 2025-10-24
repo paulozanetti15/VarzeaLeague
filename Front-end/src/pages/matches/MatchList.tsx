@@ -1,40 +1,15 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pagination } from '@mui/material';
-import EventIcon from '@mui/icons-material/Event';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import SearchIcon from '@mui/icons-material/Search';
-import ClearIcon from '@mui/icons-material/Clear';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
-import axios from 'axios';
 import './MatchList.css';
 import { getStatusLabel } from '../../utils/statusLabels';
-import { FaFilter, FaCalendarAlt, FaMoneyBillWave, FaTags } from 'react-icons/fa';
-import { IoMdClose } from 'react-icons/io';
-import { GiSoccerField } from "react-icons/gi";
 import { canCreateMatch } from '../../utils/roleUtils';
-import { FaFutbol } from 'react-icons/fa';
-
-interface Match {
-  id: number;
-  title: string;
-  date: string;
-  location: string;
-  maxPlayers: number;
-  description: string;
-  price: number | null;
-  status: string;
-  duration: string;
-  _hasPlayerLoadError?: boolean;
-  organizerId: number;
-  organizer?: {
-    id: number;
-    name: string;
-  };
-  modalidade?: string;
-  nomequadra?: string;
-}
+import { useMatches } from '../../hooks/useMatches';
+import { useFilters } from '../../hooks/useFilters';
+import { MatchCard } from '../../components/features/matches/MatchList';
+import { AdvancedFiltersModal } from '../../components/features/matches/MatchList';
+import { SearchControls } from '../../components/features/matches/MatchList';
 
 interface User {
   id: number;
@@ -44,24 +19,14 @@ interface User {
 
 const MatchList: React.FC = () => {
   const navigate = useNavigate();
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [filteredMatches, setFilteredMatches] = useState<Match[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const matchesPerPage = 8;
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string[]>([]);
-  const [priceFilter, setPriceFilter] = useState<string[]>([]);
-  const [dateFilter, setDateFilter] = useState<string[]>([]);
-  const [tempStatusFilter, setTempStatusFilter] = useState<string[]>([]);
-  const [tempPriceFilter, setTempPriceFilter] = useState<string[]>([]);
-  const [tempDateFilter, setTempDateFilter] = useState<string[]>([]);
+
   const [currentUser] = useState<User>(() => {
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token');
-    
+
     if (storedUser) {
       try {
         return JSON.parse(storedUser);
@@ -69,37 +34,39 @@ const MatchList: React.FC = () => {
         console.error('Erro ao parsear usuário do localStorage');
       }
     }
-    
+
     // Se não encontrar user, mas encontrar token, cria um objeto básico
     if (storedToken) {
       return { id: 0, token: storedToken, userTypeId: 4 };
     }
-    
+
     return { id: 0, token: '', userTypeId: 4 };
   });
-  
-  const fetchMatches = async () => {
-    try {
-      const token = currentUser.token || localStorage.getItem('token');
-      if (!token) {
-        setError('Usuário não autenticado');
-        return;
-      }
-      
-      const response = await axios.get('http://localhost:3001/api/matches/', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      // Mantém somente partidas criadas pelo usuário logado
-      const onlyMine = currentUser?.id
-        ? (response.data || []).filter((m: Match) => m.organizerId === currentUser.id)
-        : [];
-      setMatches(onlyMine);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar partidas');
-    } finally {
-      setLoading(false);
-    }
-  };
+
+  const { matches, loading, error } = useMatches(currentUser);
+
+  const {
+    searchQuery,
+    statusFilter,
+    priceFilter,
+    dateFilter,
+    tempStatusFilter,
+    tempPriceFilter,
+    tempDateFilter,
+    setTempStatusFilter,
+    setTempPriceFilter,
+    setTempDateFilter,
+    handleSearchChange,
+    clearSearch,
+    applyFilters,
+    cancelFilters,
+    clearTempFilters,
+    openFiltersModal,
+    getActiveFiltersCount,
+    clearAllFilters
+  } = useFilters();
+
+  const [filteredMatches, setFilteredMatches] = useState<any[]>([]);
 
   useEffect(() => {
     if (!matches || !Array.isArray(matches) || matches.length === 0) {
@@ -109,17 +76,17 @@ const MatchList: React.FC = () => {
     let filtered = [...matches];
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(match => 
+      filtered = filtered.filter(match =>
       match.title.toLowerCase().includes(query) ||
         match.location.toLowerCase().includes(query) ||
         match.description?.toLowerCase().includes(query)
       );
     }
-  
+
     if (statusFilter.length > 0) {
       filtered = filtered.filter(match => statusFilter.includes(match.status));
     }
-    
+
     if (priceFilter.length > 0) {
       if (priceFilter.includes('free')) {
         filtered = filtered.filter(match => !match.price || match.price === 0);
@@ -127,7 +94,7 @@ const MatchList: React.FC = () => {
         filtered = filtered.filter(match => match.price && match.price > 0);
       }
     }
-    
+
     if (dateFilter.length > 0) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -149,276 +116,36 @@ const MatchList: React.FC = () => {
         } else if (dateFilter.includes('weekend')) {
           return matchDate >= nextWeekStart && matchDate < nextWeekEnd;
         }
-        
+
         return true;
       });
     }
-    
+
     setFilteredMatches(filtered);
   }, [matches, searchQuery, statusFilter, priceFilter, dateFilter]);
-  
-  useEffect(() => {
-    fetchMatches();
-  }, []);
 
-  // Refresh manual removido
-
-  // Filtro de tipo (all/my/nearby) removido
-
- 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setPage(1);
-  };
-
-  const clearSearch = () => {
-    setSearchQuery('');
-    setPage(1);
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const isPastMatch = (matchDate: string) => {
-    const date = new Date(matchDate);
-    return date < new Date();
-  };
   const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  
-  const openFiltersModal = () => {
-    // Inicializar os filtros temporários com os valores atuais
-    setTempStatusFilter([...statusFilter]);
-    setTempPriceFilter([...priceFilter]);
-    setTempDateFilter([...dateFilter]);
+
+  const handleOpenFiltersModal = () => {
+    openFiltersModal();
     setShowAdvancedFilters(true);
   };
-  
-  // Função para aplicar os filtros temporários
-  const applyFilters = () => {
-    setStatusFilter([...tempStatusFilter]);
-    setPriceFilter([...tempPriceFilter]);
-    setDateFilter([...tempDateFilter]);
+
+  const handleApplyFilters = () => {
+    applyFilters();
     setShowAdvancedFilters(false);
   };
-  
-  // Função para cancelar e fechar o modal
-  const cancelFilters = () => {
+
+  const handleCancelFilters = () => {
+    cancelFilters();
     setShowAdvancedFilters(false);
   };
-  
-  // Função para limpar todos os filtros temporários
-  const clearTempFilters = () => {
-    setTempStatusFilter([]);
-    setTempPriceFilter([]);
-    setTempDateFilter([]);
-  };
 
-  // Função para calcular o número de filtros ativos
-  const getActiveFiltersCount = () => {
-    let count = 0;
-    if (statusFilter.length > 0) count++;
-    if (priceFilter.length > 0) count++;
-    if (dateFilter.length > 0) count++;
-    return count;
-  };
-
-  const AdvancedFiltersModal = () => {
-    if (!showAdvancedFilters) return null;
-  
-    return (
-      <div className="filters-modal-overlay">
-        <div className="filters-modal-content">
-          <div className="filters-modal-header">
-            <h3><FaFilter /> Filtros Avançados</h3>
-            <button className="close-modal" onClick={cancelFilters}>
-              <IoMdClose />
-            </button>
-          </div>
-          
-          <div className="filters-modal-body">
-            {/* Filtro de Status */}
-            <div className="filter-group">
-              <h4><FaTags /> Status da Partida</h4>
-              <div className="status-filter-options">
-                <div className="filter-option">
-                  <input 
-                    type="checkbox" 
-                    id="status-aberta" 
-                    checked={tempStatusFilter.includes('aberta')}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setTempStatusFilter([...tempStatusFilter, 'aberta']);
-                      } else {
-                        setTempStatusFilter(tempStatusFilter.filter(s => s !== 'aberta'));
-                      }
-                    }}
-                  />
-                  <label htmlFor="status-aberta">
-                    <span className="status-indicator open"></span>
-                    Abertas
-                  </label>
-                </div>
-                
-                <div className="filter-option">
-                  <input 
-                    type="checkbox" 
-                    id="status-finalizada" 
-                    checked={tempStatusFilter.includes('finalizada')}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setTempStatusFilter([...tempStatusFilter, 'finalizada']);
-                      } else {
-                        setTempStatusFilter(tempStatusFilter.filter(s => s !== 'finalizada'));
-                      }
-                    }}
-                  />
-                  <label htmlFor="status-finalizada">
-                    <span className="status-indicator full"></span>
-                    Finalizadas
-                  </label>
-                </div>
-              </div>
-            </div>
-            
-            {/* Filtro de Preço */}
-            <div className="filter-group">
-              <h4><FaMoneyBillWave /> Valor da quadra</h4>
-              <div className="price-filter-options">
-                <div className="filter-option">
-                  <input 
-                    type="checkbox" 
-                    id="price-free" 
-                    checked={tempPriceFilter.includes('free')}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setTempPriceFilter([...tempPriceFilter, 'free']);
-                      } else {
-                        setTempPriceFilter(tempPriceFilter.filter(p => p !== 'free'));
-                      }
-                    }}
-                  />
-                  <label htmlFor="price-free">
-                    <span className="price-indicator free">R$0</span>
-                    Gratuito
-                  </label>
-                </div>
-                
-                <div className="filter-option">
-                  <input 
-                    type="checkbox" 
-                    id="price-paid" 
-                    checked={tempPriceFilter.includes('paid')}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setTempPriceFilter([...tempPriceFilter, 'paid']);
-                      } else {
-                        setTempPriceFilter(tempPriceFilter.filter(p => p !== 'paid'));
-                      }
-                    }}
-                  />
-                  <label htmlFor="price-paid">
-                    <span className="price-indicator paid">R$</span>
-                    Pago
-                  </label>
-                </div>
-              </div>
-            </div>
-            
-            {/* Filtro de Data */}
-            <div className="filter-group">
-              <h4><FaCalendarAlt /> Data</h4>
-              <div className="date-filter-options">
-                <div className="filter-option">
-                  <input 
-                    type="checkbox" 
-                    id="date-today" 
-                    checked={tempDateFilter.includes('today')}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setTempDateFilter([...tempDateFilter, 'today']);
-                      } else {
-                        setTempDateFilter(tempDateFilter.filter(d => d !== 'today'));
-                      }
-                    }}
-                  />
-                  <label htmlFor="date-today">
-                    Hoje
-                  </label>
-                </div>
-                
-                <div className="filter-option">
-                  <input 
-                    type="checkbox" 
-                    id="date-tomorrow" 
-                    checked={tempDateFilter.includes('tomorrow')}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setTempDateFilter([...tempDateFilter, 'tomorrow']);
-                      } else {
-                        setTempDateFilter(tempDateFilter.filter(d => d !== 'tomorrow'));
-                      }
-                    }}
-                  />
-                  <label htmlFor="date-tomorrow">
-                    Amanhã
-                  </label>
-                </div>
-                
-                <div className="filter-option">
-                  <input 
-                    type="checkbox" 
-                    id="date-week" 
-                    checked={tempDateFilter.includes('week')}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setTempDateFilter([...tempDateFilter, 'week']);
-                      } else {
-                        setTempDateFilter(tempDateFilter.filter(d => d !== 'week'));
-                      }
-                    }}
-                  />
-                  <label htmlFor="date-week">
-                    Esta semana
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="filters-modal-footer">
-            <button className="clear-filters-btn" onClick={clearTempFilters}>
-              <ClearIcon fontSize="small" />
-              Limpar filtros
-            </button>
-            <div className="action-buttons">
-              <button className="cancel-button" onClick={cancelFilters}>
-                Cancelar
-              </button>
-              <button className="apply-button" onClick={applyFilters}>
-                Aplicar Filtros
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  const handleClearTempFilters = () => {
+    clearTempFilters();
   };
 
   // Modificar a renderização da lista para usar paginação eficiente
@@ -461,90 +188,18 @@ const MatchList: React.FC = () => {
       <>
         <div className="matches-grid">
           {currentMatches.map((match) => (
-            <div
-              className="match-card"
-              key={match.id}
-              onClick={() => navigate(`/matches/${match.id}`)}
-              data-match-id={match.id}
-            >
-              <div className="match-card-corner"></div>
-              <div className="match-card-inner">
-                <div className="match-card-gradient"></div>
-                <div className="match-header">
-                  <h2 className="match-title">{match.title}</h2>
-                </div>
-                
-                <div className="match-info">
-                  <div className="info-row" style={{color: '#ffffff'}}>
-                    <EventIcon fontSize="small" />
-                    <strong>Data:</strong> {formatDate(match.date)}
-                  </div>
-                  <div className="info-row" style={{color: '#ffffff'}}>
-                    <AccessTimeIcon fontSize="small" />
-                    <strong>Hora:</strong> {formatTime(match.date)}
-                  </div>
-                  {match.duration && (
-                    <div className="info-row" style={{color: '#ffffff'}}>
-                      <AccessTimeIcon fontSize="small" />
-                      <strong>Duração:</strong> {match.duration}
-                    </div>
-                  )}
-                  <div className='info-row' style={{color: '#ffffff'}}>
-                    <GiSoccerField fontSize={"medium"}/>
-                    <strong>Quadra:</strong> {match.nomequadra}
-                  </div>
-                  <div className="info-row" style={{color: '#ffffff'}}>
-                    <LocationOnIcon fontSize="small" />
-                    <strong>Local:</strong> {match.location}
-                  </div>
-                  <div className="info-row" style={{color: '#ffffff'}}>
-                    <FaFutbol fontSize="small" />
-                    <strong>Modalidade:</strong> {match.modalidade}
-                  </div>
-                  
-                </div>            
-                {match.price && (
-                  <div className="match-price">
-                    <span>💰</span> R$ {(() => {
-                      try {
-                        return typeof match.price === 'number' 
-                          ? match.price.toFixed(2) 
-                          : parseFloat(String(match.price)).toFixed(2);
-                      } catch (e) {
-                        return '0.00';
-                      }
-                    })()
-                    } por jogador
-                  </div>
-                )}
-                
-                <div className="match-action-container">
-                  {!isPastMatch(match.date) && 
-                   (match.status === 'aberta' || match.status === 'finalizada') && 
-                   match.organizerId !== currentUser?.id && (
-                    <div className="match-full-message">
-                      
-                    </div>
-                  )}
-                  {match.organizerId === currentUser?.id && (
-                    <div className="organizer-badge" style={{color: '#00ff00'}}>
-                      Você é o organizador
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <MatchCard key={match.id} match={match} currentUserId={currentUser.id} />
           ))}
         </div>
         {totalPages > 1 && (
           <div className="pagination-container">
-            <Pagination 
-              count={totalPages} 
-              page={page} 
-              onChange={handlePageChange} 
-              color="primary" 
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={handlePageChange}
+              color="primary"
               size="large"
-              showFirstButton 
+              showFirstButton
               showLastButton
             />
           </div>
@@ -558,37 +213,14 @@ const MatchList: React.FC = () => {
       <div className="match-list-content">
         <div className="header-container">
           <h1>Gerenciar partidas criadas por você!</h1>
-          
-          <div className="search-controls">
-            <div className="search-and-filter">
-              <div className="search-container">
-                <SearchIcon className="search-icon" />
-                <input
-                  type="text"
-                  placeholder="Buscar partidas..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="search-input"
-                />
-                {searchQuery && (
-                  <button className="clear-search" onClick={clearSearch}>
-                    <ClearIcon />
-                  </button>
-                )}
-              </div>
-              
-              <button 
-                className="advanced-filters-toggle"
-                onClick={openFiltersModal}
-              >
-                <FaFilter /> Filtros
-                {getActiveFiltersCount() > 0 && (
-                  <span className="filter-count-badge">{getActiveFiltersCount()}</span>
-                )}
-              </button>
-            </div>
 
-          </div>
+          <SearchControls
+            searchQuery={searchQuery}
+            handleSearchChange={handleSearchChange}
+            clearSearch={clearSearch}
+            openFiltersModal={handleOpenFiltersModal}
+            getActiveFiltersCount={getActiveFiltersCount}
+          />
 
           {canCreateMatch(currentUser.userTypeId) && (
             <button
@@ -598,7 +230,7 @@ const MatchList: React.FC = () => {
               <span className="btn-text">Criar Nova Partida</span>
             </button>
           )}
-          
+
           {getActiveFiltersCount() > 0 && (
             <div className="active-filters-summary">
               <p>Filtros ativos:</p>
@@ -617,7 +249,7 @@ const MatchList: React.FC = () => {
                         }).join(', ')}
                       </div>
                     )}
-                
+
                 {priceFilter.length > 0 && (
                   <div className="filter-chip">
                     <span className="chip-label">Valor da quadra:</span> {priceFilter.map(p => {
@@ -629,7 +261,7 @@ const MatchList: React.FC = () => {
                     }).join(', ')}
                   </div>
                 )}
-                
+
                 {dateFilter.length > 0 && (
                   <div className="filter-chip">
                     <span className="chip-label">Data:</span> {dateFilter.map(d => {
@@ -643,12 +275,8 @@ const MatchList: React.FC = () => {
                     }).join(', ')}
                   </div>
                 )}
-                
-                <button className="clear-all-filters" onClick={() => {
-                  setStatusFilter([]);
-                  setPriceFilter([]);
-                  setDateFilter([]);
-                }}>
+
+                <button className="clear-all-filters" onClick={clearAllFilters}>
                   Limpar todos
                 </button>
               </div>
@@ -657,8 +285,19 @@ const MatchList: React.FC = () => {
         </div>
 
         {renderMatchList()}
-        
-        <AdvancedFiltersModal />
+
+        <AdvancedFiltersModal
+          show={showAdvancedFilters}
+          tempStatusFilter={tempStatusFilter}
+          tempPriceFilter={tempPriceFilter}
+          tempDateFilter={tempDateFilter}
+          setTempStatusFilter={setTempStatusFilter}
+          setTempPriceFilter={setTempPriceFilter}
+          setTempDateFilter={setTempDateFilter}
+          applyFilters={handleApplyFilters}
+          cancelFilters={handleCancelFilters}
+          clearTempFilters={handleClearTempFilters}
+        />
       </div>
     </div>
   );

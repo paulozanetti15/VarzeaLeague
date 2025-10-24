@@ -118,10 +118,6 @@ const MatchDetail: React.FC = () => {
       toast.error(error.message || 'Falha ao finalizar');
     }
   };
-  const handleCreateSumula = async () => {     
-    setShowEventsModal(true);
-  };
- 
   const getTimeInscrito = async (matchId: string) => {
     try {
       const token = localStorage.getItem('token');
@@ -236,11 +232,8 @@ const MatchDetail: React.FC = () => {
       setShowEventsModal(true);
       return;
     }
-
-    // default: no sumula and no punishment - only organizer can create
   };
 
-  
   const handleLeaveMatch = async (matchId: string | undefined, teamId: number) => {
     if (!matchId) return;
     const numericMatchId = Number(matchId);
