@@ -13,6 +13,8 @@ interface PunicaoPartidaAmistosaModal {
 interface Dados {
   time: number;
   motivo: string;
+  team_home: number;
+  team_away: number;
 }
 
 const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({ 
@@ -23,12 +25,13 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
 }) => {
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
-  const [isChanged, setIsChanged] = useState(false);
   const [teams, setTeams] = useState<any>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Dados>({
     time: 0,
-    motivo: ""
+    motivo: "",
+    team_home: 0,
+    team_away: 0
   });
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -71,9 +74,8 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
       setError("");
       setSuccess("");
 
-      // Validações
       if (!formData.time || formData.time === 0) {
-        setError("Por favor, selecione um time");
+        setError("Por favor, selecione o time punido");
         return;
       }
       
@@ -82,40 +84,66 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
         return;
       }
 
+      if (!formData.team_home || formData.team_home === 0) {
+        setError("Por favor, selecione o time da casa");
+        return;
+      }
+
+      if (!formData.team_away || formData.team_away === 0) {
+        setError("Por favor, selecione o time visitante");
+        return;
+      }
+
+      if (formData.team_home === formData.team_away) {
+        setError("O time da casa e visitante devem ser diferentes");
+        return;
+      }
+
       const response = await axios.post(`http://localhost:3001/api/matches/${idMatch}/punicao`, {
         idtime: formData.time,
-        motivo: formData.motivo
+        motivo: formData.motivo,
+        team_home: formData.team_home,
+        team_away: formData.team_away
       }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
-      console.log(response.status)
+      
       if (response.status === 201) {
-        setSuccess("Punição aplicada com sucesso!");
-        console.log("Punição lançada com sucesso");
+        setSuccess("Punição aplicada com sucesso! Súmula 3x0 criada e partida finalizada.");
         
-        // Reset form
         setFormData({
           time: 0,
-          motivo: ""
+          motivo: "",
+          team_home: 0,
+          team_away: 0
         });
         
-        // Auto close after success
+        try {
+          await axios.put(`http://localhost:3001/api/matches/${idMatch}`, { status: 'finalizada' }, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+        } catch (err) {
+          console.error('Erro ao atualizar status da partida para cancelada:', err);
+        }
+
         setTimeout(() => {
           onClose();
+          window.location.reload();
         }, 2000);
       }
     } catch (error: any) {
       console.error("Erro ao inserir punição:", error);
       
-      // Tratamento específico de erros
       if (error.response?.status === 400) {
-        setError("Dados inválidos. Verifique as informações inseridas.");
+        setError(error.response.data.message || "Dados inválidos. Verifique as informações.");
       } else if (error.response?.status === 401) {
         setError("Acesso negado. Faça login novamente.");
       } else if (error.response?.status === 409) {
-        setError("Já existe uma punição para este time nesta partida.");
+        setError(error.response.data.message || "Já existe uma punição para esta partida.");
       } else if (error.response?.data?.message) {
         setError(error.response.data.message);
       } else {
@@ -131,12 +159,14 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
     setSuccess("");
     setFormData({
       time: 0,
-      motivo: ""
+      motivo: "",
+      team_home: 0,
+      team_away: 0
     });
     onClose();
   };
 
-  const isFormValid = formData.time > 0 && formData.motivo !== "";
+  const isFormValid = formData.time > 0 && formData.motivo !== "" && formData.team_home > 0 && formData.team_away > 0 && formData.team_home !== formData.team_away;
 
   return (
     <Modal
@@ -171,17 +201,25 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
             </div>
           ) : (
             <>
-              <div className="form-group">
-                <label style={{color:"white"}}>Selecione time para punição: </label>
+              <div className="alert alert-info" style={{backgroundColor: 'rgba(33, 150, 243, 0.2)', border: '1px solid rgba(33, 150, 243, 0.4)', color: 'white', marginBottom: '1.5rem'}}>
+                <i className="fas fa-info-circle me-2"></i>
+                Ao aplicar a punição, uma súmula 3x0 será gerada automaticamente e a partida será finalizada.
+              </div>
+
+              <div className="form-group mb-3">
+                <label className="form-label" style={{color:"white", fontWeight: 600}}>
+                  <i className="fas fa-exclamation-triangle me-2"></i>
+                  Time Punido:
+                </label>
                 <select 
                   className="form-select" 
                   name="time" 
                   onChange={handleSelectChange}
                   value={formData.time} 
-                  aria-label="Selecione o time"
+                  aria-label="Selecione o time punido"
                   disabled={loading}
                 >
-                  <option value={0}>Selecione uma opção</option>
+                  <option value={0}>Selecione o time que receberá a punição</option>
                   {teams.map((team: any) => (
                     <option key={team.id} value={team.id}>
                       {team.name}
@@ -190,42 +228,91 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
                 </select>
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label style={{color:"white"}}>Selecione motivo: </label>
-                  <select 
-                    className="form-select" 
-                    name="motivo" 
-                    onChange={handleSelectChange}
-                    value={formData.motivo}
-                    aria-label="Selecione o motivo"
-                    disabled={loading}
-                  >
-                    <option value="">Selecione uma opção</option>
-                    <option value="Desistencia">Desistência</option>
-                    <option value="Atraso">Atraso</option>
-                  </select>
-                </div>
+              <div className="form-group mb-3">
+                <label className="form-label" style={{color:"white", fontWeight: 600}}>
+                  <i className="fas fa-home me-2"></i>
+                  Time da Casa:
+                </label>
+                <select 
+                  className="form-select" 
+                  name="team_home" 
+                  onChange={handleSelectChange}
+                  value={formData.team_home} 
+                  aria-label="Selecione o time da casa"
+                  disabled={loading}
+                >
+                  <option value={0}>Selecione o time mandante</option>
+                  {teams.map((team: any) => (
+                    <option key={team.id} value={team.id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group mb-3">
+                <label className="form-label" style={{color:"white", fontWeight: 600}}>
+                  <i className="fas fa-plane-departure me-2"></i>
+                  Time Visitante:
+                </label>
+                <select 
+                  className="form-select" 
+                  name="team_away" 
+                  onChange={handleSelectChange}
+                  value={formData.team_away} 
+                  aria-label="Selecione o time visitante"
+                  disabled={loading}
+                >
+                  <option value={0}>Selecione o time visitante</option>
+                  {teams.map((team: any) => (
+                    <option key={team.id} value={team.id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group mb-4">
+                <label className="form-label" style={{color:"white", fontWeight: 600}}>
+                  <i className="fas fa-clipboard-list me-2"></i>
+                  Motivo da Punição:
+                </label>
+                <select 
+                  className="form-select" 
+                  name="motivo" 
+                  onChange={handleSelectChange}
+                  value={formData.motivo}
+                  aria-label="Selecione o motivo"
+                  disabled={loading}
+                >
+                  <option value="">Selecione o motivo</option>
+                  <option value="Desistencia">Desistência</option>
+                  <option value="Atraso">Atraso</option>
+                  <option value="Jogadores Insuficientes">Jogadores Insuficientes</option>
+                  <option value="Falta de Comparecimento">Falta de Comparecimento</option>
+                </select>
               </div>
             </>
           )}
 
-          <div className="modal-buttons">
+          <div className="modal-buttons d-flex gap-2 justify-content-end">
+            <Button 
+              variant="secondary" 
+              onClick={handleClose}
+              disabled={loading}
+            >
+              <i className="fas fa-times me-2"></i>
+              Cancelar
+            </Button>
             <button
               type="button"
               className="btn btn-warning"
               onClick={() => inserirPunicao(team.id)}
               disabled={!isFormValid || loading}
             >
-              {loading ? "Aplicando..." : "Aplicar punição"}
+              <i className="fas fa-gavel me-2"></i>
+              {loading ? "Aplicando..." : "Aplicar Punição WO"}
             </button>
-            <Button 
-              variant="secondary" 
-              onClick={handleClose}
-              disabled={loading}
-            >
-              Fechar
-            </Button>
           </div>
         </div>
       </Modal.Body>

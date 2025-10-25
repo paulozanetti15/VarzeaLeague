@@ -12,18 +12,52 @@ MatchReport.init({
   match_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    field: 'match_id',
+    references: {
+      model: 'matches',
+      key: 'id'
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
   },
-  team1_score: {
+  team_home:{
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    field: 'team_home',
+    references: {
+      model: 'teams',
+      key: 'id'
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+  },
+  team_away:{
+     type: DataTypes.INTEGER,
+    allowNull: false,
+    field: 'team_away',
+    references: {
+      model: 'teams',
+      key: 'id'
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE'
+  },
+  teamHome_score: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  team2_score: {
+  teamAway_score: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
   created_by: {
     type: DataTypes.INTEGER,
     allowNull: false,
+  },
+  is_penalty: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
   },
 }, {
   sequelize,

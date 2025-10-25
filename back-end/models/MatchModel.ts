@@ -12,7 +12,7 @@ class Match extends Model {
   public location!: string;
   public number!: string;
   public complement!: string;
-  public status!: 'open' | 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  public status!: 'aberta' | 'sem_vagas' | 'em_andamento' | 'confirmada' | 'cancelada' | 'finalizada';
   public description?: string;
   public price?: number;
   public organizerId!: number;
@@ -120,10 +120,10 @@ Match.init({
     }
   },
   status: {
-    type: DataTypes.ENUM('open', 'pending', 'confirmed', 'cancelled', 'completed'),
-    defaultValue: 'open',
+    type: DataTypes.ENUM('aberta', 'sem_vagas', 'em_andamento', 'confirmada', 'cancelada', 'finalizada'),
+    defaultValue: 'aberta',
     validate: {
-      isIn: [['open', 'pending', 'confirmed', 'cancelled', 'completed']]
+      isIn: [['aberta', 'sem_vagas', 'em_andamento', 'confirmada', 'cancelada', 'finalizada']]
     }
   },
   description: {

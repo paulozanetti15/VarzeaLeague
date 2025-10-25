@@ -7,6 +7,8 @@ import UserManagement from '../pages/UserManagement';
 import MatchListing from '../pages/listings/MatchListing';
 import Layout from '../components/Layout';
 import TeamCalendar from '../pages/teams/Calendar';
+import ChampionshipList from '../pages/championships/ChampionsShipList/ChampionshipList';
+import ChampionshipForm from '../pages/championships/ChampionshipForm';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -75,6 +77,20 @@ const AppRoutes: React.FC = () => {
           <PrivateRoute requiredUserType={3}>
             <Layout>
               <TeamCalendar />
+            </Layout>
+          </PrivateRoute>
+        } />
+
+        <Route path="/championships" element={
+          <Layout>
+            <ChampionshipList />
+          </Layout>
+        } />
+
+        <Route path="/championships/create" element={
+          <PrivateRoute requiredUserType={2}>
+            <Layout>
+              <ChampionshipForm />
             </Layout>
           </PrivateRoute>
         } />

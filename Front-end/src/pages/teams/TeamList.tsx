@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,7 +17,14 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import WcIcon from '@mui/icons-material/Wc';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { HistoricoContext } from '../../context/HistoricoContext';
 import './TeamList.css';
+import { api } from '../../services/api';
+
+// PDF export
+// @ts-ignore - tipos serão resolvidos via dependência
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface Player {
   id: string;
@@ -28,7 +35,7 @@ interface Player {
 }
 
 interface Team {
-  id: string;
+  id: number;
   name: string;
   description: string;
   playerCount: number;
@@ -48,14 +55,18 @@ const TeamList = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
+  const [expandedTeam, setExpandedTeam] = useState<number | null>(null);
   const [loadingPlayers, setLoadingPlayers] = useState<{ [key: string]: boolean }>({});
   const [teamPlayers, setTeamPlayers] = useState<{ [key: string]: Player[] }>({});
+  const [playerStats, setPlayerStats] = useState<any[] | null>(null);
+  const [loadingReport, setLoadingReport] = useState(false);
   const navigate = useNavigate();
-
+  const historico = useContext(HistoricoContext);
+  
   useEffect(() => {
     fetchTeams();
   }, []);
+ 
 
   const fetchTeams = async () => {
     try {
@@ -79,10 +90,11 @@ const TeamList = () => {
       setLoading(false);
     }
   };
-
-  const fetchTeamPlayers = async (teamId: string) => {
+  
+  const fetchTeamPlayers = async (teamId: string | number) => {
     try {
-      setLoadingPlayers(prev => ({ ...prev, [teamId]: true }));
+      const key = String(teamId);
+      setLoadingPlayers(prev => ({ ...prev, [key]: true }));
       const token = localStorage.getItem('token');
       if (!token) {
         navigate('/login');
@@ -95,38 +107,106 @@ const TeamList = () => {
         },
       });
 
-      setTeamPlayers(prev => ({ ...prev, [teamId]: response.data }));
+      setTeamPlayers(prev => ({ ...prev, [key]: response.data }));
     } catch (err) {
       console.error(`Erro ao buscar jogadores do time ${teamId}:`, err);
     } finally {
-      setLoadingPlayers(prev => ({ ...prev, [teamId]: false }));
+      const key = String(teamId);
+      setLoadingPlayers(prev => ({ ...prev, [key]: false }));
     }
   };
 
-  const togglePlayersList = (e: React.MouseEvent, teamId: string) => {
+  const togglePlayersList = (e: React.MouseEvent, teamId: number) => {
     e.stopPropagation();
     
     // Se estamos expandindo o time e ainda não buscamos os jogadores, busque-os
-    if (expandedTeam !== teamId && !teamPlayers[teamId]) {
-      fetchTeamPlayers(teamId);
+    const key = String(teamId);
+    if (expandedTeam !== teamId && !teamPlayers[key]) {
+      fetchTeamPlayers(key);
     }
-    
-    setExpandedTeam(expandedTeam === teamId ? null : teamId);
-  };
 
+    setExpandedTeam(expandedTeam === teamId ? null : Number(teamId));
+  };
+   useEffect(()=>{
+    teams.slice(0, 1).map((team)=>{
+      historico?.fetchHistorico(Number(team.id))
+    }) 
+  },[teams])
   const hasTeam = teams.length > 0;
 
-  // Mock de estatísticas (poderia futuramente vir da API)
-  const buildMockStats = (team: Team) => {
-    // Usa alguns campos existentes como base para gerar números coerentes
-    const matches = team.matchCount || Math.floor(Math.random() * 12) + 1;
-    const championships = Math.floor(matches / 4);
-    const wins = Math.max(0, Math.floor(matches * 0.5 + (Math.random() * 0.3 - 0.15) * matches));
-    const losses = Math.max(0, matches - wins - Math.floor(matches * 0.1)); // assume uns empates implícitos
-    const winRate = matches > 0 ? ((wins / matches) * 100).toFixed(1) : '0.0';
-    return { matches, championships, wins, losses, winRate };
+  const handleGenerateReport = async () => {
+    try {
+      if (!hasTeam) return;
+      setLoadingReport(true);
+      const teamId = teams[0].id;
+      const data = await api.teams.getPlayerStats(teamId);
+      setPlayerStats(data?.stats || []);
+      alert('Relatório da súmula gerado com sucesso!');
+    } catch (e) {
+      console.error('Erro ao gerar relatório de jogadores:', e);
+    } finally {
+      setLoadingReport(false);
+    }
   };
 
+  const handleDownloadPDF = () => {
+    if (!playerStats || !hasTeam) return;
+    const teamName = teams[0].name;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const margin = 40;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text(`Relatório de Jogadores - ${teamName}`, margin, 50);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    const dateStr = new Date().toLocaleString();
+    doc.text(`Gerado em: ${dateStr}`, margin, 70);
+    // Linha divisória sutil
+    doc.setDrawColor(200);
+    doc.line(margin, 78, 555, 78);
+
+    const headers = [['Jogador', 'Posição', 'Sexo', 'Gols', 'Amarelos', 'Vermelhos', 'Cartões']];
+    const body = playerStats.map((p: any) => [
+      p.nome || '-', p.posicao || '-', p.sexo || '-', String(p.gols || 0), String(p.amarelos || 0), String(p.vermelhos || 0), String(p.cartoes || 0)
+    ]);
+
+    autoTable(doc, {
+      head: headers,
+      body,
+      startY: 90,
+      theme: 'striped',
+      styles: { fontSize: 10, cellPadding: 6, halign: 'center' },
+      headStyles: { fillColor: [25, 118, 210], textColor: 255, halign: 'center' },
+      columnStyles: {
+        0: { cellWidth: 180 },
+        1: { halign: 'center' },
+        2: { halign: 'center' },
+        3: { halign: 'center' },
+        4: { halign: 'center' },
+        5: { halign: 'center' },
+        6: { halign: 'center' },
+      }
+    });
+    const filename = `relatorio-jogadores-${teamName.replace(/\s+/g, '-').toLowerCase()}.pdf`;
+    try {
+      doc.save(filename);
+    } catch (err) {
+      // Fallback manual
+      try {
+        const blob = doc.output('blob');
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        console.error('Falha ao iniciar download do PDF:', e);
+      }
+    }
+  };
   return (
     <div className="teams-container">
 
@@ -199,34 +279,109 @@ const TeamList = () => {
                       <GroupIcon sx={{ fontSize: 40, color: '#fff' }} />
                     )}
                   </div>
-                  <div className="team-info">
+                    <div className="team-info">
                     <h2 className="team-name">{team.name}</h2>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.2rem', marginBottom: '0.7rem' }}>
-                      <span style={{ color: '#fff', fontWeight: 500, fontSize: '1.05rem', opacity: 0.85 }}>
-                        {team.estado && <>{team.estado}{team.cidade ? ' - ' : ''}</>}{team.cidade}
-                      </span>
+                    
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: '1rem', 
+                      marginBottom: '1.2rem',
+                      flexWrap: 'wrap'
+                    }}>
+                      {(team.estado || team.cidade) && (
+                        <span style={{ 
+                          color: 'rgba(255, 255, 255, 0.9)', 
+                          fontWeight: 500, 
+                          fontSize: '0.95rem',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          padding: '0.4rem 1rem',
+                          borderRadius: '20px',
+                          backdropFilter: 'blur(10px)'
+                        }}>
+                          {team.estado && <>{team.estado}{team.cidade ? ' - ' : ''}</>}{team.cidade}
+                        </span>
+                      )}
                       {(team.primaryColor || team.secondaryColor) && (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          {team.primaryColor && <span title="Cor Primária" style={{ width: 22, height: 22, borderRadius: '50%', background: team.primaryColor, border: '2px solid #fff', display: 'inline-block', boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }}></span>}
-                          {team.secondaryColor && <span title="Cor Secundária" style={{ width: 22, height: 22, borderRadius: '50%', background: team.secondaryColor, border: '2px solid #fff', display: 'inline-block', boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }}></span>}
+                        <span style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '0.6rem',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          padding: '0.4rem 1rem',
+                          borderRadius: '20px',
+                          backdropFilter: 'blur(10px)'
+                        }}>
+                          {team.primaryColor && (
+                            <span 
+                              title="Cor Primária" 
+                              style={{ 
+                                width: 24, 
+                                height: 24, 
+                                borderRadius: '50%', 
+                                background: team.primaryColor, 
+                                border: '2px solid rgba(255, 255, 255, 0.9)', 
+                                display: 'inline-block', 
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.2)' 
+                              }}
+                            />
+                          )}
+                          {team.secondaryColor && (
+                            <span 
+                              title="Cor Secundária" 
+                              style={{ 
+                                width: 24, 
+                                height: 24, 
+                                borderRadius: '50%', 
+                                background: team.secondaryColor, 
+                                border: '2px solid rgba(255, 255, 255, 0.9)', 
+                                display: 'inline-block', 
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.2)' 
+                              }}
+                            />
+                          )}
                         </span>
                       )}
                     </div>
-                    <p className="team-description">
+                    
+                    <p className="team-description" style={{ 
+                      maxWidth: '600px', 
+                      margin: '0 auto 1.5rem',
+                      fontSize: '1rem',
+                      lineHeight: '1.6'
+                    }}>
                       {team.description || "Sem descrição disponível"}
                     </p>
-                    <div className="team-stats">
-                      <div className="stat">
-                        <GroupIcon sx={{ fontSize: 20, color: '#2196F3' }} />
-                        <span>{team.players?.length || 0} Jogadores</span>
-                      </div>
-                      <div className="stat">
-                        <EmojiEventsIcon sx={{ fontSize: 20, color: '#FFD700' }} />
-                        <span>{team.matchCount || 0} Partidas</span>
-                      </div>
-                    </div>
                     
-                    {/* Botão para expandir/recolher lista de jogadores */}
+                    <div className="team-stats" style={{ 
+                      display: 'flex', 
+                      gap: '1rem', 
+                      justifyContent: 'center',
+                      flexWrap: 'wrap',
+                      marginBottom: '1.5rem'
+                    }}>
+                      <div className="stat" style={{
+                        background: 'rgba(33, 150, 243, 0.15)',
+                        border: '1px solid rgba(33, 150, 243, 0.3)',
+                        padding: '0.8rem 1.5rem',
+                        borderRadius: '25px',
+                        backdropFilter: 'blur(10px)'
+                      }}>
+                        <GroupIcon sx={{ fontSize: 22, color: '#64b5f6' }} />
+                        <span style={{ fontWeight: 600 }}>{team.players?.length || 0} Jogadores</span>
+                      </div>
+                      <div className="stat" style={{
+                        background: 'rgba(255, 193, 7, 0.15)',
+                        border: '1px solid rgba(255, 193, 7, 0.3)',
+                        padding: '0.8rem 1.5rem',
+                        borderRadius: '25px',
+                        backdropFilter: 'blur(10px)'
+                      }}>
+                        <EmojiEventsIcon sx={{ fontSize: 22, color: '#FFD54F' }} />
+                        <span style={{ fontWeight: 600 }}>{team.matchCount || 0} Partidas</span>
+                      </div>
+                    </div>                    {/* Botão para expandir/recolher lista de jogadores */}
                     <button 
                       className="players-toggle-btn" 
                       onClick={(e) => togglePlayersList(e, team.id)}
@@ -282,14 +437,14 @@ const TeamList = () => {
                                 >
                                   <div className="player-name-position">
                                     <div className="player-name-container">
-                                      <PersonIcon style={{ fontSize: '1.2rem', marginRight: '6px', color: team.primaryColor || '#2196F3', flexShrink: 0 }} />
+                                      <PersonIcon style={{ fontSize: '1.2rem', marginRight: '6px', color: '#ffffff', flexShrink: 0 }} />
                                       <span className="player-name" title={player.nome}>{player.nome}</span>
                                     </div>
                                     <span 
                                       className="player-position"
                                       style={{
-                                        backgroundColor: `${team.primaryColor || '#2196F3'}20`,
-                                        color: team.primaryColor || '#64b5f6',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                                        color: '#ffffff',
                                         flexShrink: 0
                                       }}
                                     >
@@ -319,54 +474,119 @@ const TeamList = () => {
                       )}
                     </AnimatePresence>
 
-                    {/* Estatísticas do time */}
-                    {(() => {
-                      const stats = buildMockStats(team);
-                      return (
-                        <div className="team-stats-wrapper">
-                          <h3 className="team-section-title" style={{ marginTop: '1.4rem' }}>
-                            <BarChartIcon style={{ marginRight: 8, color: team.primaryColor || '#29b6f6' }} />
-                            Estatísticas do Time (mock)
-                          </h3>
-                          <div className="team-stats-grid">
-                            <div className="team-stat-card" title="Partidas disputadas">
-                              <SportsIcon className="stat-icon" />
-                              <div className="stat-value">{stats.matches}</div>
-                              <div className="stat-label">Partidas</div>
-                            </div>
-                            <div className="team-stat-card" title="Campeonatos inscritos">
-                              <MilitaryTechIcon className="stat-icon" />
-                              <div className="stat-value">{stats.championships}</div>
-                              <div className="stat-label">Campeonatos</div>
-                            </div>
-                            <div className="team-stat-card" title="Vitórias">
-                              <TrendingUpIcon className="stat-icon" />
-                              <div className="stat-value" style={{ color: '#4caf50' }}>{stats.wins}</div>
-                              <div className="stat-label">Vitórias</div>
-                            </div>
-                            <div className="team-stat-card" title="Derrotas">
-                              <WhatshotIcon className="stat-icon" />
-                              <div className="stat-value" style={{ color: '#ef5350' }}>{stats.losses}</div>
-                              <div className="stat-label">Derrotas</div>
-                            </div>
-                            <div className="team-stat-card wide" title="% de aproveitamento (vitórias/partidas)">
-                              <TrendingUpIcon className="stat-icon" />
-                              <div className="stat-value">{stats.winRate}%</div>
-                              <div className="stat-label">Aproveitamento</div>
-                            </div>
-                          </div>
+                    <div className="team-stats-wrapper">
+                      <h3 className="team-section-title" style={{ marginTop: '1.4rem' }}>
+                        <BarChartIcon style={{ marginRight: 8, color: team.primaryColor || '#29b6f6' }} />
+                        Estatísticas do Time 
+                      </h3>
+                      <div className="team-stats-grid"onClick={()=>window.location.href="/historico"}>
+                        <div className="team-stat-card" title="Partidas disputadas">
+                          <SportsIcon className="stat-icon" />
+                          <div className="stat-value">{historico?.amistosos}</div>
+                          <div className="stat-label">Amistosos participados</div>
                         </div>
-                      );
-                    })()}
-                    
+                        <div className="team-stat-card" onClick={()=>window.location.href="/historico"} title="Campeonatos inscritos">
+                          <MilitaryTechIcon className="stat-icon" />
+                          <div className="stat-value">{historico?.campeonatos}</div>
+                          <div className="stat-label">Campeonatos Participados</div>
+                        </div>
+                        <div className="team-stat-card" title="Vitórias" onClick={()=>window.location.href="/historico"}>
+                          <TrendingUpIcon className="stat-icon" />
+                          <div className="stat-value" style={{ color: '#4caf50' }}>{historico?.vitoriasGeral}</div>
+                          <div className="stat-label">Vitórias</div>
+                        </div>
+                        <div className="team-stat-card" onClick={()=>window.location.href="/historico"} title="Derrotas">
+                          <WhatshotIcon className="stat-icon" />
+                          <div className="stat-value" style={{ color: '#ef5350' }}>{historico?.derrotasGeral}</div>
+                          <div className="stat-label">Derrotas</div>
+                        </div>
+                        <div className="team-stat-card" onClick={()=>window.location.href="/historico"} title="Derrotas">
+                          <WhatshotIcon className="stat-icon" />
+                          <div className="stat-value" style={{ color: '#f0eaea65' }}>{historico?.empatesGeral}</div>
+                          <div className="stat-label">Empates</div>
+                        </div>
+                        <div className="team-stat-card wide" onClick={()=>window.location.href="/historico"} title="% de aproveitamento (vitórias/partidas)">
+                          <TrendingUpIcon className="stat-icon" />
+                          <div className="stat-value">{historico?.aproveitamentoCampeonatos}%</div>
+                          <div className="stat-label">Aproveitamento em Campeonatos</div>
+                        </div>
+                        <div className="team-stat-card wide" onClick={()=>window.location.href="/historico"} title="% de aproveitamento (vitórias/partidas)">
+                          <TrendingUpIcon className="stat-icon" />
+                          <div className="stat-value">{historico?.aproveitamentoAmistosos}%</div>
+                          <div className="stat-label">Desempenho em amistosos</div>
+                        </div>
+                      </div>
+                    </div>
+    
+                    {playerStats && (
+                      <div className="team-stats-wrapper" style={{ marginTop: '1.4rem' }}>
+                        <h3 className="team-section-title" style={{ borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
+                          <BarChartIcon style={{ marginRight: 8, color: team.primaryColor || '#29b6f6' }} />
+                          Estatísticas por Jogador
+                        </h3>
+                        {playerStats.length === 0 ? (
+                          <div className="team-no-players">
+                            <p>Nenhuma estatística encontrada para os jogadores deste time.</p>
+                          </div>
+                        ) : (
+                          <div style={{ overflowX: 'auto' }}>
+                            <table className="team-stats-table">
+                              <thead>
+                                <tr>
+                                  <th style={{ textAlign: 'left' }}>Jogador</th>
+                                  <th>Posição</th>
+                                  <th>Sexo</th>
+                                  <th>Gols</th>
+                                  <th>Amarelos</th>
+                                  <th>Vermelhos</th>
+                                  <th>Cartões</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {playerStats.map((p: any, idx: number) => (
+                                  <tr key={`${p.playerId}-${idx}`}>
+                                    <td style={{ textAlign: 'left' }}>{p.nome}</td>
+                                    <td>{p.posicao || '-'}</td>
+                                    <td>{p.sexo || '-'}</td>
+                                    <td>{p.gols}</td>
+                                    <td>{p.amarelos}</td>
+                                    <td>{p.vermelhos}</td>
+                                    <td>{p.cartoes}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                    <button
-                      className="edit-team-btn"
-                      onClick={() => navigate(`/teams/edit/${team.id}`)}
-                    >
-                      <EditIcon sx={{ mr: 1 }} />
-                      Editar meu time
-                    </button>
+                    <div className="team-bottom-actions">
+                      <button
+                        className="edit-team-btn"
+                        onClick={() => navigate(`/teams/edit/${team.id}`)}
+                      >
+                        <EditIcon sx={{ mr: 1 }} />
+                        Editar meu time
+                      </button>
+                      <button
+                        className="edit-team-btn"
+                        onClick={handleGenerateReport}
+                        disabled={loadingReport}
+                      >
+                        <BarChartIcon sx={{ mr: 1 }} />
+                        {loadingReport ? 'Gerando…' : 'Gerar relatório de jogadores'}
+                      </button>
+                      {playerStats && playerStats.length > 0 && (
+                        <button
+                          className="edit-team-btn"
+                          onClick={handleDownloadPDF}
+                        >
+                          <TrendingUpIcon sx={{ mr: 1 }} />
+                          Baixar PDF
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

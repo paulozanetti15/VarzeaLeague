@@ -146,9 +146,8 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userType = Number(user.userTypeId);
     
-    // Verifica se o usuário tem permissão (userType 1 ou 2)
     if (userType !== 1 && userType !== 2) {
-      setToastMessage('Você não tem permissão para alterar partidas.');
+      setToastMessage('Você não tem permissão para editar partidas.');
       setToastBg('error');
       setShowToast(true);
       setTimeout(() => {
@@ -161,28 +160,7 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
       const titleWidth = titleInputRef.current.offsetWidth;
       btnContainerRef.current.style.width = `${titleWidth}px`;
     }
-  }, [navigate]);
-  
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    
-    const userType = Number(user.userTypeId);
-
-    if (userType !== 1 && userType !== 2) {
-      setToastMessage('Voce não tem permissão para alterar partidas.');
-      setToastBg('error');
-      setShowToast(true);
-      setTimeout(() => {
-        navigate('/matches');
-      }, 5000);
-      return;
-    }
-
-    if (titleInputRef.current && btnContainerRef.current) {
-      const titleWidth = titleInputRef.current.offsetWidth;
-      btnContainerRef.current.style.width = `${titleWidth}px`;
-    }
-  }, [navigate]);
+  }, []);
 
   
   const onLoadData= async () =>{
@@ -193,36 +171,35 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
-      setDadosPartida(response.data);
-      setFormData({
-        title: dadosPartida.title || '',
-        description: dadosPartida.description || '',
-        date: dadosPartida.date ? format(new Date(dadosPartida.date), 'dd/MM/yyyy') : '',
-        time: dadosPartida.date ? format(new Date(dadosPartida.date), 'HH:mm') : '',
-        duration: dadosPartida.duration || '',
-        price: dadosPartida.price ? String(dadosPartida.price) : '',
-        category: dadosPartida.category || '',
-        modalidade: dadosPartida.modalidade || '',
-        nomequadra: dadosPartida.nomequadra || '', // ou response.data.quadra, conforme seu backend
-      });
-      setInitialData({
-        title: dadosPartida.title || '',
-        description: dadosPartida.description || '',
-        date: dadosPartida.date ? format(new Date(dadosPartida.date), 'dd/MM/yyyy') : '',
-        time: dadosPartida.date ? format(new Date(dadosPartida.date), 'HH:mm') : '',
-        duration: dadosPartida.duration || '',
-        price: dadosPartida.price ? String(dadosPartida.price) : '',
-        category: dadosPartida.category || '',
-        modalidade: dadosPartida.modalidade || '',
-        nomequadra: dadosPartida.nomequadra || '',
-      });
+      
+      const matchData = response.data;
+      setDadosPartida(matchData);
+      
+      const formattedData = {
+        title: matchData.title || '',
+        description: matchData.description || '',
+        date: matchData.date ? format(new Date(matchData.date), 'dd/MM/yyyy') : '',
+        time: matchData.date ? format(new Date(matchData.date), 'HH:mm') : '',
+        duration: matchData.duration || '',
+        price: matchData.price ? String(matchData.price) : '',
+        category: matchData.category || '',
+        modalidade: matchData.modalidade || '',
+        nomequadra: matchData.nomequadra || '',
+      };
+      
+      setFormData(formattedData);
+      setInitialData(formattedData);
     } catch (error) {
       console.error('Erro ao carregar dadosPartida do atleta:', error);
+      setToastMessage('Erro ao carregar dados da partida');
+      setToastBg('danger');
+      setShowToast(true);
     }
   }
+  
   useEffect(() => {
     onLoadData();
-  }, [dadosPartida?.id]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -296,8 +273,8 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
         description: formData.description?.trim(),
         duration: formData.duration,
         price: formData.price ? parseFloat(formData.price) : 0.00,
-  namequadra: (formData.nomequadra ?? '').trim(),
-  modalidade: (formData.modalidade ?? '').trim(),
+        namequadra: (formData.nomequadra ?? '').trim(),
+        modalidade: (formData.modalidade ?? '').trim(),
       };
 
       const response=await axios.put(`http://localhost:3001/api/matches/${dadosPartida.id}`, matchData, {

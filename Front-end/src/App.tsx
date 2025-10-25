@@ -26,10 +26,15 @@ import ChampionshipDetail from './pages/championships/ChampionsShipDetail/Champi
 import ChampionshipEditForm from './pages/championships/ChampionshipEditForm'
 import UserManagement from './pages/UserManagement'
 import Navbar from './components/Navbar'
+import TeamRequiredRoute from './components/TeamRequiredRoute'
 import EditMatch from './pages/matches/EditMatch'
 import { Box, CssBaseline } from '@mui/material'
 import SystemOverview from './components/dashboard/SystemOverview'
-import CalendarioPage from './components/calendario/calendárioPage'
+import CalendarioPage from './pages/calendario/calendárioPage'
+import HistoricoPage from './pages/Historico/HistoricoPage'
+import { HistoricoProvider } from './context/HistoricoContext';
+import RankingPlayers from './pages/ranking/RankingPlayers'
+import RankingTeams from './pages/ranking/RankingTeams'
 
 // Componente simples para loading
   const Loading = () => (
@@ -91,9 +96,18 @@ import CalendarioPage from './components/calendario/calendárioPage'
             } />
 
             <Route path="/dashboard" element={
-              <PageTransition>
-                <SystemOverview />
-              </PageTransition>
+              <PrivateRoute isLoggedIn={isLoggedIn}>
+                <RoleBasedRoute 
+                  isLoggedIn={isLoggedIn} 
+                  userRole={user?.userTypeId} 
+                  allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
+                  redirectTo="/"
+                >
+                  <PageTransition>
+                    <SystemOverview />
+                  </PageTransition>
+                </RoleBasedRoute>
+              </PrivateRoute>
             } />
 
             <Route path="/listings" element={
@@ -270,7 +284,7 @@ import CalendarioPage from './components/calendario/calendárioPage'
               <RoleBasedRoute 
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA,USER_ROLES.ADMIN_EVENTOS,USER_ROLES.ADMIN_TIMES]}
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA,USER_ROLES.ADMIN_EVENTOS]}
                 redirectTo="/"
               >
                 <PageTransition>
@@ -326,6 +340,16 @@ import CalendarioPage from './components/calendario/calendárioPage'
               </RoleBasedRoute>
             </PrivateRoute>
           } />
+          <Route path="/historico" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute isLoggedIn={isLoggedIn} userRole={user?.userTypeId} allowedRoles={[USER_ROLES.ADMIN_TIMES]} redirectTo="/">
+                  <TeamRequiredRoute redirectTo="/teams">
+                    <PageTransition><HistoricoPage /></PageTransition>
+                  </TeamRequiredRoute>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
+
 
           <Route path="/championships/:id/edit" element={
             <PrivateRoute isLoggedIn={isLoggedIn}>
@@ -342,6 +366,34 @@ import CalendarioPage from './components/calendario/calendárioPage'
             </PrivateRoute>
           } />
 
+          <Route path="/ranking/jogadores" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
+                redirectTo="/"
+              >
+                <PageTransition>
+                  <RankingPlayers />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
+          <Route path='/championships/:id/ranking-times' element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES,USER_ROLES.USUARIO_COMUM]}
+                redirectTo="/"
+              >
+                <PageTransition>
+                  <RankingTeams />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
           {/* Rota para Gerenciamento de Usuários (Apenas Admin do Sistema) */}
           <Route path="/admin/users" element={
             <PrivateRoute isLoggedIn={isLoggedIn}>
@@ -369,12 +421,14 @@ import CalendarioPage from './components/calendario/calendárioPage'
           style: {
             background: '#363636',
             color: '#fff',
+            zIndex: 999999,
           },
           success: {
             duration: 3000,
             style: {
               background: '#28a745',
               color: '#fff',
+              zIndex: 999999,
             },
           },
           error: {
@@ -382,8 +436,12 @@ import CalendarioPage from './components/calendario/calendárioPage'
             style: {
               background: '#dc3545',
               color: '#fff',
+              zIndex: 999999,
             },
           },
+        }}
+        containerStyle={{
+          zIndex: 999999,
         }}
       />
     </Box>
@@ -393,7 +451,10 @@ import CalendarioPage from './components/calendario/calendárioPage'
 function App() {
   return (
     <BrowserRouter>
+     <HistoricoProvider>
       <AppContent />
+     </HistoricoProvider>
+      
     </BrowserRouter>
   );
 }

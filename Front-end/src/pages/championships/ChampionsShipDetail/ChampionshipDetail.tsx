@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { api } from '../../../services/api';
 import trophy from '../../../assets/championship-trophy.svg';
 import './ChampionshipDetail.css';
@@ -31,9 +32,8 @@ const ChampionshipDetail: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [teams, setTeams] = useState<any[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showTeamSelectModal, setShowTeamSelectModal] = useState(false); // reused to show the new team+players modal
+  const [showTeamSelectModal, setShowTeamSelectModal] = useState(false);
   const [userTeams, setUserTeams] = useState<any[]>([]);
-  // removed selectedTeamId / isJoining (handled inside the new modal component)
   const [isLeavingTeamId, setIsLeavingTeamId] = useState<number | null>(null);
   const [showPunicaoRegister, setShowPunicaoRegister] = useState(false);
   const [showPunicaoInfo, setShowPunicaoInfo] = useState(false);
@@ -50,73 +50,60 @@ const ChampionshipDetail: React.FC = () => {
   );
 
   const loadChampionshipTeams = useCallback(async () => {
+    if (!id) return;
     try {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const resp = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${id}/join-team`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (resp.ok) {
-          const teamsData = await resp.json();
-          setTeams(Array.isArray(teamsData) ? teamsData : []);
-        } else {
-          setTeams([]);
-        }
-      }
-    } catch (e) {
-      console.error('Erro ao buscar times do campeonato', e);
+      console.log('Carregando times do campeonato:', id);
+      const teamsData = await api.championships.getTeams(Number(id));
+      console.log('Times carregados:', teamsData);
+      setTeams(teamsData || []);
+    } catch (err) {
+      console.error('Erro ao carregar times:', err);
       setTeams([]);
     }
   }, [id]);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
+  const loadUserTeams = useCallback(async () => {
+    try {
+      const userTeamsData = await api.teams.getUserTeams();
+      setUserTeams(userTeamsData || []);
+    } catch (err) {
+      console.error('Erro ao carregar times do usuário:', err);
     }
+  }, []);
 
-    const fetchChampionshipDetails = async () => {
+  useEffect(() => {
+    const fetchChampionship = async () => {
+      if (!id) return;
+      
       try {
         setLoading(true);
         const data = await api.championships.getById(Number(id));
         setChampionship(data);
-        
-        // Verificar permissões do usuário
+
+        // Verificar permissões
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const isCreator = user.id === data.created_by;
-  setIsAdmin(user.userTypeId === 1);
-        // Apenas o criador pode editar/excluir
-        if (isCreator) {
-          setHasEditPermission(true);
-        } else {
-          setHasEditPermission(false);
-        }
+        const userId = Number(user.id);
+        const userType = Number(user.userTypeId);
+        
+        setHasEditPermission(data.created_by === userId || userType === 1);
+        setIsAdmin(userType === 1);
 
-        // Buscar times já inscritos neste campeonato
-        await loadChampionshipTeams();
-
-        setLoading(false);
       } catch (err: any) {
-        setError(err.message || 'Erro ao carregar detalhes do campeonato');
+        setError(err.message || 'Erro ao carregar campeonato');
+        toast.error('Erro ao carregar dados do campeonato');
+      } finally {
         setLoading(false);
       }
     };
 
-    const fetchUserTeams = async () => {
-      try {
-        const teams = await api.teams.getUserTeams();
-        setUserTeams(teams);
-      } catch (err) {
-        console.error('Erro ao carregar times do usuário:', err);
-      }
-    };
-
-    fetchChampionshipDetails();
-    fetchUserTeams();
-  }, [id, navigate, loadChampionshipTeams]);
+    fetchChampionship();
+    loadChampionshipTeams();
+    loadUserTeams();
+  }, [id, loadChampionshipTeams, loadUserTeams]);
 
   const handleDeleteChampionship = async () => {
+    if (!id) return;
+    
     try {
       await api.championships.delete(Number(id));
       toast.success('Campeonato excluído com sucesso!');
@@ -126,226 +113,288 @@ const ChampionshipDetail: React.FC = () => {
     }
   };
 
-  // Punicao: decide abrir registro ou info
-  const handleOpenPunicao = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token || !id) return;
-      const resp = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${id}/punicao`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const has = Array.isArray(resp.data) && resp.data.length > 0;
-      if (has) setShowPunicaoInfo(true); else setShowPunicaoRegister(true);
-    } catch {
-      setShowPunicaoRegister(true);
-    }
+  const handleOpenPunicao = () => {
+    setShowPunicaoRegister(true);
   };
 
-  // Removed join as individual flow (not used here)
+  const handleOpenRankingClassificacao = () => {
+    navigate(`/championships/${id}/ranking-times`);
+  };
 
-  // Joining now handled inside SelectTeamPlayersChampionshipModal
+  const handleJoinChampionship = () => {
+    if (availableUserTeams.length === 0) {
+      toast.error('Você não possui times disponíveis para este campeonato');
+      return;
+    }
+    setShowTeamSelectModal(true);
+  };
 
-  const handleLeaveWithTeam = async (teamId: number) => {
+  const handleLeaveChampionship = async (teamId: number) => {
     try {
       setIsLeavingTeamId(teamId);
-      await api.championships.leaveWithTeam(Number(id), teamId);
-      toast.success('Seu time saiu do campeonato.');
-      await (async () => loadChampionshipTeams())();
-      setIsLeavingTeamId(null);
+      await api.championships.leaveChampionship(Number(id), teamId);
+      toast.success('Time removido do campeonato com sucesso!');
+      await loadChampionshipTeams();
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao sair do campeonato com o time');
+      toast.error(err.message || 'Erro ao remover time do campeonato');
+    } finally {
       setIsLeavingTeamId(null);
     }
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Não definida';
-    return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
   if (loading) {
     return (
-      <div className="championship-detail-container">
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Carregando detalhes do campeonato...</p>
+      <div className="championship-detail-bg">
+        <div className="championship-detail-container">
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Carregando campeonato...</p>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !championship) {
     return (
-      <div className="championship-detail-container">
-        <div className="error-container">
-          <h2>Erro ao carregar dados</h2>
-          <p>{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!championship) {
-    return (
-      <div className="championship-detail-container">
-        <div className="error-container">
-          <h2>Campeonato não encontrado</h2>
-          
+      <div className="championship-detail-bg">
+        <div className="championship-detail-container">
+          <div className="error-container">
+            <h2>Erro ao carregar campeonato</h2>
+            <p>{error || 'Campeonato não encontrado'}</p>
+            <button 
+              className="back-button"
+              onClick={() => navigate('/championships')}
+            >
+              Voltar para Campeonatos
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="championship-detail-container">
+    <div className="championship-detail-bg">
+      <div className="championship-detail-container">
+        <motion.div
+          className="championship-detail-header"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <img src={trophy} alt="Troféu" className="championship-detail-trophy" />
+          <h1 className="championship-detail-title">{championship.name}</h1>
+          <p className="championship-detail-subtitle">Detalhes do campeonato</p>
+        </motion.div>
 
-      <div className="detail-content">
-        <div className="championship-header">
-          <img 
-            src={trophy} 
-            alt="Troféu" 
-            className="championship-trophy-detail" 
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} 
-          />
-          <h1>{championship.name}</h1>
-        </div>
-
-        <div className="championship-info">
-          <div className="info-row">
-            <span className="info-label">Descrição:</span>
-            <span className="info-value">{championship.description || 'Sem descrição'}</span>
-          </div>
-          <div className="info-row">
-            <span className="info-label">Modalidade:</span>
-            <span className="info-value">{championship.modalidade || 'Não especificada'}</span>
-          </div>
-          <div className="info-row">
-            <span className="info-label">Quadra:</span>
-            <span className="info-value">{championship.nomequadra || 'Não especificada'}</span>
-          </div>
-          <div className="info-row">
-            <span className="info-label">Início:</span>
-            <span className="info-value">{formatDate(championship.start_date)}</span>
-          </div>          <div className="info-row">
-            <span className="info-label">Término:</span>
-            <span className="info-value">{formatDate(championship.end_date)}</span>
-          </div>
-        </div>
-
-        <div className="championship-actions">
-          {hasEditPermission ? (
-            <>
-              <button
-                className="edit-button"
-                onClick={() => navigate(`/championships/${id}/edit`)}
-              >
-                Editar Campeonato
-              </button>
-              <button
-                className="delete-button"
-                onClick={() => setShowDeleteModal(true)}
-              >
-                Excluir Campeonato
-              </button>
-              <button
-                className="btn btn-warning"
-                onClick={handleOpenPunicao}
-                style={{ marginLeft: 8 }}
-              >
-                Aplicar/Ver Punição
-              </button>
-            </>
-          ) : (
-            <>
-              {!hasUserTeamInChampionship ? (
-                <button
-                  className="join-team-button"
-                  onClick={() => { setShowTeamSelectModal(true); }}
-                  disabled={availableUserTeams.length === 0}
-                >
-                  Inscrever Time
-                </button>
-              ) : (
-                <div style={{ fontSize: 14, color: '#ffffff' }}>
-                  Você já possui um time inscrito neste campeonato.
+        <motion.div
+          className="championship-detail-content"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <div className="championship-info-section">
+            <h3 className="section-title">Informações do Campeonato</h3>
+            
+            <div className="info-grid">
+              {championship.description && (
+                <div className="info-item">
+                  <span className="info-label">Descrição:</span>
+                  <span className="info-value">{championship.description}</span>
                 </div>
               )}
-              {/* Mesmo não sendo criador, admin pode aplicar/visualizar punição */}
-              {isAdmin && (
-                <button
-                  className="btn btn-warning"
-                  onClick={handleOpenPunicao}
-                  style={{ marginLeft: 8 }}
-                >
-                  Aplicar/Ver Punição
-                </button>
+              
+              {championship.modalidade && (
+                <div className="info-item">
+                  <span className="info-label">Modalidade:</span>
+                  <span className="info-value">{championship.modalidade}</span>
+                </div>
               )}
-            </>
-          )}
-        </div>
+              
+              {championship.nomequadra && (
+                <div className="info-item">
+                  <span className="info-label">Quadra:</span>
+                  <span className="info-value">{championship.nomequadra}</span>
+                </div>
+              )}
+              
+              {championship.start_date && (
+                <div className="info-item">
+                  <span className="info-label">Data de Início:</span>
+                  <span className="info-value">
+                    {new Date(championship.start_date).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+              )}
+              
+              {championship.end_date && (
+                <div className="info-item">
+                  <span className="info-label">Data de Fim:</span>
+                  <span className="info-value">
+                    {new Date(championship.end_date).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
 
-        <div className="championship-teams-section">
-          <h3>Times Participantes</h3>
-          {teams && teams.length > 0 ? (
-            <div className="teams-list">
-              {teams.map((team) => {
-                const isUserTeam = userTeams?.some((ut) => ut.id === team.id);
-                return (
-                  <div key={team.id} className="team-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                    <span>{team.name}</span>
-                    {isUserTeam && (
+          <div className="championship-actions-section">
+            <h3 className="section-title">Ações</h3>
+            
+            <div className="actions-grid">
+              {hasEditPermission ? (
+                <>
+                  <button
+                    className="action-btn edit-btn"
+                    onClick={() => navigate(`/championships/${id}/edit`)}
+                  >
+                    <span className="btn-icon">✏️</span>
+                    Editar Campeonato
+                  </button>
+                  
+                  <button
+                    className="action-btn delete-btn"
+                    onClick={() => setShowDeleteModal(true)}
+                  >
+                    <span className="btn-icon">🗑️</span>
+                    Excluir Campeonato
+                  </button>
+                  
+                  <button
+                    className="action-btn warning-btn"
+                    onClick={handleOpenPunicao}
+                  >
+                    <span className="btn-icon">⚠️</span>
+                    Aplicar/Ver Punição
+                  </button>
+                  
+                  <button
+                    className="action-btn ranking-btn"
+                    onClick={handleOpenRankingClassificacao}
+                  >
+                    <span className="btn-icon">🏆</span>
+                    Ranking de Classificação
+                  </button>
+                </>
+              ) : (
+                <>
+                  {availableUserTeams.length > 0 && (
+                    <button
+                      className="action-btn join-btn"
+                      onClick={handleJoinChampionship}
+                    >
+                      <span className="btn-icon">➕</span>
+                      Inscrever Time
+                    </button>
+                  )}
+                  
+                  {hasUserTeamInChampionship && (
+                    <button
+                      className="action-btn ranking-btn"
+                      onClick={handleOpenRankingClassificacao}
+                    >
+                      <span className="btn-icon">🏆</span>
+                      Ver Ranking
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="teams-section">
+            <h3 className="section-title">Times Participantes</h3>
+            
+            {teams.length === 0 ? (
+              <div className="no-teams-message">
+                <p>Nenhum time inscrito neste campeonato ainda.</p>
+              </div>
+            ) : (
+              <div className="teams-grid">
+                {teams.map((team) => (
+                  <div key={team.id} className="team-card">
+                    <div className="team-logo">
+                      {team.banner ? (
+                        <img 
+                          src={`http://localhost:3001/uploads/teams/${team.banner}`} 
+                          alt={`Logo do ${team.name}`}
+                          className="team-logo-img"
+                        />
+                      ) : (
+                        <div className="team-logo-placeholder">
+                          <span className="logo-text">FC</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="team-info">
+                      <h4 className="team-name">{team.name}</h4>
+                      
+                      {team.description && (
+                        <p className="team-description">{team.description}</p>
+                      )}
+                      
+                      {team.estado && team.cidade && (
+                        <div className="team-location">
+                          <span className="location-icon">📍</span>
+                          <span className="location-text">{team.cidade}, {team.estado}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {hasEditPermission && (
                       <button
-                        className="btn btn-danger btn-sm"
-                        onClick={() => handleLeaveWithTeam(team.id)}
+                        className="remove-team-btn"
+                        onClick={() => handleLeaveChampionship(team.id)}
                         disabled={isLeavingTeamId === team.id}
                       >
-                        {isLeavingTeamId === team.id ? 'Saindo...' : 'Sair do campeonato'}
+                        {isLeavingTeamId === team.id ? 'Removendo...' : 'Remover'}
                       </button>
                     )}
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p>Nenhum time inscrito neste campeonato ainda.</p>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Modal de Confirmação de Exclusão */}
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirmar Exclusão</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            Tem certeza que deseja excluir o campeonato "{championship.name}"? 
+            Esta ação não pode ser desfeita.
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={handleDeleteChampionship}>
+              Excluir
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </div>
 
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirmar Exclusão</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Tem certeza que deseja excluir o campeonato "{championship.name}"? Esta ação não pode ser desfeita.
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancelar
-          </Button>
-          <Button variant="danger" onClick={handleDeleteChampionship}>
-            Excluir
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
+      {/* Modal de Seleção de Time */}
       <SelectTeamPlayersChampionshipModal
         show={showTeamSelectModal}
         onHide={() => setShowTeamSelectModal(false)}
         championshipId={Number(id)}
         modalidade={championship.modalidade}
         onSuccess={async () => {
-          // Reload teams list after successful inscription
-            await loadChampionshipTeams();
-            // refresh championship data (in case something changed)
-            try {
-              const updated = await api.championships.getById(Number(id));
-              setChampionship(updated);
-            } catch {}
+          await loadChampionshipTeams();
+          try {
+            const updated = await api.championships.getById(Number(id));
+            setChampionship(updated);
+          } catch {}
         }}
       />
 
-      {/* Punicao Campeonato */}
+      {/* Modais de Punição */}
       {(hasEditPermission || isAdmin) && (
         <>
           <PunicaoCampeonatoRegisterModal

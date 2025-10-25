@@ -22,15 +22,22 @@ import RulesRoutes from './routes/RulesRoutes';
 import TeamPlayerRoutes from './routes/teamPlayerRoutes';
 import { seedUserTypes } from './seeds/userTypes';
 import { associateModels } from './models/associations'; 
-import PunicaoAmitosoMatch from './models/PunicaoAmitosoMatchModel';
-import PunicaoChampionship from './models/PunicaoChampionshipModel';
+import FriendlyMatchPenalty from './models/FriendlyMatchPenaltyModel';
+import ChampionshipPenalty from './models/ChampionshipPenaltyModel';
 import fs from 'fs';
-import { forEachChild } from 'typescript';
 import championshipRoutes from './routes/championshipRoutes';
-// Importando as associações
 import userTypeRoutes from './routes/userTypeRoutes';
 import overviewRoutes from './routes/overviewRoutes';
+import historicoRoutes from './routes/historicoRoutes';
+import MatchChampionship from './models/MatchChampionshipModel';
+import MatchChampionshpReport from './models/MatchReportChampionshipModel';
 dotenv.config();
+// Import status check helpers to run periodically
+import {
+  checkAndSetMatchesInProgress,
+  checkAndConfirmFullMatches,
+  checkAndStartConfirmedMatches
+} from './controllers/matchController';
 
 const app = express();
 
@@ -61,45 +68,7 @@ app.use('/api/rules', RulesRoutes);
 app.use('/api/championships', championshipRoutes);
 app.use('/api/usertypes', userTypeRoutes);
 app.use('/api/overview', overviewRoutes);
-
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'API está funcionando!' });
-});
-
-// Rota de health check aprimorada
-app.get('/api/health', (req, res) => {
-  try {
-    // Verificar se o banco de dados está conectado
-    const dbStatus = sequelize.authenticate()
-      .then(() => true)
-      .catch(() => false);
-    
-    // Responder imediatamente sem esperar a verificação do banco
-    res.status(200).json({ 
-      status: 'ok', 
-      timestamp: Date.now(),
-      features: {
-        api: true,
-        auth: true
-      },
-      server: {
-        uptime: process.uptime(),
-        memoryUsage: process.memoryUsage().heapUsed / 1024 / 1024,
-        nodeVersion: process.version
-      }
-    });
-    
-    // Log para depuração
-    console.log(`Health check realizado em ${new Date().toISOString()}`);
-  } catch (error) {
-    console.error('Erro no health check:', error);
-    res.status(500).json({ 
-      status: 'error', 
-      timestamp: Date.now(),
-      message: 'Erro interno no servidor durante health check'
-    });
-  }
-});
+app.use('/api/historico',historicoRoutes)
 
 const startServer = async () => {
   try {
@@ -114,7 +83,7 @@ const startServer = async () => {
     await UserModel.sync();
     console.log('Modelo User sincronizado.');
     
-    await TeamModel.sync({alter: true});
+    await TeamModel.sync();
   
     console.log('Modelo Team sincronizado.');
     
@@ -136,10 +105,11 @@ const startServer = async () => {
     await AttendanceModel.sync();
     console.log('Modelo Attendance sincronizado.');
      
-    await PunicaoAmitosoMatch.sync()
+    await FriendlyMatchPenalty.sync()
     console.log('Modelo Punicao Partida Amistosa sincronizado.');
-  await PunicaoChampionship.sync();
-  console.log('Modelo Punicao Championship sincronizado.');
+    await ChampionshipPenalty.sync();
+    console.log('Modelo Punicao Championship sincronizado.');
+
     // Modelos adicionados na modelagem v2
     const { default: ChampionshipModel } = await import('./models/ChampionshipModel');
     await ChampionshipModel.sync();
@@ -149,19 +119,22 @@ const startServer = async () => {
     await MatchReportModel.sync();
     console.log('Modelo MatchReport sincronizado.');
     
-    const { default: MatchGoalModel } = await import('./models/MatchGoalModel');
-    await MatchGoalModel.sync();
+  const { default: MatchGoalModel } = await import('./models/MatchGoalModel');
+  await MatchGoalModel.sync({ alter: true }); // garantir colunas novas (player_id)
     console.log('Modelo MatchGoal sincronizado.');
     
-    const { default: MatchCardModel } = await import('./models/MatchCardModel');
-    await MatchCardModel.sync();
+  const { default: MatchCardModel } = await import('./models/MatchCardModel');
+  await MatchCardModel.sync({ alter: true }); // garantir colunas novas (player_id)
     console.log('Modelo MatchCard sincronizado.');
     
     const { default: MatchEvaluationModel } = await import('./models/MatchEvaluationModel');
     await MatchEvaluationModel.sync();
     console.log('Modelo MatchEvaluation sincronizado.');
+    await MatchChampionship.sync();
+    console.log('Modelo MatchChampionship sincronizado.');
+    await MatchChampionshpReport.sync();
+    console.log('Modelo MatchChampionshpReport sincronizado.');
     
-    // Inserir os tipos de usuário
     await seedUserTypes();
 
     
@@ -182,6 +155,20 @@ const startServer = async () => {
       console.log('- POST /api/players/add-to-team');
       console.log('- GET /api/overview');
     });
+
+    // Run status checks on startup and every minute
+    const runStatusChecks = async () => {
+      try {
+        await checkAndConfirmFullMatches();
+        await checkAndSetMatchesInProgress();
+        await checkAndStartConfirmedMatches();
+      } catch (err) {
+        console.error('Erro ao executar verificações de status agendadas:', err);
+      }
+    };
+
+    runStatusChecks();
+    setInterval(runStatusChecks, 60 * 1000);
   } catch (error) {
     console.error('Erro ao iniciar o servidor:', error);
     process.exit(1);

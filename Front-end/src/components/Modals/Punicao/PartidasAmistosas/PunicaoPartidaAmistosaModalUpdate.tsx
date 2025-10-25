@@ -15,6 +15,8 @@ interface Dados {
   idtime: number;
   nomeTime: string;
   motivo: string;
+  team_home: number;
+  team_away: number;
 }
 
 const PunicaoUpdateModal: React.FC<PunicaoPartidaAmistosaModal> = ({ 
@@ -35,13 +37,17 @@ const PunicaoUpdateModal: React.FC<PunicaoPartidaAmistosaModal> = ({
   const [formData, setFormData] = useState<Dados>({
     idtime: 0,
     nomeTime: "",
-    motivo: ""
+    motivo: "",
+    team_home: 0,
+    team_away: 0
   });
   
   const [initialData, setInitialData] = useState<Dados>({
     idtime: 0,
     nomeTime: "",
-    motivo: ""
+    motivo: "",
+    team_home: 0,
+    team_away: 0
   });
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -85,10 +91,13 @@ const PunicaoUpdateModal: React.FC<PunicaoPartidaAmistosaModal> = ({
             });
             
             if (response.data && response.data.length > 0) {
+              const punicaoData = response.data[0];
               const newData = {
-                idtime: response.data[0].idtime,
-                nomeTime: response.data[0].team.name,
-                motivo: response.data[0].motivo
+                idtime: punicaoData.idtime,
+                nomeTime: punicaoData.team.name,
+                motivo: punicaoData.motivo,
+                team_home: punicaoData.team_home || 0,
+                team_away: punicaoData.team_away || 0
               };
               
               setInitialData(newData);
@@ -150,7 +159,9 @@ const PunicaoUpdateModal: React.FC<PunicaoPartidaAmistosaModal> = ({
       console.log("Dados para enviar",formData)
       await axios.put(`http://localhost:3001/api/matches/${idMatch}/punicao`, {
         idtime: formData.idtime,
-        motivo: formData.motivo
+        motivo: formData.motivo,
+        team_home: formData.team_home,
+        team_away: formData.team_away
       }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -213,7 +224,10 @@ const PunicaoUpdateModal: React.FC<PunicaoPartidaAmistosaModal> = ({
           ) : (
             <>
               <div className="form-group">
-                <label style={{color:"white"}}>Selecione time para punição: </label>
+                <label style={{color:"white"}}>
+                  <i className="fas fa-exclamation-triangle me-2"></i>
+                  Time Punido:
+                </label>
                 <select 
                   className="form-select" 
                   name="idtime" 
@@ -221,12 +235,10 @@ const PunicaoUpdateModal: React.FC<PunicaoPartidaAmistosaModal> = ({
                   value={formData.idtime} 
                   aria-label="Selecione o time"
                 >
-                  {/* Show current selection */}
                   <option value={formData.idtime}>
                     {formData.nomeTime || "Selecione um time"}
                   </option>
                   
-                  {/* Show other team options */}
                   {Array.isArray(dataTeams) && dataTeams
                     .filter((dado: any) => dado.name !== formData.nomeTime)
                     .map((dado: any) => (
@@ -236,11 +248,56 @@ const PunicaoUpdateModal: React.FC<PunicaoPartidaAmistosaModal> = ({
                     ))
                   }
                 </select>
-              </div> 
+              </div>
+
+              <div className="form-group">
+                <label style={{color:"white"}}>
+                  <i className="fas fa-home me-2"></i>
+                  Time da Casa:
+                </label>
+                <select 
+                  className="form-select" 
+                  name="team_home" 
+                  value={formData.team_home} 
+                  onChange={(e)=>handleSelectChange(e)} 
+                  aria-label="Selecione o time da casa"
+                >
+                  <option value="">Selecione o time da casa</option>
+                  {Array.isArray(dataTeams) && dataTeams.map((team: any) => (
+                    <option key={team.id} value={team.id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label style={{color:"white"}}>
+                  <i className="fas fa-plane-departure me-2"></i>
+                  Time Visitante:
+                </label>
+                <select 
+                  className="form-select" 
+                  name="team_away" 
+                  value={formData.team_away} 
+                  onChange={(e)=>handleSelectChange(e)} 
+                  aria-label="Selecione o time visitante"
+                >
+                  <option value="">Selecione o time visitante</option>
+                  {Array.isArray(dataTeams) && dataTeams.map((team: any) => (
+                    <option key={team.id} value={team.id}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               
               <div className="form-row">
                 <div className="form-group">
-                  <label style={{color:"white"}}>Selecione motivo: </label>
+                  <label style={{color:"white"}}>
+                    <i className="fas fa-clipboard-list me-2"></i>
+                    Motivo:
+                  </label>
                   <select 
                     className="form-select" 
                     name="motivo" 
@@ -250,7 +307,9 @@ const PunicaoUpdateModal: React.FC<PunicaoPartidaAmistosaModal> = ({
                   >
                     <option value="">Selecione um motivo</option>
                     <option value="Desistencia">Desistência</option> 
-                    <option value="Atraso">Atraso</option> 
+                    <option value="Atraso">Atraso</option>
+                    <option value="Jogadores Insuficientes">Jogadores Insuficientes</option>
+                    <option value="Falta de Comparecimento">Falta de Comparecimento</option>
                   </select>
                 </div>
               </div>
@@ -262,7 +321,7 @@ const PunicaoUpdateModal: React.FC<PunicaoPartidaAmistosaModal> = ({
               type="button"
               className="btn btn-warning"
               onClick={()=>UpdatePunicao(idmatch)}   
-              disabled={!permitirAlteracao || loading || !formData.motivo}
+              disabled={!permitirAlteracao || loading || !formData.motivo || !formData.team_home || !formData.team_away || formData.team_home === formData.team_away}
             >
               {loading ? "Alterando..." : "Alterar punição"}
             </button>

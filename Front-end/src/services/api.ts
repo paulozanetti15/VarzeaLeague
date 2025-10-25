@@ -571,6 +571,14 @@ export const api = {
       });
       return handleResponse(response); 
     },
+    getPlayerStats: async (teamId: number) => {
+      const token = localStorage.getItem('token');
+      if (!token) { throw new Error('Usuário não autenticado'); }
+      const response = await fetch(`${API_URL}/teams/${teamId}/player-stats`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      return handleResponse(response);
+    },
   },
   championships: {
     list: async () => {
@@ -692,6 +700,20 @@ export const api = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return handleResponse(response);
+    },
+    getTeams: async (champId: number) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await fetch(`${API_URL}/championships/${champId}/join-team`, {
+        method: 'GET',
+        headers: {
           'Authorization': `Bearer ${token}`
         }
       });
