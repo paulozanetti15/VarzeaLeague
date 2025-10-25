@@ -36,9 +36,6 @@ Player.init(
     nome: {
       type: DataTypes.STRING,
       allowNull: false,
-      set(value: string) {
-        this.setDataValue('nome', value.trim().toLowerCase());
-      },
     },
     sexo: {
       type: DataTypes.STRING,

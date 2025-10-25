@@ -7,7 +7,7 @@
 .teams-container {
   min-height: 100vh;
   padding: 2rem;
-  background: linear-gradient(135deg, #f0f2f5 0%, #e8f4fd 50%, #f0f2f5 100%);
+  background: linear-gradient(90deg, #0d47a1 0%, #1976d2 100%);
   position: relative;
   overflow: hidden;
 }
@@ -25,23 +25,22 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  color: #333;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
   padding: 0.4rem 0.8rem;
   border-radius: 20px;
-  font-weight: 500;
+  font-weight: 400;
   cursor: pointer;
   transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   font-size: 0.85rem;
   z-index: 10;
 }
 
 .back-btn:hover {
-  background: #f8f9fa;
-  border-color: #2196F3;
-  color: #2196F3;
+  background: rgba(255, 255, 255, 0.3);
   transform: translateX(-3px);
 }
 
@@ -75,40 +74,38 @@
 
 .teams-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   position: relative;
   z-index: 2;
-  padding: 0;
+  padding: 1rem;
 }
 
 .teams-title {
-  color: #333;
-  font-size: 2.8rem;
-  font-weight: 700;
+  color: #fff;
+  font-size: 3rem;
+  font-weight: bold;
   margin-bottom: 1rem;
-  text-shadow: none;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   position: relative;
   display: inline-block;
-  letter-spacing: -0.5px;
 }
 
 .teams-title::after {
   content: '';
   position: absolute;
-  width: 100px;
-  height: 5px;
+  width: 80px;
+  height: 4px;
   background: linear-gradient(90deg, #2196F3, #3f51b5);
-  bottom: -10px;
+  bottom: -8px;
   left: 50%;
   transform: translateX(-50%);
-  border-radius: 3px;
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+  border-radius: 2px;
 }
 
 .teams-subtitle {
-  color: #666;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 1.2rem;
-  text-shadow: none;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
   max-width: 600px;
   margin: 0 auto;
 }
@@ -116,7 +113,7 @@
 .teams-actions {
   display: flex;
   justify-content: center;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   position: relative;
   z-index: 2;
 }
@@ -131,14 +128,10 @@
   padding: 1rem 2rem;
   border-radius: 50px;
   font-size: 1.1rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  letter-spacing: 0.5px;
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(10px);
 }
 
 .create-team-btn:hover {
@@ -151,43 +144,46 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
-  padding: 0;
+  padding: 1rem;
   position: relative;
   z-index: 2;
-  max-width: 100%;
-  margin: 0;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .team-card {
-  background: #ffffff;
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.5s ease;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.5s ease;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 6px 6px rgba(0, 0, 0, 0.1);
   flex-direction: column;
   height: 100%;
-  border: 1px solid rgba(33, 150, 243, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
-  backdrop-filter: blur(10px);
 }
 
 .team-card:hover {
-  box-shadow: 0 16px 48px rgba(33, 150, 243, 0.2), 0 8px 24px rgba(0, 0, 0, 0.15);
-  background: #ffffff;
-  border-color: rgba(33, 150, 243, 0.3);
-  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25), 
+              0 10px 10px rgba(0, 0, 0, 0.15),
+              0 0 15px rgba(33, 150, 243, 0.2),
+              0 0 30px rgba(33, 150, 243, 0.1);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-5px);
 }
 
 .team-banner {
-  height: 140px;
+  height: 130px;
   background: linear-gradient(135deg, #2196F3, #3f51b5);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
-  padding: 1.2rem;
+  padding: 1rem;
 }
 
 .team-banner::before {
@@ -208,8 +204,8 @@
 }
 
 .team-banner-img {
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   object-fit: cover;
   border-radius: 50%;
   position: relative;
@@ -219,13 +215,10 @@
   background: #fff;
   display: block;
   margin: 0 auto;
-  transition: all 0.3s ease;
 }
 
 .team-card:hover .team-banner-img {
   transform: scale(1.05);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  border-color: rgba(255,255,255,0.8);
 }
 
 .team-info {
@@ -239,28 +232,25 @@
 }
 
 .team-name {
-  color: #333;
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
+  color: #fff;
+  font-size: 2.1rem;
+  font-weight: 600;
+  margin-bottom: 1.1rem;
   margin-top: 0.1rem;
   position: relative;
   display: inline-block;
   letter-spacing: 0.5px;
-  text-align: center;
 }
 
 .team-name::after {
   content: '';
   position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 3px;
+  bottom: -4px;
+  left: 0;
+  width: 40px;
+  height: 2px;
   background: linear-gradient(90deg, #2196F3, transparent);
   transition: all 0.3s ease;
-  border-radius: 2px;
 }
 
 .team-card:hover .team-name::after {
@@ -268,7 +258,7 @@
 }
 
 .team-description {
-  color: #666;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 0.9rem;
   line-height: 1.5;
   margin-bottom: 1rem;
@@ -286,19 +276,16 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #f8f9fa;
+  background: rgba(0, 0, 0, 0.2);
   padding: 0.5rem 1rem;
   border-radius: 20px;
-  color: #333;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 0.85rem;
   transition: all 0.3s ease;
-  border: 1px solid #e0e0e0;
 }
 
 .team-card:hover .stat {
-  background: #e3f2fd;
-  border-color: #2196F3;
-  color: #1976d2;
+  background: rgba(33, 150, 243, 0.2);
 }
 
 .loading-container {
@@ -424,24 +411,24 @@
 }
 
 .no-teams-message {
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 3rem;
   text-align: center;
-  color: #333;
+  color: #fff;
   position: relative;
   z-index: 2;
   max-width: 600px;
   margin: 0 auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .no-teams-message p {
   font-size: 1.2rem;
   margin-bottom: 1.5rem;
-  color: #666;
-  text-shadow: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .captain-badge-container {
@@ -464,16 +451,10 @@
 
 .teams-content {
   width: 100%;
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   position: relative;
   z-index: 2;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  padding: 2.5rem;
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(33, 150, 243, 0.1);
-  backdrop-filter: blur(10px);
 }
 
 .team-container {
@@ -519,28 +500,20 @@
   padding: 1rem;
 }
 
-.team-bottom-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 1rem;
-}
-
 /* Estilos para o botão de expandir/recolher jogadores */
 .players-toggle-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
-  color: #333;
-  border: 1px solid #e0e0e0;
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  border: none;
   padding: 0.7rem 1.5rem;
   border-radius: 30px;
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   margin: 1rem 0;
   width: 100%;
@@ -548,21 +521,19 @@
 }
 
 .players-toggle-btn:hover {
-  background: #f8f9fa;
-  border-color: #2196F3;
-  color: #2196F3;
+  background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
 /* Estilos para o contêiner principal de jogadores */
 .team-players-expanded {
   margin-top: 1.2rem;
-  background-color: #f8f9fa;
+  background-color: rgba(255, 255, 255, 0.08);
   border-radius: 0.8rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1), 0 4px 15px rgba(0, 0, 0, 0.1);
   animation: fadeIn 0.3s ease-in-out;
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: hidden;
   padding: 1.2rem 1rem 1.5rem 1rem;
   position: relative;
@@ -571,7 +542,7 @@
 .team-section-title {
   font-size: 1.2rem;
   font-weight: 600;
-  color: #1a202c !important;
+  color: #f5f5f5;
   margin-bottom: 1.2rem;
   display: flex;
   align-items: center;
@@ -582,41 +553,39 @@
 /* Grid de jogadores */
 .team-players-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   width: 100%;
 }
 
 /* Cartão de jogador */
 .team-player-item {
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
   border-radius: 0.5rem;
-  padding: 1.2rem 2rem;
+  padding: 0.8rem 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.2s ease;
   animation: slideIn 0.3s ease-in-out;
   position: relative;
   overflow: hidden;
   height: auto;
-  min-width: 320px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
 .team-player-item:hover {
-  background-color: #f8f9fa;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-color: #2196F3;
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* ================= Team Stats (Mock) Section ================= */
 .team-stats-wrapper {
   width: 100%;
   margin-top: 1rem;
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
+  background: rgba(255,255,255,0.085);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 14px;
   padding: 1.1rem 1.2rem 1.4rem 1.2rem;
   box-shadow: 0 4px 18px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.12);
@@ -649,8 +618,8 @@
 }
 
 .team-stat-card {
-  background: #f8f9fa;
-  border: 1px solid #e0e0e0;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
   border-radius: 12px;
   padding: 0.75rem 0.6rem 0.85rem 0.6rem;
   display: flex;
@@ -685,25 +654,24 @@
 
 .team-stat-card:hover::after { opacity: 1; }
 .team-stat-card:hover {
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  border-color: #2196F3;
-  background: #ffffff;
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.25);
 }
 
 .team-stat-card .stat-icon {
   font-size: 1.7rem;
   margin-bottom: 0.35rem;
-  color: #2196F3;
+  color: #90caf9;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
 
 .team-stat-card .stat-value {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #333;
+  color: #fff;
   letter-spacing: .5px;
-  text-shadow: none;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.35);
 }
 
 .team-stat-card .stat-label {
@@ -711,7 +679,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #666;
+  color: rgba(255,255,255,0.75);
   margin-top: 0.25rem;
 }
 
@@ -727,41 +695,38 @@
 .player-name-container {
   display: flex;
   align-items: center;
-  flex: 1;
-  max-width: 70%;
+  max-width: 65%;
 }
 
 .player-name {
-  font-weight: 700 !important;
-  color: #1a202c !important;
-  font-size: 1.1rem !important;
-  text-shadow: none !important;
+  font-weight: 600;
+  color: #fff;
+  font-size: 1rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .player-position {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #ffffff;
-  padding: 0.25rem 0.7rem;
-  border-radius: 16px;
+  background-color: rgba(33, 150, 243, 0.15);
+  color: #64b5f6;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   display: flex;
   align-items: center;
   white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
-  border: none;
 }
 
 /* Detalhes do jogador no rodapé do cartão */
 .player-details {
   display: flex;
   justify-content: space-between;
-  color: #666;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 0.85rem;
   padding-top: 0.3rem;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -771,8 +736,7 @@
 .player-year, .player-gender {
   display: flex;
   align-items: center;
-  color: #4a5568 !important;
-  font-weight: 500 !important;
+  color: #ccc;
 }
 
 /* Estado vazio e carregando */
@@ -850,7 +814,7 @@
   }
   
   .team-players-grid {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .team-no-players,
@@ -860,8 +824,6 @@
   
   .player-name {
     font-size: 0.9rem;
-    color: #1a202c !important;
-    font-weight: 700 !important;
   }
   
   .player-details {
@@ -894,44 +856,4 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* ===== Estatísticas por jogador (tabela do relatório) ===== */
-.team-stats-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 8px;
-  color: #e3f2fd;
-}
-
-.team-stats-table thead th {
-  color: #e3f2fd;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: none;
-  padding: 10px 12px;
-}
-
-.team-stats-table tbody tr {
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.team-stats-table tbody td {
-  padding: 10px 12px;
-  text-align: center;
-  color: #ffffff;
-}
-
-.team-stats-table tbody td:first-child {
-  text-align: left;
-  font-weight: 600;
-}
-
-.team-stats-table tbody tr:hover {
-  background: #f8f9fa;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border-color: #2196F3;
 }

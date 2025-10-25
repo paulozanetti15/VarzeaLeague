@@ -1,123 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import './MatchDetail.css';
 import toast from 'react-hot-toast';
+import RegrasFormInfoModal from '../../components/Modals/Regras/RegrasFormInfoModal';
+import { Button } from 'react-bootstrap';
 import axios from 'axios';
+import { Card } from 'react-bootstrap';
+import ModalTeams from '../../components/Modals/Teams/modelTeams'; // legacy (pode ser removido futuramente)
+import SelectTeamPlayersModal from '../../components/Modals/Teams/SelectTeamPlayersModal';
 import { useAuth } from '../../hooks/useAuth';
-import ModalTeams from '../../components/Modals/Teams/modelTeams';
-import SelectTeamPlayersModal from '../../components/Dialogs/SelectTeamPlayersDialog';
-import EditRulesModal from '../../components/Modals/Rules/RegrasFormEditModal';
+import EditRulesModal from '../../components/Modals/Regras/RegrasFormEditModal';
 import PunicaoRegisterModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosoRegisterModal';
-import PunicaoViewModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosaViewModal';
-import { SumulaCreate, SumulaView, SumulaEdit } from '../sumula';
-import {
-  MatchHeader,
-  MatchInfoSection,
-  MatchDescription,
-  MatchRules,
-  TeamsList
-} from '../../features/matches/MatchDetail';
-import { MatchActions } from '../../features/matches/MatchActions/MatchActions';
-import { DeleteConfirmDialog } from '../../components/Dialogs/DeleteConfirmDialog';
-import { EvaluationDialog } from '../../components/Dialogs/EvaluationDialog';
+import PunicaoInfoModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosaModalInfo';
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
-
   const [match, setMatch] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
   const [timeCadastrados, setTimeCadastrados] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [showRulesModal, setShowRulesModal] = useState(false);
+  const [modal, setModal] = useState(false); // legacy
   const [showSelectTeamPlayers, setShowSelectTeamPlayers] = useState(false);
-  const [showEvalModal, setShowEvalModal] = useState(false);
-  const [showCommentsModal, setShowCommentsModal] = useState(false);
-  const [showEventsModal, setShowEventsModal] = useState(false);
-  const [showPunicaoRegister, setShowPunicaoRegister] = useState(false);
-  const [showPunicaoInfo, setShowPunicaoInfo] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [editRules, setEditRules] = useState(false);
-  const [modal, setModal] = useState(false);
-  const [hasSumula, setHasSumula] = useState(false);
-  const [isWo, setIsWo] = useState(false);
-  const [isEditingSumula, setIsEditingSumula] = useState(false);
-  const [punishment, setPunishment] = useState<any>(null);
-  
+  const [showPunicaoRegister, setShowPunicaoRegister] = useState(false);
+  const [showPunicaoInfo, setShowPunicaoInfo] = useState(false);
+  const { user } = useAuth();
 
-
-
-  const checkIfWo = (data: any) => {
-    if (!data) {
-      setIsWo(false);
-      return false;
-    }
-
-    const status = String(data.status || '').toLowerCase();
-    if (status === 'wo' || status === 'walkover' || data.isWO) {
-      setIsWo(true);
-      return true;
-    }
-
-    if (typeof data.homeScore === 'number' && typeof data.awayScore === 'number') {
-      if ((data.homeScore === 0 && data.awayScore > 0) || (data.awayScore === 0 && data.homeScore > 0)) {
-        setIsWo(true);
-        return true;
-      }
-    }
-
-    setIsWo(false);
-    return false;
-  };
-
-  const checkSumulaExists = async () => {
-    if (!id) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/matches/${id}/events`, { 
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        const hasEvents = (data.goals && data.goals.length > 0) || (data.cards && data.cards.length > 0);
-        setHasSumula(hasEvents);
-        return hasEvents;
-      }
-    } catch (error) {
-      setHasSumula(false);
-      return false;
-    }
-  };
-
-  const handleFinalizeMatch = async () => {
-    if (!id) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/matches/${id}/finalize`, { 
-        method: 'POST', 
-        headers: { 
-          Authorization: `Bearer ${token}`, 
-          'Content-Type':'application/json' 
-        }
-      });
-      
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        toast.error(data.message || 'Erro ao finalizar');
-        return;
-      }
-      
-      window.alert('Partida finalizada');
-      setMatch((previousMatch: any) => previousMatch ? { ...previousMatch, status: 'finalizada' } : previousMatch);
-      setShowEventsModal(true);
-    } catch (error: any) {
-      toast.error(error.message || 'Falha ao finalizar');
-    }
-  };
   const getTimeInscrito = async (matchId: string) => {
     try {
       const token = localStorage.getItem('token');
@@ -133,32 +49,6 @@ const MatchDetail: React.FC = () => {
       setTimeCadastrados(response.data);
     } catch (error) {
       console.error('Erro ao buscar times cadastrados:', error);
-    }
-  };
-
-  const fetchPunishment = async (matchId: string) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      
-      const response = await axios.get(`http://localhost:3001/api/matches/${matchId}/punicao`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      let fetched = null;
-      if (response.data) {
-        if (Array.isArray(response.data)) {
-          fetched = response.data.length > 0 ? response.data[0] : null;
-        } else {
-          fetched = response.data;
-        }
-      }
-
-      setPunishment(fetched);
-      return fetched;
-    } catch (error) {
-      setPunishment(null);
-      return null;
     }
   };
 
@@ -178,10 +68,7 @@ const MatchDetail: React.FC = () => {
           }
         });
         setMatch(response.data);
-        checkIfWo(response.data);
-        await fetchPunishment(id!);
         await getTimeInscrito(id!);
-        await checkSumulaExists();
       } catch (err: any) {
         console.error('Erro ao carregar detalhes:', err);
         if (err.response?.status === 401) {
@@ -196,76 +83,61 @@ const MatchDetail: React.FC = () => {
 
     fetchMatchDetails();
   }, [id, navigate]);
-
-  const handleViewEvents = async () => {
-    // refresh punishment and sumula before deciding
-    const latestPunishment = id ? await fetchPunishment(id) : null;
-    const sumulaExists = await checkSumulaExists();
-    // Sumula should only be visible after the match is finalized
-    const statusLower = String(match?.status || '').toLowerCase();
-    const isCompletedLocal = statusLower === 'finalizada';
-    if (!isCompletedLocal) {
-      toast.error('Súmula só disponível após a partida ser finalizada.');
-      return;
-    }
-
-    // Frontend-only permission: admins, team captains or organizer can view/export the sumula
-    const isTeamCaptain = user && timeCadastrados.some(t => Number(t.captainId) === Number(user.id));
-    const isViewOnlyUser = user && (Number(user.userTypeId) === 1 || Number(user.userTypeId) === 3);
-    const isOrganizerLocal = Boolean(user && match && Number(match.organizerId) === Number(user.id));
-    const isAdminLocal = Boolean(user && Number(user.userTypeId) === 1);
-    const canView = Boolean(isAdminLocal || isTeamCaptain || isOrganizerLocal || isViewOnlyUser);
-
-    if (!canView) {
-      toast.error('Sem permissão para visualizar a súmula.');
-      return;
-    }
-
-    if (latestPunishment || isWo) {
-      setIsEditingSumula(false);
-      setShowEventsModal(true);
-      return;
-    }
-
-    if (sumulaExists) {
-      setIsEditingSumula(false);
-      setShowEventsModal(true);
-      return;
-    }
-  };
-
+  
   const handleLeaveMatch = async (matchId: string | undefined, teamId: number) => {
     if (!matchId) return;
     const numericMatchId = Number(matchId);
-    try {
-      const response = await axios.delete(`http://localhost:3001/api/matches/${numericMatchId}/join-team/${teamId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (response.status === 200) {
-        toast.success('Time removido da partida com sucesso!');
-        setTimeout(() => {
-          window.location.reload();
-        }, 800);
+    
+    const response = await axios.delete(`http://localhost:3001/api/matches/${numericMatchId}/join-team/${teamId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
       }
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Erro ao sair da partida. Tente novamente.';
-      toast.error(msg);
+    })
+    if (response.status === 200) {
+      toast.success('Time removido da partida com sucesso!');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } else {
+      toast.error('Erro ao sair da partida. Tente novamente.');
     }
   };
-
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) return 'Data não informada';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Data inválida';
+      return format(date, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR });
+    } catch (error) {
+      return 'Data inválida';
+    }
+  };
+  
+  const formatTime = (timeString: string | undefined): string => {
+    if (!timeString) {
+      if (match?.date && match.date.includes(' ')) {
+        const timePart = match.date.split(' ')[1];
+        return timePart.slice(0, 5); // Retorna apenas HH:MM
+      }
+      return 'Horário não informado';
+    }
+    return timeString.slice(0, 5); // Extrai apenas hora e minuto (HH:MM) se existir
+  };
+  
+  const formatPrice = (price: number | string | null | undefined): string => {
+    if (price === null || price === undefined) return 'Gratuito';
+    return `R$ ${Number(price).toFixed(2).replace('.', ',')}`;
+  };
   const handleModalClose = () => {
     setModal(false);
-  };
-
+  }
+  // legacy modal (não utilizado atualmente)
   const handleOpenSelectTeamPlayers = () => {
     setShowSelectTeamPlayers(true);
-  };
-
+  }
   const handleCloseSelectTeamPlayers = () => {
     setShowSelectTeamPlayers(false);
-  };
+  }
   const handleDeleteMatch = async () => {
     if (!id) return;
     setLoading(true);
@@ -277,7 +149,7 @@ const MatchDetail: React.FC = () => {
       });
       if (response.status === 200) {
         toast.success('Partida excluída com sucesso!');
-        navigate('/matches', { state: { filter: 'my' } }); // Redirect to my ma
+        navigate('/matches', { state: { filter: 'my' } }); // Redirect to my matches after deletion
       } else {
         toast.error('Erro ao excluir a partida. Tente novamente.');
       }
@@ -298,48 +170,24 @@ const MatchDetail: React.FC = () => {
     setOpenDeleteConfirm(false);
   };
 
+  // Abre fluxo de punição: se já existir punição para a partida, abre Info; senão, abre Register
   const handleOpenPunicao = async () => {
     if (!id) return;
-    
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      
-      const response = await axios.get(`http://localhost:3001/api/matches/${id}/punicao`, {
+      const resp = await axios.get(`http://localhost:3001/api/matches/${id}/punicao`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
-      const hasPunicao = Array.isArray(response.data) && response.data.length > 0;
-      
+      const hasPunicao = Array.isArray(resp.data) && resp.data.length > 0;
       if (hasPunicao) {
         setShowPunicaoInfo(true);
       } else {
         setShowPunicaoRegister(true);
       }
-    } catch (error) {
+    } catch (e) {
+      // Em caso de erro ao checar, abre o registro por padrão
       setShowPunicaoRegister(true);
-    }
-  };
-
-  
-
-  const handlePunishmentModalClose = async () => {
-    setShowPunicaoInfo(false);
-    setShowPunicaoRegister(false);
-    if (id) {
-      await fetchPunishment(id);
-      await getTimeInscrito(id);
-      // Re-fetch match details to get updated status
-      try {
-        const token = localStorage.getItem('token');
-        if (token) {
-          const resp = await axios.get(`http://localhost:3001/api/matches/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-          setMatch(resp.data);
-          checkIfWo(resp.data);
-        }
-      } catch (err) {
-        console.error('Erro ao atualizar detalhes da partida após manipular punição', err);
-      }
     }
   };
 
@@ -375,204 +223,232 @@ const MatchDetail: React.FC = () => {
     return <div className="match-detail-container error">Partida não encontrada.</div>;
   }
 
-  const isAdmin = user && user.userTypeId === 1;
-  const isEventAdmin = user && user.userTypeId === 2;
-  const isTeamAdmin = user && user.userTypeId === 3;
   const isOrganizer = user && match.organizerId === user.id;
-  // compute statusLower and completion
-  const statusLower = String(match?.status || '').toLowerCase();
-  const isCompleted = statusLower === 'finalizada';
-  // Só admin do time pode criar sumula, e apenas após finalização
-  const canCreateSumula = Boolean(isTeamAdmin && isCompleted && !hasSumula);
-  // Admin do sistema e admin do time só veem sumula se já existir e partida finalizada
-  const canViewSumula = Boolean((isAdmin || isTeamAdmin) && hasSumula && isCompleted);
+  const isAdmin = user && user.userTypeId === 1;
   const canDeleteMatch = isOrganizer || isAdmin;
-  const effectiveMaxTeams = typeof (match?.maxTeams) === 'number' ? Number(match.maxTeams) : 2;
 
   return (
     <div className="match-detail-container">
-      <div className="detail-content">  
-        <MatchHeader
-          title={match.title}
-          organizerName={match.organizer.name}
-        />
-
-        <MatchInfoSection match={match} />
-
-        <MatchDescription description={match.description} />
-
-        <MatchRules
-          match={match}
-          showRulesModal={showRulesModal}
-          onShowRulesModal={setShowRulesModal}
-        />
-
-       
-
-        <TeamsList
-          teams={timeCadastrados}
-          match={match}
-          userId={user?.id}
-          userTypeId={user?.userTypeId}
-          isOrganizer={!!isOrganizer}
-          isAdmin={!!isAdmin}
-          isCompleted={isCompleted}
-          matchId={id}
-          effectiveMaxTeams={effectiveMaxTeams}
-          onLeaveMatch={handleLeaveMatch}
-          onOpenSelectTeamPlayers={handleOpenSelectTeamPlayers}
-        />
-
-        <MatchActions
-          canDelete={canDeleteMatch || false}
-          matchId={Number(id)}
-          canEdit={isOrganizer || false}
-          isCompleted={isCompleted}
-          canApplyPunishment={isOrganizer || isAdmin || false}
-          isWo={isWo}
-          hasPunishment={!!punishment}
-          disableComments={isWo || !!punishment}
-          userTypeId={user?.userTypeId}
-          teamsCount={timeCadastrados.length}
-          registrationDeadline={match.registrationDeadline}
-          matchStatus={match?.status}
-          onDelete={handleOpenDeleteConfirm}
-          onEdit={() => navigate(`/matches/edit/${id}`)}
-          onEditRules={() => setEditRules(true)}
-          onPunishment={handleOpenPunicao}
-          hasSumula={hasSumula}
-          onEvaluate={() => {
-            console.log('Abrindo modal de avaliação');
-            setShowEvalModal(true);
-          }}
-          onViewComments={() => {
-            console.log('Abrindo modal de comentários');
-            setShowCommentsModal(true);
-          }}
-          onFinalize={handleFinalizeMatch}
-          onCreateSumula = {()=>setShowEventsModal(true)}
-          onViewEvents={handleViewEvents}
-        />
-      </div>
-
-      {/* Modais */}
-      {modal && (
-        <ModalTeams
-          show={modal}
-          onHide={handleModalClose}
-          matchid={id ? Number(id) : 0}
-        />
-      )}
-
-      {showSelectTeamPlayers && (
-        <SelectTeamPlayersModal
-          show={showSelectTeamPlayers}
-          onHide={handleCloseSelectTeamPlayers}
-          matchId={id ? Number(id) : 0}
-          onSuccess={() => {
-            getTimeInscrito(id!);
-          }}
-        />
-      )}
-
-      {isOrganizer && editRules && (
-        <EditRulesModal
-          show={editRules}
-          onHide={handleModalClose}
-          onClose={() => setEditRules(false)}
-          userId={Number(user?.id)}
-          partidaDados={match}
-        />
-      )}
-
-      {(isOrganizer || isAdmin) && (
-        <>
-          <PunicaoRegisterModal
-            show={showPunicaoRegister}
-            onHide={() => setShowPunicaoRegister(false)}
-            onClose={handlePunishmentModalClose}
-            team={{ id: Number(id) }}
+      <div className="detail-content">
+        <div className="match-header">
+          <h1>{match.title}</h1>
+          <div className="match-organizer">
+            <SportsSoccerIcon /> Organizado por: {match.organizer.name || 'Desconhecido'}
+          </div>
+        </div>
+        
+        <div className="match-info">
+          <div className="info-row">
+            <div className="info-label">Data:</div>
+            <div className="info-value">{formatDate(match.date)}</div>
+          </div>
+          
+          <div className="info-row">
+            <div className="info-label">Horário:</div>
+            <div className="info-value">{formatTime(match.time)}</div>
+          </div>
+          
+          {match.duration && (
+            <div className="info-row">
+              <div className="info-label">Duração:</div>
+              <div className="info-value">{match.duration}</div>
+            </div>
+          )}
+          <div className="info-row">
+            <div className="info-label">Nome Quadra:</div>
+            <div className="info-value">
+              {match.nomequadra || 'Nome da quadra não informado'}
+            </div>
+          </div>
+          <div className="info-row">
+            <div className="info-label">Local:</div>
+            <div className="info-value">
+              {match.location?.address || (typeof match.location === 'string' ? match.location : 'Endereço não informado')}
+            </div>
+          </div>
+          <div className="info-row">
+            <div className="info-label">Modalidade:</div>
+            <div className="info-value">
+              {match.modalidade || 'Modalidade não informada'}
+            </div>
+          </div>
+          <div className="info-row">
+            <div className="info-label">Valor da quadra:</div>
+            <div className="info-value">
+              {formatPrice(match.price)}
+            </div>
+          </div>
+        </div>
+        {match.description && (
+          <div className="match-description">
+            <h3>Descrição</h3>
+            <p>{match.description}</p>
+          </div>
+        )}
+        <div className="match-description">
+          <h3>Regras</h3>
+          <Button 
+            className="view-rules-btn" 
+            variant="primary" 
+            onClick={() => setShowRulesModal(true)}
+          >
+            <i className="fas fa-clipboard-list me-2"></i>
+            Visualizar regras
+          </Button>
+        </div>
+        {match && (
+          <RegrasFormInfoModal
+            idpartida={match.id} 
+            show={showRulesModal} 
+            onHide={() => setShowRulesModal(false)}
           />
-        </>
-      )}
-      {(isOrganizer || isAdmin) && punishment && (
-        <PunicaoViewModal
-          show={showPunicaoInfo}
-          onHide={() => setShowPunicaoInfo(false)}
-          onClose={handlePunishmentModalClose}
-          team={{ id: Number(id) }}
-          idMatch={Number(id)}
-        />
-      )}
+        )}
+        <div className="match-description">
+          <h3>Times Participantes</h3>
+          <div className="teams-list">
+            {timeCadastrados.length > 0 ? (
+              <>
+                {timeCadastrados.map((team: any) => (
+                  <Card className="team-card" key={team.id}> 
+                    <Card.Body>
+                      {team.banner &&
+                        <Card.Img
+                         src={`http://localhost:3001/uploads/teams/${team.banner}`} 
+                         variant='top'
+                        />
+                      }
+                      <div className='d-flex flex-column align-items-center text-center'>
+                        <Card.Title>{team.name}</Card.Title>
+                        <Button variant="danger" onClick={() => handleLeaveMatch(id,team.id)}>
+                          Sair da Partida
+                        </Button>
+                      </div>  
+                    </Card.Body>
+                  </Card>
+                ))}
+                {timeCadastrados.length === 1 && <div className="versus-text">X</div>}
+              </>
 
-      {showEventsModal && !hasSumula && !punishment && isOrganizer && (
-        <SumulaCreate
-          matchId={Number(match.id)}
-          isChampionship={false}
-          show={showEventsModal}
-          onClose={() => {
-            setShowEventsModal(false);
-            checkSumulaExists();
-          }}
-        />
-      )}
-
-      {showEventsModal && !isEditingSumula && (hasSumula || punishment) && isCompleted && (
-        // Admin do sistema e admin do time só veem se já existir
-        ((isAdmin || isTeamAdmin) ? hasSumula : true) && (
-          <SumulaView
-            matchId={Number(match.id)}
-            isChampionship={false}
-            show={showEventsModal}
-            showDeleteConfirm={() => {}}
-            canEdit={isEventAdmin && hasSumula}
-            canDelete={isEventAdmin && hasSumula}
-            onClose={() => {
-              setShowEventsModal(false);
-              setIsEditingSumula(false);
+            ) : (
+              <div className="no-teams-wrapper">
+                <div className="no-teams-text">Nenhum time inscrito ainda.</div>
+                {match.status === 'open' && user?.userTypeId === 3 && (typeof match.maxTeams !== 'number' || match.countTeams < match.maxTeams) && (
+                  <Button 
+                    variant="success" 
+                    onClick={handleOpenSelectTeamPlayers} 
+                    className="join-match-btn"
+                  >
+                    <i className="fas fa-link"></i>
+                    Vincular meu Time
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+            <div className='d-flex gap-2 container justify-content-center'>
+              {canDeleteMatch && (
+                <Button
+                  variant="danger"
+                  onClick={handleOpenDeleteConfirm}
+                >
+                  <DeleteIcon /> Excluir Partida
+                </Button>
+              )}     
+                {(isOrganizer || isAdmin) && (
+                  <>
+                    <Button
+                      variant="warning"
+                      onClick={handleOpenPunicao}
+                    >
+                      Aplicar/Ver Punição
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => navigate(`/matches/edit/${id}`)}
+                    >
+                      <EditIcon/> Editar Partida 
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setEditRules(true)}
+                    >
+                      <EditIcon/> Editar Regras   
+                    </Button>
+                  </>
+                )}
+              
+            </div>
+        </div>
+        {modal && (
+          <ModalTeams
+            show={modal}
+            onHide={handleModalClose}
+            matchid={id ? Number(id) : 0}
+          />
+        )}
+        {showSelectTeamPlayers && (
+          <SelectTeamPlayersModal
+            show={showSelectTeamPlayers}
+            onHide={handleCloseSelectTeamPlayers}
+            matchId={id ? Number(id) : 0}
+            onSuccess={() => {
+              // refresh teams list after success
+              getTimeInscrito(id!);
             }}
-            onEdit={() => setIsEditingSumula(true)}
           />
-        )
-      )}
-
-      {showEventsModal && isEditingSumula && (hasSumula) && isEventAdmin && isCompleted && (
-        <SumulaEdit
-          matchId={Number(match.id)}
-          isChampionship={false}
-          show={showEventsModal}
-          onClose={() => {
-            setShowEventsModal(false);
-            setIsEditingSumula(false);
-            checkSumulaExists();
-          }}
-        />
-      )}
-
-      <DeleteConfirmDialog
+        )}
+        {isOrganizer && editRules && (
+          <EditRulesModal
+            show={editRules}
+            onHide={handleModalClose}
+            onClose={() => setEditRules(false)}
+            userId={Number(user?.id)}
+            partidaDados={match}
+          />
+        )}
+        {/* Punição: registrar ou visualizar/editar */}
+        {(isOrganizer || isAdmin) && (
+          <>
+            <PunicaoRegisterModal
+              show={showPunicaoRegister}
+              onHide={() => setShowPunicaoRegister(false)}
+              onClose={() => {
+                setShowPunicaoRegister(false);
+                getTimeInscrito(id!);
+              }}
+              team={{ id: Number(id) }}
+            />
+            <PunicaoInfoModal
+              show={showPunicaoInfo}
+              onHide={() => setShowPunicaoInfo(false)}
+              onClose={() => setShowPunicaoInfo(false)}
+              team={{ id: Number(id) }}
+              idMatch={Number(id)}
+            />
+          </>
+        )}
+      </div>
+      <Dialog
         open={openDeleteConfirm}
         onClose={handleCloseDeleteConfirm}
-        onConfirm={handleDeleteMatch}
-      />
-
-      {match && (
-        <>
-          <EvaluationDialog
-            open={showEvalModal}
-            onClose={() => setShowEvalModal(false)}
-            matchId={Number(match.id)}
-            readOnly={false}
-          />
-          
-          <EvaluationDialog
-            open={showCommentsModal}
-            onClose={() => setShowCommentsModal(false)}
-            matchId={Number(match.id)}
-            readOnly={true}
-            title="Comentários da Partida"
-          />
-        </>
-      )}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Confirmar Exclusão"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Tem certeza de que deseja excluir esta partida? Esta ação é irreversível.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteConfirm} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={handleDeleteMatch} color="primary" autoFocus>
+            Excluir
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

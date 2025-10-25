@@ -59,4 +59,15 @@ TeamPlayer.init(
   }
 );
 
+// Definir associações
+TeamPlayer.belongsTo(Player, { 
+  foreignKey: 'playerId',
+  as: 'player'
+});
+
+TeamPlayer.belongsTo(Team, {
+  foreignKey: 'teamId',
+  as: 'team'
+});
+
 export default TeamPlayer; 

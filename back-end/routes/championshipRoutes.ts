@@ -1,18 +1,5 @@
 import express from 'express';
-import { 
-  createChampionship, 
-  listChampionships, 
-  getChampionship, 
-  updateChampionship, 
-  deleteChampionship, 
-  joinTeamInChampionship, 
-  getChampionshipTeams, 
-  leaveTeamFromChampionship,
-  applyToChampionship,
-  getChampionshipApplications,
-  updateApplicationStatus,
-  publishChampionship
-} from '../controllers/championshipController';
+import { createChampionship, listChampionships, getChampionship, updateChampionship, deleteChampionship, joinTeamInChampionship, getChampionshipTeams, leaveTeamFromChampionship } from '../controllers/championshipController';
 import { busarPunicaoCampeonato, inserirPunicaoCampeonato, alterarPunicaoCampeonato, deletarPunicaoCampeonato } from '../controllers/PunicaoController';
 import { authenticateToken } from '../middleware/auth';
 
@@ -27,12 +14,6 @@ router.delete('/:id', authenticateToken, deleteChampionship);
 router.post('/:id/join-team', authenticateToken, joinTeamInChampionship);
 router.get('/:id/join-team', authenticateToken, getChampionshipTeams);
 router.delete('/:id/join-team/:teamId', authenticateToken, leaveTeamFromChampionship);
-
-// Aplicações de campeonatos
-router.post('/:championshipId/apply', authenticateToken, applyToChampionship);
-router.get('/:championshipId/applications', authenticateToken, getChampionshipApplications);
-router.put('/applications/:applicationId/status', authenticateToken, updateApplicationStatus);
-router.put('/:championshipId/publish', authenticateToken, publishChampionship);
 
 // Punição em Campeonato (WO etc.)
 router.get('/:idCampeonato/punicao', authenticateToken, busarPunicaoCampeonato);

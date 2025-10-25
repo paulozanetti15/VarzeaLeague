@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../../hooks/useAuth';
-import '../../Dialogs/SelectTeamPlayersDialog.css';
+import './SelectTeamPlayersModal.css';
 
 interface SelectTeamPlayersChampionshipModalProps {
   show: boolean;

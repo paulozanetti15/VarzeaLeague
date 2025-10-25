@@ -1,8 +1,6 @@
 import { get } from "http";
 import Rules from "../models/RulesModel";
 import MatchModel from "../models/MatchModel";
-import MatchTeamsModel from "../models/MatchTeamsModel";
-import { Op } from "sequelize";
 
 export const insertRules = async (req, res) => {
     try {
@@ -90,38 +88,6 @@ export const updateRules = async (req, res) => {
             idadeMaxima: parseInt(idadeMaxima),
             genero: genero
         }, { where: { partidaId:id } });
-
-        const now = new Date();
-        now.setHours(23, 59, 59, 999);
-        
-        const deadline = new Date(dataLimite);
-        deadline.setHours(23, 59, 59, 999);
-        
-        const match = await MatchModel.findByPk(id);
-        
-        if (match) {
-            const teamsCount = await MatchTeamsModel.count({
-                where: { matchId: id }
-            });
-
-            if (now > deadline) {
-                if (teamsCount < 2 && (match.status === 'aberta' || match.status === 'sem_vagas')) {
-                    await match.update({ 
-                        status: 'cancelada'
-                    });
-                } else if (teamsCount >= 2 && match.status !== 'finalizada' && match.status !== 'cancelada') {
-                    await match.update({
-                        status: 'confirmada'
-                    });
-                }
-            } else {
-                if (match.status === 'cancelada') {
-                    await match.update({ 
-                        status: 'aberta'
-                    });
-                }
-            }
-        }
 
         res.status(200).json({ message: "Regras atualizadas com sucesso!" });
     }

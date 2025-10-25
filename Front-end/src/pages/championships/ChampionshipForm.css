@@ -1,1507 +1,330 @@
-/* Reset e configurações básicas */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+@import '../../styles/required.css';
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  background-color: #f0f2f5;
-  color: #2d3748;
-  line-height: 1.6;
-}
-
-/* Container principal */
-.create-team-container,
-.championship-form-bg {
-  min-height: 100vh !important;
-  padding: 2rem !important;
-  background: linear-gradient(135deg, #f0f2f5 0%, #e8f4fd 50%, #f0f2f5 100%) !important;
-  position: relative !important;
-  overflow: hidden !important;
-  width: 100% !important;
-  max-width: none !important;
-}
-
-.create-team-container::before,
-.championship-form-bg::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle, rgba(33, 150, 243, 0.04) 0%, transparent 70%);
-  animation: pulse 8s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
-}
-
-/* Header da página */
-.teams-header,
-.championship-form-header {
-  text-align: center;
-  margin-bottom: 2rem;
-  position: relative;
-  z-index: 2;
-}
-
-.teams-title,
-.championship-form-title {
-  color: #2d3748;
-  font-size: 1.8rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  text-shadow: none;
-  position: relative;
-  display: inline-block;
-  letter-spacing: -0.3px;
-}
-
-.teams-title::after,
-.championship-form-title::after {
-  content: '';
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 2px;
-  background: linear-gradient(90deg, #2196F3, #3f51b5);
-  border-radius: 1px;
-  box-shadow: 0 1px 4px rgba(33, 150, 243, 0.2);
-}
-
-.teams-subtitle,
-.championship-form-subtitle {
-  color: #718096;
-  font-size: 1rem;
-  text-shadow: none;
-  max-width: 600px;
-  margin: 0 auto;
-  font-weight: 400;
-}
-
-/* Container principal do formulário - FORÇA MÁXIMA */
-.create-team-container .form-container,
-.championship-form-container,
-div.form-container,
-.form-container {
-  width: 95% !important;
-  max-width: 1800px !important;
-  min-width: 1200px !important;
-  margin: 0 auto !important;
-  padding: 2rem !important;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
-  border-radius: 24px !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1), 0 8px 25px rgba(0, 0, 0, 0.05) !important;
-  position: relative !important;
-  z-index: 2 !important;
-  border: 1px solid rgba(33, 150, 243, 0.1) !important;
-  backdrop-filter: blur(15px) !important;
-}
-
-.form-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle, rgba(33, 150, 243, 0.02) 0%, transparent 70%);
-  animation: pulse 6s ease-in-out infinite;
-  pointer-events: none;
-  border-radius: 24px;
-}
-
-/* Layout principal - Grid horizontal */
-.form-main-grid {
-  display: grid !important;
-  grid-template-columns: 450px 1fr !important;
-  gap: 3rem !important;
-  align-items: start !important;
-  width: 100% !important;
-  min-height: 0 !important;
-}
-
-/* Seção de tipo de campeonato */
-.logo-section {
-  background: linear-gradient(135deg, #2196F3, #3f51b5);
-  border-radius: 20px;
-  padding: 2.5rem;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 12px 35px rgba(33, 150, 243, 0.4);
-  height: fit-content;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.logo-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
-  pointer-events: none;
-}
-
-.logo-preview-container {
-  width: 120px;
-  height: 120px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.3);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 3px solid rgba(255, 255, 255, 0.5);
-  overflow: hidden;
-  position: relative;
-  margin: 0 auto 1rem auto;
-  backdrop-filter: blur(15px);
-}
-
-.logo-preview-container:hover {
-  background: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-  border-color: rgba(255, 255, 255, 0.7);
-}
-
-.trophy-icon {
-  font-size: 2.8rem !important;
-  color: white;
-  opacity: 0.95;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-  margin-bottom: 0.5rem;
-}
-
-.logo-preview-container span {
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-  letter-spacing: 0.3px;
-  color: white;
-}
-
-/* Descrição na seção de tipo de campeonato */
-.logo-description {
-  width: 100%;
-  margin-top: 0;
-}
-
-.logo-description .form-label {
-  color: #ffffff !important;
-  font-weight: 600;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.logo-description .form-control {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 2px solid rgba(255, 255, 255, 0.4) !important;
-  color: #2d3748 !important;
-  font-size: 1rem;
-  font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  resize: vertical;
-  min-height: 220px;
-  border-radius: 12px;
-  padding: 1.2rem;
-  line-height: 1.6;
-  letter-spacing: 0.3px;
-  transition: none !important;
-  animation: none !important;
-  transform: none !important;
-}
-
-.logo-description .form-control::placeholder {
-  color: #718096 !important;
-  font-size: 0.95rem;
-  font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  letter-spacing: 0.2px;
-}
-
-.logo-description .form-control:focus {
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  box-shadow: none !important;
-  outline: none !important;
-  transition: none !important;
-  animation: none !important;
-  transform: none !important;
-}
-
-/* Seção de formulário */
-.form-section {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  width: 100%;
-}
-
-/* Grid de campos básicos */
-.form-basic-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  width: 100%;
-}
-
-/* Grupos de formulário */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.form-label {
-  color: #2d3748;
-  font-weight: 600;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.5rem;
-}
-
-.form-control {
-  padding: 1.2rem 1.5rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 15px;
-  font-size: 1rem;
-  font-weight: 400;
-  background-color: #ffffff;
-  color: #2d3748;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: #2196F3;
-  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
-}
-
-.form-control::placeholder {
-  color: #a0aec0;
-  font-weight: 400;
-}
-
-/* Mensagens de erro */
-.field-error {
-  color: #e53e3e;
-  font-size: 0.8rem;
-  font-weight: 500;
-  margin-top: 0.25rem;
-}
-
-.error-message {
-  background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
-  color: #c53030;
-  padding: 1rem 1.5rem;
-  border-radius: 12px;
-  border: 1px solid #f56565;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 15px rgba(245, 101, 101, 0.1);
-}
-
-.error-message p {
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-/* Opções específicas para Liga */
-.liga-options {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border-radius: 16px;
-  padding: 1.5rem;
-  border: 2px solid #0ea5e9;
-  margin-top: 1rem;
-  border-left: 5px solid #0ea5e9;
-}
-
-/* Opções específicas para Mata-Mata */
-.mata-mata-options {
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-  border-radius: 16px;
-  padding: 1.5rem;
-  border: 2px solid #e2e8f0;
-  margin-top: 1rem;
-  border-left: 5px solid #6b7280;
-}
-
-/* Configuração de grupos */
-.grupos-config {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 2px solid #e2e8f0;
-}
-
-.config-title {
-  color: #374151;
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.config-title::before {
-  content: '⚙️';
-  font-size: 1.2rem;
-}
-
-/* Preview da configuração */
-.config-preview {
-  margin-top: 1.5rem;
-}
-
-.preview-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-radius: 12px;
-  padding: 1.5rem;
-  border: 2px solid #e2e8f0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.preview-card h5 {
-  color: #1f2937;
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.preview-stats {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-}
-
-.stat {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-}
-
-.stat.total {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-}
-
-.preview-description {
-  color: #6b7280;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin: 0;
-  font-style: italic;
-}
-
-/* Alerta de sobra de times */
-.alert-card {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border: 2px solid #f59e0b;
-  border-radius: 12px;
-  padding: 1rem;
-  margin-top: 1rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
-  animation: alertPulse 2s ease-in-out infinite;
-  position: relative;
-  overflow: hidden;
-}
-
-.alert-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
-  pointer-events: none;
-}
-
-@keyframes alertPulse {
-  0%, 100% { 
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
-    transform: scale(1);
-  }
-  50% { 
-    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
-    transform: scale(1.01);
-  }
-}
-
-.alert-icon {
-  font-size: 1.5rem;
-  line-height: 1;
-  flex-shrink: 0;
-  animation: bounce 1.5s ease-in-out infinite;
-}
-
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-4px);
-  }
-  60% {
-    transform: translateY(-2px);
-  }
-}
-
-.alert-content {
-  flex: 1;
-  position: relative;
-  z-index: 1;
-}
-
-.alert-title {
-  color: #92400e;
-  font-weight: 700;
-  font-size: 0.95rem;
-  margin-bottom: 0.25rem;
-  text-shadow: 0 1px 2px rgba(146, 64, 14, 0.1);
-  letter-spacing: 0.3px;
-}
-
-.alert-description {
-  color: #b45309;
-  font-size: 0.85rem;
-  line-height: 1.4;
-  font-weight: 500;
-  margin: 0;
-}
-
-.alert-description strong {
-  color: #92400e;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.5);
-  padding: 0.1rem 0.3rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  cursor: pointer;
-  font-weight: 600;
-  color: #2d3748;
-  font-size: 1rem;
-}
-
-.checkbox-label input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #2196F3;
-  border-radius: 4px;
-  background: white;
-  cursor: pointer;
-  position: relative;
-}
-
-.checkbox-label input[type="checkbox"]:checked {
-  background: #2196F3;
-}
-
-.checkbox-label input[type="checkbox"]:checked::after {
-  content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-weight: bold;
-  font-size: 12px;
-}
-
-.option-description {
-  color: #718096;
-  font-size: 0.85rem;
-  margin-top: 0.5rem;
-  font-style: italic;
-}
-
-/* Botões */
-.form-buttons {
-  display: flex;
-  justify-content: center;
-  margin-top: 2rem;
-}
-
-.submit-btn {
-  background: linear-gradient(135deg, #2196F3 0%, #3f51b5 100%) !important;
-  color: #ffffff !important;
-  border: 2px solid #1976D2 !important;
-  border-radius: 16px;
-  padding: 1.2rem 3rem;
-  font-size: 1.1rem;
-  font-weight: 800 !important;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4) !important;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  min-width: 200px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  position: relative;
-  overflow: hidden;
-}
-
-.submit-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.submit-btn:hover::before {
-  left: 100%;
-}
-
-.submit-btn:hover {
-  background: linear-gradient(135deg, #1976D2 0%, #283593 100%) !important;
-  color: #ffffff !important;
-  border-color: #1565C0 !important;
-  transform: translateY(-2px);
-  box-shadow: 0 12px 35px rgba(33, 150, 243, 0.6) !important;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.submit-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4) !important;
-}
-
-.submit-btn:disabled {
-  background: #a0aec0 !important;
-  color: #ffffff !important;
-  border-color: #a0aec0 !important;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-  text-shadow: none;
-}
-
-.submit-btn:disabled::before {
-  display: none;
-}
-
-.loading-text {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* Responsividade */
-@media (max-width: 1400px) {
-  .form-container {
-    width: 95%;
-    max-width: 1400px;
-    padding: 2rem;
-  }
-  
-  .form-main-grid {
-    grid-template-columns: 400px 1fr;
-    gap: 2.5rem;
-  }
-  
-  .form-basic-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-}
-
-@media (max-width: 1200px) {
-  .form-container {
-    width: 95%;
-    max-width: 1200px;
-    padding: 2rem;
-  }
-  
-  .form-main-grid {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-  
-  .logo-section {
-    padding: 2rem;
-  }
-  
-  .form-basic-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-}
-
-@media (max-width: 900px) {
-  .form-basic-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .create-team-container {
-    padding: 1rem;
-  }
-  
-  .form-container {
-    width: 95%;
-    padding: 1.5rem 1rem;
-    border-radius: 16px;
-  }
-  
-  .teams-title {
-    font-size: 2.2rem;
-  }
-  
-  .teams-subtitle {
-    font-size: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .form-container {
-    padding: 1.5rem 1rem;
-  }
-  
-  .logo-section {
-    padding: 1.5rem;
-  }
-  
-  .logo-preview-container {
-    width: 100px;
-    height: 100px;
-  }
-  
-  .trophy-icon {
-    font-size: 2.5rem !important;
-  }
-}
-
-/* Garantir legibilidade - Override de conflitos */
-.create-team-container label,
-.create-team-container .form-label,
-.create-team-container .MuiFormLabel-root {
-  color: #2d3748 !important;
-  font-weight: 700 !important;
-  text-shadow: none !important;
-}
-
-.create-team-container input,
-.create-team-container textarea,
-.create-team-container select,
-.create-team-container .form-control {
-  background-color: #ffffff !important;
-  color: #2d3748 !important;
-  border: 2px solid #e2e8f0 !important;
-}
-
-.create-team-container input::placeholder,
-.create-team-container textarea::placeholder {
-  color: #a0aec0 !important;
-}
-
-.create-team-container select,
-.create-team-container .logo-description select {
-  background-color: #ffffff !important;
-  color: #2d3748 !important;
-}
-
-.create-team-container select option {
-  background-color: #ffffff !important;
-  color: #2d3748 !important;
-}
-
-.create-team-container p,
-.create-team-container span,
-.create-team-container div {
-  color: #2d3748 !important;
-}
-
-.create-team-container .MuiInputBase-root,
-.create-team-container .MuiFormControl-root {
-  background-color: #ffffff !important;
-  color: #2d3748 !important;
-}
-
-.championship-form-container .MuiInputBase-input {
-  background-color: #ffffff !important;
-  color: #2d3748 !important;
-}
-
-.create-team-container .MuiFormLabel-root,
-.create-team-container .MuiInputLabel-root {
-  color: #2d3748 !important;
-}
-
-/* Garantir legibilidade máxima do botão */
-.create-team-container button,
-.create-team-container .submit-btn,
-button.submit-btn,
-.submit-btn {
-  background: linear-gradient(135deg, #2196F3 0%, #3f51b5 100%) !important;
-  color: #ffffff !important;
-  border: 2px solid #1976D2 !important;
-  font-weight: 800 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
-  box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4) !important;
-}
-
-.create-team-container button:hover,
-.create-team-container .submit-btn:hover,
-button.submit-btn:hover,
-.submit-btn:hover {
-  background: linear-gradient(135deg, #1976D2 0%, #283593 100%) !important;
-  color: #ffffff !important;
-  border-color: #1565C0 !important;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
-  box-shadow: 0 12px 35px rgba(33, 150, 243, 0.6) !important;
-}
-
-.create-team-container button:disabled,
-.create-team-container .submit-btn:disabled,
-button.submit-btn:disabled,
-.submit-btn:disabled {
-  background: #a0aec0 !important;
-  color: #ffffff !important;
-  border-color: #a0aec0 !important;
-  text-shadow: none !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Forçar remoção de animações na descrição */
-.create-team-container .logo-description .form-control,
-.create-team-container .logo-description textarea,
-.logo-description .form-control,
-.logo-description textarea {
-  transition: none !important;
-  animation: none !important;
-  transform: none !important;
-  box-shadow: none !important;
-  outline: none !important;
-}
-
-/* Estilos para DatePicker */
-.championship-form-container .MuiDatePicker-root {
-  width: 100%;
-}
-
-.championship-form-container .MuiTextField-root {
-  width: 100%;
-}
-
-.championship-form-container .MuiOutlinedInput-root {
-  border-radius: 8px !important;
-  transition: all 0.3s ease !important;
-  background-color: #ffffff !important;
-  border: 2px solid #e2e8f0 !important;
-  min-height: 36px !important;
-  height: 36px !important;
-}
-
-.championship-form-container .MuiOutlinedInput-root:hover {
-  border-color: #2196F3 !important;
-  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1) !important;
-}
-
-.championship-form-container .MuiOutlinedInput-root.Mui-focused {
-  border-color: #2196F3 !important;
-  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2) !important;
-}
-
-.championship-form-container .MuiInputBase-input {
-  padding: 0.5rem 0.7rem !important;
-  font-size: 0.8rem !important;
-  font-weight: 400 !important;
-  color: #2d3748 !important;
-  background-color: #ffffff !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
-}
-
-.championship-form-container .MuiInputBase-input::placeholder {
-  color: #a0aec0 !important;
-  font-weight: 400 !important;
-}
-
-.championship-form-container .MuiInputAdornment-root {
-  color: #2196F3 !important;
-}
-
-.create-team-container .MuiInputAdornment-root .MuiIconButton-root {
-  color: #2196F3 !important;
-  padding: 0.5rem !important;
-}
-
-.create-team-container .MuiInputAdornment-root .MuiIconButton-root:hover {
-  background-color: rgba(33, 150, 243, 0.1) !important;
-  border-radius: 8px !important;
-}
-
-/* Estilo do calendário popup */
-.MuiPickersPopper-root {
-  z-index: 9999 !important;
-}
-
-.MuiPickersCalendarHeader-root {
-  background: linear-gradient(135deg, #2196F3 0%, #3f51b5 100%) !important;
-  color: white !important;
-}
-
-.MuiPickersCalendarHeader-label {
-  color: white !important;
-  font-weight: 700 !important;
-}
-
-.MuiPickersArrowSwitcher-root .MuiIconButton-root {
-  color: white !important;
-}
-
-.MuiPickersDay-root {
-  border-radius: 8px !important;
-  font-weight: 500 !important;
-  transition: all 0.2s ease !important;
-}
-
-.MuiPickersDay-root:hover {
-  background-color: rgba(33, 150, 243, 0.1) !important;
-}
-
-.MuiPickersDay-root.Mui-selected {
-  background: linear-gradient(135deg, #2196F3 0%, #3f51b5 100%) !important;
-  color: white !important;
-  font-weight: 700 !important;
-}
-
-.MuiPickersDay-root.Mui-selected:hover {
-  background: linear-gradient(135deg, #1976D2 0%, #283593 100%) !important;
-}
-
-.MuiPickersDay-root.Mui-disabled {
-  color: #a0aec0 !important;
-}
-
-/* Estilo dos dias da semana */
-.MuiPickersCalendarHeader-root .MuiDayCalendar-weekContainer .MuiTypography-root {
-  color: #6b7280 !important;
-  font-weight: 600 !important;
-  font-size: 0.9rem !important;
-}
-
-/* Estilos para o popup do calendário */
-.championship-form-container .MuiPopper-root {
-  z-index: 9999 !important;
-}
-
-.championship-form-container .MuiPopper-root[role="tooltip"] {
-  transform: translateY(-8px) !important;
-}
-
-.championship-form-container .MuiPaper-root {
-  border-radius: 10px !important;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
-  overflow: hidden !important;
-  border: 1px solid #e2e8f0 !important;
-  background: #ffffff !important;
-  background-color: #ffffff !important;
-  animation: calendarSlideIn 0.3s cubic-bezier(0.23, 1, 0.32, 1) !important;
-  width: 280px !important;
-  max-width: 90vw !important;
-  opacity: 1 !important;
-}
-
-/* Header do calendário */
-.championship-form-container .MuiPickersCalendarHeader-root {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 0.8rem 0.6rem;
-  position: relative;
-  background-color: #667eea !important;
-}
-
-.championship-form-container .MuiPickersCalendarHeader-root::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-}
-
-.championship-form-container .MuiPickersCalendarHeader-labelContainer {
-  color: white;
-  font-weight: 600;
-  font-size: 0.9rem;
-  letter-spacing: 0.3px;
-}
-
-.championship-form-container .MuiPickersCalendarHeader-switchViewButton {
-  color: white;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-  padding: 8px;
-}
-
-.championship-form-container .MuiPickersCalendarHeader-switchViewButton:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-  transform: scale(1.05);
-}
-
-/* Navegação do calendário */
-.championship-form-container .MuiPickersArrowSwitcher-root {
-  color: white;
-}
-
-.championship-form-container .MuiPickersArrowSwitcher-button {
-  color: white;
-  padding: 10px;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-  margin: 0 4px;
-}
-
-.championship-form-container .MuiPickersArrowSwitcher-button:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-  transform: scale(1.1);
-}
-
-/* Corpo do calendário */
-.championship-form-container .MuiDayCalendar-root {
-  padding: 0.8rem;
-  background: #ffffff !important;
-  background-color: #ffffff !important;
-}
-
-.championship-form-container .MuiPickersPopper-root {
-  z-index: 9999 !important;
-}
-
-.championship-form-container .MuiPickersPopper-root .MuiPaper-root {
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-}
-
-.championship-form-container .MuiPickersDay-root {
-  font-weight: 500;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  margin: 1px;
-  min-width: 28px;
-  min-height: 28px;
-  position: relative;
-  font-size: 0.8rem;
-}
-
-.championship-form-container .MuiPickersDay-root:hover {
-  background-color: rgba(33, 150, 243, 0.1);
-  transform: scale(1.05);
-  color: #2196F3;
-  font-weight: 600;
-}
-
-.championship-form-container .MuiPickersDay-root.Mui-selected {
-  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-  color: white;
-  font-weight: 700;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
-  transform: scale(1.02);
-}
-
-.championship-form-container .MuiPickersDay-root.Mui-selected:hover {
-  background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
-  transform: scale(1.08);
-  box-shadow: 0 6px 18px rgba(33, 150, 243, 0.5);
-}
-
-.championship-form-container .MuiPickersDay-root.Mui-disabled {
-  color: #e2e8f0;
-  background-color: #f7fafc;
-}
-
-.championship-form-container .MuiPickersDay-root.Mui-disabled:hover {
-  transform: none;
-  background-color: #f7fafc;
-}
-
-/* Dias da semana */
-.championship-form-container .MuiDayCalendar-weekContainer {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.championship-form-container .MuiDayCalendar-weekDayLabel {
-  font-weight: 600;
-  color: #4a5568;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 4px 1px;
-  text-align: center;
-}
-
-/* Ícones */
-.championship-form-container .MuiPickersCalendarHeader-root .MuiSvgIcon-root {
-  font-size: 1.2rem;
-}
-
-.championship-form-container .MuiPickersArrowSwitcher-button .MuiSvgIcon-root {
-  font-size: 1.1rem;
-}
-
-/* Ícone do calendário no input */
-.championship-form-container .MuiInputAdornment-root .MuiSvgIcon-root {
-  color: #2196F3;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-.championship-form-container .MuiInputAdornment-root:hover .MuiSvgIcon-root {
-  color: #1976D2;
-  transform: scale(1.1);
-}
-
-/* Forçar fundo branco em todos os elementos do calendário */
-.championship-form-container .MuiPickersPopper-root,
-.championship-form-container .MuiPickersPopper-root .MuiPaper-root,
-.championship-form-container .MuiPickersCalendar-root,
-.championship-form-container .MuiPickersCalendar-root .MuiDayCalendar-root,
-.championship-form-container .MuiPickersCalendarHeader-root,
-.championship-form-container .MuiPickersCalendarHeader-root::before,
-.championship-form-container .MuiPickersCalendarHeader-root::after {
-  background: #ffffff !important;
-  background-color: #ffffff !important;
-  opacity: 1 !important;
-}
-
-/* Garantir que não há transparência */
-.championship-form-container .MuiPaper-root,
-.championship-form-container .MuiPopper-root .MuiPaper-root,
-.championship-form-container .MuiOutlinedInput-root {
-  background: #ffffff !important;
-  background-color: #ffffff !important;
-  opacity: 1 !important;
-}
-
-/* Garantir que o header do calendário tenha fundo sólido */
-.championship-form-container .MuiPickersCalendarHeader-root {
-  background: #667eea !important;
-  background-color: #667eea !important;
-  opacity: 1 !important;
-}
-
-/* Estilos para inputs de data nativos */
-.date-input-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.date-input {
-  padding: 0.5rem 0.7rem 0.5rem 2.5rem !important;
-  font-size: 0.8rem !important;
-  font-weight: 400 !important;
-  color: #2d3748 !important;
-  background-color: #ffffff !important;
-  border: 2px solid #e2e8f0 !important;
-  border-radius: 8px !important;
-  min-height: 36px !important;
-  height: 36px !important;
-  width: 100% !important;
-  transition: all 0.3s ease !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
-}
-
-.date-input:focus {
-  outline: none !important;
-  border-color: #2196F3 !important;
-  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1) !important;
-}
-
-.date-input:hover {
-  border-color: #2196F3 !important;
-  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.05) !important;
-}
-
-.date-input::-webkit-calendar-picker-indicator {
-  opacity: 0;
-  position: absolute;
-  right: 0.5rem;
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-}
-
-.date-icon {
-  position: absolute !important;
-  left: 0.7rem !important;
-  color: #2196F3 !important;
-  font-size: 1rem !important;
-  pointer-events: all !important;
-  cursor: pointer !important;
-  z-index: 1 !important;
-  transition: all 0.3s ease !important;
-}
-
-.date-icon:hover {
-  color: #1976D2 !important;
-  transform: scale(1.1) !important;
-}
-
-/* Calendário customizado */
-.custom-calendar {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: #ffffff;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  margin-top: 4px;
-  overflow: hidden;
-  animation: calendarSlideIn 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.calendar-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 0.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-}
-
-.nav-btn {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 4px 8px;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  font-weight: bold;
-}
-
-.nav-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-}
-
-.close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
-}
-
-.calendar-body {
-  padding: 1rem;
-  background: #ffffff;
-}
-
-.calendar-month-year {
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: white;
-  text-transform: capitalize;
-  flex: 1;
-  text-align: center;
-}
-
-.calendar-weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-  margin-bottom: 8px;
-}
-
-.calendar-weekdays div {
-  text-align: center;
-  font-weight: 600;
-  font-size: 0.8rem;
-  color: #4a5568;
-  padding: 8px 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.calendar-days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-
-.calendar-day {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: none;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #2d3748;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-}
-
-.calendar-day:hover:not(.disabled) {
-  background: rgba(33, 150, 243, 0.1);
-  color: #2196F3;
-  transform: scale(1.1);
-}
-
-.calendar-day.today {
-  background: rgba(33, 150, 243, 0.2);
-  color: #2196F3;
-  font-weight: 600;
-}
-
-.calendar-day.selected {
-  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-  color: white;
-  font-weight: 700;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
-}
-
-.calendar-day.selected:hover {
-  background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
-  transform: scale(1.15);
-}
-
-.calendar-day.other-month {
-  color: #cbd5e0;
-}
-
-.calendar-day.disabled {
-  color: #e2e8f0;
-  cursor: not-allowed;
-  background: #f7fafc;
-}
-
-.calendar-day.disabled:hover {
-  background: #f7fafc;
-  transform: none;
-}
-
-/* Animação de entrada do calendário */
-@keyframes calendarSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Estilos específicos para formulário de campeonato */
 .championship-form-bg {
   min-height: 100vh;
   padding: 2rem;
-  background: linear-gradient(135deg, #f0f2f5 0%, #e8f4fd 50%, #f0f2f5 100%);
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
   position: relative;
   overflow: hidden;
 }
 
+.championship-form-bg * {
+  box-sizing: border-box;
+}
+
 .championship-form-bg::before {
+  display: none;
+}
+
+.championship-form-bg::after {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle, rgba(33, 150, 243, 0.04) 0%, transparent 70%);
-  animation: pulse 8s ease-in-out infinite;
+  background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%);
+  z-index: 1;
   pointer-events: none;
 }
 
 .championship-form-container {
-  width: 95%;
-  max-width: 1800px;
-  min-width: 1200px;
+  max-width: 800px;
   margin: 0 auto;
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(33, 150, 243, 0.1);
+  padding: 2.5rem;
+  background: rgba(255,255,255,0.1);
   backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
   position: relative;
-  z-index: 1;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .championship-form-header {
-  text-align: center;
   margin-bottom: 2rem;
+  text-align: center;
   position: relative;
-  z-index: 2;
 }
 
 .championship-form-trophy {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   margin-bottom: 1rem;
   filter: drop-shadow(0 4px 16px #ffd70088);
   animation: trophy-pop 0.8s cubic-bezier(.23,1.12,.62,1.01);
 }
 
-@keyframes trophy-pop {
-  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
-  50% { transform: scale(1.2) rotate(-90deg); opacity: 0.8; }
-  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+.championship-form-header h2 {
+  color: #fff;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.championship-form-header h2::after {
+  content: '';
+  position: absolute;
+  bottom: -0.7rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, #2196F3, #3f51b5);
+  border-radius: 2px;
+}
+
+.championship-form-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  margin-top: 1rem;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
 .championship-form {
-  max-width: 800px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.championship-form label {
+  display: block;
+  color: #fff;
+  margin-bottom: 0.8rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.championship-form input,
+.championship-form textarea,
+.championship-form select {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.championship-form input:focus,
+.championship-form textarea:focus,
+.championship-form select:focus {
+  outline: none;
+  border-color: #2196F3;
+  box-shadow: 0 0 15px rgba(33,150,243,0.3);
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.15);
+}
+
+.championship-form input:hover,
+.championship-form textarea:hover,
+.championship-form select:hover {
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.12);
+}
+
+.championship-form input::placeholder,
+.championship-form textarea::placeholder {
+  color: rgba(255,255,255,0.7);
+  font-weight: 400;
+}
+
+/* Custom styled select */
+/*.styled-select base visual container*/
+.styled-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  position: relative;
+  padding-right: 2.4rem !important;
+  background: rgba(255,255,255,0.18) linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.05));
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  color: #ffffff;
+}
+
+.styled-select:focus {
+  background: rgba(255,255,255,0.24) linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.07));
+}
+
+.styled-select.error-select {
+  border-color: #e53935 !important;
+}
+
+/* Dropdown arrow */
+.styled-select::-ms-expand { display: none; }
+
+.styled-select-wrapper {
+  position: relative;
+}
+
+/* Remove custom arrow (browser native arrow preserved) */
+.styled-select-wrapper::after { content: none; }
+
+.styled-select-wrapper:focus-within::after {
+  color: #2196F3;
+}
+
+/* High-contrast placeholder for select first option */
+select.styled-select option[value=""] { color: #555; }
+
+/* Force dropdown list (where supported) to have light background & dark text for readability */
+select.styled-select option { color: #111; background: #ffffff; }
+select.styled-select option:checked { background: #1976d2 linear-gradient(#1976d2,#1976d2); color: #fff; }
+select.styled-select:disabled { cursor: not-allowed; opacity: 0.6; }
+
+/* Firefox focus ring inside gradient */
+@-moz-document url-prefix() {
+  .styled-select { background-clip: padding-box; }
 }
 
 .form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.error-message,
-.success-message {
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  text-align: center;
-  font-weight: 500;
-}
-
-.error-message {
-  background: rgba(244, 67, 54, 0.1);
-  color: #d32f2f;
-  border: 1px solid rgba(244, 67, 54, 0.2);
-}
-
-.success-message {
-  background: rgba(76, 175, 80, 0.1);
-  color: #388e3c;
-  border: 1px solid rgba(76, 175, 80, 0.2);
-}
-
-.loading-container {
   display: flex;
-  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.form-row > div {
+  flex: 1;
+}
+
+.form-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(90deg, #1976D2 60%, #42A5F5 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 1rem;
+}
+
+.form-btn:hover:not(:disabled) {
+  background: linear-gradient(90deg, #125ea2 60%, #1976D2 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+}
+
+.form-btn:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.back-btn {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 3rem;
+  gap: 0.3rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 0.85rem;
+  z-index: 10;
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-3px);
+}
+
+.back-btn svg {
+  font-size: 16px;
+}
+
+.form-error {
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.1);
+  padding: 0.8rem;
+  border-radius: 8px;
   text-align: center;
+  margin-top: 1rem;
+  border: 1px solid rgba(255, 68, 68, 0.2);
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #2196F3;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
+.form-success {
+  color: #00C851;
+  background: rgba(0, 200, 81, 0.1);
+  padding: 0.8rem;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 1rem;
+  border: 1px solid rgba(0, 200, 81, 0.2);
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+@keyframes trophy-pop {
+  0% { transform: scale(0.7) rotate(-10deg); opacity: 0; }
+  60% { transform: scale(1.1) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
-/* Responsividade para formulário de campeonato */
+@keyframes zoomBackground {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
 @media (max-width: 768px) {
   .championship-form-bg {
     padding: 1rem;
   }
   
   .championship-form-container {
-    width: 100%;
-    min-width: auto;
     padding: 1.5rem;
   }
   
   .form-row {
-    grid-template-columns: 1fr;
-    gap: 0.8rem;
+    flex-direction: column;
+    gap: 1rem;
   }
   
-  .championship-form-header {
-    margin-bottom: 1.5rem;
+  .championship-form-header h2 {
+    font-size: 1.8rem;
+  }
+}
+
+.date-input {
+  font-family: monospace;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.date-input::placeholder {
+  letter-spacing: normal;
+  font-family: inherit;
+}
+
+/* Ajuste para o layout responsivo */
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
   }
   
-  .championship-form-title {
-    font-size: 1.5rem;
+  .form-row .form-group {
+    width: 100%;
   }
   
-  .championship-form-trophy {
-    width: 50px;
-    height: 50px;
+  .date-input {
+    width: 100%;
   }
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, IconButton, InputAdornment, Alert, Input } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, IconButton, InputAdornment, Alert } from '@mui/material';
 import axios from 'axios';
 import ToastComponent from '../../Toast/ToastComponent';
 import LockIcon from '@mui/icons-material/Lock';
@@ -25,6 +25,7 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [currentPasswordError, setCurrentPasswordError] = useState('');
     
     useEffect(() => {   
         if (!senha || !confirmarSenha) return;
@@ -43,12 +44,16 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
     }, [senha, confirmarSenha]);
 
     const updatePasswordRequest = async (userId: number) => {
-        setPasswordError('');
-
+        setCurrentPasswordError('');
+        if (!senhaAtual) {
+            setCurrentPasswordError('Digite a senha atual');
+            setConfirmPasswordTouched(true);
+            return;
+        }
         if (senha && senha === confirmarSenha) {
             setIsLoading(true);
             try {
-                const response = await axios.put(`http://localhost:3001/api/password-reset/${userId}/update`,
+                const response = await axios.put(`http://localhost:3001/api/user/password/${userId}`,
                     {
                         currentPassword: senhaAtual,
                         password: senha,
@@ -67,20 +72,26 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
                     }, 1500);
                 }
             } catch (error: any) {
-                setToastMessage(error.response?.data?.message || "Erro ao alterar senha");
-                setToastBg("danger");
-                setShowToast(true);
+                if (error.response?.data?.message?.toLowerCase().includes('atual')) {
+                    setCurrentPasswordError(error.response.data.message);
+                } else {
+                    setToastMessage(error.response?.data?.message || "Erro ao alterar senha");
+                    setToastBg("danger");
+                    setShowToast(true);
+                }
             } finally {
                 setIsLoading(false);
             }
         }
-    };
-
+    }
+    
     const handleClose = () => {
+        // Reset form state when closing
         setSenhaAtual(null);
         setSenha(null);
         setConfirmarSenha(null);
         setPasswordError('');
+        setCurrentPasswordError('');
         setConfirmPasswordTouched(false);
         setShowPassword(false);
         setShowConfirmPassword(false);
@@ -98,12 +109,25 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
     return (
         <>
             <Dialog open={show} onClose={handleClose} disableScrollLock maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
-                <DialogTitle  sx={{ textAlign: 'center', fontWeight: 700, fontSize: 22}}>
+                <DialogTitle className="modal-header" sx={{ textAlign: 'center', fontWeight: 700, fontSize: 22, background: 'linear-gradient(to right, #007bff, #0056b3)', color: 'white', padding: '16px 16px 0 16px', textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}>
                     <LockIcon className="lock-icon" /> Alterar Senha
                 </DialogTitle>
                 <DialogContent className="modal-body" sx={{ p: 3 }}>
-                    <form className="password-form">            
-                        
+                    <form className="password-form">
+                        <TextField
+                            label="Senha atual"
+                            type="password"
+                            placeholder="Digite sua senha atual"
+                            onChange={(e) => setSenhaAtual(e.target.value)}
+                            autoFocus
+                            className="password-input"
+                            error={!!currentPasswordError}
+                            helperText={currentPasswordError}
+                            fullWidth
+                            margin='normal'
+                            variant='outlined'
+                            sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(25, 118, 210, 0.07)' }}
+                        />
                         <TextField
                             label="Nova senha"
                             type={showPassword ? "text" : "password"}
@@ -136,7 +160,7 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
                             fullWidth
                             margin='normal'
                             variant='outlined'
-                            sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(19, 21, 23, 0)' }}
+                            sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(25, 118, 210, 0.07)' }}
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
@@ -150,6 +174,7 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
                                 ),
                             }}
                         />
+                        
                         {confirmPasswordTouched && passwordError && (
                             <Alert severity="error" sx={{ mt: 2 }}>{passwordError}</Alert>
                         )}

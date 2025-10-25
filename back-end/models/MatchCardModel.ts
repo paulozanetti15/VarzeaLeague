@@ -15,7 +15,7 @@ MatchCard.init({
   },
   user_id: {
     type: DataTypes.INTEGER,
-    allowNull: true, // opcional
+    allowNull: false,
   },
   card_type: {
     type: DataTypes.ENUM('yellow', 'red'),
@@ -24,10 +24,6 @@ MatchCard.init({
   minute: {
     type: DataTypes.INTEGER,
     allowNull: true,
-  },
-  player_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true, // novo campo para vincular ao Player
   },
 }, {
   sequelize,

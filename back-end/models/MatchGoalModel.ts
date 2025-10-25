@@ -15,20 +15,7 @@ MatchGoal.init({
   },
   user_id: {
     type: DataTypes.INTEGER,
-    allowNull: true,
-  },
-  player_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-  },
-  team_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-  },
-  minute: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    defaultValue: 0,
+    allowNull: false,
   },
 }, {
   sequelize,

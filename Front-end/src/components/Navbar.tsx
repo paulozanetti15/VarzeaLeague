@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   AppBar,
+  Box,
   IconButton,
   Typography,
   Avatar,
+  Button,
   Tooltip,
   useTheme,
   Drawer,
@@ -15,13 +17,11 @@ import {
   Badge,
   Chip,
 } from '@mui/material';
-
 import {
   Menu as MenuIcon,
   SportsSoccer,
   People,
   EmojiEvents,
-  Leaderboard,
   Dashboard,
   Logout,
   Person,
@@ -35,12 +35,13 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getRoleName } from '../utils/roleUtils';
-import { History } from '@mui/icons-material';
-import { api } from '../services/api';
-import Dropdown from 'react-bootstrap/Dropdown';
-import { SplitButton } from 'react-bootstrap';
-import './Navbar.css';
+import '../components/landing/Header.css';
 
+// Pages are computed per role (see visiblePages below)
+
+const adminPages = [
+  { name: 'Usuários', path: '/admin/users', icon: <Person /> },
+];
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -50,47 +51,16 @@ const Navbar = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const [hasTeam, setHasTeam] = useState<boolean>(false);
-
-  useEffect(() => {
-    let mounted = true;
-    const checkTeams = async () => {
-      try {
-        const teams = await api.teams.list();
-        if (!mounted) return;
-        setHasTeam(Array.isArray(teams) && teams.length > 0);
-      } catch (e) {
-        if (!mounted) return;
-        setHasTeam(false);
-      }
-    };
-    if (user) {
-      checkTeams();
-    } else {
-      setHasTeam(false);
-    }
-    return () => { mounted = false; };
-  }, [user]);
-
   const showBackButton = location.pathname !== '/' && location.pathname !== '/dashboard';
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
-  
-
   const handleNavigation = (path: string) => {
-    if (path.startsWith('/historico') && !hasTeam) {
-      navigate('/teams');
-      setMobileOpen(false);
-      setDrawerUserOpen(false);
-      return;
-    }
     navigate(path);
     setMobileOpen(false);
     setDrawerUserOpen(false);
-    
   };
 
   const handleLogout = () => {
@@ -107,6 +77,7 @@ const Navbar = () => {
     navigate(-1);
   };
 
+  // Compute role-based visible pages
   const role = user?.userTypeId;
   const visiblePages = (() => {
     const base = [] as { name: string; path: string; icon: JSX.Element }[];
@@ -114,30 +85,27 @@ const Navbar = () => {
       { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
     ];
     switch (role) {
-      case 1:
+      case 1: // Admin Sistema
         return [
-          { name: 'Times', path: '/teams', icon: <People /> },
-          { name: 'Usuários', path: '/admin/users', icon: <Person /> },
-          { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
-          { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
-           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
-        ];
-      case 2:
-        return [
-          { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
-          { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
-           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
-        ];
-      case 3:
-        return [
-          { name: 'Times', path: '/teams', icon: <People /> },
-          ...(hasTeam ? [{ name: 'Histórico', path: '/historico', icon: <History/> }] : []),
-          ...(hasTeam ? [{ name: 'Calendário', path: '/calendario', icon: <CalendarMonth/> }] : []),
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
+          { name: 'Times', path: '/teams', icon: <People /> },
+          { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
+          { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
         ];
-      case 4:
+      case 2: // Admin Eventos
         return [
-          { name: 'Ranking', path: '/ranking/jogadores', icon: <Leaderboard /> },
+          { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
+          { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
+          { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
+        ];
+      case 3: // Admin Times
+        return [
+          { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
+          { name: 'Times', path: '/teams', icon: <People /> },
+        ];
+      case 4: // Usuário Comum
+        return [
+          { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
         ];
       default:
         return base;
@@ -145,23 +113,119 @@ const Navbar = () => {
   })();
 
   const drawer = (
-
-    <div className="navbar-drawer">
-      <Typography variant="h6" className="navbar-drawer-title">
+    <Box sx={{ textAlign: 'center', p: 2 }}>
+      <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: 'primary.main' }}>
         Várzea League
       </Typography>
-      <Divider className="navbar-divider" />
-      <List className="navbar-drawer-list">
+      <Divider sx={{ mb: 1 }} />
+      <List>
+        <ListItem
+          component="div"
+          key="Procurar"
+          onClick={() => handleNavigation('/listings')}
+          sx={{
+            backgroundColor: isActive('/listings') ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+            color: isActive('/listings') ? 'primary.main' : 'text.primary',
+            borderRadius: 2,
+            mb: 1,
+            cursor: 'pointer',
+            '&:hover': {
+              backgroundColor: 'rgba(25, 118, 210, 0.04)',
+            },
+          }}
+        >
+          <ListItemIcon sx={{ color: isActive('/listings') ? 'primary.main' : 'inherit' }}>
+            <Search />
+          </ListItemIcon>
+          <ListItemText primary="Procurar" />
+        </ListItem>
+        {visiblePages.map((page) => (
+          <ListItem
+            component="div"
+            key={page.name}
+            onClick={() => handleNavigation(page.path)}
+            sx={{
+              backgroundColor: isActive(page.path) ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+              color: isActive(page.path) ? 'primary.main' : 'text.primary',
+              borderRadius: 2,
+              mb: 1,
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: 'rgba(25, 118, 210, 0.04)',
+              },
+            }}
+          >
+            <ListItemIcon sx={{ color: isActive(page.path) ? 'primary.main' : 'inherit' }}>{page.icon}</ListItemIcon>
+            <ListItemText primary={page.name} />
+          </ListItem>
+        ))}
+        {user?.userTypeId === 3 && (
+          <ListItem
+            component="div"
+            key="Calendário"
+            onClick={() => handleNavigation('/calendario')}
+            sx={{
+              backgroundColor: isActive('/calendario') ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+              color: isActive('/calendario') ? 'primary.main' : 'text.primary',
+              borderRadius: 2,
+              mb: 1,
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: 'rgba(25, 118, 210, 0.04)',
+              },
+            }}
+          >
+            <ListItemIcon sx={{ color: isActive('/calendario') ? 'primary.main' : 'inherit' }}>
+              <CalendarMonth />
+            </ListItemIcon>
+            <ListItemText primary="Calendário" />
+          </ListItem>
+        )}
+        {user?.userTypeId === 1 && (
+          <>
+            <Divider sx={{ my: 1 }} />
+            {adminPages.map((page) => (
+              <ListItem
+                component="div"
+                key={page.name}
+                onClick={() => handleNavigation(page.path)}
+                sx={{
+                  backgroundColor: isActive(page.path) ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+                  color: isActive(page.path) ? 'primary.main' : 'text.primary',
+                  borderRadius: 2,
+                  mb: 1,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ color: isActive(page.path) ? 'primary.main' : 'inherit' }}>{page.icon}</ListItemIcon>
+                <ListItemText primary={page.name} />
+              </ListItem>
+            ))}
+          </>
+        )}
+        {/* Opções para usuários não logados */}
         {!user && (
           <>
-            <Divider className="navbar-divider" />
+            <Divider sx={{ my: 1 }} />
             <ListItem
               component="div"
               key="Login"
               onClick={() => handleNavigation('/login')}
-              className={`navbar-drawer-item ${isActive('/login') ? 'active' : ''}`}
+              sx={{
+                backgroundColor: isActive('/login') ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+                color: isActive('/login') ? 'primary.main' : 'text.primary',
+                borderRadius: 2,
+                mb: 1,
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                },
+              }}
             >
-              <ListItemIcon className="navbar-drawer-item-icon">
+              <ListItemIcon sx={{ color: isActive('/login') ? 'primary.main' : 'inherit' }}>
                 <Login />
               </ListItemIcon>
               <ListItemText primary="Entrar" />
@@ -170,9 +234,18 @@ const Navbar = () => {
               component="div"
               key="Register"
               onClick={() => handleNavigation('/register')}
-              className={`navbar-drawer-item ${isActive('/register') ? 'active' : ''}`}
+              sx={{
+                backgroundColor: isActive('/register') ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+                color: isActive('/register') ? 'primary.main' : 'text.primary',
+                borderRadius: 2,
+                mb: 1,
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                },
+              }}
             >
-              <ListItemIcon className="navbar-drawer-item-icon">
+              <ListItemIcon sx={{ color: isActive('/register') ? 'primary.main' : 'inherit' }}>
                 <PersonAdd />
               </ListItemIcon>
               <ListItemText primary="Registrar" />
@@ -180,119 +253,243 @@ const Navbar = () => {
           </>
         )}
       </List>
-    </div>
+    </Box>
   );
 
   const userDrawer = (
-    <div className="navbar-user-drawer">
+    <Box
+      sx={{
+        width: { xs: 270, sm: 320 },
+        p: 3,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        background: '#fff',
+        color: 'primary.main',
+        boxShadow: '0 8px 32px 0 rgba(25, 118, 210, 0.15)',
+        borderTopLeftRadius: 24,
+        borderBottomLeftRadius: 24,
+        zIndex: 2000,
+      }}
+      role="presentation"
+    >
       <Avatar
         alt={user?.name}
         src={user?.avatar}
-        className="navbar-user-avatar"
+        sx={{ width: 90, height: 90, border: '3px solid #1976d2', color: '#1976d2', fontWeight: 700, fontSize: 36, mb: 2 }}
       >
         {user?.name?.charAt(0)}
       </Avatar>
-      <Typography variant="h6" className="navbar-user-name">{user?.name}</Typography>
-      <Typography variant="body2" className="navbar-user-email">{user?.email}</Typography>
+      <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>{user?.name}</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{user?.email}</Typography>
       {user?.userTypeId && (
         <Chip
           label={getRoleName(user.userTypeId)}
           color="primary"
           variant="outlined"
-          className="navbar-user-role-chip"
+          sx={{ mb: 3, fontWeight: 600, fontSize: 14, letterSpacing: 0.5 }}
         />
       )}
-      <button
-        className="navbar-user-button"
+      <Button
+        fullWidth
+        variant="contained"
+        color="primary"
+        startIcon={<Person />}
+        sx={{ mb: 2, borderRadius: 3, fontWeight: 700, textTransform: 'none', py: 1.2, background: '#1976d2', '&:hover': { background: '#2196f3' } }}
         onClick={() => handleNavigation('/perfil')}
       >
-        <Person /> Perfil
-      </button>
+        Perfil
+      </Button>
       {user?.userTypeId === 1 && (
-        <button
-          className="navbar-user-button"
+        <Button
+          fullWidth
+          variant="contained"
+          color="primary"
+          startIcon={<Person />}
+          sx={{ mb: 2, borderRadius: 3, fontWeight: 700, textTransform: 'none', py: 1.2, background: '#1976d2', '&:hover': { background: '#2196f3' } }}
           onClick={() => handleNavigation('/admin/users')}
         >
-          <Person /> Gerenciar Usuários
-        </button>
+          Gerenciar Usuários
+        </Button>
       )}
-      <button
-        className="navbar-user-button"
+      <Button
+        fullWidth
+        variant="contained"
+        color="primary"
+        startIcon={<Logout />}
+        sx={{ mb: 2, borderRadius: 3, fontWeight: 700, textTransform: 'none', py: 1.2, background: '#1976d2', '&:hover': { background: '#2196f3' } }}
         onClick={handleLogout}
       >
-        <Logout /> Sair
-      </button>
-      <div className="flex-grow" />
-      <Typography variant="caption" className="navbar-user-footer">
+        Sair
+      </Button>
+      <Box sx={{ flexGrow: 1 }} />
+      <Typography variant="caption" color="text.secondary" sx={{ mt: 4 }}>
         Várzea League &copy; {new Date().getFullYear()}
       </Typography>
-    </div>
+    </Box>
   );
 
   return (
-    <AppBar position="fixed" elevation={0}>
-      <div className="navbar-appbar">
+    <AppBar
+      position="fixed"
+      elevation={0}
+    >
+      <Box
+        sx={{
+          background: 'linear-gradient(90deg, #0d47a1 0%, #1976d2 100%)',
+          boxShadow: '0 4px 20px rgba(33, 150, 243, 0.10)',
+          minHeight: 72,
+          color: '#fff',
+          width: '100vw',
+          maxWidth: '100vw',
+          left: 0,
+          top: 0,
+          position: 'fixed',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          px: { xs: 1, md: 4 },
+          py: 1.5,
+          borderRadius: 0,
+        }}
+      >
         {/* Botão de voltar */}
         {showBackButton && (
-          <IconButton onClick={handleBack} className="navbar-back-button">
+          <IconButton onClick={handleBack} sx={{ mr: 2 }} color="primary">
             <ArrowBack />
           </IconButton>
         )}
-        <div
+        {/* Logo e nome */}
+        <Box
           onClick={() => handleNavigation('/')}
           className="navbar-brand"
+          sx={{
+            textDecoration: 'none',
+            position: 'relative',
+            display: 'inline-block',
+            color: '#fff',
+            fontWeight: 900,
+            letterSpacing: 2,
+            textTransform: 'uppercase',
+            fontFamily: 'Inter, Montserrat, Arial, sans-serif',
+            fontSize: '1.55rem',
+            lineHeight: 1.1,
+            padding: '0.2rem 0',
+            transition: 'all 0.3s ease',
+            cursor: 'pointer',
+            verticalAlign: 'middle',
+            minWidth: 0,
+            maxWidth: '100%',
+            whiteSpace: 'nowrap',
+            '&:hover': {
+              color: '#ffd600',
+            },
+          }}
         >
           VÁRZEA LEAGUE
-        </div>
-        <div className="navbar-desktop-menu">
-          {user?.userTypeId === 1 && (
-            <div className="navbar-manage-dropdown">
-              <SplitButton id="dropdown-basic-button" title={<><Person className="navbar-manage-icon"/> Gerenciar</>}>
-                {visiblePages.map((page, index) => (
-                  <Dropdown.Item key={index} href={page.path} className="navbar-dropdown-item">
-                    <span className="navbar-dropdown-icon">{page.icon}</span>
-                    <span className="navbar-dropdown-text">{page.name}</span>
-                  </Dropdown.Item>
-                ))}
-              </SplitButton>
-            </div>
-          )}
-          {user?.userTypeId === 2 && (
-            <div className="navbar-manage-dropdown">
-              <SplitButton id="dropdown-basic-button" title={<><Person className="navbar-manage-icon"/> Gerenciar</>}>
-                {visiblePages.map((page, index) => (
-                  <Dropdown.Item key={index} href={page.path} className="navbar-dropdown-item">
-                    <span className="navbar-dropdown-icon">{page.icon}</span>
-                    <span className="navbar-dropdown-text">{page.name}</span>
-                  </Dropdown.Item>
-                ))}
-              </SplitButton>
-            </div>
-          )}
+        </Box>
+        {/* Menu desktop */}
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
+          {visiblePages.map((page) => (
+            <Button
+              key={page.name}
+              onClick={() => handleNavigation(page.path)}
+              startIcon={page.icon}
+              sx={{
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: 18,
+                letterSpacing: 1,
+                borderRadius: 8,
+                padding: '0.5rem 1.2rem',
+                position: 'relative',
+                transition: 'all 0.3s',
+                '&:hover': {
+                  color: '#ffd600',
+                  background: 'rgba(255,255,255,0.08)',
+                },
+              }}
+            >
+              {page.name}
+            </Button>
+          ))}
+          <Button
+            key="Procurar"
+            onClick={() => handleNavigation('/listings')}
+            startIcon={<Search />}
+            sx={{
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: 18,
+              letterSpacing: 1,
+              borderRadius: 8,
+              padding: '0.5rem 1.2rem',
+              position: 'relative',
+              transition: 'all 0.3s',
+              '&:hover': {
+                color: '#ffd600',
+                background: 'rgba(255,255,255,0.08)',
+              },
+            }}
+          >
+            Procurar
+          </Button>
           {user?.userTypeId === 3 && (
+            <Button
+              key="Calendário"
+              onClick={() => handleNavigation('/calendario')}
+              startIcon={<CalendarMonth />}
+              sx={{
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: 18,
+                letterSpacing: 1,
+                borderRadius: 8,
+                padding: '0.5rem 1.2rem',
+                position: 'relative',
+                transition: 'all 0.3s',
+                '&:hover': {
+                  color: '#ffd600',
+                  background: 'rgba(255,255,255,0.08)',
+                },
+              }}
+            >
+              Calendário
+            </Button>
+          )}
+          {user?.userTypeId === 1 && (
             <>
-              {visiblePages.map((page, index) => (
-                <button
-                  key={index}
-                  className="navbar-menu-button"
+              <Divider orientation="vertical" flexItem sx={{ mx: 2 }} />
+              {adminPages.map((page) => (
+                <Button
+                  key={page.name}
                   onClick={() => handleNavigation(page.path)}
+                  startIcon={page.icon}
+                  sx={{
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: 18,
+                    letterSpacing: 1,
+                    borderRadius: 8,
+                    padding: '0.5rem 1.2rem',
+                    position: 'relative',
+                    transition: 'all 0.3s',
+                    '&:hover': {
+                      color: '#ffd600',
+                      background: 'rgba(255,255,255,0.08)',
+                    },
+                  }}
                 >
-                  {page.icon} {page.name}
-                </button>
+                  {page.name}
+                </Button>
               ))}
             </>
           )}
-          
-
-          <button
-            className="navbar-menu-button"
-            onClick={() => handleNavigation('/listings')}
-          >
-            <Search /> Procurar
-          </button>
-        </div>
-        <div className="navbar-mobile-menu">
-          <IconButton onClick={handleDrawerToggle} className="navbar-mobile-toggle">
+        </Box>
+        {/* Menu mobile */}
+        <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
+          <IconButton onClick={handleDrawerToggle} color="primary">
             <MenuIcon />
           </IconButton>
           <Drawer
@@ -310,23 +507,29 @@ const Navbar = () => {
           >
             {drawer}
           </Drawer>
-        </div>
-
+        </Box>
+        {/* Avatar e notificações (usuário logado) ou botões de login/register (não logado) */}
         {user ? (
-          <div className="navbar-user-actions">
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 2 }}>
             <Tooltip title="Notificações">
-              <IconButton className="navbar-notification-button">
+              <IconButton sx={{ color: 'primary.main' }}>
                 <Badge badgeContent={3} color="error">
                   <Notifications />
                 </Badge>
               </IconButton>
             </Tooltip>
             <Tooltip title="Abrir menu do usuário">
-              <IconButton onClick={() => setDrawerUserOpen(true)} className="navbar-avatar-button">
+              <IconButton onClick={() => setDrawerUserOpen(true)} sx={{ p: 0 }}>
                 <Avatar
                   alt={user.name}
                   src={user.avatar}
-                  className="navbar-avatar"
+                  sx={{
+                    bgcolor: 'primary.main',
+                    width: 40,
+                    height: 40,
+                    border: '2px solid #ffd600',
+                    boxShadow: '0 2px 8px rgba(13,71,161,0.10)',
+                  }}
                 >
                   {user.name?.charAt(0)}
                 </Avatar>
@@ -349,24 +552,54 @@ const Navbar = () => {
             >
               {userDrawer}
             </Drawer>
-          </div>
+          </Box>
         ) : (
-          <div className="navbar-auth-buttons">
-            <button
-              className="navbar-login-button"
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 2 }}>
+            <Button
               onClick={() => handleNavigation('/login')}
+              startIcon={<Login />}
+              sx={{
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: 16,
+                letterSpacing: 1,
+                borderRadius: 8,
+                padding: '0.5rem 1.2rem',
+                border: '2px solid #fff',
+                transition: 'all 0.3s',
+                '&:hover': {
+                  color: '#0d47a1',
+                  background: '#fff',
+                },
+              }}
             >
-              <Login /> Entrar
-            </button>
-            <button
-              className="navbar-register-button"
+              Entrar
+            </Button>
+            <Button
               onClick={() => handleNavigation('/register')}
+              startIcon={<PersonAdd />}
+              sx={{
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: 16,
+                letterSpacing: 1,
+                borderRadius: 8,
+                padding: '0.5rem 1.2rem',
+                background: '#ffd600',
+                border: '2px solid #ffd600',
+                transition: 'all 0.3s',
+                '&:hover': {
+                  color: '#ffd600',
+                  background: 'transparent',
+                  border: '2px solid #ffd600',
+                },
+              }}
             >
-              <PersonAdd /> Registrar
-            </button>
-          </div>
+              Registrar
+            </Button>
+          </Box>
         )}
-      </div>
+      </Box>
     </AppBar>
   );
 };

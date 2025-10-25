@@ -26,15 +26,10 @@ import ChampionshipDetail from './pages/championships/ChampionsShipDetail/Champi
 import ChampionshipEditForm from './pages/championships/ChampionshipEditForm'
 import UserManagement from './pages/UserManagement'
 import Navbar from './components/Navbar'
-import TeamRequiredRoute from './components/TeamRequiredRoute'
 import EditMatch from './pages/matches/EditMatch'
 import { Box, CssBaseline } from '@mui/material'
 import SystemOverview from './components/dashboard/SystemOverview'
-import CalendarioPage from './pages/calendario/calendárioPage'
-import HistoricoPage from './pages/Historico/HistoricoPage'
-import { HistoricoProvider } from './context/HistoricoContext';
-import RankingPlayers from './pages/ranking/RankingPlayers'
-import RankingTeams from './pages/ranking/RankingTeams'
+import CalendarioPage from './components/calendario/calendárioPage'
 
 // Componente simples para loading
   const Loading = () => (
@@ -96,18 +91,9 @@ import RankingTeams from './pages/ranking/RankingTeams'
             } />
 
             <Route path="/dashboard" element={
-              <PrivateRoute isLoggedIn={isLoggedIn}>
-                <RoleBasedRoute 
-                  isLoggedIn={isLoggedIn} 
-                  userRole={user?.userTypeId} 
-                  allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
-                  redirectTo="/"
-                >
-                  <PageTransition>
-                    <SystemOverview />
-                  </PageTransition>
-                </RoleBasedRoute>
-              </PrivateRoute>
+              <PageTransition>
+                <SystemOverview />
+              </PageTransition>
             } />
 
             <Route path="/listings" element={
@@ -284,7 +270,7 @@ import RankingTeams from './pages/ranking/RankingTeams'
               <RoleBasedRoute 
                 isLoggedIn={isLoggedIn} 
                 userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA,USER_ROLES.ADMIN_EVENTOS]}
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA,USER_ROLES.ADMIN_EVENTOS,USER_ROLES.ADMIN_TIMES]}
                 redirectTo="/"
               >
                 <PageTransition>
@@ -340,16 +326,6 @@ import RankingTeams from './pages/ranking/RankingTeams'
               </RoleBasedRoute>
             </PrivateRoute>
           } />
-          <Route path="/historico" element={
-            <PrivateRoute isLoggedIn={isLoggedIn}>
-              <RoleBasedRoute isLoggedIn={isLoggedIn} userRole={user?.userTypeId} allowedRoles={[USER_ROLES.ADMIN_TIMES]} redirectTo="/">
-                  <TeamRequiredRoute redirectTo="/teams">
-                    <PageTransition><HistoricoPage /></PageTransition>
-                  </TeamRequiredRoute>
-              </RoleBasedRoute>
-            </PrivateRoute>
-          } />
-
 
           <Route path="/championships/:id/edit" element={
             <PrivateRoute isLoggedIn={isLoggedIn}>
@@ -366,34 +342,6 @@ import RankingTeams from './pages/ranking/RankingTeams'
             </PrivateRoute>
           } />
 
-          <Route path="/ranking/jogadores" element={
-            <PrivateRoute isLoggedIn={isLoggedIn}>
-              <RoleBasedRoute 
-                isLoggedIn={isLoggedIn} 
-                userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
-                redirectTo="/"
-              >
-                <PageTransition>
-                  <RankingPlayers />
-                </PageTransition>
-              </RoleBasedRoute>
-            </PrivateRoute>
-          } />
-          <Route path='/championships/:id/ranking-times' element={
-            <PrivateRoute isLoggedIn={isLoggedIn}>
-              <RoleBasedRoute 
-                isLoggedIn={isLoggedIn} 
-                userRole={user?.userTypeId} 
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES,USER_ROLES.USUARIO_COMUM]}
-                redirectTo="/"
-              >
-                <PageTransition>
-                  <RankingTeams />
-                </PageTransition>
-              </RoleBasedRoute>
-            </PrivateRoute>
-          } />
           {/* Rota para Gerenciamento de Usuários (Apenas Admin do Sistema) */}
           <Route path="/admin/users" element={
             <PrivateRoute isLoggedIn={isLoggedIn}>
@@ -421,14 +369,12 @@ import RankingTeams from './pages/ranking/RankingTeams'
           style: {
             background: '#363636',
             color: '#fff',
-            zIndex: 999999,
           },
           success: {
             duration: 3000,
             style: {
               background: '#28a745',
               color: '#fff',
-              zIndex: 999999,
             },
           },
           error: {
@@ -436,12 +382,8 @@ import RankingTeams from './pages/ranking/RankingTeams'
             style: {
               background: '#dc3545',
               color: '#fff',
-              zIndex: 999999,
             },
           },
-        }}
-        containerStyle={{
-          zIndex: 999999,
         }}
       />
     </Box>
@@ -451,10 +393,7 @@ import RankingTeams from './pages/ranking/RankingTeams'
 function App() {
   return (
     <BrowserRouter>
-     <HistoricoProvider>
       <AppContent />
-     </HistoricoProvider>
-      
     </BrowserRouter>
   );
 }
