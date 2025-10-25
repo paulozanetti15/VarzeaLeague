@@ -105,9 +105,13 @@ export const updateRules = async (req, res) => {
             });
 
             if (now > deadline) {
-                if (teamsCount < 2 && (match.status === 'aberta' || match.status === 'pendente')) {
+                if (teamsCount < 2 && (match.status === 'aberta' || match.status === 'sem_vagas')) {
                     await match.update({ 
                         status: 'cancelada'
+                    });
+                } else if (teamsCount >= 2 && match.status !== 'finalizada' && match.status !== 'cancelada') {
+                    await match.update({
+                        status: 'confirmada'
                     });
                 }
             } else {

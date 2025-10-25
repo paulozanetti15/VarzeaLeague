@@ -1,370 +1,819 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { api } from '../../services/api';
 import trophy from '../../assets/championship-trophy.svg';
 import './ChampionshipForm.css';
 import { format, parse, isValid } from 'date-fns';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import GroupsIcon from '@mui/icons-material/Groups';
+import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
+import { IconButton } from '@mui/material';
 
-const initialState = {
-  name: '',
-  description: '',
-  start_date: '',
-  end_date: '',
-  modalidade: '',
-  nomequadra: '',
-};
+interface ChampionshipFormData {
+  name: string;
+  description: string;
+  start_date: string;
+  end_date: string;
+  modalidade: string;
+  nomequadra: string;
+  tipo: 'liga' | 'mata-mata' | '';
+  fase_grupos: boolean;
+  max_teams: number;
+  genero: string;
+  num_grupos?: number;
+  times_por_grupo?: number;
+  num_equipes_liga?: number;
+}
 
 const ChampionshipForm: React.FC = () => {
-  const [form, setForm] = useState(initialState);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{[k:string]: string}>({});
-  const navigate = useNavigate();
-  const hiddenStartRef = useRef<HTMLInputElement>(null);
-  const hiddenEndRef = useRef<HTMLInputElement>(null);
+  const [showStartCalendar, setShowStartCalendar] = useState(false);
+  const [showEndCalendar, setShowEndCalendar] = useState(false);
+  const [currentStartMonth, setCurrentStartMonth] = useState(new Date());
+  const [currentEndMonth, setCurrentEndMonth] = useState(new Date());
+  const startCalendarRef = useRef<HTMLDivElement>(null);
+  const endCalendarRef = useRef<HTMLDivElement>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-
-    if (name === 'start_date' || name === 'end_date') {
-      // Validar e formatar a data
-      const dateRegex = /^(\d{0,2})\/(\d{0,2})\/(\d{0,4})$/;
-      let formattedDate = value.replace(/\D/g, '');
+  // Fechar calendário quando clicar fora
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
       
-      if (formattedDate.length <= 8) {
-        if (formattedDate.length > 4) {
-          formattedDate = formattedDate.replace(/(\d{2})(\d{2})(\d{0,4})/, '$1/$2/$3');
-        } else if (formattedDate.length > 2) {
-          formattedDate = formattedDate.replace(/(\d{2})(\d{0,2})/, '$1/$2');
-        }
-        
-        if (dateRegex.test(formattedDate) || formattedDate.length < 10) {
-          setForm(prev => ({
-            ...prev,
-            [name]: formattedDate
-          }));
-        }
+      if (startCalendarRef.current && !startCalendarRef.current.contains(target)) {
+        setShowStartCalendar(false);
       }
+      
+      if (endCalendarRef.current && !endCalendarRef.current.contains(target)) {
+        setShowEndCalendar(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  const [formData, setFormData] = useState<ChampionshipFormData>({
+    name: '',
+    description: '',
+    start_date: '',
+    end_date: '',
+    modalidade: '',
+    nomequadra: '',
+    tipo: '',
+    fase_grupos: false,
+    max_teams: 8,
+    genero: '',
+    num_grupos: undefined,
+    times_por_grupo: undefined,
+    num_equipes_liga: undefined
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    
+    if (name === 'fase_grupos') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: (e.target as HTMLInputElement).checked
+      }));
       return;
     }
 
-    setForm(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'number' ? (value === '' ? '' : parseInt(value) || 0) : value
+    }));
+
+    // Limpar erro do campo quando o usuário começar a digitar
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const handleDateSelect = (date: string, field: 'start_date' | 'end_date') => {
+    console.log('=== HANDLE DATE SELECT ===');
+    console.log('Received date string:', date);
+    console.log('Field:', field);
+    
+    // Verificar se a data está sendo interpretada corretamente
+    const parsedDate = new Date(date);
+    console.log('Parsed date:', parsedDate);
+    console.log('Parsed date ISO:', parsedDate.toISOString());
+    console.log('Parsed date local:', parsedDate.toLocaleDateString());
+    
+    setFormData(prev => {
+      console.log('Previous formData:', prev);
+      const newData = {
+        ...prev,
+        [field]: date
+      };
+      console.log('New formData:', newData);
+      return newData;
+    });
+    
+    setShowStartCalendar(false);
+    setShowEndCalendar(false);
+    
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
+  };
+
+  const navigateMonth = (direction: 'prev' | 'next', field: 'start_date' | 'end_date') => {
+    if (field === 'start_date') {
+      setCurrentStartMonth(prev => {
+        const newDate = new Date(prev);
+        newDate.setMonth(prev.getMonth() + (direction === 'next' ? 1 : -1));
+        return newDate;
+      });
+    } else {
+      setCurrentEndMonth(prev => {
+        const newDate = new Date(prev);
+        newDate.setMonth(prev.getMonth() + (direction === 'next' ? 1 : -1));
+        return newDate;
+      });
+    }
+  };
+
+  const generateCalendar = (currentDate: Date, selectedDate: string, field: 'start_date' | 'end_date') => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    // Primeiro dia do mês atual
+    const firstDay = new Date(year, month, 1);
+    
+    // Calcular o primeiro domingo da primeira semana visível
+    const dayOfWeek = firstDay.getDay(); // 0 = domingo, 1 = segunda, etc.
+    const firstSunday = new Date(year, month, 1 - dayOfWeek);
+    
+    const days = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Gerar 42 dias (6 semanas)
+    for (let i = 0; i < 42; i++) {
+      // Criar data usando UTC para evitar problemas de timezone
+      const dayDate = new Date(firstSunday.getTime() + (i * 24 * 60 * 60 * 1000));
+      
+      // Forçar timezone local
+      const localDate = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
+      
+      const dateString = format(localDate, 'yyyy-MM-dd');
+      const isCurrentMonth = localDate.getMonth() === month;
+      const isToday = localDate.getTime() === today.getTime();
+      const isSelected = dateString === selectedDate;
+      const isPast = localDate < today && !isToday;
+      const isMinDate = field === 'end_date' && formData.start_date && localDate < new Date(formData.start_date);
+      
+      days.push(
+        <button
+          key={`${field}-${i}-${localDate.getDate()}-${localDate.getMonth()}`}
+          type="button"
+          className={`calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${isPast || isMinDate ? 'disabled' : ''}`}
+          onClick={() => {
+            if (!isPast && !isMinDate) {
+              console.log('Clicking date object:', localDate);
+              console.log('Clicking date string:', dateString);
+              console.log('Field:', field);
+              console.log('Formatted for display:', format(localDate, 'dd/MM/yyyy'));
+              handleDateSelect(dateString, field);
+            }
+          }}
+          disabled={isPast || isMinDate}
+        >
+          {localDate.getDate()}
+        </button>
+      );
+    }
+    
+    return days;
+  };
+
+  const validateForm = () => {
+    const errors: {[k:string]: string} = {};
+    
+    if (!formData.name.trim()) errors.name = 'Nome do campeonato é obrigatório';
+    if (!formData.description.trim()) errors.description = 'Descrição é obrigatória';
+    if (!formData.start_date.trim()) errors.start_date = 'Data de início é obrigatória';
+    if (!formData.end_date.trim()) errors.end_date = 'Data de fim é obrigatória';
+    if (!formData.modalidade.trim()) errors.modalidade = 'Modalidade é obrigatória';
+    if (!formData.nomequadra.trim()) errors.nomequadra = 'Nome da quadra é obrigatório';
+    if (!formData.tipo) errors.tipo = 'Tipo do campeonato é obrigatório';
+    if (!formData.genero.trim()) errors.genero = 'Gênero é obrigatório';
+    if (formData.max_teams < 4) errors.max_teams = 'Mínimo de 4 times';
+    if (formData.max_teams > 32) errors.max_teams = 'Máximo de 32 times';
+
+    // Validações específicas por tipo
+    if (formData.tipo === 'liga') {
+      if (!formData.num_equipes_liga || formData.num_equipes_liga < 4 || formData.num_equipes_liga > 20) {
+        errors.num_equipes_liga = 'Para Liga, especifique entre 4 e 20 equipes';
+      }
+    }
+
+    if (formData.tipo === 'mata-mata' && formData.fase_grupos) {
+      if (!formData.num_grupos || formData.num_grupos < 2 || formData.num_grupos > 8) {
+        errors.num_grupos = 'Número de grupos deve ser entre 2 e 8';
+      }
+      if (!formData.times_por_grupo || formData.times_por_grupo < 3 || formData.times_por_grupo > 6) {
+        errors.times_por_grupo = 'Times por grupo deve ser entre 3 e 6';
+      }
+      // Validar se o total de times não excede o máximo
+      const totalTimes = (formData.num_grupos || 0) * (formData.times_por_grupo || 0);
+      if (totalTimes > formData.max_teams) {
+        errors.times_por_grupo = `Total de times (${totalTimes}) excede o máximo permitido (${formData.max_teams})`;
+      }
+    }
+
+    // Validar datas
+    if (formData.start_date && formData.end_date) {
+      const startDate = new Date(formData.start_date);
+      const endDate = new Date(formData.end_date);
+      
+      if (isNaN(startDate.getTime())) {
+        errors.start_date = 'Data de início inválida';
+      }
+      if (isNaN(endDate.getTime())) {
+        errors.end_date = 'Data de fim inválida';
+      }
+      if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && startDate >= endDate) {
+        errors.end_date = 'Data de fim deve ser posterior à data de início';
+      }
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      setError('Por favor, corrija os erros no formulário');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
-    setFieldErrors({});
 
     try {
-      const errors: {[k:string]: string} = {};
-      const nameTrim = form.name.trim();
-      if (!nameTrim) {
-        errors.name = 'Informe o nome do campeonato';
-      } else if (nameTrim.length < 3) {
-        errors.name = 'Nome muito curto (mín. 3)';
-      } else if (nameTrim.length > 100) {
-        errors.name = 'Nome muito longo (máx. 100)';
-      }
-
-      if (form.description && form.description.length > 1000) {
-        errors.description = 'Descrição excede 1000 caracteres';
-      }
-
-      // Modalidade obrigatória
-      if (!form.modalidade) {
-        errors.modalidade = 'Selecione a modalidade';
-      }
-
-      // Quadra obrigatória
-      const nomequadraTrim = form.nomequadra.trim();
-      if (!nomequadraTrim) {
-        errors.nomequadra = 'Informe o nome da quadra';
-      } else if (nomequadraTrim.length < 3) {
-        errors.nomequadra = 'Nome muito curto (mín. 3)';
-      } else if (nomequadraTrim.length > 100) {
-        errors.nomequadra = 'Nome muito longo (máx. 100)';
-      }
-
-      // Datas: validações
-      if (!form.start_date) errors.start_date = 'Informe a data de início';
-      if (!form.end_date) errors.end_date = 'Informe a data de término';
-
-      let parsedStartDate: Date | null = null;
-      let parsedEndDate: Date | null = null;
-
-      if (form.start_date) {
-        const p = parse(form.start_date, 'dd/MM/yyyy', new Date());
-        if (!isValid(p)) {
-          errors.start_date = 'Data de início inválida';
-        } else {
-          parsedStartDate = p;
-        }
-      }
-      if (form.end_date) {
-        const p = parse(form.end_date, 'dd/MM/yyyy', new Date());
-        if (!isValid(p)) {
-          errors.end_date = 'Data de término inválida';
-        } else {
-          parsedEndDate = p;
-        }
-      }
-
-      // Normalizar para comparar (sem hora)
-      const normalizeDay = (d: Date) => { const c = new Date(d); c.setHours(0,0,0,0); return c; };
-      const today = normalizeDay(new Date());
-      if (parsedStartDate) {
-        const ns = normalizeDay(parsedStartDate);
-        if (ns < today) {
-          errors.start_date = 'Data de início não pode ser no passado';
-        }
-      }
-      if (parsedStartDate && parsedEndDate) {
-        const ne = normalizeDay(parsedEndDate);
-        const ns = normalizeDay(parsedStartDate);
-        if (ne <= ns) {
-          errors.end_date = 'Término deve ser depois do início';
-        }
-      }
-
-      if (Object.keys(errors).length) {
-        setFieldErrors(errors);
-        setError('Corrija os campos destacados.');
-        setLoading(false);
-        return;
-      }
-
-      // Converter datas para o formato ISO antes de enviar
-      const formattedData = {
-        ...form,
-        name: nameTrim,
-        nomequadra: form.nomequadra.trim(),
-        start_date: format(parsedStartDate as Date, 'yyyy-MM-dd'),
-        end_date: format(parsedEndDate as Date, 'yyyy-MM-dd')
+      const submitData = {
+        ...formData,
+        start_date: formData.start_date,
+        end_date: formData.end_date
       };
 
-      await api.championships.create(formattedData);
+      await api.post('/championships', submitData);
+      
       setSuccess('Campeonato criado com sucesso!');
-      setTimeout(() => navigate('/championships'), 1200);
+      setTimeout(() => {
+        navigate('/championships');
+      }, 2000);
+      
     } catch (err: any) {
-      setError(err.message || 'Erro ao criar campeonato');
+      console.error('Erro ao criar campeonato:', err);
+      setError(err.response?.data?.message || 'Erro ao criar campeonato');
     } finally {
       setLoading(false);
     }
   };
 
-  const openPicker = (which: 'start' | 'end') => {
-    const ref = which === 'start' ? hiddenStartRef.current : hiddenEndRef.current;
-    if (!ref) return;
-    const current = which === 'start' ? form.start_date : form.end_date;
-    if (current && current.length === 10) {
-      const [d,m,y] = current.split('/');
-      ref.value = `${y}-${m}-${d}`;
-    }
-    const anyEl: any = ref;
-    if (typeof anyEl.showPicker === 'function') { anyEl.showPicker(); } else { ref.click(); }
-  };
-
-  const handleHiddenChange = (e: React.ChangeEvent<HTMLInputElement>, which: 'start' | 'end') => {
-    const iso = e.target.value; if (!iso) return;
-    const [y,m,d] = iso.split('-');
-    const br = `${d}/${m}/${y}`;
-    setForm(prev => ({ ...prev, [which === 'start' ? 'start_date' : 'end_date']: br }));
-  };
-
   return (
-    <div className="championship-form-bg">
-      
-      <div className="championship-form-container">
-        <div className="championship-form-header">
-          <img src={trophy} alt="Troféu" className="championship-form-trophy" />
-          <h2>Cadastrar Campeonato</h2>
-          <p className="championship-form-subtitle">Preencha os dados para criar um campeonato incrível!</p>
-        </div>
-
-        <form className="championship-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Nome do Campeonato <span className="required-asterisk" aria-hidden="true">*</span></label>
-            <input
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              required
-              placeholder="Digite o nome do campeonato"
-              style={fieldErrors.name ? { borderColor: '#e53935' } : undefined}
-              aria-invalid={!!fieldErrors.name}
-            />
-            {fieldErrors.name && <small style={{ color:'#e53935' }}>{fieldErrors.name}</small>}
-          </div>
-
-          <div className="form-group">
-            <label>Descrição</label>
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              placeholder="Descrição, regras, premiação..."
-              rows={4}
-              style={fieldErrors.description ? { borderColor: '#e53935' } : undefined}
-              aria-invalid={!!fieldErrors.description}
-            />
-            {fieldErrors.description && <small style={{ color:'#e53935' }}>{fieldErrors.description}</small>}
-          </div>
-
-          <div className="form-row">
-            <div className="form-group styled-select-wrapper">
-              <label>Modalidade <span className="required-asterisk" aria-hidden="true">*</span></label>
-              <select
-                name="modalidade"
-                value={form.modalidade}
-                onChange={handleChange}
-                required
-                className={`styled-select ${fieldErrors.modalidade ? 'error-select' : ''}`}
-                aria-invalid={!!fieldErrors.modalidade}
-              >
-                <option value="">Selecione a modalidade</option>
-                <option value="Fut7">Fut7</option>
-                <option value="Futsal">Futsal</option>
-                <option value="Futebol campo">Futebol campo</option>
-              </select>
-              {fieldErrors.modalidade && <small style={{ color:'#e53935' }}>{fieldErrors.modalidade}</small>}
-            </div>
-
-            <div className="form-group">
-              <label>Nome da Quadra <span className="required-asterisk" aria-hidden="true">*</span></label>
-              <input
-                type="text"
-                name="nomequadra"
-                value={form.nomequadra}
-                onChange={handleChange}
-                placeholder="Ex: Arena Central"
-                required
-                style={fieldErrors.nomequadra ? { borderColor: '#e53935' } : undefined}
-                aria-invalid={!!fieldErrors.nomequadra}
-              />
-              {fieldErrors.nomequadra && <small style={{ color:'#e53935' }}>{fieldErrors.nomequadra}</small>}
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>Data de Início <span className="required-asterisk" aria-hidden="true">*</span></label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <input
-                    type="text"
-                    name="start_date"
-                    value={form.start_date}
-                    onChange={handleChange}
-                    placeholder="DD/MM/AAAA"
-                    maxLength={10}
-                    className="date-input"
-                    onFocus={() => openPicker('start')}
-                    required
-                    style={fieldErrors.start_date ? { borderColor: '#e53935' } : undefined}
-                    aria-invalid={!!fieldErrors.start_date}
-                  />
-                  <input
-                    ref={hiddenStartRef}
-                    type="date"
-                    onChange={(e) => handleHiddenChange(e, 'start')}
-                    style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
-                    aria-hidden="true"
-                    tabIndex={-1}
-                  />
-                </div>
-                <button
-                  type="button"
-                  aria-label="Abrir calendário início"
-                  onClick={() => openPicker('start')}
-                  style={{
-                    border: 'none',
-                    background: '#0d47a1',
-                    padding: 0,
-                    cursor: 'pointer',
-                    color: '#fff',
-                    borderRadius: 6,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 44,
-                    height: 44,
-                    minWidth: 44
-                  }}
-                >
-                  <CalendarMonthIcon fontSize="medium" style={{ marginRight: 0 }} />
-                </button>
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Data de Término <span className="required-asterisk" aria-hidden="true">*</span></label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <input
-                    type="text"
-                    name="end_date"
-                    value={form.end_date}
-                    onChange={handleChange}
-                    placeholder="DD/MM/AAAA"
-                    maxLength={10}
-                    className="date-input"
-                    onFocus={() => openPicker('end')}
-                    required
-                    style={fieldErrors.end_date ? { borderColor: '#e53935' } : undefined}
-                    aria-invalid={!!fieldErrors.end_date}
-                  />
-                  <input
-                    ref={hiddenEndRef}
-                    type="date"
-                    onChange={(e) => handleHiddenChange(e, 'end')}
-                    style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
-                    aria-hidden="true"
-                    tabIndex={-1}
-                  />
-                </div>
-                <button
-                  type="button"
-                  aria-label="Abrir calendário término"
-                  onClick={() => openPicker('end')}
-                  style={{
-                    border: 'none',
-                    background: '#0d47a1',
-                    padding: 0,
-                    cursor: 'pointer',
-                    color: '#fff',
-                    borderRadius: 6,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 44,
-                    height: 44,
-                    minWidth: 44
-                  }}
-                >
-                  <CalendarMonthIcon fontSize="medium" style={{ marginRight: 0 }} />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {fieldErrors.start_date && <small style={{ color:'#e53935' }}>{fieldErrors.start_date}</small>}
-          {fieldErrors.end_date && <small style={{ color:'#e53935' }}>{fieldErrors.end_date}</small>}
-          {error && <div className="form-error">{error}</div>}
-          {success && <div className="form-success">{success}</div>}
-
-          <button
-            type="submit"
-            className="form-btn"
-            disabled={loading}
-          >
-            {loading ? 'Salvando...' : 'Cadastrar Campeonato'}
-          </button>
-        </form>
+    <div className="championship-form-container">
+      <div className="teams-header">
+        <h1 className="teams-title">Criar Campeonato</h1>
+        <p className="teams-subtitle">
+          Crie um campeonato e permita que times se inscrevam para participar
+        </p>
       </div>
+
+      <motion.div 
+        className="form-container" 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="form-main-grid">
+          {/* Seção de Tipo de Campeonato - Lado Esquerdo */}
+          <div className="logo-section">
+            <div className="logo-preview-container">
+              <EmojiEventsIcon className="trophy-icon" />
+              <span>Tipo de Campeonato</span>
+            </div>
+            
+            {/* Campo de Descrição movido para baixo da logo */}
+            <div className="form-group logo-description">
+              <label className="form-label" htmlFor="description">Descrição do Campeonato</label>
+              <textarea
+                id="description"
+                name="description"
+                className="form-control"
+                value={formData.description}
+                onChange={handleInputChange}
+                placeholder="Descreva o campeonato, regras, premiação e informações importantes"
+                required
+                rows={11}
+              />
+              {fieldErrors.description && <span className="field-error">{fieldErrors.description}</span>}
+            </div>
+          </div>
+
+          {/* Seção de Formulário - Lado Direito */}
+          <div className="form-section">
+            {error && (
+              <div className="error-message">
+                <p>{error}</p>
+              </div>
+            )}
+            
+            <form onSubmit={handleSubmit}>
+          
+              {/* Campos básicos em grid 2 colunas */}
+              <div className="form-basic-grid">
+                <motion.div 
+                  className="form-group"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 }}
+                >
+                  <label className="form-label" htmlFor="name">Nome do Campeonato</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    className="form-control"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Digite o nome do campeonato"
+                    required
+                  />
+                  {fieldErrors.name && <span className="field-error">{fieldErrors.name}</span>}
+                </motion.div>
+
+                <motion.div 
+                  className="form-group"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <label className="form-label" htmlFor="tipo">Tipo do Campeonato</label>
+                  <select
+                    id="tipo"
+                    name="tipo"
+                    className="form-control"
+                    value={formData.tipo}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Selecione o tipo</option>
+                    <option value="liga">Liga (Pontos Corridos)</option>
+                    <option value="mata-mata">Mata-Mata (Eliminatório)</option>
+                  </select>
+                  {fieldErrors.tipo && <span className="field-error">{fieldErrors.tipo}</span>}
+                </motion.div>
+              </div>
+
+              {/* Campos de data em grid 2 colunas */}
+              <div className="form-basic-grid">
+                <motion.div 
+                  className="form-group"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                >
+                  <label className="form-label" htmlFor="start_date">Data de Início</label>
+                  <div className="date-input-container" ref={startCalendarRef}>
+                    <input
+                      type="text"
+                      id="start_date"
+                      name="start_date"
+                      className="form-control date-input"
+                      value={formData.start_date ? (() => {
+                        const date = new Date(formData.start_date);
+                        console.log('Displaying start_date:', formData.start_date, 'as date:', date);
+                        return format(date, 'dd/MM/yyyy');
+                      })() : ''}
+                      placeholder="Selecione a data de início"
+                      readOnly
+                      onClick={() => setShowStartCalendar(!showStartCalendar)}
+                    />
+                    <CalendarMonthIcon className="date-icon" onClick={() => setShowStartCalendar(!showStartCalendar)} />
+                    
+                    {showStartCalendar && (
+                      <div className="custom-calendar">
+                        <div className="calendar-header">
+                          <button type="button" className="nav-btn" onClick={() => navigateMonth('prev', 'start_date')}>
+                            ‹
+                          </button>
+                          <div className="calendar-month-year">
+                            {format(currentStartMonth, 'MMMM yyyy')}
+                          </div>
+                          <button type="button" className="nav-btn" onClick={() => navigateMonth('next', 'start_date')}>
+                            ›
+                          </button>
+                          <button type="button" className="close-btn" onClick={() => setShowStartCalendar(false)}>×</button>
+                        </div>
+                        <div className="calendar-body">
+                          <div className="calendar-weekdays">
+                            <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+                          </div>
+                          <div className="calendar-days">
+                            {generateCalendar(currentStartMonth, formData.start_date, 'start_date')}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  className="form-group"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <label className="form-label" htmlFor="end_date">Data de Fim</label>
+                  <div className="date-input-container" ref={endCalendarRef}>
+                    <input
+                      type="text"
+                      id="end_date"
+                      name="end_date"
+                      className="form-control date-input"
+                      value={formData.end_date ? (() => {
+                        const date = new Date(formData.end_date);
+                        console.log('Displaying end_date:', formData.end_date, 'as date:', date);
+                        return format(date, 'dd/MM/yyyy');
+                      })() : ''}
+                      placeholder="Selecione a data de fim"
+                      readOnly
+                      onClick={() => setShowEndCalendar(!showEndCalendar)}
+                    />
+                    <CalendarMonthIcon className="date-icon" onClick={() => setShowEndCalendar(!showEndCalendar)} />
+                    
+                    {showEndCalendar && (
+                      <div className="custom-calendar">
+                        <div className="calendar-header">
+                          <button type="button" className="nav-btn" onClick={() => navigateMonth('prev', 'end_date')}>
+                            ‹
+                          </button>
+                          <div className="calendar-month-year">
+                            {format(currentEndMonth, 'MMMM yyyy')}
+                          </div>
+                          <button type="button" className="nav-btn" onClick={() => navigateMonth('next', 'end_date')}>
+                            ›
+                          </button>
+                          <button type="button" className="close-btn" onClick={() => setShowEndCalendar(false)}>×</button>
+                        </div>
+                        <div className="calendar-body">
+                          <div className="calendar-weekdays">
+                            <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+                          </div>
+                          <div className="calendar-days">
+                            {generateCalendar(currentEndMonth, formData.end_date, 'end_date')}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Campos de configuração em grid 2 colunas */}
+              <div className="form-basic-grid">
+                <motion.div 
+                  className="form-group"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 }}
+                >
+                  <label className="form-label" htmlFor="modalidade">Modalidade</label>
+                  <select
+                    id="modalidade"
+                    name="modalidade"
+                    className="form-control"
+                    value={formData.modalidade}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Selecione a modalidade</option>
+                    <option value="Futsal">Futsal</option>
+                    <option value="Society">Society</option>
+                    <option value="Futebol 11">Futebol 11</option>
+                  </select>
+                  {fieldErrors.modalidade && <span className="field-error">{fieldErrors.modalidade}</span>}
+                </motion.div>
+
+                <motion.div 
+                  className="form-group"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <label className="form-label" htmlFor="nomequadra">Nome da Quadra</label>
+                  <input
+                    type="text"
+                    id="nomequadra"
+                    name="nomequadra"
+                    className="form-control"
+                    value={formData.nomequadra}
+                    onChange={handleInputChange}
+                    placeholder="Nome da quadra/campo"
+                    required
+                  />
+                  {fieldErrors.nomequadra && <span className="field-error">{fieldErrors.nomequadra}</span>}
+                </motion.div>
+              </div>
+
+              {/* Campos de configuração específicos */}
+              <div className="form-basic-grid">
+                <motion.div 
+                  className="form-group"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35 }}
+                >
+                  <label className="form-label" htmlFor="max_teams">Máximo de Times</label>
+                  <input
+                    type="number"
+                    id="max_teams"
+                    name="max_teams"
+                    className="form-control"
+                    value={formData.max_teams}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Remove zeros à esquerda e converte para número
+                      const numericValue = value === '' ? '' : parseInt(value, 10);
+                      setFormData(prev => ({
+                        ...prev,
+                        max_teams: numericValue
+                      }));
+                      
+                      // Limpar erro do campo quando o usuário começar a digitar
+                      if (fieldErrors.max_teams) {
+                        setFieldErrors(prev => ({
+                          ...prev,
+                          max_teams: ''
+                        }));
+                      }
+                    }}
+                    min="4"
+                    max="32"
+                    required
+                  />
+                  {fieldErrors.max_teams && <span className="field-error">{fieldErrors.max_teams}</span>}
+                </motion.div>
+
+                <motion.div 
+                  className="form-group"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <label className="form-label" htmlFor="genero">Gênero</label>
+                  <select
+                    id="genero"
+                    name="genero"
+                    className="form-control"
+                    value={formData.genero}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Selecione o gênero</option>
+                    <option value="masculino">Masculino</option>
+                    <option value="feminino">Feminino</option>
+                    <option value="misto">Misto</option>
+                  </select>
+                  {fieldErrors.genero && <span className="field-error">{fieldErrors.genero}</span>}
+                </motion.div>
+              </div>
+
+              {/* Opções específicas para Liga */}
+              {formData.tipo === 'liga' && (
+                <motion.div 
+                  className="liga-options"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 }}
+                >
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="num_equipes_liga">Número de Equipes na Liga</label>
+                    <input
+                      type="number"
+                      id="num_equipes_liga"
+                      name="num_equipes_liga"
+                      className="form-control"
+                      value={formData.num_equipes_liga || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        const numericValue = value === '' ? '' : parseInt(value, 10);
+                        setFormData(prev => ({
+                          ...prev,
+                          num_equipes_liga: numericValue
+                        }));
+                        
+                        if (fieldErrors.num_equipes_liga) {
+                          setFieldErrors(prev => ({
+                            ...prev,
+                            num_equipes_liga: ''
+                          }));
+                        }
+                      }}
+                      min="4"
+                      max="20"
+                      placeholder="Ex: 8, 10, 12..."
+                    />
+                    {fieldErrors.num_equipes_liga && <span className="field-error">{fieldErrors.num_equipes_liga}</span>}
+                    <p className="option-description">
+                      Especifique quantas equipes participarão do campeonato de pontos corridos
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Opções específicas para Mata-Mata */}
+              {formData.tipo === 'mata-mata' && (
+                <motion.div 
+                  className="mata-mata-options"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 }}
+                >
+                  <div className="form-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        name="fase_grupos"
+                        checked={formData.fase_grupos}
+                        onChange={handleInputChange}
+                      />
+                      <span className="checkmark"></span>
+                      Incluir Fase de Grupos
+                    </label>
+                    <p className="option-description">
+                      Se marcado, os times serão divididos em grupos antes da fase eliminatória
+                    </p>
+                  </div>
+
+                  {/* Configurações da fase de grupos */}
+                  {formData.fase_grupos && (
+                    <div className="grupos-config">
+                      <h4 className="config-title">Configuração da Fase de Grupos</h4>
+                      
+                      <div className="form-basic-grid">
+                        <motion.div 
+                          className="form-group"
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.5 }}
+                        >
+                          <label className="form-label" htmlFor="num_grupos">Número de Grupos</label>
+                          <input
+                            type="number"
+                            id="num_grupos"
+                            name="num_grupos"
+                            className="form-control"
+                            value={formData.num_grupos || ''}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              const numericValue = value === '' ? '' : parseInt(value, 10);
+                              setFormData(prev => ({
+                                ...prev,
+                                num_grupos: numericValue
+                              }));
+                              
+                              if (fieldErrors.num_grupos) {
+                                setFieldErrors(prev => ({
+                                  ...prev,
+                                  num_grupos: ''
+                                }));
+                              }
+                            }}
+                            min="2"
+                            max="8"
+                            placeholder="Ex: 2, 4, 8..."
+                          />
+                          {fieldErrors.num_grupos && <span className="field-error">{fieldErrors.num_grupos}</span>}
+                        </motion.div>
+
+                        <motion.div 
+                          className="form-group"
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.55 }}
+                        >
+                          <label className="form-label" htmlFor="times_por_grupo">Times por Grupo</label>
+                          <input
+                            type="number"
+                            id="times_por_grupo"
+                            name="times_por_grupo"
+                            className="form-control"
+                            value={formData.times_por_grupo || ''}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              const numericValue = value === '' ? '' : parseInt(value, 10);
+                              setFormData(prev => ({
+                                ...prev,
+                                times_por_grupo: numericValue
+                              }));
+                              
+                              if (fieldErrors.times_por_grupo) {
+                                setFieldErrors(prev => ({
+                                  ...prev,
+                                  times_por_grupo: ''
+                                }));
+                              }
+                            }}
+                            min="3"
+                            max="6"
+                            placeholder="Ex: 3, 4, 5..."
+                          />
+                          {fieldErrors.times_por_grupo && <span className="field-error">{fieldErrors.times_por_grupo}</span>}
+                        </motion.div>
+                      </div>
+
+                      {/* Preview da configuração */}
+                      {formData.num_grupos && formData.times_por_grupo && (
+                        <div className="config-preview">
+                          <div className="preview-card">
+                            <h5>📊 Resumo da Configuração</h5>
+                            <div className="preview-stats">
+                              <span className="stat">
+                                <strong>{formData.num_grupos}</strong> grupos
+                              </span>
+                              <span className="stat">
+                                <strong>{formData.times_por_grupo}</strong> times por grupo
+                              </span>
+                              <span className="stat total">
+                                <strong>{formData.num_grupos * formData.times_por_grupo}</strong> times total
+                              </span>
+                            </div>
+                            <p className="preview-description">
+                              Os times serão divididos em {formData.num_grupos} grupos de {formData.times_por_grupo} times cada.
+                              Os primeiros colocados de cada grupo avançarão para a fase eliminatória.
+                            </p>
+                            
+                            {/* Alerta de sobra de times */}
+                            {(() => {
+                              const totalTimes = formData.num_grupos * formData.times_por_grupo;
+                              const sobraTimes = formData.max_teams - totalTimes;
+                              
+                              if (sobraTimes > 0) {
+                                return (
+                                  <div className="alert-card">
+                                    <div className="alert-icon">🏆</div>
+                                    <div className="alert-content">
+                                      <div className="alert-title">Vagas Disponíveis</div>
+                                      <div className="alert-description">
+                                        Com {formData.max_teams} vagas disponíveis e {totalTimes} times nos grupos, 
+                                        restam <strong>{sobraTimes} vaga{sobraTimes > 1 ? 's' : ''}</strong> para times adicionais.
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              <div className="form-buttons">
+                <motion.button 
+                  type="submit"
+                  className="submit-btn"
+                  disabled={loading}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  {loading ? (
+                    <span className="loading-text">Criando...</span>
+                  ) : (
+                    'Criar Campeonato'
+                  )}
+                </motion.button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };

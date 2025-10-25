@@ -8,6 +8,171 @@ import TeamModel from "../models/TeamModel"
 import Rules from '../models/RulesModel';
 import { Op } from 'sequelize';
 
+// Helper: parse duration string 'HH:MM' into minutes
+const parseDurationToMinutes = (duration?: string): number => {
+  if (!duration) return 90; // default 1h30
+  const parts = duration.split(':');
+  if (parts.length !== 2) return 90;
+  const hours = parseInt(parts[0], 10) || 0;
+  const minutes = parseInt(parts[1], 10) || 0;
+  return hours * 60 + minutes;
+};
+
+// Compute match end date from start date and duration
+const computeMatchEnd = (startDate: Date, duration?: string): Date => {
+  const minutes = parseDurationToMinutes(duration);
+  return new Date(startDate.getTime() + minutes * 60000);
+};
+
+// Scan matches and set status to 'em_andamento' when current time is within [start, end)
+export const checkAndSetMatchesInProgress = async (): Promise<void> => {
+  try {
+    const now = new Date();
+    // find candidate matches that are not finalized or canceled (include em_andamento so we can finalize them)
+    const candidates = await MatchModel.findAll({
+      where: {
+        status: { [Op.notIn]: ['finalizada', 'cancelada'] }
+      }
+    });
+
+    for (const match of candidates) {
+      if (!match.date) continue;
+      const start = new Date((match as any).date);
+      const end = computeMatchEnd(start, (match as any).duration);
+
+      if (now >= start && now < end) {
+        // Only update if not already em_andamento
+        if (String((match as any).status) !== 'em_andamento') {
+          await match.update({ status: 'em_andamento' });
+        }
+      }
+
+      // Auto-finish matches that have passed their end time (finalize regardless of previous status)
+      if (now >= end) {
+        if (String((match as any).status) !== 'finalizada') {
+          await match.update({ status: 'finalizada' });
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao verificar partidas em andamento:', error);
+  }
+};
+
+// Confirm matches that are full (sem_vagas) after registration deadline
+export const checkAndConfirmFullMatches = async (): Promise<void> => {
+  try {
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+
+    // Consider matches in any status except finalized, cancelled or already confirmed
+    const candidates = await MatchModel.findAll({
+      where: {
+        status: { [Op.notIn]: ['finalizada', 'cancelada', 'confirmada'] }
+      },
+      include: [{ model: Rules, as: 'rules', required: false }]
+    });
+
+    for (const match of candidates) {
+      const regras = (match as any).rules;
+      const deadlineRaw = regras?.dataLimite || regras?.dataValues?.dataLimite;
+      if (!deadlineRaw) {
+        // no deadline defined, skip
+        continue;
+      }
+
+      const deadline = new Date(deadlineRaw);
+      deadline.setHours(23, 59, 59, 999);
+
+      if (now > deadline) {
+        const matchId = (match as any).id;
+        const teamsCount = await MatchTeamsModel.count({ where: { matchId } });
+        const maxTimes = Number(regras?.dataValues?.quantidade_times ?? regras?.quantidade_times) || 2;
+
+        if (teamsCount >= maxTimes) {
+          if (String((match as any).status) !== 'confirmada') {
+            await match.update({ status: 'confirmada' });
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao confirmar partidas cheias após prazo:', error);
+  }
+};
+
+// Set matches to 'sem_vagas' when they have enough teams and the registration deadline hasn't passed
+export const checkAndSetSemVagas = async (): Promise<void> => {
+  try {
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+
+    const candidates = await MatchModel.findAll({
+      where: {
+        status: { [Op.notIn]: ['finalizada', 'cancelada', 'sem_vagas'] }
+      },
+      include: [{ model: Rules, as: 'rules', required: false }]
+    });
+
+    for (const match of candidates) {
+      const regras = (match as any).rules;
+      const deadlineRaw = regras?.dataLimite || regras?.dataValues?.dataLimite;
+      const hasDeadline = !!deadlineRaw;
+      let deadline: Date | null = null;
+      if (hasDeadline) {
+        deadline = new Date(deadlineRaw as any);
+        deadline.setHours(23, 59, 59, 999);
+      }
+
+      // If deadline exists and is already passed, skip setting sem_vagas here
+      if (hasDeadline && now > deadline!) continue;
+
+      const matchId = (match as any).id;
+      const teamsCount = await MatchTeamsModel.count({ where: { matchId } });
+      const maxTimes = Number(regras?.dataValues?.quantidade_times ?? regras?.quantidade_times) || 2;
+
+      if (teamsCount >= maxTimes) {
+        if (String((match as any).status) !== 'sem_vagas') {
+          await match.update({ status: 'sem_vagas' });
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao marcar partidas como sem_vagas:', error);
+  }
+};
+
+// Start matches that are 'confirmada' when current time is within [start, end)
+export const checkAndStartConfirmedMatches = async (): Promise<void> => {
+  try {
+    const now = new Date();
+    const candidates = await MatchModel.findAll({
+      where: { status: 'confirmada' }
+    });
+
+    for (const match of candidates) {
+      if (!match.date) continue;
+      const start = new Date((match as any).date);
+      const end = computeMatchEnd(start, (match as any).duration);
+
+      if (now >= start && now < end) {
+        if (String((match as any).status) !== 'em_andamento') {
+          await match.update({ status: 'em_andamento' });
+        }
+      }
+
+      // If the confirmed match already passed its end, finalize it
+      if (now >= end) {
+        if (String((match as any).status) !== 'finalizada') {
+          await match.update({ status: 'finalizada' });
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao iniciar partidas confirmadas:', error);
+  }
+};
+
 interface UserWithType extends User {
   userTypeId: number;
 }
@@ -147,6 +312,14 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
 
 export const listMatches = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Ensure statuses are up-to-date for matches that should be in progress
+    await checkAndSetMatchesInProgress();
+    // Confirm full matches after registration deadline
+    await checkAndConfirmFullMatches();
+  // Start confirmed matches when their start time arrives
+  await checkAndStartConfirmedMatches();
+    // Check and set matches to 'sem_vagas' when they reach maximum teams
+    await checkAndSetSemVagas();
     const matches = await MatchModel.findAll({
       include: [
         {
@@ -154,6 +327,12 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
           as: 'organizer',
           attributes: ['id', 'name', 'email']
         },
+        {
+          model: Rules,
+          as: 'rules',
+          attributes: ['dataLimite'],
+          required: false
+        }
       ],
       attributes: [
         'id',
@@ -169,17 +348,16 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
       ],
       order: [['date', 'ASC']]
     });
-    matches.map(async (match: any) => {
-      const organizer = {
-        id: match.organizerId,
-        name: match.organizerName
-      };
+
+    const payload = matches.map((match: any) => {
+      const obj = match.toJSON ? match.toJSON() : match;
       return {
-        ...match,
-        organizer,
+        ...obj,
+        registrationDeadline: obj.rules ? obj.rules.dataLimite || null : null
       };
     });
-    res.json(matches);
+
+    res.json(payload);
   } catch (error) {
     console.error('Erro ao listar partidas:', error);
     res.status(500).json({ message: 'Erro ao listar partidas' });
@@ -188,6 +366,12 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
   
 export const getMatch = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Update in-progress statuses before returning a single match
+    await checkAndSetMatchesInProgress();
+    await checkAndConfirmFullMatches();
+  await checkAndStartConfirmedMatches();
+    // Check and set matches to 'sem_vagas' when they reach maximum teams
+    await checkAndSetSemVagas();
     const match = await MatchModel.findByPk(req.params.id,{
       include: [
         {
@@ -216,6 +400,21 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
     if (!match) {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
+    }
+
+    // Extra safety: if match end time already passed, finalize it before returning
+    try {
+      if (match.date) {
+        const start = new Date((match as any).date);
+        const end = computeMatchEnd(start, (match as any).duration);
+        const now = new Date();
+        if (now >= end && String((match as any).status) !== 'finalizada') {
+          await match.update({ status: 'finalizada' });
+          await match.reload();
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao verificar finalização da partida no getMatch:', err);
     }
     
     const countTeams = await MatchTeamsModel.count({
@@ -300,9 +499,13 @@ export const updateMatch = async (req: Request, res: Response): Promise<void> =>
       await match.reload();
 
       if (now > deadline) {
-        if (teamsCount < 2 && (match.status === 'aberta' || match.status === 'pendente')) {
+        if (teamsCount < 2 && (match.status === 'aberta' || match.status === 'sem_vagas')) {
           await match.update({ 
             status: 'cancelada'
+          });
+        } else if (teamsCount >= 2 && match.status !== 'finalizada' && match.status !== 'cancelada') {
+          await match.update({
+            status: 'confirmada'
           });
         }
       } else {

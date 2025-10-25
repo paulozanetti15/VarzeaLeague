@@ -704,6 +704,20 @@ export const api = {
         }
       });
       return handleResponse(response);
+    },
+    getTeams: async (champId: number) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await fetch(`${API_URL}/championships/${champId}/join-team`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return handleResponse(response);
     }
   },
 };

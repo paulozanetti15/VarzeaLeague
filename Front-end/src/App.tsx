@@ -32,7 +32,7 @@ import { Box, CssBaseline } from '@mui/material'
 import SystemOverview from './components/dashboard/SystemOverview'
 import CalendarioPage from './pages/calendario/calendárioPage'
 import HistoricoPage from './pages/Historico/HistoricoPage'
-import { HistoricoProvider } from '../src/Context/HistoricoContext';
+import { HistoricoProvider } from './context/HistoricoContext';
 import RankingPlayers from './pages/ranking/RankingPlayers'
 import RankingTeams from './pages/ranking/RankingTeams'
 
@@ -421,12 +421,14 @@ import RankingTeams from './pages/ranking/RankingTeams'
           style: {
             background: '#363636',
             color: '#fff',
+            zIndex: 999999,
           },
           success: {
             duration: 3000,
             style: {
               background: '#28a745',
               color: '#fff',
+              zIndex: 999999,
             },
           },
           error: {
@@ -434,8 +436,12 @@ import RankingTeams from './pages/ranking/RankingTeams'
             style: {
               background: '#dc3545',
               color: '#fff',
+              zIndex: 999999,
             },
           },
+        }}
+        containerStyle={{
+          zIndex: 999999,
         }}
       />
     </Box>

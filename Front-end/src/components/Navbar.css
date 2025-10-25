@@ -427,3 +427,38 @@
   background: rgba(25, 118, 210, 0.04);
   color: #1976d2;
 }
+
+/* Align icons inside dropdown items and size them */
+.navbar-dropdown-item .navbar-dropdown-icon {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-dropdown-item .navbar-dropdown-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.navbar-dropdown-item .navbar-dropdown-text {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* explicit spacing between icon and text in dropdown items */
+.navbar-dropdown-item .navbar-dropdown-text {
+  margin-left: 8px;
+}
+
+/* small top offset to nudge labels for visual alignment with icons */
+.navbar-dropdown-item .navbar-dropdown-text {
+  margin-top: -0.6rem;
+}
+
+.navbar-manage-icon {
+  vertical-align: middle;
+  margin-right: 6px;
+  color: #fff;
+}

@@ -7,38 +7,40 @@
 }
 
 .rules-info-modal .modal-content {
-  background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%) !important;
-  border: none !important;
+  background: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
   border-radius: 16px !important;
-  box-shadow: 0 10px 40px rgba(13, 71, 161, 0.4) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
   overflow: hidden;
 }
 
 .rules-info-modal .modal-header {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e0e0e0 !important;
   padding: 1.25rem 1.5rem !important;
   text-align: center !important;
   position: relative !important;
 }
 
 .rules-info-modal .modal-title {
-  color: #ffffff !important;
+  color: #333333 !important;
   font-size: 1.5rem !important;
   font-weight: 700 !important;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  text-shadow: none !important;
   margin: 0 !important;
   line-height: 1.3 !important;
   width: 100%;
 }
 
 .rules-info-modal .btn-close {
-  filter: brightness(0) invert(1);
-  opacity: 0.8;
+  filter: none;
+  opacity: 0.6;
+  color: #666666;
 }
 
 .rules-info-modal .btn-close:hover {
   opacity: 1;
+  color: #333333;
 }
 
 .rules-info-modal .modal-body {
@@ -47,10 +49,10 @@
 }
 
 .rules-info-container {
-  background: rgba(255, 255, 255, 0.08);
+  background: #ffffff;
   border-radius: 12px;
   padding: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid #f0f0f0;
 }
 
 .rules-info-grid {
@@ -60,10 +62,10 @@
 }
 
 .rule-info-card {
-  background: rgba(255, 255, 255, 0.1);
+  background: #ffffff;
   border-radius: 10px;
   padding: 1rem 1.125rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid #333333;
   transition: all 0.3s ease;
   min-height: 75px;
   display: flex;
@@ -73,13 +75,13 @@
 
 .rule-info-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  border-color: #000000;
 }
 
 .rule-info-label {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: #666666 !important;
   margin-bottom: 0.5rem !important;
   font-size: 0.75rem !important;
   font-weight: 600 !important;
@@ -89,17 +91,17 @@
 }
 
 .rule-info-value {
-  color: #ffffff !important;
+  color: #333333 !important;
   margin: 0 !important;
   font-size: 1.05rem !important;
   font-weight: 700 !important;
   line-height: 1.3 !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  text-shadow: none;
 }
 
 .rules-info-modal .modal-footer {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: #ffffff !important;
+  border-top: 1px solid #e0e0e0 !important;
   padding: 1rem 1.5rem !important;
   display: flex !important;
   justify-content: center !important;
@@ -112,19 +114,19 @@
   font-weight: 600 !important;
   cursor: pointer !important;
   transition: all 0.3s ease !important;
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: #007bff !important;
   color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border: 1px solid #007bff !important;
   min-width: 140px !important;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-
+ 
 .rules-info-modal .btn-primary:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
+  background: #0056b3 !important;
   transform: translateY(-2px) !important;
-  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.3) !important;
-  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.3) !important;
+  border-color: #0056b3 !important;
 }
 
 .rules-info-modal .btn-primary:active {
@@ -233,7 +235,7 @@
 /* Estados de foco para acessibilidade */
 .rules-info-modal .btn-close:focus,
 .rules-info-modal .btn-primary:focus {
-  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline: 2px solid #007bff;
   outline-offset: 2px;
 }
 
@@ -243,15 +245,15 @@
 }
 
 .rules-info-modal .modal-body::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+  background: #f1f1f1;
   border-radius: 10px;
 }
 
 .rules-info-modal .modal-body::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
+  background: #c1c1c1;
   border-radius: 10px;
 }
 
 .rules-info-modal .modal-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: #a8a8a8;
 }

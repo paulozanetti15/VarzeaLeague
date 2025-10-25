@@ -32,6 +32,12 @@ import historicoRoutes from './routes/historicoRoutes';
 import MatchChampionship from './models/MatchChampionshipModel';
 import MatchChampionshpReport from './models/MatchReportChampionshipModel';
 dotenv.config();
+// Import status check helpers to run periodically
+import {
+  checkAndSetMatchesInProgress,
+  checkAndConfirmFullMatches,
+  checkAndStartConfirmedMatches
+} from './controllers/matchController';
 
 const app = express();
 
@@ -149,6 +155,20 @@ const startServer = async () => {
       console.log('- POST /api/players/add-to-team');
       console.log('- GET /api/overview');
     });
+
+    // Run status checks on startup and every minute
+    const runStatusChecks = async () => {
+      try {
+        await checkAndConfirmFullMatches();
+        await checkAndSetMatchesInProgress();
+        await checkAndStartConfirmedMatches();
+      } catch (err) {
+        console.error('Erro ao executar verificações de status agendadas:', err);
+      }
+    };
+
+    runStatusChecks();
+    setInterval(runStatusChecks, 60 * 1000);
   } catch (error) {
     console.error('Erro ao iniciar o servidor:', error);
     process.exit(1);

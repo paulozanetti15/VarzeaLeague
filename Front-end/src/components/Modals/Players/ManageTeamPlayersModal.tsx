@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import './ManagePlayerModal.css';
+import './ManageTeamPlayersModal.css';
 import CloseIcon from '@mui/icons-material/Close';
 
 

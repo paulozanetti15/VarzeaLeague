@@ -1,27 +1,34 @@
-import React, { useEffect, useState } from 'react';
-import { Modal } from 'react-bootstrap';
+import React, { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { SumulaHeader } from '../../components/features/sumula/SumulaDisplay/SumulaHeader';
-import { SumulaStats } from '../../components/features/sumula/SumulaDisplay/SumulaStats';
-import { GoalsTable } from '../../components/features/sumula/SumulaDisplay/GoalsTable';
-import { CardsTable } from '../../components/features/sumula/SumulaDisplay/CardsTable';
-import { SumulaActions } from '../../components/features/sumula/SumulaActions/SumulaActions';
+import { SumulaHeader } from '../../features/sumula/SumulaDisplay/SumulaHeader';
+import { SumulaStats } from '../../features/sumula/SumulaDisplay/SumulaStats';
+import { GoalsTable } from '../../features/sumula/SumulaDisplay/GoalsTable';
+import { CardsTable } from '../../features/sumula/SumulaDisplay/CardsTable';
+import { EventsTimeline } from '../../features/sumula/SumulaDisplay/EventsTimeline';
 import { useSumulaData } from './hooks/useSumulaData';
 import { useSumulaPDF } from './hooks/useSumulaPDF';
+import './Sumula.css';
 
 interface SumulaViewProps {
   matchId: number;
   isChampionship?: boolean;
   onClose: () => void;
+  onEdit?: () => void;
   show: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 export const SumulaView: React.FC<SumulaViewProps> = ({ 
   matchId, 
   isChampionship = false, 
   onClose,
-  show 
+  onEdit,
+  show,
+  canEdit,
+  canDelete
 }) => {
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const [matchDate, setMatchDate] = useState('');
   const [matchLocation, setMatchLocation] = useState('');
   const [homeTeam, setHomeTeam] = useState(0);
@@ -32,13 +39,13 @@ export const SumulaView: React.FC<SumulaViewProps> = ({
   const [awayScore, setAwayScore] = useState(0);
   const [goals, setGoals] = useState<any[]>([]);
   const [cards, setCards] = useState<any[]>([]);
+  const [isWO, setIsWO] = useState(false);
 
   const {
-    teams,
     loading: dataLoading,
     error: dataError,
-    fetchTeams,
     fetchMatchDetails,
+    deleteSumula,
     setError
   } = useSumulaData();
 
@@ -46,12 +53,11 @@ export const SumulaView: React.FC<SumulaViewProps> = ({
 
   useEffect(() => {
     if (show && matchId) {
-      fetchTeams(matchId, isChampionship);
-      
-      fetchMatchDetails(matchId, isChampionship).then(details => {
+      const loadData = async () => {
+        const details = await fetchMatchDetails(matchId, isChampionship);
         if (details) {
-          setMatchDate(details.matchDate);
-          setMatchLocation(details.matchLocation);
+          setMatchDate(details.matchDate || '');
+          setMatchLocation(details.matchLocation || '');
           setHomeTeam(details.homeTeam);
           setAwayTeam(details.awayTeam);
           setHomeTeamName(details.homeTeamName);
@@ -60,10 +66,30 @@ export const SumulaView: React.FC<SumulaViewProps> = ({
           setAwayScore(details.awayScore);
           setGoals(details.goals);
           setCards(details.cards);
+          if (
+            (details.goals.length === 0 && details.cards.length === 0) &&
+            ((details.homeScore === 0 && details.awayScore >= 1) || (details.awayScore === 0 && details.homeScore >= 1))
+          ) {
+            setIsWO(true);
+          } else {
+            setIsWO(false);
+          }
         }
-      });
+      };
+      loadData();
     }
-  }, [show, matchId, isChampionship, fetchTeams, fetchMatchDetails]);
+  }, [show, matchId, isChampionship, fetchMatchDetails]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    if (show) {
+      dialog.showModal();
+    } else {
+      dialog.close();
+    }
+  }, [show]);
 
   useEffect(() => {
     if (dataError) {
@@ -92,69 +118,163 @@ export const SumulaView: React.FC<SumulaViewProps> = ({
     toast.success('PDF exportado com sucesso!');
   };
 
-  if (dataLoading) {
-    return (
-      <Modal show={show} onHide={onClose} size="lg" centered>
-        <Modal.Body className="text-center p-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
-        </Modal.Body>
-      </Modal>
-    );
-  }
+  const handleDelete = async () => {
+    if (!window.confirm('⚠️ Tem certeza que deseja deletar esta súmula?\n\nEsta ação não pode ser desfeita e todos os gols e cartões serão removidos permanentemente.')) {
+      return;
+    }
+    
+    const loadingToast = toast.loading('Deletando súmula...');
+
+    const success = await deleteSumula(matchId, isChampionship);
+    
+    toast.dismiss(loadingToast);
+    
+    if (success) {
+      onClose();
+      toast.success('🗑️ Súmula deletada com sucesso!', {
+        duration: 3000,
+      });
+    } else {
+      toast.error('❌ Erro ao deletar súmula. Tente novamente.', {
+        duration: 4000,
+      });
+    }
+  };
 
   return (
-    <Modal show={show} onHide={onClose} size="lg" centered>
-      <Modal.Header closeButton>
-        <Modal.Title>Visualizar Súmula</Modal.Title>
-      </Modal.Header>
-
-      <Modal.Body>
-        <SumulaHeader
-          homeTeamName={homeTeamName}
-          awayTeamName={awayTeamName}
-          homeScore={homeScore}
-          awayScore={awayScore}
-          isSaved={true}
-        />
-
-        <div className="mt-3">
-          <p><strong>Data:</strong> {matchDate || 'Não informada'}</p>
-          <p><strong>Local:</strong> {matchLocation || 'Não informado'}</p>
-        </div>
-
-        <SumulaStats goals={goals} cards={cards} />
-
-        <hr />
-
-        {goals.length > 0 && (
-          <>
-            <GoalsTable goals={goals} />
-            <hr />
-          </>
-        )}
-
-        {cards.length > 0 && <CardsTable cards={cards} />}
-
-        {goals.length === 0 && cards.length === 0 && (
-          <div className="alert alert-info text-center">
-            Nenhum evento registrado nesta partida.
+  <dialog ref={dialogRef} className="sumula-dialog" onClose={onClose}>
+      {dataLoading ? (
+        <div className="dialog-body">
+          <div className="text-center p-5">
+            <div className="spinner-border text-primary" role="status" style={{width: '3rem', height: '3rem'}}>
+              <span className="visually-hidden">Carregando...</span>
+            </div>
+            <p className="mt-3">Carregando súmula...</p>
           </div>
-        )}
-      </Modal.Body>
+        </div>
+      ) : (
+        <>
+      <div className="dialog-header">
+        <h2 className="dialog-title">
+          <i className="fas fa-eye me-2"></i>
+          {isWO ? 'Partida cancelada por WO' : 'Visualizar Súmula'}
+        </h2>
+        <button className="dialog-close" onClick={onClose} type="button">
+          <i className="bi bi-x"></i>
+        </button>
+      </div>
 
-      <Modal.Footer>
-        <SumulaActions
-          isSaved={true}
-          canSave={false}
-          loading={false}
-          isFormValid={false}
-          onSave={() => {}}
-          onExportPDF={handleExportPDF}
-          onClose={onClose}
-        />
-      </Modal.Footer>
-    </Modal>
+      <div className="dialog-body">
+        <div className="container-fluid p-4">
+          <SumulaHeader
+            homeTeamName={homeTeamName}
+            awayTeamName={awayTeamName}
+            homeScore={isWO ? (homeScore > awayScore ? homeScore : 0) : homeScore}
+            awayScore={isWO ? (awayScore > homeScore ? awayScore : 0) : awayScore}
+          />
+          {isWO && (
+            <div className="alert alert-warning text-center mt-3 mb-4" style={{ fontWeight: 600, fontSize: 18 }}>
+              Partida encerrada automaticamente por WO (Walk Over).
+            </div>
+          )}
+
+          <div className="form-section">
+            <h5>
+              <i className="fas fa-info-circle me-2"></i>
+              Informações da Partida
+            </h5>
+            <div className="row">
+              <div className="col-md-6">
+                <p className="mb-2">
+                  <i className="fas fa-calendar me-2 text-primary"></i>
+                  <strong>Data:</strong> {matchDate || 'Não informada'}
+                </p>
+              </div>
+              <div className="col-md-6">
+                <p className="mb-2">
+                  <i className="fas fa-map-marker-alt me-2 text-primary"></i>
+                  <strong>Local:</strong> {matchLocation || 'Não informado'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <SumulaStats goals={goals} cards={cards} />
+
+          <div className="row mb-4">
+            <div className="col-lg-6 mb-3">
+              <EventsTimeline goals={goals} cards={cards} />
+            </div>
+            <div className="col-lg-6">
+              <div className="row">
+                {goals.length > 0 && (
+                  <div className="col-12 mb-3">
+                    <GoalsTable goals={goals} />
+                  </div>
+                )}
+                {cards.length > 0 && (
+                  <div className="col-12">
+                    <CardsTable cards={cards} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {goals.length === 0 && cards.length === 0 && (
+            <div className="alert alert-info text-center">
+              <i className="fas fa-info-circle me-2"></i>
+              Nenhum evento registrado nesta partida.
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="dialog-footer">
+        <div className="d-flex justify-content-between w-100">
+          {!isWO && canDelete !== false && (
+            <button
+              className="btn btn-danger"
+              onClick={handleDelete}
+              disabled={dataLoading}
+            >
+              <i className="fas fa-trash me-2"></i>
+              Deletar Súmula
+            </button>
+          )}
+
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-secondary"
+              onClick={onClose}
+              disabled={dataLoading}
+            >
+              <i className="fas fa-times me-2"></i>
+              Fechar
+            </button>
+            {!isWO && onEdit && canEdit !== false && (
+              <button
+                className="btn btn-warning"
+                onClick={onEdit}
+                disabled={dataLoading}
+              >
+                <i className="fas fa-edit me-2"></i>
+                Editar Súmula
+              </button>
+            )}
+            <button
+              className="btn btn-primary"
+              onClick={handleExportPDF}
+              disabled={dataLoading}
+            >
+              <i className="fas fa-file-pdf me-2"></i>
+              Exportar PDF
+            </button>
+          </div>
+        </div>
+      </div>
+      </>
+      )}
+    </dialog>
   );
 };

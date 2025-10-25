@@ -28,7 +28,7 @@ export const finalizeMatch = async (req: AuthRequest, res: Response): Promise<vo
 export const addGoal = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const matchId = Number(req.params.id);
-    const { playerId, userId, email } = req.body as { playerId?: number; userId?: number; email?: string };
+    const { playerId, userId, email, minute } = req.body as { playerId?: number; userId?: number; email?: string; minute?: number };
     if (!req.user?.id) { res.status(401).json({ message: 'Não autenticado' }); return; }
     const match = await Match.findByPk(matchId);
     if (!match) { res.status(404).json({ message: 'Partida não encontrada' }); return; }
@@ -48,7 +48,7 @@ export const addGoal = async (req: AuthRequest, res: Response): Promise<void> =>
       if (!userByEmail) { res.status(400).json({ message: 'Email não encontrado' }); return; }
       resolvedUserId = (userByEmail as any).id;
     }
-    const goal = await MatchGoal.create({ match_id: matchId, user_id: resolvedUserId, player_id: resolvedPlayerId });
+    const goal = await MatchGoal.create({ match_id: matchId, user_id: resolvedUserId, player_id: resolvedPlayerId, minute: minute || 0 });
     res.status(201).json(goal);
   } catch (err) {
     console.error('Erro ao registrar gol:', err);
@@ -176,5 +176,39 @@ export const deleteCardEvent = async (req: AuthRequest, res: Response): Promise<
   } catch (err) {
     console.error('Erro ao remover cartão:', err);
     res.status(500).json({ message: 'Erro ao remover cartão' });
+  }
+};
+
+export const clearGoals = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const matchId = Number(req.params.id);
+    if (!req.user?.id) { res.status(401).json({ message: 'Não autenticado' }); return; }
+    const match = await Match.findByPk(matchId);
+    if (!match) { res.status(404).json({ message: 'Partida não encontrada' }); return; }
+    const requester = await User.findByPk(req.user.id);
+    const isAdmin = (requester as any)?.userTypeId === 1;
+    if (match.organizerId !== req.user.id && !isAdmin) { res.status(403).json({ message: 'Sem permissão' }); return; }
+    await MatchGoal.destroy({ where: { match_id: matchId } });
+    res.json({ message: 'Gols removidos' });
+  } catch (err) {
+    console.error('Erro ao limpar gols:', err);
+    res.status(500).json({ message: 'Erro ao limpar gols' });
+  }
+};
+
+export const clearCards = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const matchId = Number(req.params.id);
+    if (!req.user?.id) { res.status(401).json({ message: 'Não autenticado' }); return; }
+    const match = await Match.findByPk(matchId);
+    if (!match) { res.status(404).json({ message: 'Partida não encontrada' }); return; }
+    const requester = await User.findByPk(req.user.id);
+    const isAdmin = (requester as any)?.userTypeId === 1;
+    if (match.organizerId !== req.user.id && !isAdmin) { res.status(403).json({ message: 'Sem permissão' }); return; }
+    await MatchCard.destroy({ where: { match_id: matchId } });
+    res.json({ message: 'Cartões removidos' });
+  } catch (err) {
+    console.error('Erro ao limpar cartões:', err);
+    res.status(500).json({ message: 'Erro ao limpar cartões' });
   }
 };

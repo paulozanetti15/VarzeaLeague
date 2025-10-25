@@ -1,0 +1,21 @@
+.matchfilters-datepicker-popper {
+  z-index: 5000 !important;
+}
+
+.matchfilters-datepicker-paper {
+  background-color: #ffffff !important;
+  color: rgba(0,0,0,0.87) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+/* Ensure picker's internal paper elements are not overridden by global rules */
+.matchfilters-datepicker-paper .MuiPickersDay-root {
+  background: transparent !important;
+}
+
+/* Force the popper to use normal stacking context */
+.matchfilters-datepicker-popper .MuiPaper-root {
+  background: #ffffff !important;
+}
