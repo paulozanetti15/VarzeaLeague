@@ -7,9 +7,9 @@ import { getStatusLabel } from '../../utils/statusLabels';
 import { canCreateMatch } from '../../utils/roleUtils';
 import { useMatches } from '../../hooks/useMatches';
 import { useFilters } from '../../hooks/useFilters';
-import { MatchCard } from '../../components/features/matches/MatchList';
-import { AdvancedFiltersModal } from '../../components/features/matches/MatchList';
-import { SearchControls } from '../../components/features/matches/MatchList';
+import { MatchCard } from '../../features/matches/MatchList';
+import { AdvancedFiltersModal } from '../../features/matches/MatchList';
+import { SearchControls } from '../../features/matches/MatchList';
 
 interface User {
   id: number;

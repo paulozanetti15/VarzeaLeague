@@ -2,11 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CreateMatch.css';
 import RegrasFormRegisterModal from '../../components/Modals/Rules/RegrasFormRegisterModal';
-import axios from 'axios';
-import CircularProgress from '@mui/material/CircularProgress';
 import ToastComponent from '../../components/Toast/ToastComponent';
-import { format, parse, isValid, isAfter } from 'date-fns';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import { useCreateMatch } from '../../hooks/useCreateMatch';
+import {
+  BasicFields,
+  DateTimeFields,
+  ConfigFields,
+  PriceLocationFields
+} from '../../features/matches/CreateMatch';
 
 interface MatchFormData {
   title: string;

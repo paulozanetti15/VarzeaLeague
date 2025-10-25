@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import type { SumulaData } from '../../../components/features/sumula/types';
+import type { SumulaData } from '../../../features/sumula/types';
 
 interface UseSumulaPDFReturn {
   exportPDF: (data: SumulaData, matchType: string) => void;

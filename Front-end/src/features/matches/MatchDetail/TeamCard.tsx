@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Card } from 'react-bootstrap';
+import { FaUsers, FaCrown } from 'react-icons/fa';
 import './ParticipantTeamCard.css';
 
 interface TeamCardProps {
@@ -21,10 +22,26 @@ const TeamCard: React.FC<TeamCardProps> = ({
   canLeaveMatch,
   onLeaveMatch
 }) => {
+  const isUserCaptain = team.captainId === userId;
+
   return (
-    <Card className="team-card simple">
+    <Card className={`team-card simple ${isUserCaptain ? 'captain-team' : ''}`}>
       <Card.Body className="d-flex flex-column align-items-center justify-content-center text-center py-4">
-        <div className="team-name" title={team.name}>{team.name}</div>
+        <div className="team-icon mb-2">
+          <FaUsers size={32} color="#007bff" />
+        </div>
+
+        <div className="team-name-container">
+          <div className="team-name" title={team.name}>
+            {team.name}
+          </div>
+          {isUserCaptain && (
+            <div className="captain-badge">
+              <FaCrown size={12} color="#ffd700" />
+              <span>Capitão</span>
+            </div>
+          )}
+        </div>
 
         <div className="mt-3 action-buttons">
           {(team.captainId === userId && canLeaveMatch) && (

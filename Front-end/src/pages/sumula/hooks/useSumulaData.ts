@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import axios from 'axios';
-import type { Team } from '../../../components/features/sumula/types';
-import type { Player } from '../../../components/features/sumula/types';
-import type { SumulaData } from '../../../components/features/sumula/types';
+import type { Team } from '../../../features/sumula/types';
+import type { Player } from '../../../features/sumula/types';
+import type { SumulaData } from '../../../features/sumula/types';
 
 interface UseSumulaDataReturn {
   teams: Team[];

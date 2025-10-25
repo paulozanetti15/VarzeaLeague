@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { StarRating } from '../../../common/StarRating/StarRating';
+import {StarRating} from '../../../components/common/StarRating/StarRating';
 import './MatchEvaluations.css';
 
 interface MatchEvaluationsProps {

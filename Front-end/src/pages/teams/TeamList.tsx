@@ -17,7 +17,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import WcIcon from '@mui/icons-material/Wc';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { HistoricoContext } from '../../Context/HistoricoContext';
+import { HistoricoContext } from '../../context/HistoricoContext';
 import './TeamList.css';
 import { api } from '../../services/api';
 

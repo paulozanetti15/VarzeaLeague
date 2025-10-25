@@ -25,7 +25,6 @@ interface MatchActionsProps {
   onPunishment: () => void;
   onEvaluate: () => void;
   onViewComments: () => void;
-  onFinalize?: () => void;
   onViewEvents?: () => void;
   onCreateSumula?: () => void;
 }
@@ -48,12 +47,10 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
   onPunishment,
   onEvaluate,
   onViewComments,
-  onFinalize,
   onViewEvents,
   hasSumula,
   onCreateSumula
 }) => {
-  const canFinalizeMatch = userTypeId === 1 || userTypeId === 2;
   const canEditMatchAndRules = userTypeId === 1 || userTypeId === 2;
   const isCancelled = matchStatus === 'cancelada';
   
@@ -88,7 +85,7 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
                 <EditIcon /> Editar Partida
               </Button>
               
-              <Button className="btn-edit" onClick={onEditRules}>
+              <Button className="btn-edit btn-edit-rules" onClick={onEditRules}>
                 <EditIcon /> Editar Regras
               </Button>
             </>

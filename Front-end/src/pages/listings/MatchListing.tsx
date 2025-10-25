@@ -12,7 +12,7 @@ import {
   Typography,
   Paper,
 } from '@mui/material';
-import MatchFilters from '../../components/features/matches/MatchFilters/MatchFilters';
+import MatchFilters from '../../features/matches/MatchFilters/MatchFilters';
 import { getStatusLabel } from '../../utils/statusLabels';
 import { format } from 'date-fns';
 

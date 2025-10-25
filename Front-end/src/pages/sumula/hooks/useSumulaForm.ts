@@ -1,8 +1,8 @@
 import { useState, useCallback, useMemo } from 'react';
-import type { Team } from '../../../components/features/sumula/types';
-import type { Player } from '../../../components/features/sumula/types';
-import type { Goal } from '../../../components/features/sumula/types';
-import type { Card } from '../../../components/features/sumula/types';
+import type { Team } from '../../../features/sumula/types';
+import type { Player } from '../../../features/sumula/types';
+import type { Goal } from '../../../features/sumula/types';
+import type { Card } from '../../../features/sumula/types';
 
 interface UseSumulaFormReturn {
   homeTeam: number;

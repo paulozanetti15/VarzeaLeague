@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { SumulaHeader } from '../../components/features/sumula/SumulaDisplay/SumulaHeader';
-import { SumulaStats } from '../../components/features/sumula/SumulaDisplay/SumulaStats';
-import { GoalsTable } from '../../components/features/sumula/SumulaDisplay/GoalsTable';
-import { CardsTable } from '../../components/features/sumula/SumulaDisplay/CardsTable';
-import { EventsTimeline } from '../../components/features/sumula/SumulaDisplay/EventsTimeline';
+import { SumulaHeader } from '../../features/sumula/SumulaDisplay/SumulaHeader';
+import { SumulaStats } from '../../features/sumula/SumulaDisplay/SumulaStats';
+import { GoalsTable } from '../../features/sumula/SumulaDisplay/GoalsTable';
+import { CardsTable } from '../../features/sumula/SumulaDisplay/CardsTable';
+import { EventsTimeline } from '../../features/sumula/SumulaDisplay/EventsTimeline';
 import { useSumulaData } from './hooks/useSumulaData';
 import { useSumulaPDF } from './hooks/useSumulaPDF';
 import './Sumula.css';

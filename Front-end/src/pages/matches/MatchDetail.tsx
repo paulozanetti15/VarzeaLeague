@@ -16,8 +16,8 @@ import {
   MatchDescription,
   MatchRules,
   TeamsList
-} from '../../components/features/matches/MatchDetail';
-import { MatchActions } from '../../components/features/matches/MatchActions/MatchActions';
+} from '../../features/matches/MatchDetail';
+import { MatchActions } from '../../features/matches/MatchActions/MatchActions';
 import { DeleteConfirmDialog } from '../../components/Dialogs/DeleteConfirmDialog';
 import { EvaluationDialog } from '../../components/Dialogs/EvaluationDialog';
 const MatchDetail: React.FC = () => {
