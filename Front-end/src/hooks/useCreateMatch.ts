@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { createMatchService, MatchFormData } from '../services/createMatchService';
+import { createMatch, searchCEP, MatchFormData } from '../services/matchesFriendlyServices';
+import { formatDateISOToBR, formatCEP } from '../utils/formUtils';
 
 export interface UseCreateMatchReturn {
   formData: MatchFormData;
@@ -43,47 +44,11 @@ export const useCreateMatch = (usuario: any): UseCreateMatchReturn => {
   const [cepErrorMessage, setCepErrorMessage] = useState<string | null>(null);
   const [enderecoCompleto, setEnderecoCompleto] = useState('');
 
-  const formatarCep = (cep: string): string => {
-    cep = cep.replace(/\D/g, '');
-    if (cep.length > 8) cep = cep.slice(0, 8);
-    if (cep.length > 5) {
-      return `${cep.slice(0, 5)}-${cep.slice(5)}`;
-    }
-    return cep;
-  };
-
-  const buscarCep = async (cep: string) => {
-    const cepLimpo = cep.replace(/\D/g, '');
-    if (cepLimpo.length !== 8) return;
-
-    try {
-      const data = await createMatchService.searchCEP(cep);
-
-      if (data.erro) {
-        setCepErrorMessage('CEP não encontrado');
-        return;
-      }
-
-      setFormData(prev => ({
-        ...prev,
-        UF: data.uf,
-        city: data.localidade,
-        location: data.logradouro
-      }));
-
-      const endereco = `${data.logradouro}, ${data.localidade} - ${data.uf}`;
-      setEnderecoCompleto(endereco);
-      setCepErrorMessage(null);
-    } catch (error) {
-      setCepErrorMessage('Erro ao buscar CEP');
-    }
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
 
     if (name === 'cep') {
-      const cepFormatado = formatarCep(value);
+      const cepFormatado = formatCEP(value);
       setFormData(prev => ({ ...prev, [name]: cepFormatado }));
 
       if (cepFormatado.length === 9) {
@@ -114,7 +79,7 @@ export const useCreateMatch = (usuario: any): UseCreateMatchReturn => {
     if (!formData.title.trim()) errors.title = 'Título é obrigatório';
     if (!formData.date.trim()) errors.date = 'Data é obrigatória';
     if (!formData.time.trim()) errors.time = 'Horário é obrigatório';
-    if (!formData.duration.trim()) errors.duration = 'Duração é obrigatória';
+    if (!(formData.duration ?? '').trim()) errors.duration = 'Duração é obrigatória';
     if (!formData.price.trim()) errors.price = 'Preço é obrigatório';
     if (!formData.modalidade.trim()) errors.modalidade = 'Modalidade é obrigatória';
     if (!formData.quadra.trim()) errors.quadra = 'Nome da quadra é obrigatório';
@@ -142,33 +107,13 @@ export const useCreateMatch = (usuario: any): UseCreateMatchReturn => {
         organizerId: usuario?.id
       };
 
-      await createMatchService.createMatch(matchData);
+  await createMatch(matchData);
     } catch (error: any) {
       console.error('Erro ao criar partida:', error);
       setError(error.response?.data?.message || 'Erro ao criar partida');
       throw error;
     } finally {
       setLoading(false);
-    }
-  };
-
-  const formatDateISOToBR = (isoDate: string): string => {
-    try {
-      const date = new Date(isoDate);
-      return format(date, 'dd/MM/yyyy');
-    } catch {
-      return isoDate;
-    }
-  };
-
-  const handleOpenDatePicker = () => {
-    const el = document.querySelector('input[type="date"]') as HTMLInputElement;
-    if (!el) return;
-
-    if (typeof el.showPicker === 'function') {
-      el.showPicker();
-    } else {
-      el.click();
     }
   };
 

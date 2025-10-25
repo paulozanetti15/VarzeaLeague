@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { api } from '../services/api';
+import {getUserTeams} from '../services/teamsServices';
 
 interface TeamRequiredRouteProps {
   children: React.ReactNode;
@@ -14,7 +14,7 @@ const TeamRequiredRoute: React.FC<TeamRequiredRouteProps> = ({ children, redirec
     let mounted = true;
     const checkTeams = async () => {
       try {
-        const teams = await api.teams.list();
+        const teams = await getUserTeams();
         if (!mounted) return;
         setHasTeam(Array.isArray(teams) && teams.length > 0);
       } catch (e) {

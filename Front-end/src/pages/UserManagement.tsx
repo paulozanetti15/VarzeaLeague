@@ -32,10 +32,18 @@ import {
   Slide,
   Grid
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon, VisibilityOff as VisibilityOffIcon, ErrorOutline as ErrorOutlineIcon } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
-import { api } from '../services/api';
+import { getUsers, createUser, updateUser, deleteUser, User as UserService } from '../services/userServices';
+import { useUserForm } from '../hooks/useUserForm';
+import { useUserSearch } from '../hooks/useUserSearch';
+import { useUserManagement } from '../hooks/useUserManagement';
+import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
+import UserForm from '../components/features/user/UserForm';
+import UserDetailDialog from '../components/features/user/UserDetailDialog';
+import ConfirmDeleteDialog from '../components/features/user/ConfirmDeleteDialog';
+import { validateCPF, checkPasswordStrength } from '../utils/formUtils';
+import { SEXO_OPTIONS, USER_TYPE_OPTIONS, userTypeLabel, getSelectMenuProps, sexoValue } from '../utils/userUtils';
 import './UserManagement.css';
 
 // Transition helper to pass direction without typing errors
@@ -46,306 +54,79 @@ const TransitionUp = React.forwardRef(function TransitionUp(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-// Modal moderno e profissional
-const CustomDialog = styled(Dialog)(() => ({
-  '& .MuiPaper-root': {
-    borderRadius: 20,
-    background: '#ffffff',
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05)',
-    padding: 0,
-    minWidth: 520,
-    maxWidth: 640,
-    width: '90vw',
-    margin: 'auto',
-    overflow: 'hidden',
-    border: 'none',
-  },
-  '& .MuiBackdrop-root': {
-    background: 'rgba(0, 0, 0, 0.6)',
-    backdropFilter: 'blur(4px)',
-  },
-}));
-
-// Avatar moderno e sofisticado
-const StyledAvatar = styled(Avatar)(() => ({
-  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  color: 'white',
-  width: 72,
-  height: 72,
-  fontSize: 28,
-  fontWeight: 700,
-  boxShadow: '0 8px 25px rgba(102, 126, 234, 0.3)',
-  border: '3px solid #ffffff',
-}));
-
-// Input moderno e elegante
-const FancyTextField = styled(TextField)(() => ({
-  '& .MuiOutlinedInput-root': {
-    borderRadius: 12,
-    fontSize: 15,
-    backgroundColor: '#fafbfc',
-    minHeight: 56,
-    '& fieldset': {
-      borderColor: '#e1e5e9',
-      borderWidth: 1.5,
-    },
-    '&:hover fieldset': {
-      borderColor: '#667eea',
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: '#667eea',
-      borderWidth: 2,
-      boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.1)',
-    },
-  },
-  '& .MuiInputLabel-root': {
-    color: '#64748b',
-    fontWeight: 600,
-    fontSize: '14px',
-    '&.Mui-focused': {
-      color: '#667eea',
-    },
-  },
-  '& .MuiOutlinedInput-input': {
-    padding: '16px 14px',
-    fontSize: '15px',
-    fontWeight: 500,
-  },
-}));
-
-const FancyFormControl = styled(FormControl)(() => ({
-  '& .MuiOutlinedInput-root': {
-    borderRadius: 12,
-    fontSize: 15,
-    backgroundColor: '#fafbfc',
-    minHeight: 56,
-    '& fieldset': {
-      borderColor: '#e1e5e9',
-      borderWidth: 1.5,
-    },
-    '&:hover fieldset': {
-      borderColor: '#667eea',
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: '#667eea',
-      borderWidth: 2,
-      boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.1)',
-    },
-  },
-  '& .MuiInputLabel-root': {
-    color: '#64748b',
-    fontWeight: 600,
-    fontSize: '14px',
-    '&.Mui-focused': {
-      color: '#667eea',
-    },
-  },
-  '& .MuiSelect-select': {
-    padding: '16px 14px',
-    fontSize: '15px',
-    fontWeight: 500,
-  },
-}));
-
 // (Removed unused FancyTableCell and FancyTableRow)
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  cpf: string;
-  phone: string;
-  sexo: string;
-  userTypeId: number;
-  usertype?: {
-    name: string;
-  };
-}
+interface User extends UserService {}
 
-const SEXO_OPTIONS = [
-  { value: 'Masculino', label: 'Masculino' },
-  { value: 'Feminino', label: 'Feminino' },
-  { value: 'N/A', label: 'N/A' },
-];
-const sexoValue = (label: string) => {
-  const found = SEXO_OPTIONS.find(opt => opt.label === label || opt.value === label);
-  return found ? found.value : label;
-};
-const USER_TYPE_OPTIONS = [
-  { id: 1, name: 'Admin Master' },
-  { id: 2, name: 'Admin Eventos' },
-  { id: 3, name: 'Admin Times' },
-  { id: 4, name: 'Usuário Comum' },
-];
-const userTypeLabel = (id: number|string) => {
-  const found = USER_TYPE_OPTIONS.find(opt => String(opt.id) === String(id));
-  return found ? found.name : 'Desconhecido';
-};
 
-// Validação de CPF real
-const validateCPF = (cpf: string): boolean => {
-  cpf = cpf.replace(/[^\d]/g, '');
-  
-  if (cpf.length !== 11) return false;
-  
-  if (/^(\d)\1{10}$/.test(cpf)) return false;
-  
-  let sum = 0;
-  for (let i = 0; i < 9; i++) {
-    sum += parseInt(cpf.charAt(i)) * (10 - i);
-  }
-  let remainder = (sum * 10) % 11;
-  if (remainder === 10 || remainder === 11) remainder = 0;
-  if (remainder !== parseInt(cpf.charAt(9))) return false;
-  
-  sum = 0;
-  for (let i = 0; i < 10; i++) {
-    sum += parseInt(cpf.charAt(i)) * (11 - i);
-  }
-  remainder = (sum * 10) % 11;
-  if (remainder === 10 || remainder === 11) remainder = 0;
-  if (remainder !== parseInt(cpf.charAt(10))) return false;
-  
-  return true;
-};
-
-// Validação de força da senha
-const checkPasswordStrength = (password: string) => {
-  const requirements = {
-    length: password.length >= 8,
-    uppercase: /[A-Z]/.test(password),
-    lowercase: /[a-z]/.test(password),
-    number: /\d/.test(password),
-    special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
-  };
-
-  const score = Object.values(requirements).filter(Boolean).length;
-  
-  let strength = 'weak';
-  if (score >= 5) strength = 'very-strong';
-  else if (score >= 4) strength = 'strong';
-  else if (score >= 3) strength = 'medium';
-  
-  return {
-    isStrong: score >= 4,
-    strength,
-    requirements,
-    score
-  };
-};
 
 const UserManagement: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  // Removed unused userTypes state (using static USER_TYPE_OPTIONS instead)
   const [openDialog, setOpenDialog] = useState(false);
   const [openDetail, setOpenDetail] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    cpf: '',
-    phone: '',
-    sexo: '',
-    userTypeId: '',
-    password: '',
-    confirmPassword: '',
-  });
   const [search, setSearch] = useState('');
   const [snackbar, setSnackbar] = useState<{open: boolean, message: string, severity: 'success'|'error'}>({open: false, message: '', severity: 'success'});
-  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [formErrors, setFormErrors] = useState<any>({});
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [userToDeleteId, setUserToDeleteId] = useState<number | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState<any>(null);
 
   const { user } = useAuth();
   const theme = useTheme();
+  const { users, loading, initialLoading, fetchUsers, deleteUserById } = useUserManagement();
+  const { filteredUsers } = useUserSearch(users, search);
+  const {
+    formData,
+    errors: formErrors,
+    loading: formLoading,
+    passwordStrength,
+    showPassword,
+    showConfirmPassword,
+    setShowPassword,
+    setShowConfirmPassword,
+    handleInputChange,
+    validateForm,
+    resetForm,
+    submitForm,
+  } = useUserForm();
 
   // MenuProps to force white background for Select dropdowns (overrides global CSS)
-  const selectMenuProps: any = {
-    PaperProps: {
-      sx: {
-        backgroundColor: '#ffffff',
-        // ensure text is dark
-        color: theme.palette.text.primary,
-      }
-    },
-    MenuListProps: {
-      sx: {
-        backgroundColor: '#ffffff'
-      }
-    }
-  };
+  const selectMenuProps = getSelectMenuProps(theme);
 
   useEffect(() => {
     if (user?.userTypeId === 1) {
       fetchUsers();
     } else {
-      setInitialLoading(false);
+      // Note: initialLoading is handled by useUserManagement hook
     }
   }, [user]);
-
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const response = await api.get('/user');
-      setUsers(Array.isArray(response) ? response : []);
-    } catch (error: any) {
-      setSnackbar({
-        open: true,
-        message: error.message || 'Erro ao buscar usuários',
-        severity: 'error'
-      });
-      setUsers([]);
-    } finally {
-      setLoading(false);
-      setInitialLoading(false);
-    }
-  };
 
   // Removed fetchUserTypes (no longer used)
 
   const handleOpenDialog = (user?: User) => {
     if (user) {
       setSelectedUser(user);
-      setFormData({
-        name: user.name,
-        email: user.email,
-        cpf: user.cpf,
-        phone: user.phone,
-        sexo: sexoValue(user.sexo),
-        userTypeId: user.userTypeId.toString(),
-        password: '',
-        confirmPassword: '',
-      });
+      // Set form data for editing
+      handleInputChange({ target: { name: 'name', value: user.name } } as any);
+      handleInputChange({ target: { name: 'email', value: user.email } } as any);
+      handleInputChange({ target: { name: 'cpf', value: user.cpf } } as any);
+      handleInputChange({ target: { name: 'phone', value: user.phone } } as any);
+      handleInputChange({ target: { name: 'sexo', value: sexoValue(user.sexo) } } as any);
+      handleInputChange({ target: { name: 'userTypeId', value: user.userTypeId.toString() } } as any);
+      handleInputChange({ target: { name: 'password', value: '' } } as any);
+      handleInputChange({ target: { name: 'confirmPassword', value: '' } } as any);
     } else {
       setSelectedUser(null);
-      setFormData({
-        name: '',
-        email: '',
-        cpf: '',
-        phone: '',
-        sexo: '',
-        userTypeId: '',
-        password: '',
-        confirmPassword: '',
-      });
+      resetForm();
     }
-    setFormErrors({});
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedUser(null);
-    setFormErrors({});
-    setPasswordStrength(null);
+    resetForm();
   };
 
   const handleOpenDetail = (user: User) => {
@@ -358,175 +139,26 @@ const UserManagement: React.FC = () => {
     setSelectedUser(null);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
-    const { name, value } = e.target;
-    let newValue = value;
-    
-    if (name === 'cpf') {
-      let v = String(value).replace(/\D/g, '').slice(0, 11);
-      if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
-      else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1.$2.$3');
-      else if (v.length > 3) v = v.replace(/(\d{3})(\d{0,3})/, '$1.$2');
-      newValue = v;
-    }
-    
-    if (name === 'phone') {
-      let v = String(value).replace(/\D/g, '').slice(0, 11);
-      if (v.length > 10) v = v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-      else if (v.length > 6) v = v.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-      else if (v.length > 2) v = v.replace(/(\d{2})(\d{0,5})/, '($1) $2');
-      newValue = v;
-    }
-    
-    if (name === 'sexo') {
-      newValue = value;
-    }
 
-    // Validação da senha em tempo real
-    if (name === 'password') {
-      const passwordCheck = checkPasswordStrength(String(value));
-      setPasswordStrength(passwordCheck);
-    }
 
-    setFormData(prev => ({
-      ...prev,
-      [name as string]: newValue,
-    }));
-    setFormErrors((prev: any) => ({ ...prev, [name as string]: undefined }));
-  };
 
-  const validateForm = () => {
-    let tempErrors: any = {};
-    let isValid = true;
-
-    // Validação do nome
-    if (!formData.name.trim()) { 
-      tempErrors.name = "Nome é obrigatório"; 
-      isValid = false; 
-    }
-
-    // Validação do email
-    if (!formData.email.trim()) { 
-      tempErrors.email = "Email é obrigatório"; 
-      isValid = false; 
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) { 
-      tempErrors.email = "Email inválido"; 
-      isValid = false; 
-    }
-
-    // Validação do CPF
-    if (!formData.cpf.trim()) { 
-      tempErrors.cpf = "CPF é obrigatório"; 
-      isValid = false; 
-    } else {
-      const cpfLimpo = formData.cpf.replace(/\D/g, '');
-      if (!validateCPF(cpfLimpo)) { 
-        tempErrors.cpf = "CPF inválido"; 
-        isValid = false; 
-      }
-      else {
-        // Verificar CPF duplicado no array de usuários (somente criação ou se mudou no edição)
-        const cpfExists = users.some(u => String(u.cpf).replace(/\D/g, '') === String(cpfLimpo) && (!selectedUser || u.id !== selectedUser.id));
-        if (cpfExists) {
-          tempErrors.cpf = 'CPF já cadastrado';
-          isValid = false;
-        }
-      }
-    }
-
-    // Validação do telefone
-    if (!formData.phone.trim()) { 
-      tempErrors.phone = "Telefone é obrigatório"; 
-      isValid = false; 
-    } else if (!/^\d{10,11}$/.test(formData.phone.replace(/\D/g, ''))) { 
-      tempErrors.phone = "Telefone inválido"; 
-      isValid = false; 
-    }
-
-    // Validação do gênero
-    if (!formData.sexo) { 
-      tempErrors.sexo = "Gênero é obrigatório"; 
-      isValid = false; 
-    }
-
-    // Validação do tipo de usuário
-    if (!formData.userTypeId) { 
-      tempErrors.userTypeId = "Tipo de usuário é obrigatório"; 
-      isValid = false; 
-    }
-
-    // Validação de email duplicado (usar lista local de usuários)
-    if (!formData.email.trim()) {
-      tempErrors.email = tempErrors.email || 'Email é obrigatório';
-      isValid = false;
-    } else {
-      // Checar se email já existe em outro usuário
-      const emailExists = users.some(u => String(u.email).toLowerCase() === String(formData.email).toLowerCase() && (!selectedUser || u.id !== selectedUser.id));
-      if (emailExists) {
-        tempErrors.email = 'Email já cadastrado';
-        isValid = false;
-      }
-    }
-
-    // Validação da senha (apenas para novos usuários ou quando senha é fornecida)
-    if (!selectedUser || (selectedUser && formData.password)) {
-      if (!formData.password) { 
-        tempErrors.password = "Senha é obrigatória"; 
-        isValid = false; 
-      } else {
-        const passwordCheck = checkPasswordStrength(formData.password);
-        if (!passwordCheck.isStrong) {
-          tempErrors.password = "A senha deve cumprir todos os requisitos de segurança";
-          isValid = false;
-        }
-      }
-      
-      if (formData.password !== formData.confirmPassword) { 
-        tempErrors.confirmPassword = "As senhas não coincidem"; 
-        isValid = false; 
-      }
-    }
-
-    setFormErrors(tempErrors);
-    return isValid;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) {
+    if (!validateForm(!!selectedUser, users, selectedUser?.id)) {
       return;
     }
-    setLoading(true);
-    try {
-      const dataToSend = {
-        ...formData,
-        sexo: sexoValue(formData.sexo),
-        userTypeId: formData.userTypeId,
-      };
-      if (selectedUser) {
-        await api.put(`/user/${selectedUser.id}`, dataToSend);
-        setSnackbar({open: true, message: 'Usuário atualizado com sucesso!', severity: 'success'});
-      } else {
-        await api.post('/user', dataToSend);
-        setSnackbar({open: true, message: 'Usuário criado com sucesso!', severity: 'success'});
-      }
+    const result = await submitForm(!!selectedUser, selectedUser?.id);
+    if (result.success) {
+      setSnackbar({open: true, message: result.message, severity: 'success'});
       fetchUsers();
       handleCloseDialog();
-    } catch (error: any) {
-      // Extrair mensagem de erro de várias formas possíveis
-      let errMsg = 'Erro ao salvar usuário';
-      if (error?.response?.data) {
-        errMsg = error.response.data.error || error.response.data.message || errMsg;
-      } else if (error?.message) {
-        errMsg = error.message;
-      }
+    } else {
       setSnackbar({
         open: true,
-        message: errMsg,
+        message: result.message,
         severity: 'error'
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -539,28 +171,17 @@ const UserManagement: React.FC = () => {
   const confirmDelete = async () => {
     if (userToDeleteId === null) return;
 
-    setLoading(true);
     try {
-      await api.delete(`/user/${userToDeleteId}`);
+      await deleteUserById(userToDeleteId);
       setSnackbar({open: true, message: 'Usuário excluído com sucesso!', severity: 'success'});
-      fetchUsers();
       // success: close modal and clear
       setOpenDeleteConfirm(false);
       setUserToDeleteId(null);
       setDeleteError(null);
     } catch (error: any) {
-      // extract message robustly
-      let errMsg = 'Erro ao excluir usuário';
-      if (error?.response?.data) {
-        errMsg = error.response.data.error || error.response.data.message || errMsg;
-      } else if (error?.message) {
-        errMsg = error.message;
-      }
       // show snackbar and also show inside modal
-      setSnackbar({ open: true, message: errMsg, severity: 'error' });
-      setDeleteError(errMsg);
-    } finally {
-      setLoading(false);
+      setSnackbar({ open: true, message: error.message, severity: 'error' });
+      setDeleteError(error.message);
     }
   };
 
@@ -586,7 +207,7 @@ const UserManagement: React.FC = () => {
 
   if (initialLoading) {
     return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+      <Container className="user-management-loading-container">
         <CircularProgress size={60} thickness={4} color="primary" />
       </Container>
     );
@@ -596,7 +217,7 @@ const UserManagement: React.FC = () => {
     return (
       <Container>
         <Fade in>
-          <Typography variant="h5" color="error" sx={{ mt: 8, textAlign: 'center' }}>
+          <Typography variant="h5" color="error" className="user-management-access-denied-title">
             Acesso não autorizado
           </Typography>
         </Fade>
@@ -604,16 +225,12 @@ const UserManagement: React.FC = () => {
     );
   }
 
-  // Filtro de busca
-  const filteredUsers = users.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
-  );
+
 
   return (
     <div className="user-management-bg">
       <div className="user-management-card">
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+        <Box className="user-management-header-box">
           <div className="user-management-title">Gestão de Usuários</div>
           <Button
             variant="contained"
@@ -624,13 +241,13 @@ const UserManagement: React.FC = () => {
             Novo Usuário
           </Button>
         </Box>
-        <FancyTextField
+        <TextField
           label="Buscar por nome ou email"
           variant="outlined"
           value={search}
           onChange={handleSearchChange}
           fullWidth
-          className="user-management-search user-management-input"
+          className="user-management-search user-management-input user-management-fancy-text-field"
           placeholder="Buscar por nome ou email"
         />
         <div className="user-management-table-container">
@@ -666,7 +283,7 @@ const UserManagement: React.FC = () => {
                     <TableCell className="user-avatar-cell">
                       <Avatar className="user-avatar-premium">{u.name[0]}</Avatar>
                     </TableCell>
-                    <TableCell style={{ fontWeight: 600 }}>{u.name}</TableCell>
+                    <TableCell className="user-management-user-name">{u.name}</TableCell>
                     <TableCell className="user-email-cell">{u.email}</TableCell>
                     <TableCell className="user-cpf-cell">{u.cpf}</TableCell>
                     <TableCell className="user-phone-cell">{u.phone}</TableCell>
@@ -707,432 +324,80 @@ const UserManagement: React.FC = () => {
             onRowsPerPageChange={handleChangeRowsPerPage}
             labelRowsPerPage="Linhas por página:"
             labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count !== -1 ? count : `mais de ${to}`}`}
-            sx={{
-              borderTop: `1px solid rgba(0,0,0,0.05)`,
-              '.MuiTablePagination-select': {
-                borderRadius: '8px',
-                padding: '4px 8px'
-              },
-              '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
-                margin: 0
-              }
-            }}
+            className="user-management-table-pagination"
           />
         </div>
       </div>
       {/* Modais */}
+      <UserDetailDialog open={openDetail} onClose={handleCloseDetail} user={selectedUser} />
       <Dialog
-        open={openDetail}
-        onClose={handleCloseDetail}
-        maxWidth="sm"
-        fullWidth
-        className="user-management-modal"
+        open={openDialog}
+        onClose={handleCloseDialog}
         TransitionComponent={TransitionUp}
+        transitionDuration={400}
+        className="user-management-custom-dialog"
       >
-        <DialogTitle className="user-management-modal-title">Detalhes do Usuário</DialogTitle>
-        <DialogContent>
-          {selectedUser && (
-            <Stack spacing={2} alignItems="center" sx={{ mt: 2, mb: 2 }}>
-              <Avatar className="user-management-modal-avatar">{selectedUser.name[0]}</Avatar>
-              <Typography className="user-management-modal-content"><b>Nome:</b> {selectedUser.name}</Typography>
-              <Typography className="user-management-modal-content"><b>Email:</b> {selectedUser.email}</Typography>
-              <Typography className="user-management-modal-content"><b>CPF:</b> {selectedUser.cpf}</Typography>
-              <Typography className="user-management-modal-content"><b>Telefone:</b> {selectedUser.phone}</Typography>
-              <Typography className="user-management-modal-content"><b>Sexo:</b> {selectedUser.sexo}</Typography>
-              <Typography className="user-management-modal-content"><b>Tipo de Usuário:</b> {selectedUser.usertype?.name || 'Sem tipo'}</Typography>
-            </Stack>
-          )}
-        </DialogContent>
-        <DialogActions className="user-management-modal-actions">
-          <Button onClick={handleCloseDetail} variant="contained" color="primary">
-            Fechar
-          </Button>
-        </DialogActions>
-      </Dialog>
-  <CustomDialog open={openDialog} onClose={handleCloseDialog} TransitionComponent={TransitionUp} transitionDuration={400}>
-        <DialogTitle sx={{ 
-          textAlign: 'center', 
-          pb: 4, 
-          pt: 5,
-          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-          borderBottom: '1px solid #e2e8f0',
-          position: 'relative',
-        }}>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            mb: 3,
-          }}>
-            <StyledAvatar>
+        <DialogTitle className="user-management-create-dialog-title">
+          <Box className="user-management-create-dialog-avatar-box">
+            <Avatar className="user-management-styled-avatar">
               {selectedUser ? selectedUser.name[0] : <AddIcon fontSize="large" />}
-            </StyledAvatar>
+            </Avatar>
           </Box>
           <Typography 
             variant="h4" 
             component="div" 
             fontWeight={800} 
-            sx={{ 
-              color: '#1e293b',
-              mb: 1.5,
-              fontSize: '28px',
-              letterSpacing: '-0.025em',
-            }}
+            className="user-management-create-dialog-main-title"
           >
             {selectedUser ? 'Editar Usuário' : 'Novo Usuário'}
           </Typography>
           <Typography 
             variant="body1" 
-            sx={{ 
-              color: '#64748b', 
-              fontWeight: 500,
-              fontSize: '16px',
-              maxWidth: '400px',
-              margin: '0 auto',
-              lineHeight: 1.5,
-            }}
+            className="user-management-create-dialog-subtitle"
           >
             {selectedUser ? 'Atualize as informações do usuário' : 'Preencha os dados para criar um novo usuário'}
           </Typography>
         </DialogTitle>
-        <DialogContent sx={{ 
-          px: 5, 
-          py: 4, 
-          overflowY: 'visible',
-          backgroundColor: '#ffffff',
-        }}>
-          <Grid container spacing={3.5}>
-            <Grid item xs={12} md={6}>
-              <FancyTextField
-                margin="dense"
-                label="Nome *"
-                type="text"
-                fullWidth
-                variant="outlined"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                error={!!formErrors.name}
-                helperText={formErrors.name}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FancyTextField
-                margin="dense"
-                label="Email *"
-                type="email"
-                fullWidth
-                variant="outlined"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                error={!!formErrors.email}
-                helperText={formErrors.email}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FancyTextField
-                margin="dense"
-                label="CPF *"
-                type="text"
-                fullWidth
-                variant="outlined"
-                name="cpf"
-                value={formData.cpf}
-                onChange={handleInputChange}
-                error={!!formErrors.cpf}
-                helperText={selectedUser ? 'CPF não pode ser alterado' : formErrors.cpf}
-                InputLabelProps={{ shrink: true }}
-                InputProps={{ readOnly: !!selectedUser }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FancyTextField
-                margin="dense"
-                label="Telefone *"
-                type="text"
-                fullWidth
-                variant="outlined"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                error={!!formErrors.phone}
-                helperText={formErrors.phone}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FancyFormControl fullWidth margin="dense" error={!!formErrors.sexo}>
-                <InputLabel id="sexo-label" shrink>Gênero *</InputLabel>
-                <Select
-                  labelId="sexo-label"
-                  id="sexo"
-                  name="sexo"
-                  value={formData.sexo}
-                  label="Gênero *"
-                  onChange={(e) => handleInputChange(e as any)}
-                  MenuProps={selectMenuProps}
-                  sx={{ backgroundColor: '#ffffff' }}
-                >
-                  {SEXO_OPTIONS.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {formErrors.sexo && <Typography color="error" fontSize={13}>{formErrors.sexo}</Typography>}
-              </FancyFormControl>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FancyFormControl fullWidth margin="dense" error={!!formErrors.userTypeId}>
-                <InputLabel id="userTypeId-label" shrink>Tipo de Usuário *</InputLabel>
-                <Select
-                  labelId="userTypeId-label"
-                  id="userTypeId"
-                  name="userTypeId"
-                  value={formData.userTypeId}
-                  label="Tipo de Usuário *"
-                  onChange={(e) => handleInputChange(e as any)}
-                  MenuProps={selectMenuProps}
-                  sx={{ backgroundColor: '#ffffff' }}
-                >
-                  {USER_TYPE_OPTIONS.map((type) => (
-                    <MenuItem key={type.id} value={type.id}>
-                      {type.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {formErrors.userTypeId && <Typography color="error" fontSize={13}>{formErrors.userTypeId}</Typography>}
-              </FancyFormControl>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FancyTextField
-                margin="dense"
-                label="Senha *"
-                type={showPassword ? 'text' : 'password'}
-                fullWidth
-                variant="outlined"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                error={!!formErrors.password}
-                helperText={formErrors.password}
-                InputLabelProps={{ shrink: true }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(prev => !prev)}
-                        onMouseDown={(e) => e.preventDefault()}
-                        edge="end"
-                        aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                      >
-                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-              {formData.password && passwordStrength && (
-                <div className="password-strength-container">
-                  <div className="password-strength-title">
-                    <span>Força da senha</span>
-                    <span className={`password-strength-label ${passwordStrength.strength}`}>
-                      {passwordStrength.strength === 'weak' && 'Fraca'}
-                      {passwordStrength.strength === 'medium' && 'Média'}
-                      {passwordStrength.strength === 'strong' && 'Forte'}
-                      {passwordStrength.strength === 'very-strong' && 'Muito Forte'}
-                    </span>
-                  </div>
-                  <div className="password-strength-meter">
-                    <div className={`password-strength-progress ${passwordStrength.strength}`}></div>
-                  </div>
-                  <div className="password-requirements">
-                    <div className={`password-requirement ${passwordStrength.requirements.length ? 'valid' : 'invalid'}`}>
-                      <span>{passwordStrength.requirements.length ? '✓' : '✗'}</span>
-                      <span>Mín. 8 caracteres</span>
-                    </div>
-                    <div className={`password-requirement ${passwordStrength.requirements.uppercase ? 'valid' : 'invalid'}`}>
-                      <span>{passwordStrength.requirements.uppercase ? '✓' : '✗'}</span>
-                      <span>Maiúscula</span>
-                    </div>
-                    <div className={`password-requirement ${passwordStrength.requirements.lowercase ? 'valid' : 'invalid'}`}>
-                      <span>{passwordStrength.requirements.lowercase ? '✓' : '✗'}</span>
-                      <span>Minúscula</span>
-                    </div>
-                    <div className={`password-requirement ${passwordStrength.requirements.number ? 'valid' : 'invalid'}`}>
-                      <span>{passwordStrength.requirements.number ? '✓' : '✗'}</span>
-                      <span>Número</span>
-                    </div>
-                    <div className={`password-requirement ${passwordStrength.requirements.special ? 'valid' : 'invalid'}`}>
-                      <span>{passwordStrength.requirements.special ? '✓' : '✗'}</span>
-                      <span>Símbolo</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <FancyTextField
-                margin="dense"
-                label="Confirmar Senha *"
-                type={showConfirmPassword ? 'text' : 'password'}
-                fullWidth
-                variant="outlined"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                error={!!formErrors.confirmPassword}
-                helperText={formErrors.confirmPassword}
-                InputLabelProps={{ shrink: true }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowConfirmPassword(prev => !prev)}
-                        onMouseDown={(e) => e.preventDefault()}
-                        edge="end"
-                        aria-label={showConfirmPassword ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}
-                      >
-                        {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-          </Grid>
+        <DialogContent className="user-management-create-dialog-content">
+          <form onSubmit={handleSubmit}>
+            <UserForm
+              formData={formData}
+              formErrors={formErrors}
+              showPassword={showPassword}
+              showConfirmPassword={showConfirmPassword}
+              passwordStrength={passwordStrength}
+              handleInputChange={handleInputChange}
+              setShowPassword={setShowPassword}
+              setShowConfirmPassword={setShowConfirmPassword}
+              selectedUser={selectedUser}
+              selectMenuProps={selectMenuProps}
+            />
+            <DialogActions className="user-management-create-dialog-actions">
+              <Button 
+                onClick={handleCloseDialog} 
+                variant="outlined" 
+                color="primary"
+                className="user-management-create-dialog-cancel-btn"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                variant="contained" 
+                className="user-management-create-dialog-submit-btn"
+              >
+                {selectedUser ? 'Atualizar' : 'Criar Usuário'}
+              </Button>
+            </DialogActions>
+          </form>
         </DialogContent>
-        <DialogActions sx={{ 
-          justifyContent: 'center', 
-          pt: 4, 
-          pb: 5,
-          px: 5,
-          background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-          borderTop: '1px solid #e2e8f0',
-          gap: 3,
-        }}>
-          <Button 
-            onClick={handleCloseDialog} 
-            variant="outlined" 
-            color="primary"
-            sx={{ 
-              borderRadius: 12, 
-              px: 5, 
-              py: 1.5,
-              fontSize: '15px',
-              fontWeight: 700,
-              textTransform: 'none',
-              borderColor: '#d1d5db',
-              color: `${theme.palette.text.primary} !important`,
-              backgroundColor: '#ffffff !important',
-              borderWidth: 2,
-              minWidth: '140px',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-              '&.MuiButton-outlined': {
-                color: `${theme.palette.text.primary} !important`,
-                backgroundColor: '#ffffff !important',
-                borderColor: '#d1d5db !important'
-              },
-              '&:hover': {
-                borderColor: '#9ca3af',
-                color: `${theme.palette.text.primary} !important`,
-                backgroundColor: '#f9fafb !important',
-                borderWidth: 2,
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-                transform: 'translateY(-1px)',
-              },
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button 
-            type="submit" 
-            onClick={handleSubmit} 
-            variant="contained" 
-            sx={{ 
-              borderRadius: 12, 
-              px: 5, 
-              py: 1.5,
-              fontSize: '15px',
-              fontWeight: 700,
-              textTransform: 'none',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              minWidth: '160px',
-              boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
-                boxShadow: '0 6px 16px rgba(102, 126, 234, 0.4)',
-                transform: 'translateY(-1px)',
-              },
-            }}
-          >
-            {selectedUser ? 'Atualizar' : 'Criar Usuário'}
-          </Button>
-        </DialogActions>
-      </CustomDialog>
-      <Dialog
+      </Dialog>
+      <ConfirmDeleteDialog
         open={openDeleteConfirm}
         onClose={handleCloseDeleteConfirm}
-        maxWidth="xs"
-        className="user-management-modal"
-        TransitionComponent={Fade}
-        TransitionProps={{ timeout: 300 }}
-      >
-        <DialogTitle className="user-management-modal-title" sx={{ pb: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-          <ErrorOutlineIcon sx={{ fontSize: '2rem', color: theme.palette.error.main }} />Confirmar Exclusão
-        </DialogTitle>
-        <DialogContent sx={{ textAlign: 'center', pb: 2 }}>
-          <Typography className="user-management-modal-content" sx={{ mb: 2 }}>
-            Tem certeza que deseja excluir este usuário?
-          </Typography>
-          <Typography className="user-management-modal-content" sx={{ color: theme.palette.error.main, fontWeight: 700 }}>
-            Esta ação não pode ser desfeita.
-          </Typography>
-          {deleteError && (
-            <Box sx={{ mt: 2 }}>
-              <Alert severity="error" sx={{ fontWeight: 700 }}>{deleteError}</Alert>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions className="user-management-modal-actions">
-          <Button
-            onClick={handleCloseDeleteConfirm}
-            variant="text"
-            color="primary"
-            sx={{
-              // force readable text/background because global CSS sometimes overrides button styles
-              color: `${theme.palette.text.primary} !important`,
-              backgroundColor: '#ffffff !important',
-              borderRadius: 8,
-              px: 3,
-              py: 1,
-              fontWeight: 700,
-              textTransform: 'none',
-              '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04) !important',
-              }
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button 
-            onClick={confirmDelete} 
-            variant="contained" 
-            color="error"
-            sx={{
-              background: theme.palette.error.main, /* Usar a cor de erro padrão do tema */
-              '&:hover': {
-                background: theme.palette.error.dark, /* Escurecer no hover */
-              }
-            }}
-          >
-            Excluir
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={confirmDelete}
+        error={deleteError}
+      />
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -1140,7 +405,7 @@ const UserManagement: React.FC = () => {
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         TransitionComponent={Fade}
       >
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} sx={{ fontWeight: 600, fontSize: 16, borderRadius: 2 }}>
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })} className="user-management-snackbar-alert">
           {snackbar.message}
         </Alert>
       </Snackbar>

@@ -140,6 +140,44 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
+/* Estilos para o select de Gênero dentro do modal de regras */
+.regras-modal .form-control,
+.regras-modal select.form-control {
+  background: #000 !important;
+  color: #fff !important;
+  border: 1px solid #111 !important;
+  border-radius: 8px !important;
+  padding: 0.5rem 0.75rem !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+.regras-modal .form-control:focus,
+.regras-modal select.form-control:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: #000 !important;
+}
+
+/* Tornar as options ainda mais escuras quando abertas */
+.regras-modal select.form-control option {
+  background: #000 !important;
+  color: #fff !important;
+}
+
+.regras-modal select.form-control option:hover,
+.regras-modal select.form-control option:focus {
+  background: #050505 !important;
+  color: #fff !important;
+}
+
+/* Forçar contraste do placeholder option */
+.regras-modal select.form-control option[value=""] {
+  color: #cfcfcf !important;
+  background: #0b0b0b !important;
+}
+
 .modal-footer {
   background: rgba(255, 255, 255, 0.08) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.2) !important;

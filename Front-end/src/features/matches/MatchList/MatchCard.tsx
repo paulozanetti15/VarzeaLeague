@@ -5,7 +5,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { GiSoccerField } from "react-icons/gi";
 import { FaFutbol } from 'react-icons/fa';
-import { Match } from '../../../../services/matchService';
+import { Match } from '../../../../services/matchesFriendlyServices';
 import { OrganizerBadge } from './OrganizerBadge';
 
 interface MatchCardProps {

@@ -13,7 +13,7 @@
 }
 
 .regras-modal .modal-content {
-  background: linear-gradient(90deg, #0d47a1 0%, #1976d2 100%) !important;
+  background: #ebecec !important;
   border: none !important;
   border-radius: 20px !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
@@ -64,7 +64,7 @@
   right: 1rem !important;
   background: rgba(255, 255, 255, 0.1) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
+  color: #000000 !important;
   width: 36px !important;
   height: 36px !important;
   border-radius: 50% !important;

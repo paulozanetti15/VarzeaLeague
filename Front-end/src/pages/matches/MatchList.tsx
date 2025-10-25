@@ -5,7 +5,7 @@ import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import './MatchList.css';
 import { getStatusLabel } from '../../utils/statusLabels';
 import { canCreateMatch } from '../../utils/roleUtils';
-import { useMatches } from '../../hooks/useMatches';
+import { useMatches } from '../../hooks/useMatchOperations';
 import { useFilters } from '../../hooks/useFilters';
 import { MatchCard } from '../../features/matches/MatchList';
 import { AdvancedFiltersModal } from '../../features/matches/MatchList';

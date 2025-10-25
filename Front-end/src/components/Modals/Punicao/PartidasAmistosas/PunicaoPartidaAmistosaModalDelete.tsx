@@ -1,7 +1,7 @@
 import React from 'react';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-import axios from 'axios';
+import { deletePunicao, fetchMatchById, updateMatch } from '../../../../services/matchesFriendlyServices';
 import toast from 'react-hot-toast';
 
 interface PunicaoPartidaAmistosaModalProps {
@@ -17,37 +17,26 @@ const PunicaoPartidaAmistosaDeletarModal: React.FC<PunicaoPartidaAmistosaModalPr
   onClose, 
   idmatch 
 }) => {
-  const token = localStorage.getItem('token');
+  
 
   const deletarPunicao = async (id: number) => {
     try {
-      const response = await axios.delete(`http://localhost:3001/api/matches/${id}/punicao`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.status === 200) {
+      const resp = await deletePunicao(id);
+      if (resp.status === 200) {
         try {
-          // Após excluir a punição, verificar o status atual da partida
-          const matchResp = await axios.get(`http://localhost:3001/api/matches/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-
-          const matchData = matchResp.data;
+          const matchResp = await fetchMatchById(Number(id));
+          const matchData = matchResp as any;
           const status = String(matchData?.status || '').toLowerCase();
           const isWOFlag = !!matchData?.isWO || status === 'wo' || status === 'walkover';
 
           if (isWOFlag) {
-            // atualizar status da partida para 'aberta'
-            await axios.put(`http://localhost:3001/api/matches/${id}`, { status: 'aberta' }, {
-              headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
-            });
+            await updateMatch(String(id), { status: 'aberta' });
           }
         } catch (err) {
-          // se falhar em atualizar o status, não bloqueia a remoção da punição
           console.error('Erro ao atualizar status da partida após remover punição:', err);
         }
 
-        onClose(); // Fecha o modal
+        onClose();
       }
     } catch (error: any) {
       console.error('Erro ao deletar punição:', error);

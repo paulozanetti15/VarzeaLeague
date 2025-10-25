@@ -36,7 +36,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getRoleName } from '../utils/roleUtils';
 import { History } from '@mui/icons-material';
-import { api } from '../services/api';
+import { getAllTeams } from '../services/teamsServices';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { SplitButton } from 'react-bootstrap';
 import './Navbar.css';
@@ -56,7 +56,7 @@ const Navbar = () => {
     let mounted = true;
     const checkTeams = async () => {
       try {
-        const teams = await api.teams.list();
+        const teams = await getAllTeams();
         if (!mounted) return;
         setHasTeam(Array.isArray(teams) && teams.length > 0);
       } catch (e) {

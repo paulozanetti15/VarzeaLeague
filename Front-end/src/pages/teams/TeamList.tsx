@@ -1,6 +1,5 @@
-import React, { useState, useEffect,useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import AddIcon from '@mui/icons-material/Add';
 import GroupIcon from '@mui/icons-material/Group';
@@ -19,45 +18,17 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { HistoricoContext } from '../../context/HistoricoContext';
 import './TeamList.css';
-import { api } from '../../services/api';
+import useTeams from '../../hooks/useTeams';
+import type { Team, Player, PlayerStats } from '../../interfaces/team';
 
 // PDF export
 // @ts-ignore - tipos serão resolvidos via dependência
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-interface Player {
-  id: string;
-  nome: string;
-  sexo: string;
-  ano: string;
-  posicao: string;
-}
-
-interface Team {
-  id: number;
-  name: string;
-  description: string;
-  playerCount: number;
-  matchCount: number;
-  ownerId?: number;
-  isCurrentUserCaptain?: boolean;
-  banner?: string;
-  createdAt?: string;
-  players?: Player[];
-  primaryColor?: string;
-  secondaryColor?: string;
-  estado?: string;
-  cidade?: string;
-}
-
 const TeamList = () => {
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { teams, loading, error, teamPlayers, loadingPlayers, fetchTeams, fetchTeamPlayers, fetchTeamPlayerStats } = useTeams();
   const [expandedTeam, setExpandedTeam] = useState<number | null>(null);
-  const [loadingPlayers, setLoadingPlayers] = useState<{ [key: string]: boolean }>({});
-  const [teamPlayers, setTeamPlayers] = useState<{ [key: string]: Player[] }>({});
   const [playerStats, setPlayerStats] = useState<any[] | null>(null);
   const [loadingReport, setLoadingReport] = useState(false);
   const navigate = useNavigate();
@@ -65,56 +36,7 @@ const TeamList = () => {
   
   useEffect(() => {
     fetchTeams();
-  }, []);
- 
-
-  const fetchTeams = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
-      const response = await axios.get('http://localhost:3001/api/teams/', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setTeams(response.data);
-    } catch (err) {
-      console.error('Erro ao buscar times:', err);
-      setError('Erro ao carregar o time.');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const fetchTeamPlayers = async (teamId: string | number) => {
-    try {
-      const key = String(teamId);
-      setLoadingPlayers(prev => ({ ...prev, [key]: true }));
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
-      const response = await axios.get(`http://localhost:3001/api/teamplayers/${teamId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setTeamPlayers(prev => ({ ...prev, [key]: response.data }));
-    } catch (err) {
-      console.error(`Erro ao buscar jogadores do time ${teamId}:`, err);
-    } finally {
-      const key = String(teamId);
-      setLoadingPlayers(prev => ({ ...prev, [key]: false }));
-    }
-  };
+  }, [fetchTeams]);
 
   const togglePlayersList = (e: React.MouseEvent, teamId: number) => {
     e.stopPropagation();
@@ -122,7 +44,7 @@ const TeamList = () => {
     // Se estamos expandindo o time e ainda não buscamos os jogadores, busque-os
     const key = String(teamId);
     if (expandedTeam !== teamId && !teamPlayers[key]) {
-      fetchTeamPlayers(key);
+      fetchTeamPlayers(teamId);
     }
 
     setExpandedTeam(expandedTeam === teamId ? null : Number(teamId));
@@ -139,7 +61,7 @@ const TeamList = () => {
       if (!hasTeam) return;
       setLoadingReport(true);
       const teamId = teams[0].id;
-      const data = await api.teams.getPlayerStats(teamId);
+  const data = await fetchTeamPlayerStats(teamId);
       setPlayerStats(data?.stats || []);
       alert('Relatório da súmula gerado com sucesso!');
     } catch (e) {
@@ -241,15 +163,7 @@ const TeamList = () => {
           <div className="error-message">
             <p>{error}</p>
             <div style={{ height: "15px" }}></div>
-            <button 
-              className="retry-btn" 
-              onClick={() => {
-                setLoading(true);
-                fetchTeams();
-              }}
-            >
-              Tentar novamente
-            </button>
+            <button className="retry-btn" onClick={() => fetchTeams()}>Tentar novamente</button>
           </div>
         </div>
       )}

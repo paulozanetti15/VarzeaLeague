@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { matchService, Match } from '../services/matchService';
+import { fetchMatches, Match } from '../services/matchesFriendlyServices';
 
 interface User {
   id: number;
@@ -20,7 +20,7 @@ export const useMatches = (currentUser: User) => {
         return;
       }
 
-      const data = await matchService.fetchMatches(token);
+  const data = await fetchMatches();
       // Mantém somente partidas criadas pelo usuário logado
       const onlyMine = currentUser?.id
         ? data.filter((m: Match) => m.organizerId === currentUser.id)

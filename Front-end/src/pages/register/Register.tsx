@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Register.css';
-import { api } from '../../services/api';
+import { register, checkCPF } from '../../services/authServices';
 
 interface RegisterProps {
   onLoginClick: () => void;
@@ -111,7 +111,7 @@ const Register: React.FC<RegisterProps> = () => {
   // Função para verificar CPF duplicado
   const checkCPFExists = async (cpf: string): Promise<boolean> => {
     try {
-      const { exists } = await api.auth.checkCPF(cpf);
+      const { exists } = await checkCPF(cpf);
       return exists;
     } catch (error) {
       console.error('Erro ao verificar CPF:', error);
@@ -168,7 +168,7 @@ const Register: React.FC<RegisterProps> = () => {
     setErrors({});
     
     try {
-  await api.auth.register(formData);
+  await register(formData);
       // Em vez de logar direto, forçamos o usuário a autenticar manualmente
       // Garantir que nada residual fique salvo
       localStorage.removeItem('token');

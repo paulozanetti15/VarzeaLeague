@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
-import axios from 'axios';
+import { getPunicao, getJoinedTeams } from '../../../../services/matchesFriendlyServices';
 import toast from 'react-hot-toast';
 import './PunicaoViewModal.css';
 import PunicaoUpdateModal from './PunicaoPartidaAmistosaModalUpdate';
@@ -51,28 +51,16 @@ const PunicaoPartidaAmistosaViewModal: React.FC<PunicaoViewModalProps> = ({
     
     try {
       setLoading(true);
-      
-      // Buscar punição
-      const punicaoResponse = await axios.get(`http://localhost:3001/api/matches/${idMatch}/punicao`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (punicaoResponse.data && punicaoResponse.data.length > 0) {
-        const punicaoData = punicaoResponse.data[0];
+      const resp = await getPunicao(idMatch);
+      if (resp.data && resp.data.length > 0) {
+        const punicaoData = resp.data[0];
         setPunicao(punicaoData);
-        
-        // Buscar todos os times da partida
-        const teamsResponse = await axios.get(`http://localhost:3001/api/matches/${idMatch}/join-team`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (teamsResponse.data) {
-          setAllTeams(teamsResponse.data);
-          
-          // Identificar nomes dos times da casa e visitante
-          const homeTeam = teamsResponse.data.find((t: TeamInfo) => t.id === punicaoData.team_home);
-          const awayTeam = teamsResponse.data.find((t: TeamInfo) => t.id === punicaoData.team_away);
-          
+
+        const teamsResp = await getJoinedTeams(idMatch);
+        if (teamsResp.data) {
+          setAllTeams(teamsResp.data);
+          const homeTeam = teamsResp.data.find((t: TeamInfo) => t.id === punicaoData.team_home);
+          const awayTeam = teamsResp.data.find((t: TeamInfo) => t.id === punicaoData.team_away);
           setHomeTeamName(homeTeam?.name || 'Time da Casa');
           setAwayTeamName(awayTeam?.name || 'Time Visitante');
         }

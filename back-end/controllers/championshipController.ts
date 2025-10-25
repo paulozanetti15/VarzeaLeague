@@ -402,7 +402,7 @@ export const getChampionshipApplications = asyncHandler(async (req: Request, res
   }
 });
 
-// Aprovar/rejeitar aplicação
+ 
 export const updateApplicationStatus = asyncHandler(async (req: Request, res: Response) => {
   const { applicationId } = req.params;
   const { status, rejection_reason } = req.body;

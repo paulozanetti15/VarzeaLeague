@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ChampionshipList.css';
-import { api } from '../../../services/api';
+import { getAllChampionships } from '../../../services/championshipsServices';
 import trophy from "../../../assets/championship-trophy.svg";
 
 interface Championship {
@@ -40,7 +40,7 @@ export default function ChampionshipList() {
 
     async function fetchChampionships() {
       try {
-        const data = await api.championships.list();
+        const data = await getAllChampionships();
         const uid = Number(user.id);
         if (uid) {
           const onlyMine = (data || []).filter((c: Championship) => c.created_by === uid);

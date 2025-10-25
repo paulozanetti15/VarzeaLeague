@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './CreateMatch.css';
 import RegrasFormRegisterModal from '../../components/Modals/Rules/RegrasFormRegisterModal';
 import ToastComponent from '../../components/Toast/ToastComponent';
-import { useCreateMatch } from '../../hooks/useCreateMatch';
+import { createMatch, searchCEP } from '../../services/matchesFriendlyServices';
 import {
   BasicFields,
   DateTimeFields,
@@ -87,8 +87,7 @@ const CreateMatch: React.FC = () => {
     if (cepLimpo.length !== 8) return;
 
     try {
-      const response = await axios.get(`https://viacep.com.br/ws/${cepLimpo}/json/`);
-      const data = response.data;
+      const data = await searchCEP(cepLimpo);
 
       if (data.erro) {
         setCepErrorMessage('CEP não encontrado');
@@ -164,16 +163,9 @@ const CreateMatch: React.FC = () => {
         date: formatDateISOToBR(formData.date),
         organizerId: usuario?.id
       };
-
-      const response = await axios.post('http://localhost:3001/api/matches', matchData, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.status === 201) {
-        setDadosPartida(response.data);
+      const created = await createMatch({ ...matchData, organizerId: String(usuario?.id) });
+      if (created) {
+        setDadosPartida(created);
         setShowInfoAthleteModal(true);
         setToastMessage('Partida criada com sucesso!');
         setToastBg('success');

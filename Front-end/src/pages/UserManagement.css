@@ -536,4 +536,359 @@
 
 .password-requirement.invalid {
   color: #dc2626;
+}
+
+/* Modal de criação/edição de usuário */
+.user-management-create-dialog-title {
+  text-align: center;
+  padding-bottom: 32px;
+  padding-top: 40px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  position: relative;
+}
+
+.user-management-create-dialog-avatar-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.user-management-create-dialog-main-title {
+  color: #1e293b;
+  margin-bottom: 12px;
+  font-size: 28px;
+  letter-spacing: -0.025em;
+}
+
+.user-management-create-dialog-subtitle {
+  color: #64748b;
+  font-weight: 500;
+  font-size: 16px;
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+.user-management-create-dialog-content {
+  padding-left: 40px;
+  padding-right: 40px;
+  padding-top: 32px;
+  padding-bottom: 32px;
+  overflow-y: visible;
+  background-color: #ffffff;
+}
+
+.user-management-create-dialog-actions {
+  justify-content: center;
+  padding-top: 32px;
+  padding-bottom: 40px;
+  padding-left: 40px;
+  padding-right: 40px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-top: 1px solid #e2e8f0;
+  gap: 24px;
+}
+
+.user-management-create-dialog-cancel-btn {
+  border-radius: 12px;
+  padding-left: 40px;
+  padding-right: 40px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: none;
+  border-color: #d1d5db;
+  color: #374151 !important;
+  background-color: #ffffff !important;
+  border-width: 2px;
+  min-width: 140px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.user-management-create-dialog-cancel-btn:hover {
+  border-color: #9ca3af;
+  color: #374151 !important;
+  background-color: #f9fafb !important;
+  border-width: 2px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.user-management-create-dialog-submit-btn {
+  border-radius: 12px;
+  padding-left: 40px;
+  padding-right: 40px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-width: 160px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.user-management-create-dialog-submit-btn:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Modal de confirmação de exclusão */
+.user-management-delete-dialog-title {
+  padding-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.user-management-delete-dialog-content {
+  text-align: center;
+  padding-bottom: 16px;
+}
+
+.user-management-delete-dialog-error-text {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.user-management-delete-dialog-actions {
+  justify-content: center;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.user-management-delete-dialog-cancel-btn {
+  color: #374151 !important;
+  background-color: #ffffff !important;
+  border-radius: 8px;
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.user-management-delete-dialog-cancel-btn:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+.user-management-delete-dialog-delete-btn {
+  background: #dc2626;
+}
+
+.user-management-delete-dialog-delete-btn:hover {
+  background: #b91c1c;
+}
+
+/* Select com fundo branco */
+.user-management-select-white-bg {
+  background-color: #ffffff !important;
+}
+
+/* Container de loading */
+.user-management-loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+/* Título de erro de acesso */
+.user-management-access-denied-title {
+  margin-top: 64px;
+  text-align: center;
+}
+
+/* Box do cabeçalho */
+.user-management-header-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Stack do modal de detalhes */
+.user-management-detail-stack {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+/* Box de erro no modal de exclusão */
+.user-management-delete-error-box {
+  margin-top: 16px;
+}
+
+/* Snackbar */
+.user-management-snackbar-alert {
+  font-weight: 600;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+/* Ícone de erro no modal de exclusão */
+.user-management-error-icon {
+  font-size: 2rem;
+  color: #dc2626;
+}
+
+/* Nome do usuário na tabela */
+.user-management-user-name {
+  font-weight: 600;
+}
+
+/* Paginação da tabela */
+.user-management-table-pagination {
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.user-management-table-pagination .MuiTablePagination-select {
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+.user-management-table-pagination .MuiTablePagination-selectLabel,
+.user-management-table-pagination .MuiTablePagination-displayedRows {
+  margin: 0;
+}
+
+/* Paginação da tabela */
+.user-management-table-pagination {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.user-management-table-pagination .MuiTablePagination-select {
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+.user-management-table-pagination .MuiTablePagination-selectLabel,
+.user-management-table-pagination .MuiTablePagination-displayedRows {
+  margin: 0;
+}
+
+/* Espaçamento do modal de exclusão */
+.user-management-delete-dialog-text-spacing {
+  margin-bottom: 16px;
+}
+
+/* Alert de erro no modal de exclusão */
+.user-management-delete-error-alert {
+  font-weight: 700;
+}
+
+/* Componentes Styled - CustomDialog */
+.user-management-custom-dialog .MuiPaper-root {
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  padding: 0;
+  min-width: 520px;
+  max-width: 640px;
+  width: 90vw;
+  margin: auto;
+  overflow: hidden;
+  border: none;
+}
+
+.user-management-custom-dialog .MuiBackdrop-root {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+/* StyledAvatar */
+.user-management-styled-avatar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  width: 72px;
+  height: 72px;
+  font-size: 28px;
+  font-weight: 700;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  border: 3px solid #ffffff;
+}
+
+/* FancyTextField */
+.user-management-fancy-text-field .MuiOutlinedInput-root {
+  border-radius: 12px;
+  font-size: 15px;
+  background-color: #fafbfc;
+  min-height: 56px;
+}
+
+.user-management-fancy-text-field .MuiOutlinedInput-root fieldset {
+  border-color: #e1e5e9;
+  border-width: 1.5px;
+}
+
+.user-management-fancy-text-field .MuiOutlinedInput-root:hover fieldset {
+  border-color: #667eea;
+}
+
+.user-management-fancy-text-field .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #667eea;
+  border-width: 2px;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.user-management-fancy-text-field .MuiInputLabel-root {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.user-management-fancy-text-field .MuiInputLabel-root.Mui-focused {
+  color: #667eea;
+}
+
+.user-management-fancy-text-field .MuiOutlinedInput-input {
+  padding: 16px 14px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* FancyFormControl */
+.user-management-fancy-form-control .MuiOutlinedInput-root {
+  border-radius: 12px;
+  font-size: 15px;
+  background-color: #fafbfc;
+  min-height: 56px;
+}
+
+.user-management-fancy-form-control .MuiOutlinedInput-root fieldset {
+  border-color: #e1e5e9;
+  border-width: 1.5px;
+}
+
+.user-management-fancy-form-control .MuiOutlinedInput-root:hover fieldset {
+  border-color: #667eea;
+}
+
+.user-management-fancy-form-control .MuiOutlinedInput-root.Mui-focused fieldset {
+  border-color: #667eea;
+  border-width: 2px;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.user-management-fancy-form-control .MuiInputLabel-root {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.user-management-fancy-form-control .MuiInputLabel-root.Mui-focused {
+  color: #667eea;
+}
+
+.user-management-fancy-form-control .MuiSelect-select {
+  padding: 16px 14px;
+  font-size: 15px;
+  font-weight: 500;
 } 

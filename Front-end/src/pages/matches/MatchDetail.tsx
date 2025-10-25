@@ -2,7 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './MatchDetail.css';
 import toast from 'react-hot-toast';
-import axios from 'axios';
+import {
+  fetchMatchById,
+  getMatchEvents,
+  getJoinedTeams,
+  getPunicao,
+  leaveTeam,
+  deleteMatch
+} from '../../services/matchesFriendlyServices';
 import { useAuth } from '../../hooks/useAuth';
 import ModalTeams from '../../components/Modals/Teams/modelTeams';
 import SelectTeamPlayersModal from '../../components/Dialogs/SelectTeamPlayersDialog';
@@ -73,64 +80,23 @@ const MatchDetail: React.FC = () => {
 
   const checkSumulaExists = async () => {
     if (!id) return;
-    
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/matches/${id}/events`, { 
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        const hasEvents = (data.goals && data.goals.length > 0) || (data.cards && data.cards.length > 0);
-        setHasSumula(hasEvents);
-        return hasEvents;
-      }
+      const resp = await getMatchEvents(id);
+      const data = resp.data || {};
+      const hasEvents = (data.goals && data.goals.length > 0) || (data.cards && data.cards.length > 0);
+      setHasSumula(hasEvents);
+      return hasEvents;
     } catch (error) {
       setHasSumula(false);
       return false;
     }
   };
 
-  const handleFinalizeMatch = async () => {
-    if (!id) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/matches/${id}/finalize`, { 
-        method: 'POST', 
-        headers: { 
-          Authorization: `Bearer ${token}`, 
-          'Content-Type':'application/json' 
-        }
-      });
-      
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        toast.error(data.message || 'Erro ao finalizar');
-        return;
-      }
-      
-      window.alert('Partida finalizada');
-      setMatch((previousMatch: any) => previousMatch ? { ...previousMatch, status: 'finalizada' } : previousMatch);
-      setShowEventsModal(true);
-    } catch (error: any) {
-      toast.error(error.message || 'Falha ao finalizar');
-    }
-  };
+
   const getTimeInscrito = async (matchId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('Token não encontrado');
-        return;
-      }
-      const response = await axios.get(`http://localhost:3001/api/matches/${matchId}/join-team`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      setTimeCadastrados(response.data);
+      const resp = await getJoinedTeams(matchId);
+      setTimeCadastrados(resp.data);
     } catch (error) {
       console.error('Erro ao buscar times cadastrados:', error);
     }
@@ -138,19 +104,13 @@ const MatchDetail: React.FC = () => {
 
   const fetchPunishment = async (matchId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      
-      const response = await axios.get(`http://localhost:3001/api/matches/${matchId}/punicao`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
+      const resp = await getPunicao(matchId);
       let fetched = null;
-      if (response.data) {
-        if (Array.isArray(response.data)) {
-          fetched = response.data.length > 0 ? response.data[0] : null;
+      if (resp.data) {
+        if (Array.isArray(resp.data)) {
+          fetched = resp.data.length > 0 ? resp.data[0] : null;
         } else {
-          fetched = response.data;
+          fetched = resp.data;
         }
       }
 
@@ -172,13 +132,9 @@ const MatchDetail: React.FC = () => {
     const fetchMatchDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:3001/api/matches/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        setMatch(response.data);
-        checkIfWo(response.data);
+  const resp = await fetchMatchById(Number(id));
+  setMatch(resp);
+  checkIfWo(resp);
         await fetchPunishment(id!);
         await getTimeInscrito(id!);
         await checkSumulaExists();
@@ -238,12 +194,8 @@ const MatchDetail: React.FC = () => {
     if (!matchId) return;
     const numericMatchId = Number(matchId);
     try {
-      const response = await axios.delete(`http://localhost:3001/api/matches/${numericMatchId}/join-team/${teamId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (response.status === 200) {
+      const resp = await leaveTeam(numericMatchId, teamId);
+      if (resp.status === 200) {
         toast.success('Time removido da partida com sucesso!');
         setTimeout(() => {
           window.location.reload();
@@ -270,12 +222,8 @@ const MatchDetail: React.FC = () => {
     if (!id) return;
     setLoading(true);
     try {
-      const response = await axios.delete(`http://localhost:3001/api/matches/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (response.status === 200) {
+      const resp = await deleteMatch(id);
+      if (resp.status === 200) {
         toast.success('Partida excluída com sucesso!');
         navigate('/matches', { state: { filter: 'my' } }); // Redirect to my ma
       } else {
@@ -302,15 +250,8 @@ const MatchDetail: React.FC = () => {
     if (!id) return;
     
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      
-      const response = await axios.get(`http://localhost:3001/api/matches/${id}/punicao`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      const hasPunicao = Array.isArray(response.data) && response.data.length > 0;
-      
+      const resp = await getPunicao(id);
+      const hasPunicao = Array.isArray(resp.data) && resp.data.length > 0;
       if (hasPunicao) {
         setShowPunicaoInfo(true);
       } else {
@@ -331,12 +272,9 @@ const MatchDetail: React.FC = () => {
       await getTimeInscrito(id);
       // Re-fetch match details to get updated status
       try {
-        const token = localStorage.getItem('token');
-        if (token) {
-          const resp = await axios.get(`http://localhost:3001/api/matches/${id}`, { headers: { Authorization: `Bearer ${token}` } });
-          setMatch(resp.data);
-          checkIfWo(resp.data);
-        }
+        const resp = await fetchMatchById(Number(id));
+        setMatch(resp);
+        checkIfWo(resp);
       } catch (err) {
         console.error('Erro ao atualizar detalhes da partida após manipular punição', err);
       }
@@ -375,17 +313,14 @@ const MatchDetail: React.FC = () => {
     return <div className="match-detail-container error">Partida não encontrada.</div>;
   }
 
-  const isAdmin = user && user.userTypeId === 1;
-  const isEventAdmin = user && user.userTypeId === 2;
-  const isTeamAdmin = user && user.userTypeId === 3;
-  const isOrganizer = user && match.organizerId === user.id;
+  const isAdmin = Boolean(user && Number(user.userTypeId) === 1);
+  const isEventAdmin = Boolean(user && Number(user.userTypeId) === 2);
+  const isTeamAdmin = Boolean(user && Number(user.userTypeId) === 3);
+  const isOrganizer = Boolean(user && Number(match?.organizerId) === Number(user.id));
   // compute statusLower and completion
   const statusLower = String(match?.status || '').toLowerCase();
   const isCompleted = statusLower === 'finalizada';
   // Só admin do time pode criar sumula, e apenas após finalização
-  const canCreateSumula = Boolean(isTeamAdmin && isCompleted && !hasSumula);
-  // Admin do sistema e admin do time só veem sumula se já existir e partida finalizada
-  const canViewSumula = Boolean((isAdmin || isTeamAdmin) && hasSumula && isCompleted);
   const canDeleteMatch = isOrganizer || isAdmin;
   const effectiveMaxTeams = typeof (match?.maxTeams) === 'number' ? Number(match.maxTeams) : 2;
 
@@ -449,7 +384,6 @@ const MatchDetail: React.FC = () => {
             console.log('Abrindo modal de comentários');
             setShowCommentsModal(true);
           }}
-          onFinalize={handleFinalizeMatch}
           onCreateSumula = {()=>setShowEventsModal(true)}
           onViewEvents={handleViewEvents}
         />
@@ -524,9 +458,8 @@ const MatchDetail: React.FC = () => {
             matchId={Number(match.id)}
             isChampionship={false}
             show={showEventsModal}
-            showDeleteConfirm={() => {}}
-            canEdit={isEventAdmin && hasSumula}
-            canDelete={isEventAdmin && hasSumula}
+            canEdit={!!(isEventAdmin && hasSumula)}
+            canDelete={!!(isEventAdmin && hasSumula)}
             onClose={() => {
               setShowEventsModal(false);
               setIsEditingSumula(false);

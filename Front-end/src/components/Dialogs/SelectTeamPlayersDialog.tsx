@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import axios from 'axios';
+import { fetchMatchById, getJoinedTeams, getAvailableForMatch, joinTeam } from '../../services/matchesFriendlyServices';
 import { Button, Spinner } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
@@ -63,10 +64,8 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
 
   const fetchMatch = async () => {
     try {
-      const resp = await axios.get(`http://localhost:3001/api/matches/${matchId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const mod = resp?.data?.modalidade as string | undefined;
+      const data = await fetchMatchById(matchId);
+      const mod = data?.modalidade as string | undefined;
       setModalidade(mod || null);
     } catch (e) {
       setModalidade(null);
@@ -78,8 +77,8 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
     try {
       const [myTeamsResp, registeredResp, availableResp] = await Promise.all([
         axios.get(`http://localhost:3001/api/teams`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`http://localhost:3001/api/matches/${matchId}/join-team`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`http://localhost:3001/api/matches/${matchId}/available`, { headers: { Authorization: `Bearer ${token}` } })
+        getJoinedTeams(matchId),
+        getAvailableForMatch(matchId)
       ]);
 
       const myTeams: Team[] = myTeamsResp.data || [];
@@ -225,11 +224,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
       setLoading(true);
       setError('');
       
-      const resp = await axios.post(`http://localhost:3001/api/matches/${matchId}/join-team`, {
-        teamId: selectedTeamId,
-        matchId
-      }, { headers: { Authorization: `Bearer ${token}` }});
-      
+      const resp = await joinTeam(matchId, { teamId: selectedTeamId, matchId });
       if (resp.status === 201 || resp.status === 200) {
         toast.success('Time vinculado à partida!');
         dialogRef.current?.close();
