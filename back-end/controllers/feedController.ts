@@ -37,10 +37,10 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
     if (!type || type === 'match_completed') {
       const completedMatches = await MatchModel.findAll({
         where: {
-          status: 'completed',
-          updatedAt: { [Op.gte]: since }
+          status: 'finalizada',
+          updated_at: { [Op.gte]: since }
         },
-        order: [['updatedAt', 'DESC']],
+        order: [['updated_at', 'DESC']],
         limit: 10,
         include: [
           { model: UserModel, as: 'organizer', attributes: ['id', 'name'] }
@@ -52,7 +52,7 @@ export const getFeed = async (req: Request, res: Response): Promise<void> => {
         events.push({
           id: `match-completed-${matchData.id}`,
           type: 'match_completed',
-          timestamp: new Date(matchData.updatedAt),
+          timestamp: new Date(matchData.updated_at),
           title: 'Partida Finalizada',
           description: `A partida "${matchData.title}" foi finalizada`,
           relatedEntity: {
@@ -235,8 +235,8 @@ export const getMatchResults = async (req: Request, res: Response): Promise<void
     const limit = req.query.limit ? Number(req.query.limit) : 10;
 
     const completedMatches = await MatchModel.findAll({
-      where: { status: 'completed' },
-      order: [['updatedAt', 'DESC']],
+      where: { status: 'finalizada' },
+      order: [['updated_at', 'DESC']],
       limit,
       include: [
         { model: UserModel, as: 'organizer', attributes: ['id', 'name'] }
