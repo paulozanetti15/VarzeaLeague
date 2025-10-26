@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../../services/api';
+import { fetchMatches } from '../../services/matchesFriendlyServices';
 import { useNavigate } from 'react-router-dom';
 
 interface Match {
@@ -33,7 +33,6 @@ export function MatchesWidgetFixed() {
     today.setHours(0, 0, 0, 0); // Garantir que sempre inicie no dia de hoje
     return today;
   });
-  const [selectedTab, setSelectedTab] = useState('futebol');
   const [cardScrollPosition, setCardScrollPosition] = useState(0);
   const [calendarScrollPosition, setCalendarScrollPosition] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -52,17 +51,19 @@ export function MatchesWidgetFixed() {
   const getMatchesForDate = (date: Date) => {
     const normalizedDate = new Date(date);
     normalizedDate.setHours(0, 0, 0, 0);
-    
-    const today = getToday();
-    const isToday = normalizedDate.getTime() === today.getTime();
-    
+
     return matches.filter(match => {
-      // Para hoje: mostrar jogos ao vivo e próximos
-      if (isToday) {
-        return match.status === 'live' || match.status === 'upcoming';
+      if (!match.date) return false;
+      const matchDate = new Date(match.date);
+      matchDate.setHours(0, 0, 0, 0);
+
+      const isSameDay = matchDate.getTime() === normalizedDate.getTime();
+
+      if (isSameDay) {
+        return match.status === 'live' || match.status === 'upcoming' || match.status === 'finished';
       }
-      // Para outros dias: mostrar apenas próximos
-      return match.status === 'upcoming';
+
+      return false;
     });
   };
 
@@ -91,8 +92,8 @@ export function MatchesWidgetFixed() {
     const today = getToday();
     const nextWeek = new Date(today);
     nextWeek.setDate(today.getDate() + 7);
-    
     return matches.filter(match => {
+      if (!match.date) return false;
       const matchDate = new Date(match.date);
       matchDate.setHours(0, 0, 0, 0);
       return matchDate >= today && matchDate <= nextWeek && match.status === 'upcoming';
@@ -146,14 +147,11 @@ export function MatchesWidgetFixed() {
 
   const loadData = async () => {
     try {
-      const matchesData = await api.matches.list();
+      const matchesData = await fetchMatches();
       if (matchesData && matchesData.length > 0) {
         const processedMatches = matchesData.slice(0, 6).map((match: any) => ({
           id: match.id,
-          date: new Date(match.date).toLocaleDateString('pt-BR', { 
-            day: '2-digit', 
-            month: '2-digit' 
-          }),
+          date: new Date(match.date).toISOString(),
           time: new Date(match.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
           homeTeam: {
             id: match.homeTeam?.id || 0,
@@ -182,95 +180,105 @@ export function MatchesWidgetFixed() {
     }
   };
 
-  const getMockMatches = (): Match[] => [
-    {
-      id: 1,
-      date: 'Hoje',
-      time: '19:00',
-      homeTeam: { id: 1, name: 'Lucato FC' },
-      awayTeam: { id: 2, name: 'Atlético Micas' },
-      status: 'upcoming',
-      championship: 'Campeonato Brasileiro',
-      location: 'Maracanã'
-    },
-    {
-      id: 2,
-      date: 'Hoje',
-      time: '21:00',
-      homeTeam: { id: 3, name: 'PZFC' },
-      awayTeam: { id: 4, name: 'Rafa Perfeita' },
-      status: 'upcoming',
-      championship: 'Paulistão 2025',
-      location: 'Allianz Parque'
-    },
-    {
-      id: 3,
-      date: 'Amanhã',
-      time: '16:00',
-      homeTeam: { id: 5, name: 'Lucato FC' },
-      awayTeam: { id: 6, name: 'PZFC' },
-      status: 'upcoming',
-      championship: 'Copa Libertadores',
-      location: 'Vila Belmiro'
-    },
-    {
-      id: 4,
-      date: 'Amanhã',
-      time: '18:30',
-      homeTeam: { id: 7, name: 'Atlético Micas' },
-      awayTeam: { id: 8, name: 'Rafa Perfeita' },
-      status: 'upcoming',
-      championship: 'Cariocão 2025',
-      location: 'São Januário'
-    },
-    {
-      id: 5,
-      date: 'Sábado',
-      time: '15:00',
-      homeTeam: { id: 9, name: 'PZFC' },
-      awayTeam: { id: 10, name: 'Lucato FC' },
-      status: 'upcoming',
-      championship: 'Campeonato Brasileiro',
-      location: 'Nilton Santos'
-    },
-    {
-      id: 6,
-      date: 'Sábado',
-      time: '17:30',
-      homeTeam: { id: 11, name: 'Rafa Perfeita' },
-      awayTeam: { id: 12, name: 'Atlético Micas' },
-      status: 'upcoming',
-      championship: 'Série A',
-      location: 'Beira-Rio'
-    },
-    {
-      id: 7,
-      date: 'Domingo',
-      time: '16:00',
-      homeTeam: { id: 13, name: 'Lucato FC' },
-      awayTeam: { id: 14, name: 'Rafa Perfeita' },
-      status: 'upcoming',
-      championship: 'Brasileirão',
-      location: 'Arena da Baixada'
-    },
-    {
-      id: 8,
-      date: 'Domingo',
-      time: '18:30',
-      homeTeam: { id: 15, name: 'Atlético Micas' },
-      awayTeam: { id: 16, name: 'PZFC' },
-      status: 'upcoming',
-      championship: 'Cearense',
-      location: 'Castelão'
-    }
-  ];
+  const getMockMatches = (): Match[] => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
 
-  const getTeamLogoUrl = (banner?: string) => {
-    if (!banner) return null;
-    if (banner.startsWith('/uploads')) {
-      return `http://localhost:3001${banner}`;
-    }
-    return `http://localhost:3001/uploads/teams/${banner}`;
+    const saturday = new Date(today);
+    saturday.setDate(today.getDate() + ((6 - today.getDay() + 7) % 7 || 7));
+
+    const sunday = new Date(saturday);
+    sunday.setDate(saturday.getDate() + 1);
+
+    const fmtTime = (d: Date, hours: number, minutes: number) => {
+      const dt = new Date(d);
+      dt.setHours(hours, minutes, 0, 0);
+      return dt.toISOString();
+    };
+
+    return [
+      {
+        id: 1,
+        date: fmtTime(today, 19, 0),
+        time: '19:00',
+        homeTeam: { id: 1, name: 'Lucato FC' },
+        awayTeam: { id: 2, name: 'Atlético Micas' },
+        status: 'upcoming',
+        championship: 'Campeonato Brasileiro',
+        location: 'Maracanã'
+      },
+      {
+        id: 2,
+        date: fmtTime(today, 21, 0),
+        time: '21:00',
+        homeTeam: { id: 3, name: 'PZFC' },
+        awayTeam: { id: 4, name: 'Rafa Perfeita' },
+        status: 'upcoming',
+        championship: 'Paulistão 2025',
+        location: 'Allianz Parque'
+      },
+      {
+        id: 3,
+        date: fmtTime(tomorrow, 16, 0),
+        time: '16:00',
+        homeTeam: { id: 5, name: 'Lucato FC' },
+        awayTeam: { id: 6, name: 'PZFC' },
+        status: 'upcoming',
+        championship: 'Copa Libertadores',
+        location: 'Vila Belmiro'
+      },
+      {
+        id: 4,
+        date: fmtTime(tomorrow, 18, 30),
+        time: '18:30',
+        homeTeam: { id: 7, name: 'Atlético Micas' },
+        awayTeam: { id: 8, name: 'Rafa Perfeita' },
+        status: 'upcoming',
+        championship: 'Cariocão 2025',
+        location: 'São Januário'
+      },
+      {
+        id: 5,
+        date: fmtTime(saturday, 15, 0),
+        time: '15:00',
+        homeTeam: { id: 9, name: 'PZFC' },
+        awayTeam: { id: 10, name: 'Lucato FC' },
+        status: 'upcoming',
+        championship: 'Campeonato Brasileiro',
+        location: 'Nilton Santos'
+      },
+      {
+        id: 6,
+        date: fmtTime(saturday, 17, 30),
+        time: '17:30',
+        homeTeam: { id: 11, name: 'Rafa Perfeita' },
+        awayTeam: { id: 12, name: 'Atlético Micas' },
+        status: 'upcoming',
+        championship: 'Série A',
+        location: 'Beira-Rio'
+      },
+      {
+        id: 7,
+        date: fmtTime(sunday, 16, 0),
+        time: '16:00',
+        homeTeam: { id: 13, name: 'Lucato FC' },
+        awayTeam: { id: 14, name: 'Rafa Perfeita' },
+        status: 'upcoming',
+        championship: 'Brasileirão',
+        location: 'Arena da Baixada'
+      },
+      {
+        id: 8,
+        date: fmtTime(sunday, 18, 30),
+        time: '18:30',
+        homeTeam: { id: 15, name: 'Atlético Micas' },
+        awayTeam: { id: 16, name: 'PZFC' },
+        status: 'upcoming',
+        championship: 'Cearense',
+        location: 'Castelão'
+      }
+    ];
   };
 
   const getGameStatusIcon = (status: string) => {
@@ -289,11 +297,17 @@ export function MatchesWidgetFixed() {
     }
   };
 
-  const formatMonthYear = (date: Date) => {
-    return date.toLocaleDateString('pt-BR', { 
-      month: 'long', 
-      year: 'numeric' 
-    });
+  const formatMatchDate = (isoDate?: string) => {
+    if (!isoDate) return '';
+    const d = new Date(isoDate);
+    d.setHours(0, 0, 0, 0);
+    const today = getToday();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    if (d.getTime() === today.getTime()) return 'Hoje';
+    if (d.getTime() === tomorrow.getTime()) return 'Amanhã';
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
   };
 
   const getDaysInMonth = () => {
@@ -301,14 +315,18 @@ export function MatchesWidgetFixed() {
     const month = selectedDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const days = [];
-    
+    const sel = new Date(selectedDate);
+    sel.setHours(0, 0, 0, 0);
+
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
       date.setHours(0, 0, 0, 0); // Normalizar data
+      const isSel = date.getTime() === sel.getTime();
       days.push({
         day,
         date,
         isToday: isToday(date), // Usar a função isToday corrigida
+        isSelected: isSel,
         dayName: date.toLocaleDateString('pt-BR', { weekday: 'short' })
       });
     }
@@ -331,23 +349,6 @@ export function MatchesWidgetFixed() {
     setIsDragging(true);
     setDragStart({ x: e.clientX, position: calendarScrollPosition });
     e.preventDefault();
-  };
-
-  const handleDragMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    
-    const deltaX = e.clientX - dragStart.x;
-    const barWidth = 300; // Largura da barra
-    const daysInMonth = getDaysInMonth();
-    const maxScroll = Math.max(0, daysInMonth.length - 7);
-    
-    const sensitivity = maxScroll / barWidth;
-    const newPosition = Math.max(0, Math.min(maxScroll, dragStart.position + (deltaX * sensitivity)));
-    setCalendarScrollPosition(newPosition);
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
   };
 
 
@@ -562,7 +563,7 @@ export function MatchesWidgetFixed() {
                     color: '#718096',
                     fontWeight: '500'
                   }}>
-                    {match.date} • {match.time}
+                    {formatMatchDate(match.date)} • {match.time}
                   </div>
                 </div>
                 
@@ -579,20 +580,20 @@ export function MatchesWidgetFixed() {
                       width: '45px', 
                       height: '45px', 
                       borderRadius: '50%',
-                      background: match.homeTeam.logo 
-                        ? `url(${match.homeTeam.logo}) center/cover no-repeat`
+                      background: match.homeTeam.banner 
+                        ? `url(${match.homeTeam.banner}) center/cover no-repeat`
                         : 'linear-gradient(135deg, #1976D2, #0D47A1)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: match.homeTeam.logo ? 'transparent' : 'white',
+                      color: match.homeTeam.banner ? 'transparent' : 'white',
                       fontWeight: '700',
-                      fontSize: match.homeTeam.logo ? '0' : '1.4rem',
+                      fontSize: match.homeTeam.banner ? '0' : '1.4rem',
                       boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
-                      border: match.homeTeam.logo ? '2px solid #E2E8F0' : 'none',
+                      border: match.homeTeam.banner ? '2px solid #E2E8F0' : 'none',
                       flexShrink: 0
                     }}>
-                      {!match.homeTeam.logo && match.homeTeam.name.charAt(0)}
+                      {!match.homeTeam.banner && match.homeTeam.name.charAt(0)}
                     </div>
                     <span style={{ 
                       fontWeight: '600', 
@@ -650,20 +651,20 @@ export function MatchesWidgetFixed() {
                       width: '45px', 
                       height: '45px', 
                       borderRadius: '50%',
-                      background: match.awayTeam.logo 
-                        ? `url(${match.awayTeam.logo}) center/cover no-repeat`
+                      background: match.awayTeam.banner 
+                        ? `url(${match.awayTeam.banner}) center/cover no-repeat`
                         : 'linear-gradient(135deg, #1976D2, #0D47A1)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: match.awayTeam.logo ? 'transparent' : 'white',
+                      color: match.awayTeam.banner ? 'transparent' : 'white',
                       fontWeight: '700',
-                      fontSize: match.awayTeam.logo ? '0' : '1.4rem',
+                      fontSize: match.awayTeam.banner ? '0' : '1.4rem',
                       boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
-                      border: match.awayTeam.logo ? '2px solid #E2E8F0' : 'none',
+                      border: match.awayTeam.banner ? '2px solid #E2E8F0' : 'none',
                       flexShrink: 0
                     }}>
-                      {!match.awayTeam.logo && match.awayTeam.name.charAt(0)}
+                      {!match.awayTeam.banner && match.awayTeam.name.charAt(0)}
                     </div>
                   </div>
                 </div>
@@ -863,9 +864,9 @@ export function MatchesWidgetFixed() {
                   <button
                     key={dayInfo.day}
                     style={{
-                      background: dayInfo.isToday ? '#1976D2' : 'transparent',
-                      color: dayInfo.isToday ? 'white' : '#4A5568',
-                      border: dayInfo.isToday ? 'none' : '2px solid #E2E8F0',
+                      background: dayInfo.isSelected || dayInfo.isToday ? '#1976D2' : 'transparent',
+                      color: dayInfo.isSelected || dayInfo.isToday ? 'white' : '#4A5568',
+                      border: dayInfo.isSelected || dayInfo.isToday ? 'none' : '2px solid #E2E8F0',
                       borderRadius: '12px',
                       padding: '1rem',
                       cursor: 'pointer',
@@ -879,16 +880,22 @@ export function MatchesWidgetFixed() {
                       transition: 'all 0.3s ease',
                       fontWeight: '600'
                     }}
-                    onClick={() => setSelectedDate(dayInfo.date)}
+                    onClick={() => {
+                      setSelectedDate(dayInfo.date);
+                      setShowAllGames(false);
+                      setCardScrollPosition(0);
+                      const initialPos = Math.max(0, dayInfo.day - 4);
+                      setCalendarScrollPosition(initialPos);
+                    }}
                     onMouseOver={(e) => {
-                      if (!dayInfo.isToday) {
+                      if (!dayInfo.isToday && !dayInfo.isSelected) {
                         e.currentTarget.style.borderColor = '#1976D2';
                         e.currentTarget.style.color = '#1976D2';
                         e.currentTarget.style.transform = 'translateY(-2px)';
                       }
                     }}
                     onMouseOut={(e) => {
-                      if (!dayInfo.isToday) {
+                      if (!dayInfo.isToday && !dayInfo.isSelected) {
                         e.currentTarget.style.borderColor = '#E2E8F0';
                         e.currentTarget.style.color = '#4A5568';
                         e.currentTarget.style.transform = 'translateY(0)';

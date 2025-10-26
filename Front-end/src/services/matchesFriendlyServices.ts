@@ -89,7 +89,7 @@ export async function updateMatch(matchId: string, payload: any) {
   return axios.put(`${API_BASE}/matches/${matchId}`, payload, { headers: getAuthHeaders() });
 }
 
-// -- Teams / registrations
+// -- Teams / registra;tions
 export async function getJoinedTeams(matchId: string | number) {
   return axios.get(`${API_BASE}/matches/${matchId}/join-team`, { headers: getAuthHeaders() });
 }

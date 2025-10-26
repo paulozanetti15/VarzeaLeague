@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { api } from '../../services/api';
+import { createChampionship } from '../../services/championshipsServices';
 import trophy from '../../assets/championship-trophy.svg';
 import './ChampionshipForm.css';
 import { format, parse, isValid } from 'date-fns';
@@ -277,7 +277,7 @@ const ChampionshipForm: React.FC = () => {
         end_date: formData.end_date
       };
 
-      await api.post('/championships', submitData);
+      await createChampionship(submitData);
       
       setSuccess('Campeonato criado com sucesso!');
       setTimeout(() => {

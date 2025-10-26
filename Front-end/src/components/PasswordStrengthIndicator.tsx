@@ -4,6 +4,7 @@ import { Box, Typography } from '@mui/material';
 interface PasswordStrengthIndicatorProps {
   passwordStrength: {
     strength: string;
+    score: number;
     requirements: {
       length: boolean;
       uppercase: boolean;

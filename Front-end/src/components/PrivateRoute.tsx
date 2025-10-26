@@ -1,16 +1,20 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
-  isLoggedIn: boolean;
+  isLoggedIn?: boolean;
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, isLoggedIn }) => {
-  if (!isLoggedIn) {
+  const { user } = useAuth();
+  const logged = typeof isLoggedIn === 'boolean' ? isLoggedIn : !!user;
+
+  if (!logged) {
     return <Navigate to="/login" replace />;
   }
   return <>{children}</>;
 };
 
-export default PrivateRoute; 
+export default PrivateRoute;

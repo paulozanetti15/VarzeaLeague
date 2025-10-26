@@ -1,7 +1,7 @@
 import React from 'react';
 import { Grid, TextField, FormControl, InputLabel, Select, MenuItem, Typography, InputAdornment, IconButton } from '@mui/material';
-import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
-import { SEXO_OPTIONS, USER_TYPE_OPTIONS } from '../utils/userUtils';
+import PasswordStrengthIndicator from '../../PasswordStrengthIndicator';
+import { SEXO_OPTIONS, USER_TYPE_OPTIONS } from '../../../utils/userUtils';
 
 interface UserFormProps {
   formData: any;

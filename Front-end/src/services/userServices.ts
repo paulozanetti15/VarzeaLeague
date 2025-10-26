@@ -1,4 +1,12 @@
-import { api } from './api';
+
+import axios from 'axios';
+
+const API_BASE = 'http://localhost:3001/api';
+
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 export interface User {
   id: number;
@@ -28,20 +36,54 @@ export interface UpdateUserData extends Omit<CreateUserData, 'password'> {
 }
 
 export const getUsers = async (): Promise<User[]> => {
-  const response = await api.get('/user');
-  return response?.data ?? [];
+  try {
+    const response = await axios.get(`${API_BASE}/user`, {
+      headers: getAuthHeaders()
+    });
+    return response?.data ?? [];
+  } catch (error: any) {
+    console.error('Erro ao buscar usuários:', error);
+    throw new Error(error.response?.data?.message || 'Erro ao buscar usuários');
+  }
 };
 
 export const createUser = async (userData: CreateUserData): Promise<User> => {
-  const response = await api.post('/user', userData);
-  return response.data;
+  try {
+    const response = await axios.post(`${API_BASE}/user`, userData, {
+      headers: {
+        ...getAuthHeaders(),
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Erro ao criar usuário:', error);
+    throw new Error(error.response?.data?.message || 'Erro ao criar usuário');
+  }
 };
 
 export const updateUser = async (userId: number, userData: UpdateUserData): Promise<User> => {
-  const response = await api.put(`/user/${userId}`, userData);
-  return response.data;
+  try {
+    const response = await axios.put(`${API_BASE}/user/${userId}`, userData, {
+      headers: {
+        ...getAuthHeaders(),
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Erro ao atualizar usuário:', error);
+    throw new Error(error.response?.data?.message || 'Erro ao atualizar usuário');
+  }
 };
 
 export const deleteUser = async (userId: number): Promise<void> => {
-  await api.delete(`/user/${userId}`);
+  try {
+    await axios.delete(`${API_BASE}/user/${userId}`, {
+      headers: getAuthHeaders()
+    });
+  } catch (error: any) {
+    console.error('Erro ao deletar usuário:', error);
+    throw new Error(error.response?.data?.message || 'Erro ao deletar usuário');
+  }
 };

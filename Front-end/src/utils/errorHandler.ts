@@ -74,3 +74,29 @@ export const getErrorMessage = (error: any): string => {
 
   return ERROR_MESSAGES.GENERAL.UNKNOWN_ERROR;
 };
+
+// Validation functions
+export const validateEmail = (email: string): { valid: boolean; message?: string } => {
+  if (!email || email.trim() === '') {
+    return { valid: false, message: ERROR_MESSAGES.VALIDATION.REQUIRED_FIELD };
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.trim())) {
+    return { valid: false, message: ERROR_MESSAGES.VALIDATION.INVALID_EMAIL };
+  }
+
+  return { valid: true };
+};
+
+export const validatePassword = (password: string): { valid: boolean; message?: string } => {
+  if (!password || password === '') {
+    return { valid: false, message: ERROR_MESSAGES.VALIDATION.REQUIRED_FIELD };
+  }
+
+  if (password.length < 6) {
+    return { valid: false, message: ERROR_MESSAGES.VALIDATION.MIN_LENGTH(6) };
+  }
+
+  return { valid: true };
+};
