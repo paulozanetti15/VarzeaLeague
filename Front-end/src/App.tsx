@@ -35,6 +35,7 @@ import HistoricoPage from './pages/Historico/HistoricoPage'
 import { HistoricoProvider } from './context/HistoricoContext';
 import RankingPlayers from './pages/ranking/RankingPlayers'
 import RankingTeams from './pages/ranking/RankingTeams'
+import Feed from './pages/feed/Feed'
 
 // Componente simples para loading
   const Loading = () => (
@@ -380,6 +381,15 @@ import RankingTeams from './pages/ranking/RankingTeams'
               </RoleBasedRoute>
             </PrivateRoute>
           } />
+
+          <Route path="/feed" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <PageTransition>
+                <Feed />
+              </PageTransition>
+            </PrivateRoute>
+          } />
+
           <Route path='/championships/:id/ranking-times' element={
             <PrivateRoute isLoggedIn={isLoggedIn}>
               <RoleBasedRoute 

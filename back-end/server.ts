@@ -29,6 +29,7 @@ import championshipRoutes from './routes/championshipRoutes';
 import userTypeRoutes from './routes/userTypeRoutes';
 import overviewRoutes from './routes/overviewRoutes';
 import historicoRoutes from './routes/historicoRoutes';
+import feedRoutes from './routes/feedRoutes';
 import MatchChampionship from './models/MatchChampionshipModel';
 import MatchChampionshpReport from './models/MatchReportChampionshipModel';
 dotenv.config();
@@ -68,7 +69,8 @@ app.use('/api/rules', RulesRoutes);
 app.use('/api/championships', championshipRoutes);
 app.use('/api/usertypes', userTypeRoutes);
 app.use('/api/overview', overviewRoutes);
-app.use('/api/historico',historicoRoutes)
+app.use('/api/historico',historicoRoutes);
+app.use('/api/feed', feedRoutes);
 
 const startServer = async () => {
   try {

@@ -31,6 +31,7 @@ import {
   Search,
   Login,
   PersonAdd,
+  FeedOutlined,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -289,6 +290,13 @@ const Navbar = () => {
             onClick={() => handleNavigation('/listings')}
           >
             <Search /> Procurar
+          </button>
+          
+          <button
+            className="navbar-menu-button"
+            onClick={() => handleNavigation('/feed')}
+          >
+            <FeedOutlined /> Feed
           </button>
         </div>
         <div className="navbar-mobile-menu">
