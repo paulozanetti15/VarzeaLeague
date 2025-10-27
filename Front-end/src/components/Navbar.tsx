@@ -32,6 +32,7 @@ import {
   Login,
   PersonAdd,
   FeedOutlined,
+  Sports,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -121,12 +122,14 @@ const Navbar = () => {
           { name: 'Usuários', path: '/admin/users', icon: <Person /> },
           { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
           { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
+          { name: 'Árbitros', path: '/referees', icon: <Sports /> },
            { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
         ];
       case 2:
         return [
           { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
           { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
+          { name: 'Árbitros', path: '/referees', icon: <Sports /> },
            { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
         ];
       case 3:

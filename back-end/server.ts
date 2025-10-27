@@ -30,6 +30,7 @@ import userTypeRoutes from './routes/userTypeRoutes';
 import overviewRoutes from './routes/overviewRoutes';
 import historicoRoutes from './routes/historicoRoutes';
 import feedRoutes from './routes/feedRoutes';
+import refereeRoutes from './routes/refereeRoutes';
 import MatchChampionship from './models/MatchChampionshipModel';
 import MatchChampionshpReport from './models/MatchReportChampionshipModel';
 dotenv.config();
@@ -71,6 +72,7 @@ app.use('/api/usertypes', userTypeRoutes);
 app.use('/api/overview', overviewRoutes);
 app.use('/api/historico',historicoRoutes);
 app.use('/api/feed', feedRoutes);
+app.use('/api/referees', refereeRoutes);
 
 const startServer = async () => {
   try {
@@ -136,6 +138,14 @@ const startServer = async () => {
     console.log('Modelo MatchChampionship sincronizado.');
     await MatchChampionshpReport.sync();
     console.log('Modelo MatchChampionshpReport sincronizado.');
+    
+    const { default: RefereeModel } = await import('./models/RefereeModel');
+    await RefereeModel.sync();
+    console.log('Modelo Referee sincronizado.');
+    
+    const { default: MatchRefereeModel } = await import('./models/MatchRefereeModel');
+    await MatchRefereeModel.sync();
+    console.log('Modelo MatchReferee sincronizado.');
     
     await seedUserTypes();
 

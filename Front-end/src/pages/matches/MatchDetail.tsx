@@ -20,6 +20,9 @@ import {
 import { MatchActions } from '../../features/matches/MatchActions/MatchActions';
 import { DeleteConfirmDialog } from '../../components/Dialogs/DeleteConfirmDialog';
 import { EvaluationDialog } from '../../components/Dialogs/EvaluationDialog';
+import AssignRefereeModal from '../../components/features/referees/AssignRefereeModal';
+import { Sports } from '@mui/icons-material';
+import { Card, Button, ListGroup, Badge } from 'react-bootstrap';
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -44,6 +47,8 @@ const MatchDetail: React.FC = () => {
   const [isWo, setIsWo] = useState(false);
   const [isEditingSumula, setIsEditingSumula] = useState(false);
   const [punishment, setPunishment] = useState<any>(null);
+  const [showRefereeModal, setShowRefereeModal] = useState(false);
+  const [matchReferees, setMatchReferees] = useState<any[]>([]);
   
 
 
@@ -162,6 +167,25 @@ const MatchDetail: React.FC = () => {
     }
   };
 
+  const loadMatchReferees = async () => {
+    if (!id) return;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      const response = await fetch(`http://localhost:3001/api/referees/match/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setMatchReferees(data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar árbitros:', error);
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -182,6 +206,7 @@ const MatchDetail: React.FC = () => {
         await fetchPunishment(id!);
         await getTimeInscrito(id!);
         await checkSumulaExists();
+        await loadMatchReferees();
       } catch (err: any) {
         console.error('Erro ao carregar detalhes:', err);
         if (err.response?.status === 401) {
@@ -407,6 +432,47 @@ const MatchDetail: React.FC = () => {
           onShowRulesModal={setShowRulesModal}
         />
 
+        {(isOrganizer || isAdmin) && (
+          <Card className="mb-3">
+            <Card.Header className="d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">
+                <Sports className="me-2" />
+                Árbitros
+              </h5>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowRefereeModal(true)}
+              >
+                Gerenciar Árbitros
+              </Button>
+            </Card.Header>
+            <Card.Body>
+              {matchReferees.length === 0 ? (
+                <p className="text-muted mb-0">Nenhum árbitro associado a esta partida.</p>
+              ) : (
+                <ListGroup variant="flush">
+                  {matchReferees.map((mr: any) => (
+                    <ListGroup.Item key={mr.id} className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong>{mr.referee?.nome}</strong>
+                        <br />
+                        <small className="text-muted">
+                          CPF: {mr.referee?.cpf}
+                          {mr.referee?.certificacao && ` | ${mr.referee.certificacao}`}
+                        </small>
+                      </div>
+                      <Badge bg={mr.tipo === 'principal' ? 'primary' : 'secondary'}>
+                        {mr.tipo === 'principal' ? 'Principal' : 'Auxiliar'}
+                      </Badge>
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              )}
+            </Card.Body>
+          </Card>
+        )}
+
        
 
         <TeamsList
@@ -572,6 +638,18 @@ const MatchDetail: React.FC = () => {
             title="Comentários da Partida"
           />
         </>
+      )}
+
+      {showRefereeModal && (
+        <AssignRefereeModal
+          show={showRefereeModal}
+          matchId={Number(id)}
+          onClose={() => setShowRefereeModal(false)}
+          onSuccess={() => {
+            loadMatchReferees();
+            toast.success('Árbitros atualizados com sucesso');
+          }}
+        />
       )}
     </div>
   );

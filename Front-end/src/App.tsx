@@ -36,6 +36,7 @@ import { HistoricoProvider } from './context/HistoricoContext';
 import RankingPlayers from './pages/ranking/RankingPlayers'
 import RankingTeams from './pages/ranking/RankingTeams'
 import Feed from './pages/feed/Feed'
+import RefereeList from './pages/referees/RefereeList/RefereeList'
 
 // Componente simples para loading
   const Loading = () => (
@@ -387,6 +388,21 @@ import Feed from './pages/feed/Feed'
               <PageTransition>
                 <Feed />
               </PageTransition>
+            </PrivateRoute>
+          } />
+
+          <Route path="/referees" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn}
+                userRole={user?.userTypeId}
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS]}
+                redirectTo="/"
+              >
+                <PageTransition>
+                  <RefereeList />
+                </PageTransition>
+              </RoleBasedRoute>
             </PrivateRoute>
           } />
 
