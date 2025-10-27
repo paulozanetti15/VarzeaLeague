@@ -1,49 +1,22 @@
 import { useEffect, useState } from 'react';
-import { fetchMatches } from '../../services/matchesFriendlyServices';
 import { useNavigate } from 'react-router-dom';
+import { useMatchesWidget } from '../../hooks/useMatchesWidget';
+import { getToday, isToday, formatMatchDate } from '../../utils/matchesUtils';
 import './MatchesWidgetFixed.css';
 
-interface Match {
-  id: number;
-  date: string;
-  time: string;
-  homeTeam: {
-    id: number;
-    name: string;
-    banner?: string;
-  };
-  awayTeam: {
-    id: number;
-    name: string;
-    banner?: string;
-  };
-  score?: {
-    home: number;
-    away: number;
-  };
-  status: 'upcoming' | 'live' | 'finished';
-  championship?: string;
-  location?: string;
-}
-
 export function MatchesWidgetFixed() {
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { matches, loading } = useMatchesWidget();
   const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getToday();
     return today;
   });
+  const [cardScrollPosition, setCardScrollPosition] = useState(0);
+  const [calendarScrollPosition, setCalendarScrollPosition] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, position: 0 });
+  const [showAllGames, setShowAllGames] = useState(false);
   const navigate = useNavigate();
 
-  // Função para obter o dia de hoje normalizado
-  const getToday = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
-  };
-
-  // Função para filtrar jogos por data específica
   const getMatchesForDate = (date: Date) => {
     const normalizedDate = new Date(date);
     normalizedDate.setHours(0, 0, 0, 0);
@@ -63,210 +36,103 @@ export function MatchesWidgetFixed() {
     });
   };
 
-  // Função para obter jogos do dia atual ou próximos se não houver
   const getTodayMatches = () => {
     const todayMatches = getMatchesForDate(getToday());
 
-    // Se não há jogos hoje, buscar próximos jogos
     if (todayMatches.length === 0) {
-      const upcoming = getUpcomingMatches();
-      return upcoming.length > 0 ? upcoming.slice(0, 4) : getMockMatches().slice(0, 4);
+      return matches.filter(match => {
+        const matchDate = new Date(match.date);
+        const today = getToday();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+
+        matchDate.setHours(0, 0, 0, 0);
+        return matchDate.getTime() === today.getTime() || matchDate.getTime() === tomorrow.getTime();
+      }).slice(0, 4);
     }
 
     return todayMatches.slice(0, 4);
   };
 
-  // Função para obter próximos jogos
-  const getUpcomingMatches = () => {
-    const today = getToday();
-    const nextWeek = new Date(today);
-    nextWeek.setDate(today.getDate() + 7);
-    return matches.filter(match => {
-      if (!match.date) return false;
-      const matchDate = new Date(match.date);
-      matchDate.setHours(0, 0, 0, 0);
-      return matchDate >= today && matchDate <= nextWeek && match.status === 'upcoming';
-    });
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Garantir que sempre inicie no dia de hoje
   useEffect(() => {
     const today = getToday();
     setSelectedDate(today);
+
+    const todayDay = today.getDate();
+    const initialPosition = Math.max(0, todayDay - 4);
+    setCalendarScrollPosition(initialPosition);
   }, []);
 
   // Event listeners para arrastar
   useEffect(() => {
-    // Removido - funcionalidade simplificada
-  }, []);
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        const deltaX = e.clientX - dragStart.x;
+        const barWidth = 300;
+        const daysInMonth = getDaysInMonth();
+        const maxScroll = Math.max(0, daysInMonth.length - 7);
 
-  const loadData = async () => {
-    try {
-      const matchesData = await fetchMatches();
-      if (matchesData && matchesData.length > 0) {
-        const processedMatches = matchesData.map((match: any) => ({
-          id: match.id,
-          date: new Date(match.date).toISOString(),
-          time: new Date(match.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          homeTeam: {
-            id: match.organizer?.id || 0,
-            name: match.organizer?.name || 'Organizador',
-            banner: undefined
-          },
-          awayTeam: {
-            id: 0,
-            name: 'Time Adversário',
-            banner: undefined
-          },
-          score: undefined,
-          status: 'upcoming' as 'upcoming' | 'live' | 'finished',
-          championship: match.title || 'Partida Amistosa',
-          location: match.location
-        }));
-        setMatches(processedMatches);
-      } else {
-        setMatches(getMockMatches());
+        const sensitivity = maxScroll / barWidth;
+        const newPosition = Math.max(0, Math.min(maxScroll, dragStart.position + (deltaX * sensitivity)));
+        setCalendarScrollPosition(newPosition);
       }
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-      setMatches(getMockMatches());
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getMockMatches = (): Match[] => {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    const saturday = new Date(today);
-    saturday.setDate(today.getDate() + ((6 - today.getDay() + 7) % 7 || 7));
-
-    const sunday = new Date(saturday);
-    sunday.setDate(saturday.getDate() + 1);
-
-    const fmtTime = (d: Date, hours: number, minutes: number) => {
-      const dt = new Date(d);
-      dt.setHours(hours, minutes, 0, 0);
-      return dt.toISOString();
     };
 
-    return [
-      {
-        id: 1,
-        date: fmtTime(today, 19, 0),
-        time: '19:00',
-        homeTeam: { id: 1, name: 'Lucato FC' },
-        awayTeam: { id: 2, name: 'Atlético Micas' },
-        status: 'upcoming',
-        championship: 'Campeonato Brasileiro',
-        location: 'Maracanã'
-      },
-      {
-        id: 2,
-        date: fmtTime(today, 21, 0),
-        time: '21:00',
-        homeTeam: { id: 3, name: 'PZFC' },
-        awayTeam: { id: 4, name: 'Rafa Perfeita' },
-        status: 'upcoming',
-        championship: 'Paulistão 2025',
-        location: 'Allianz Parque'
-      },
-      {
-        id: 3,
-        date: fmtTime(tomorrow, 16, 0),
-        time: '16:00',
-        homeTeam: { id: 5, name: 'Lucato FC' },
-        awayTeam: { id: 6, name: 'PZFC' },
-        status: 'upcoming',
-        championship: 'Copa Libertadores',
-        location: 'Vila Belmiro'
-      },
-      {
-        id: 4,
-        date: fmtTime(tomorrow, 18, 30),
-        time: '18:30',
-        homeTeam: { id: 7, name: 'Atlético Micas' },
-        awayTeam: { id: 8, name: 'Rafa Perfeita' },
-        status: 'upcoming',
-        championship: 'Cariocão 2025',
-        location: 'São Januário'
-      },
-      {
-        id: 5,
-        date: fmtTime(saturday, 15, 0),
-        time: '15:00',
-        homeTeam: { id: 9, name: 'PZFC' },
-        awayTeam: { id: 10, name: 'Lucato FC' },
-        status: 'upcoming',
-        championship: 'Campeonato Brasileiro',
-        location: 'Nilton Santos'
-      },
-      {
-        id: 6,
-        date: fmtTime(saturday, 17, 30),
-        time: '17:30',
-        homeTeam: { id: 11, name: 'Rafa Perfeita' },
-        awayTeam: { id: 12, name: 'Atlético Micas' },
-        status: 'upcoming',
-        championship: 'Série A',
-        location: 'Beira-Rio'
-      },
-      {
-        id: 7,
-        date: fmtTime(sunday, 16, 0),
-        time: '16:00',
-        homeTeam: { id: 13, name: 'Lucato FC' },
-        awayTeam: { id: 14, name: 'Rafa Perfeita' },
-        status: 'upcoming',
-        championship: 'Brasileirão',
-        location: 'Arena da Baixada'
-      },
-      {
-        id: 8,
-        date: fmtTime(sunday, 18, 30),
-        time: '18:30',
-        homeTeam: { id: 15, name: 'Atlético Micas' },
-        awayTeam: { id: 16, name: 'PZFC' },
-        status: 'upcoming',
-        championship: 'Cearense',
-        location: 'Castelão'
-      }
-    ];
-  };
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
 
-  const getGameStatusIcon = (status: string) => {
-    switch (status) {
-      case 'live': return '🔴';
-      case 'finished': return '✅';
-      default: return '⏰';
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
     }
-  };
 
-  const getGameStatusText = (status: string) => {
-    switch (status) {
-      case 'live': return 'AO VIVO';
-      case 'finished': return 'FINALIZADO';
-      default: return 'PRÓXIMO';
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragStart]);
+
+  const getDaysInMonth = () => {
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const days = [];
+    const sel = new Date(selectedDate);
+    sel.setHours(0, 0, 0, 0);
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      date.setHours(0, 0, 0, 0);
+      const isSel = date.getTime() === sel.getTime();
+      days.push({
+        day,
+        date,
+        isToday: isToday(date),
+        isSelected: isSel,
+        dayName: date.toLocaleDateString('pt-BR', { weekday: 'short' }).toUpperCase()
+      });
     }
+
+    return days;
   };
 
-  const formatMatchDate = (isoDate?: string) => {
-    if (!isoDate) return '';
-    const d = new Date(isoDate);
-    d.setHours(0, 0, 0, 0);
-    const today = getToday();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
+  // Funções para rolagem dos cards
+  const scrollCardsLeft = () => {
+    setCardScrollPosition(prev => Math.max(0, prev - 1));
+  };
 
-    if (d.getTime() === today.getTime()) return 'Hoje';
-    if (d.getTime() === tomorrow.getTime()) return 'Amanhã';
-    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  const scrollCardsRight = () => {
+    const todayMatches = getTodayMatches();
+    const maxScroll = Math.max(0, todayMatches.length - 3);
+    setCardScrollPosition(prev => Math.min(maxScroll, prev + 1));
+  };
+
+  // Funções para arrastar a barra de rolagem
+  const handleDragStart = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, position: calendarScrollPosition });
+    e.preventDefault();
   };
 
   if (loading) {
@@ -306,10 +172,20 @@ export function MatchesWidgetFixed() {
 
           {/* Container principal */}
           <div className="cards-container">
+            {/* Botão de navegação esquerdo */}
+            <button className="navigation-button left" onClick={scrollCardsLeft}>
+              <i className="fas fa-arrow-left"></i>
+            </button>
+
             {/* Área dos cards */}
             <div className="cards-area">
-              <div className="cards-wrapper">
-                {getTodayMatches().slice(0, 4).map((match) => (
+              <div
+                className="cards-wrapper"
+                style={{
+                  '--card-transform': `-${cardScrollPosition * (380 + 24)}px`
+                } as React.CSSProperties}
+              >
+                {getTodayMatches().map((match) => (
                   <div
                     key={match.id}
                     className="match-card"
@@ -318,16 +194,10 @@ export function MatchesWidgetFixed() {
                     {/* Header Compacto */}
                     <div className="card-header-compact">
                       <div className="championship-badge">{match.championship}</div>
-                      <div className={`status-pill ${match.status}`}>
-                        {match.status === 'live' && <span className="live-dot"></span>}
-                        {match.status === 'live' ? 'AO VIVO' :
-                         match.status === 'finished' ? 'ENCERRADO' : 'PRÓXIMO'}
-                      </div>
                     </div>
 
                     {/* Informação de Data e Hora */}
                     <div className="match-datetime">
-                      <i className="far fa-calendar"></i>
                       <span>{formatMatchDate(match.date)} • {match.time}</span>
                     </div>
 
@@ -335,9 +205,6 @@ export function MatchesWidgetFixed() {
                     <div className="teams-confrontation">
                       {/* Time Casa */}
                       <div className="team-info">
-                        <div className="team-logo-placeholder">
-                          <i className="fas fa-shield-alt"></i>
-                        </div>
                         <span className="team-name-compact">{match.homeTeam.name}</span>
                       </div>
 
@@ -353,24 +220,34 @@ export function MatchesWidgetFixed() {
 
                       {/* Time Visitante */}
                       <div className="team-info">
-                        <div className="team-logo-placeholder">
-                          <i className="fas fa-shield-alt"></i>
-                        </div>
                         <span className="team-name-compact">{match.awayTeam.name}</span>
                       </div>
                     </div>
 
-                    {/* Footer com Local */}
-                    {match.location && (
-                      <div className="card-footer-compact">
-                        <i className="fas fa-map-marker-alt"></i>
-                        <span>{match.location}</span>
+                    {/* Footer com Informações */}
+                    <div className="card-footer-compact">
+                      <span className="round-label">{match.round} • {match.category}</span>
+                      {match.location && (
+                        <span className="location-label">
+                          <i className="fas fa-map-marker-alt"></i>
+                          <span className="location-text">{match.location}</span>
+                        </span>
+                      )}
+                      <div className={`status-pill ${match.status}`} role="status" aria-label={`status ${match.status}`}>
+                        {match.status === 'live' && <span className="live-dot"></span>}
+                        {match.status === 'live' ? 'AO VIVO' :
+                         match.status === 'finished' ? 'ENCERRADO' : 'PRÓXIMO'}
                       </div>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
+
+            {/* Botão de navegação direito */}
+            <button className="navigation-button right" onClick={scrollCardsRight}>
+              <i className="fas fa-arrow-right"></i>
+            </button>
           </div>
         </section>
 
@@ -383,40 +260,168 @@ export function MatchesWidgetFixed() {
             </p>
           </div>
 
+          {/* Controles de Data */}
+          <div className="date-controls">
+            <div className="date-controls-header">
+              {/* Seletor de Mês */}
+              <div className="month-year-selectors">
+                <select
+                  className="month-selector"
+                  value={selectedDate.getMonth()}
+                  onChange={(e) => {
+                    const newDate = new Date(selectedDate);
+                    newDate.setMonth(parseInt(e.target.value));
+                    setSelectedDate(newDate);
+                  }}
+                >
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const date = new Date(2024, i, 1);
+                    return (
+                      <option key={i} value={i}>
+                        {date.toLocaleDateString('pt-BR', { month: 'long' })}
+                      </option>
+                    );
+                  })}
+                </select>
+
+                <select
+                  className="year-selector"
+                  value={selectedDate.getFullYear()}
+                  onChange={(e) => {
+                    const newDate = new Date(selectedDate);
+                    newDate.setFullYear(parseInt(e.target.value));
+                    setSelectedDate(newDate);
+                  }}
+                >
+                  {Array.from({ length: 3 }, (_, i) => {
+                    const year = new Date().getFullYear() + i;
+                    return (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              <div className="calendar-area">
+                <div
+                  className="calendar-wrapper"
+                  style={{
+                    '--calendar-transform': `-${calendarScrollPosition * (60 + 8)}px`
+                  } as React.CSSProperties}
+                >
+                  {getDaysInMonth().map((dayInfo) => (
+                    <button
+                      key={dayInfo.day}
+                      className={`day-button ${dayInfo.isSelected || dayInfo.isToday ? 'selected' : ''} ${dayInfo.isToday ? 'today' : ''}`}
+                      onClick={() => {
+                        setSelectedDate(dayInfo.date);
+                        setShowAllGames(false);
+                        setCardScrollPosition(0);
+                        const initialPos = Math.max(0, dayInfo.day - 4);
+                        setCalendarScrollPosition(initialPos);
+                      }}
+                    >
+                      <span className="day-number">{dayInfo.day}</span>
+                      <span className="day-name">{dayInfo.dayName}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Barra de rolagem */}
+            <div className="scrollbar-container">
+              <div
+                className="scrollbar-track"
+                onMouseDown={handleDragStart}
+                onClick={(e) => {
+                  if (!isDragging) {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    const percentage = clickX / rect.width;
+                    const daysInMonth = getDaysInMonth();
+                    const maxScroll = Math.max(0, daysInMonth.length - 7);
+                    const newPosition = Math.round(percentage * maxScroll);
+                    setCalendarScrollPosition(Math.max(0, Math.min(maxScroll, newPosition)));
+                  }
+                }}
+              >
+                <div
+                  className="scrollbar-progress"
+                  style={{
+                    '--scrollbar-width': (() => {
+                      const daysInMonth = getDaysInMonth();
+                      const maxScroll = Math.max(0, daysInMonth.length - 7);
+                      return maxScroll > 0 ? `${(calendarScrollPosition / maxScroll) * 100}%` : '100%';
+                    })()
+                  } as React.CSSProperties}
+                ></div>
+
+                <div
+                  className="scrollbar-handle"
+                  style={{
+                    '--handle-position': (() => {
+                      const daysInMonth = getDaysInMonth();
+                      const maxScroll = Math.max(0, daysInMonth.length - 7);
+                      const percentage = maxScroll > 0 ? (calendarScrollPosition / maxScroll) : 0;
+                      const trackWidth = 600; // max-width do scrollbar-track
+                      return `${percentage * (trackWidth - 16)}px`;
+                    })()
+                  } as React.CSSProperties}
+                ></div>
+              </div>
+            </div>
+          </div>
+
           {/* Lista de Partidas */}
           <div className="matches-list">
             {getMatchesForDate(selectedDate).length > 0 ? (
-              getMatchesForDate(selectedDate).slice(0, 5).map((match) => (
-                <div
-                  key={match.id}
-                  className="match-list-item"
-                  onClick={() => navigate(`/matches/${match.id}`)}
-                >
-                  <div className="match-time">
-                    <span>{match.time}</span>
-                  </div>
-
-                  <div className="match-details">
-                    <div className="match-teams">
-                      <span className="team-home">{match.homeTeam.name}</span>
-                      <span className="vs-indicator">x</span>
-                      <span className="team-away">{match.awayTeam.name}</span>
+              <>
+                {(showAllGames ? getMatchesForDate(selectedDate) : getMatchesForDate(selectedDate).slice(0, 3)).map((match) => (
+                  <div
+                    key={match.id}
+                    className="match-list-item"
+                    onClick={() => navigate(`/matches/${match.id}`)}
+                  >
+                    <div className="match-details">
+                      <div className="match-teams">
+                        <span className="team-home">{match.homeTeam.name}</span>
+                        <span className="vs-indicator">x</span>
+                        <span className="team-away">{match.awayTeam.name}</span>
+                      </div>
+                      <div className="match-meta">
+                        <span className="championship-label">{match.championship}</span>
+                        {match.location && (
+                          <span className="location-label">{match.location}</span>
+                        )}
+                      </div>
                     </div>
-                    <div className="match-meta">
-                      <span className="championship-label">{match.championship}</span>
-                      {match.location && (
-                        <span className="location-label">📍 {match.location}</span>
-                      )}
+
+                    <div className="match-time-info">
+                      <div className="match-time">
+                        <span>{match.time}</span>
+                      </div>
+                      <div className="match-status-display">
+                        <span className={`status-indicator ${match.status}`}>
+                          {match.status === 'live' ? 'AO VIVO' :
+                           match.status === 'finished' ? 'ENCERRADO' : 'PRÓXIMO'}
+                        </span>
+                      </div>
                     </div>
                   </div>
+                ))}
 
-                  <div className="match-status-display">
-                    <span className={`status-indicator ${match.status}`}>
-                      {getGameStatusIcon(match.status)} {getGameStatusText(match.status)}
-                    </span>
+                {/* Botão para expandir/recolher */}
+                {getMatchesForDate(selectedDate).length > 3 && (
+                  <div className="expand-button">
+                    <button onClick={() => setShowAllGames(!showAllGames)}>
+                      {showAllGames ? 'Ver menos' : `Ver mais ${getMatchesForDate(selectedDate).length - 3} jogos`}
+                    </button>
                   </div>
-                </div>
-              ))
+                )}
+              </>
             ) : (
               <div className="empty-state">
                 <div className="empty-icon">⚽</div>

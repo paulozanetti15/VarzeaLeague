@@ -22,6 +22,24 @@ const computeMatchEnd = (startDate: Date, duration?: string): Date => {
   return new Date(startDate.getTime() + minutes * 60000);
 };
 
+// Função consolidada para atualizar todos os status das partidas
+export const updateAllMatchStatuses = async (): Promise<void> => {
+  try {
+    console.log('🔄 Iniciando atualização de status de todas as partidas...');
+
+    // Executar todas as verificações de status em sequência
+    await checkAndSetMatchesInProgress();
+    await checkAndConfirmFullMatches();
+    await checkAndStartConfirmedMatches();
+    await checkAndSetSemVagas();
+
+    console.log('✅ Status de todas as partidas atualizados com sucesso');
+  } catch (error) {
+    console.error('❌ Erro ao atualizar status das partidas:', error);
+    throw error;
+  }
+};
+
 // Scan matches and set status to 'em_andamento' when current time is within [start, end)
 export const checkAndSetMatchesInProgress = async (): Promise<void> => {
   try {
@@ -329,91 +347,14 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
 
 export const listMatches = async (req: Request, res: Response): Promise<void> => {
   try {
-    // Ensure statuses are up-to-date for matches that should be in progress
-    await checkAndSetMatchesInProgress();
-    // Confirm full matches after registration deadline
-    await checkAndConfirmFullMatches();
-  // Start confirmed matches when their start time arrives
-  await checkAndStartConfirmedMatches();
-    // Check and set matches to 'sem_vagas' when they reach maximum teams
-    await checkAndSetSemVagas();
+    console.log('🔍 Iniciando busca básica de partidas...');
 
-    const { from, to, status, search, sort, matchDateFrom, registrationDateFrom, searchMatches, searchChampionships, friendlyOnly, myMatches } = req.query;
+    // Atualizar status das partidas antes de retornar
+    await updateAllMatchStatuses();
 
-    const whereClause: any = {};
-
-    // Filtro por status
-    if (status) {
-      const statusArray = Array.isArray(status) ? status : status.toString().split(',');
-      whereClause.status = { [Op.in]: statusArray };
-    }
-
-    // Filtro para partidas criadas pelo usuário logado
-    if (myMatches === 'true') {
-      const authReq = req as any;
-      if (authReq.user && authReq.user.id) {
-        whereClause.organizerId = authReq.user.id;
-      }
-    }
-
-    // Filtro por data da partida
-    if (matchDateFrom) {
-      const fromDate = new Date(matchDateFrom.toString());
-      if (!isNaN(fromDate.getTime())) {
-        whereClause.date = { ...whereClause.date, [Op.gte]: fromDate };
-      }
-    }
-
-    // Filtro por data de inscrição (através das regras)
-    let rulesWhereClause: any = {};
-    if (registrationDateFrom) {
-      rulesWhereClause = { rules: {} };
-      const fromDate = new Date(registrationDateFrom.toString());
-      if (!isNaN(fromDate.getTime())) {
-        rulesWhereClause.rules.dataLimite = { ...rulesWhereClause.rules.dataLimite, [Op.gte]: fromDate };
-      }
-    }
-
-    // Filtro por busca (search)
-    let searchWhereClause: any = {};
-    if (searchMatches) {
-      const searchTerm = searchMatches.toString().toLowerCase();
-      searchWhereClause = {
-        [Op.or]: [
-          { title: { [Op.iLike]: `%${searchTerm}%` } },
-          { description: { [Op.iLike]: `%${searchTerm}%` } },
-          { location: { [Op.iLike]: `%${searchTerm}%` } }
-        ]
-      };
-    }
-
-    // Determinar ordenação
-    let order: any = [['date', 'ASC']];
-    if (sort) {
-      switch (sort.toString()) {
-        case 'date_desc':
-          order = [['date', 'DESC']];
-          break;
-        case 'date_asc':
-          order = [['date', 'ASC']];
-          break;
-        default:
-          order = [['date', 'ASC']];
-      }
-    }
-
-    // Determinar a condição where final
-    const finalWhereClause = friendlyOnly === 'true' ? {
-      ...whereClause,
-      ...searchWhereClause,
-      '$matchChampionship.id$': null // Apenas partidas que não têm associação com campeonato
-    } : {
-      ...whereClause,
-      ...searchWhereClause
-    };
+    console.log('📊 Executando query básica no banco...');
 
     const matches = await MatchModel.findAll({
-      where: finalWhereClause,
       include: [
         {
           model: User,
@@ -424,15 +365,24 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
           model: Rules,
           as: 'rules',
           attributes: ['dataLimite'],
-          required: Object.keys(rulesWhereClause).length > 0,
-          where: rulesWhereClause.rules || undefined
+          required: false
         },
-        // Incluir MatchChampionship para filtrar partidas amistosas
         {
           model: MatchChampionship,
           as: 'matchChampionship',
           required: false,
           attributes: []
+        },
+        {
+          model: MatchTeamsModel,
+          as: 'matchTeams',
+          include: [
+            {
+              model: TeamModel,
+              as: 'team',
+              attributes: ['id', 'name']
+            }
+          ]
         }
       ],
       attributes: [
@@ -448,8 +398,10 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
         'nomequadra',
         'modalidade',
       ],
-      order
+      order: [['date', 'ASC']]
     });
+
+    console.log(`✅ Query básica executada com sucesso. Encontradas ${matches.length} partidas.`);
 
     const payload = matches.map((match: any) => {
       const obj = match.toJSON ? match.toJSON() : match;
@@ -459,7 +411,8 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
       };
     });
 
-    res.json(payload);
+    console.log('📤 Enviando resposta com', payload.length, 'partidas');
+    res.status(200).json(payload);
   } catch (error) {
     console.error('Erro ao listar partidas:', error);
     res.status(500).json({ message: 'Erro ao listar partidas' });
@@ -674,42 +627,242 @@ export const deleteMatch = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ message: 'Erro ao excluir partida' });
   }
 };
-export const getMatchStatus = async (req: Request, res: Response): Promise<void> => {
+export const getMatchesByOrganizer = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const match = await MatchModel.findByPk(req.params.id);
+    console.log('🔍 Buscando partidas por organizador...');
+    console.log('👤 Usuário autenticado:', req.user?.id);
 
-    if (!match) {
-      res.status(404).json({ message: 'Partida não encontrada' });
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ message: 'Usuário não autenticado' });
       return;
     }
 
-    // Verificar e atualizar status baseado na data/hora atual
-    let updatedStatus = match.status;
-    const now = new Date();
+    const userId = req.user.id;
 
-    if (match.date) {
-      const start = new Date((match as any).date);
-      const end = computeMatchEnd(start, (match as any).duration);
+    // Ensure statuses are up-to-date for matches that should be in progress
+    await updateAllMatchStatuses();
 
-      // Se estiver confirmada e hora atual estiver dentro do intervalo -> em_andamento
-      if (String(match.status) === 'confirmada' && now >= start && now < end) {
-        updatedStatus = 'em_andamento';
-        await match.update({ status: updatedStatus });
-      }
-      // Se estiver em_andamento ou confirmada e passou do fim -> finalizada
-      else if ((String(match.status) === 'em_andamento' || String(match.status) === 'confirmada') && now >= end) {
-        updatedStatus = 'finalizada';
-        await match.update({ status: updatedStatus });
+    console.log('📊 Buscando partidas do organizador:', userId);
+
+    const matches = await MatchModel.findAll({
+      where: {
+        organizerId: userId
+      },
+      include: [
+        {
+          model: User,
+          as: 'organizer',
+          attributes: ['id', 'name', 'email']
+        },
+        {
+          model: Rules,
+          as: 'rules',
+          attributes: ['dataLimite'],
+          required: false
+        },
+        {
+          model: MatchChampionship,
+          as: 'matchChampionship',
+          required: false,
+          attributes: []
+        },
+        {
+          model: MatchTeamsModel,
+          as: 'matchTeams',
+          include: [
+            {
+              model: TeamModel,
+              as: 'team',
+              attributes: ['id', 'name']
+            }
+          ]
+        }
+      ],
+      attributes: [
+        'id',
+        'title',
+        'date',
+        'location',
+        'status',
+        'description',
+        'price',
+        'organizerId',
+        'duration',
+        'nomequadra',
+        'modalidade',
+      ],
+      order: [['date', 'ASC']]
+    });
+
+    console.log(`✅ Encontradas ${matches.length} partidas do organizador`);
+
+    const payload = matches.map((match: any) => {
+      const obj = match.toJSON ? match.toJSON() : match;
+      return {
+        ...obj,
+        registrationDeadline: obj.rules ? obj.rules.dataLimite || null : null
+      };
+    });
+
+    console.log('📤 Enviando resposta com', payload.length, 'partidas do organizador');
+    res.status(200).json(payload);
+  } catch (error) {
+    console.error('Erro ao buscar partidas do organizador:', error);
+    res.status(500).json({ message: 'Erro ao buscar partidas do organizador' });
+  }
+};
+
+export const getFilteredMatches = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    console.log('🔍 Buscando partidas com filtros...');
+    console.log('📋 Query params recebidos:', req.query);
+    console.log('👤 Usuário autenticado:', req.user?.id);
+
+    // Ensure statuses are up-to-date for matches that should be in progress
+    await updateAllMatchStatuses();
+
+    const { from, to, status, search, sort, matchDateFrom, registrationDateFrom, searchMatches, searchChampionships, friendlyOnly, myMatches } = req.query;
+
+    const whereClause: any = {};
+
+    // Filtro por status
+    if (status) {
+      const statusArray = Array.isArray(status) ? status : status.toString().split(',');
+      whereClause.status = { [Op.in]: statusArray };
+    }
+
+    // Filtro para partidas criadas pelo usuário logado
+    if (myMatches === 'true') {
+      if (req.user && req.user.id) {
+        whereClause.organizerId = req.user.id;
       }
     }
 
-    res.status(200).json({
-      id: match.id,
-      status: updatedStatus
+    // Filtro por data da partida
+    if (matchDateFrom) {
+      const fromDate = new Date(matchDateFrom.toString());
+      if (!isNaN(fromDate.getTime())) {
+        whereClause.date = { ...whereClause.date, [Op.gte]: fromDate };
+      }
+    }
+
+    // Filtro por data de inscrição (através das regras)
+    let rulesWhereClause: any = {};
+    if (registrationDateFrom) {
+      rulesWhereClause = { rules: {} };
+      const fromDate = new Date(registrationDateFrom.toString());
+      if (!isNaN(fromDate.getTime())) {
+        rulesWhereClause.rules.dataLimite = { ...rulesWhereClause.rules.dataLimite, [Op.gte]: fromDate };
+      }
+    }
+
+    // Filtro por busca (search)
+    let searchWhereClause: any = {};
+    if (searchMatches) {
+      const searchTerm = searchMatches.toString().toLowerCase();
+      searchWhereClause = {
+        [Op.or]: [
+          { title: { [Op.iLike]: `%${searchTerm}%` } },
+          { description: { [Op.iLike]: `%${searchTerm}%` } },
+          { location: { [Op.iLike]: `%${searchTerm}%` } }
+        ]
+      };
+    }
+
+    // Determinar ordenação
+    let order: any = [['date', 'ASC']];
+    if (sort) {
+      switch (sort.toString()) {
+        case 'date_desc':
+          order = [['date', 'DESC']];
+          break;
+        case 'date_asc':
+          order = [['date', 'ASC']];
+          break;
+        default:
+          order = [['date', 'ASC']];
+      }
+    }
+
+    // Determinar a condição where final
+    const finalWhereClause = friendlyOnly === 'true' ? {
+      ...whereClause,
+      ...searchWhereClause,
+      '$matchChampionship.id$': null // Apenas partidas que não têm associação com campeonato
+    } : {
+      ...whereClause,
+      ...searchWhereClause
+    };
+
+    console.log('🎯 Filtros aplicados:', { friendlyOnly, myMatches, status, searchMatches });
+    console.log('🔍 Condição WHERE final:', JSON.stringify(finalWhereClause, null, 2));
+    console.log('📊 Executando query filtrada no banco...');
+
+    const matches = await MatchModel.findAll({
+      where: finalWhereClause,
+      include: [
+        {
+          model: User,
+          as: 'organizer',
+          attributes: ['id', 'name', 'email']
+        },
+        {
+          model: Rules,
+          as: 'rules',
+          attributes: ['dataLimite'],
+          required: Object.keys(rulesWhereClause).length > 0,
+          where: rulesWhereClause.rules || undefined
+        },
+        // Incluir MatchChampionship para filtrar partidas amistosas
+        {
+          model: MatchChampionship,
+          as: 'matchChampionship',
+          required: false,
+          attributes: []
+        },
+        {
+          model: MatchTeamsModel,
+          as: 'matchTeams',
+          include: [
+            {
+              model: TeamModel,
+              as: 'team',
+              attributes: ['id', 'name']
+            }
+          ]
+        }
+      ],
+      attributes: [
+        'id',
+        'title',
+        'date',
+        'location',
+        'status',
+        'description',
+        'price',
+        'organizerId',
+        'duration',
+        'nomequadra',
+        'modalidade',
+      ],
+      order
     });
+
+    console.log(`✅ Query filtrada executada com sucesso. Encontradas ${matches.length} partidas.`);
+
+    const payload = matches.map((match: any) => {
+      const obj = match.toJSON ? match.toJSON() : match;
+      return {
+        ...obj,
+        registrationDeadline: obj.rules ? obj.rules.dataLimite || null : null
+      };
+    });
+
+    console.log('📤 Enviando resposta com', payload.length, 'partidas filtradas');
+    res.status(200).json(payload);
   } catch (error) {
-    console.error('Erro ao obter status da partida:', error);
-    res.status(500).json({ message: 'Erro ao obter status da partida' });
+    console.error('Erro ao buscar partidas filtradas:', error);
+    res.status(500).json({ message: 'Erro ao buscar partidas filtradas' });
   }
 };
  

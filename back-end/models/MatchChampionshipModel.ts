@@ -4,6 +4,7 @@ import sequelize from '../config/database';
 
 class MatchChampionship extends Model {
   public id!: number;
+  public championship_id!: number;
   public date!: Date;
   public location!: string;
   public quadra!: string;
@@ -16,6 +17,14 @@ MatchChampionship.init({
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
+  },
+  championship_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'championships',
+      key: 'id'
+    }
   },
   date: {
     type: DataTypes.DATE,

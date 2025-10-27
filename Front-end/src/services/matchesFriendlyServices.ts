@@ -65,6 +65,21 @@ export async function fetchMatches(filters?: Record<string, string>): Promise<Ma
   return response.data || [];
 }
 
+export async function fetchMatchesFiltered(filters?: Record<string, string>): Promise<Match[]> {
+  const params = new URLSearchParams();
+  if (filters) {
+    Object.entries(filters).forEach(([k, v]) => { if (v) params.append(k, v); });
+  }
+  const url = `/matches/filtered${params.toString() ? `?${params.toString()}` : ''}`;
+  const response = await axios.get(`${API_BASE}${url}`, { headers: getAuthHeaders() });
+  return response.data || [];
+}
+
+export async function fetchMatchesByOrganizer(): Promise<Match[]> {
+  const response = await axios.get(`${API_BASE}/matches/organizer`, { headers: getAuthHeaders() });
+  return response.data || [];
+}
+
 export async function fetchMatchById(id: number): Promise<Match> {
   const response = await axios.get(`${API_BASE}/matches/${id}`, { headers: getAuthHeaders() });
   return response.data;
@@ -156,6 +171,8 @@ export default {
   createMatch,
   searchCEP,
   fetchMatches,
+  fetchMatchesFiltered,
+  fetchMatchesByOrganizer,
   fetchMatchById,
   loadPlayersForMatch,
   getMatch,
