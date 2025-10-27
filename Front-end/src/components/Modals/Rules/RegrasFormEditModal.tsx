@@ -125,30 +125,25 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
   };
 
   const validarIdades = (): boolean => {
-    const minima = formData.idadeMinima;
-    const maxima = formData.idadeMaxima;
-
-    if (isNaN(minima) || minima < 0) {
-      setError('A idade mínima deve ser um número positivo');
+    if (formData.idadeMinima >= formData.idadeMaxima) {
+      setError('A idade mínima deve ser menor que a idade máxima');
       return false;
     }
-
-    if (isNaN(maxima) || maxima < 0) {
-      setError('A idade máxima deve ser um número positivo');
+    if (formData.idadeMinima < 0 || formData.idadeMaxima < 0) {
+      setError('As idades não podem ser negativas');
       return false;
     }
-
-    if (minima >maxima) {
-      setError('A idade mínima não pode ser maior que a idade máxima');
+    if (formData.idadeMaxima > 100) {
+      setError('A idade máxima não pode ser maior que 100');
       return false;
     }
-
-    if (maxima > 100) {
-      setError('A idade máxima não pode ser maior que 100 anos');
-      return false;
-    }
-
     return true;
+  };
+
+  const handleOpenDatePicker = () => {
+    const el = hiddenDateInputRef.current; if (!el) return;
+    const v = formData.dataLimite; if (v && v.length===10) { const [d,m,y] = v.split('/'); el.value = `${y}-${m}-${d}`; }
+    const anyEl:any = el; if(typeof anyEl.showPicker==='function'){ anyEl.showPicker(); } else { el.click(); }
   };
 
   const atualizaRegras = async (partidaDados: any) => {
@@ -245,7 +240,7 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
       > 
         <Modal.Body>
           <div className="modal-content-wrapper">
-            <h2 className="modal-title">Atualizar regras da partida</h2>
+            <h2 className="modal-title">Editar regras da partida</h2>
             {error && (
               <div className="error-message">
                 <p>{error}</p>
@@ -259,8 +254,8 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
             <br/>
             <div className="form-group">
               <label>Data Limite para Inscrição</label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ position: 'relative', flex: 1 }}>
+              <div className="date-input-container">
+                <div style={{ position: 'relative', flex: 1, minHeight: '38px' }}>
                   <input
                     type="text"
                     id="dataLimite"
@@ -276,6 +271,7 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
                       const v = formData.dataLimite; if (v && v.length===10) { const [d,m,y] = v.split('/'); el.value = `${y}-${m}-${d}`; }
                       const anyEl:any = el; if(typeof anyEl.showPicker==='function'){ anyEl.showPicker(); } else { el.click(); }
                     }}
+                    style={{ height: '38px', lineHeight: '1.5' }}
                   />
                   <input
                     ref={hiddenDateInputRef}
@@ -285,7 +281,7 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
                       setDataLimite(`${d}/${m}/${y}`);
                       setFormData(prev => ({ ...prev, dataLimite: `${d}/${m}/${y}` }));
                     }}
-                    style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                    style={{ position: 'absolute', opacity: 0, width: '1px', height: '1px', pointerEvents: 'none', overflow: 'hidden' }}
                     aria-hidden="true"
                     tabIndex={-1}
                   />
@@ -293,25 +289,11 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
                 <button
                   type="button"
                   aria-label="Abrir calendário"
-                  onClick={() => {
-                    const el = hiddenDateInputRef.current; if (!el) return;
-                    const v = formData.dataLimite; if (v && v.length===10) { const [d,m,y] = v.split('/'); el.value = `${y}-${m}-${d}`; }
-                    const anyEl:any = el; if(typeof anyEl.showPicker==='function'){ anyEl.showPicker(); } else { el.click(); }
-                  }}
-                  style={{
-                    border: 'none',
-                    background: '#0d47a1',
-                    padding: '6px 10px',
-                    cursor: 'pointer',
-                    color: '#fff',
-                    borderRadius: 6,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: 40
-                  }}
+                  onClick={handleOpenDatePicker}
+                  className="calendar-button"
+                  style={{ height: '38px', width: '40px' }}
                 >
-                  <CalendarMonthIcon fontSize="small" />
+                  <CalendarMonthIcon className="date-icon" fontSize="small" />
                 </button>
               </div>
             </div>
@@ -367,7 +349,7 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
                 onClick={()=>atualizaRegras(partidaDados)}
                 disabled={isChanged ? false : true}
               >
-                Atualizar Regras
+                Editar Regras
               </button>
               <Button
                 variant="danger"

@@ -40,9 +40,15 @@ const Navbar: React.FC = () => {
           <RoleMenu />
           <button
             className="navbar-menu-button"
-            onClick={() => navigate('/listings')}
+            onClick={() => navigate('/buscar-partidas')}
           >
-            <Search /> Procurar
+            <Search /> Buscar Partidas Amistosas
+          </button>
+          <button
+            className="navbar-menu-button"
+            onClick={() => navigate('/buscar-campeonatos')}
+          >
+            <Search /> Buscar Campeonatos
           </button>
         </div>
         <div className="navbar-mobile-menu">

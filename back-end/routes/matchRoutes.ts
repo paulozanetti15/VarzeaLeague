@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 import {joinMatchByTeam,getMatchTeams, deleteTeamMatch,getTeamsAvailable, checkTeamsRuleCompliance} from '../controllers/MatchTeamsController';
-import { createMatch, listMatches, getMatch, deleteMatch, updateMatch,getMatchesByTeam, checkAndCancelMatchesWithInsufficientTeams} from '../controllers/matchController';
+import { createMatch, listMatches, getMatch, deleteMatch, updateMatch, checkAndCancelMatchesWithInsufficientTeams, getMatchStatus} from '../controllers/matchController';
 import { listMatchEvaluations, upsertMatchEvaluation, getMatchEvaluationSummary } from '../controllers/matchEvaluationController';
 import {busarPunicaoPartidaAmistosa,alterarPunicaoPartidaAmistosa,deletarPunicaoPartidaAmistosa, inserirPunicaoPartidaAmistosa} from '../controllers/PunicaoController';
 import { finalizeMatch, addGoal, addCard, listEvents, deleteGoalEvent, deleteCardEvent, clearGoals, clearCards } from '../controllers/matchEventsController';
@@ -11,13 +11,13 @@ import { getPlayerRanking } from '../controllers/playerRankingController';
 const router = express.Router();
 
 router.get('/ranking/jogadores', authenticateToken, getPlayerRanking);
-router.get('/teams/:id', authenticateToken, getMatchesByTeam);
 router.post('/check-cancelled', authenticateToken, checkAndCancelMatchesWithInsufficientTeams);
 
 router.get('/:id/available', authenticateToken, getTeamsAvailable);
 router.post('/', authenticateToken, createMatch);
 router.get('/', listMatches);
 router.get('/:id', getMatch);
+router.get('/:id/status', getMatchStatus);
 router.delete('/:id', authenticateToken, deleteMatch);
 router.post('/:id/join-team', authenticateToken, joinMatchByTeam);
 router.get('/:id/join-team', authenticateToken, getMatchTeams);

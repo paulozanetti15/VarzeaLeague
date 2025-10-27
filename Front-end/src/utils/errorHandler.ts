@@ -56,6 +56,10 @@ export const getErrorMessage = (error: any): string => {
         if (serverMessage && !isErrorTechnical(serverMessage)) return serverMessage;
         return ERROR_MESSAGES.VALIDATION.INVALID_FORMAT;
       case 401:
+        // Verificar se é erro de credenciais incorretas
+        if (serverMessage && serverMessage.includes('Email ou senha incorretos')) {
+          return ERROR_MESSAGES.AUTH.INVALID_CREDENTIALS;
+        }
         return ERROR_MESSAGES.AUTH.UNAUTHORIZED;
       case 403:
         return ERROR_MESSAGES.AUTH.ACCOUNT_DISABLED;

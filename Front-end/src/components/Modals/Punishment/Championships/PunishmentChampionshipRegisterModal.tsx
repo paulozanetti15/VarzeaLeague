@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 import axios from 'axios';
-import '../PunicaoModal.css';
+import '../PunishmentModal.css';
 
 interface Props {
   show: boolean;

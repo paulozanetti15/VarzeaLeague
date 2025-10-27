@@ -70,6 +70,11 @@ export async function fetchMatchById(id: number): Promise<Match> {
   return response.data;
 }
 
+export async function getMatchStatus(matchId: string | number): Promise<{ id: number; status: string }> {
+  const response = await axios.get(`${API_BASE}/matches/${matchId}/status`, { headers: getAuthHeaders() });
+  return response.data;
+}
+
 export async function loadPlayersForMatch(matchId: number): Promise<any[]> {
   try {
     const response = await axios.get(`${API_BASE}/matches/${matchId}/players`, { headers: getAuthHeaders() });
@@ -154,5 +159,6 @@ export default {
   fetchMatchById,
   loadPlayersForMatch,
   getMatch,
-  updateMatch
+  updateMatch,
+  getMatchStatus
 };

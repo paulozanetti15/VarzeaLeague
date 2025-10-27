@@ -5,6 +5,7 @@ import Team from '../models/TeamModel';
 import TeamPlayer from '../models/TeamPlayerModel';
 import TeamChampionship from '../models/TeamChampionshipModel'; // Added import for TeamChampionshipModel
 import jwt from 'jsonwebtoken';
+import { Op } from 'sequelize';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
 
@@ -127,7 +128,63 @@ export const createChampionship = asyncHandler(async (req: Request, res: Respons
 });
 
 export const listChampionships = asyncHandler(async (req: Request, res: Response) => {
-  const championships = await Championship.findAll();
+  const { from, to, search, sort, championshipDateFrom, championshipDateTo, searchChampionships } = req.query;
+
+  const whereClause: any = {};
+
+  // Filtro por data (from) - usando start_date
+  if (championshipDateFrom) {
+    const fromDate = new Date(championshipDateFrom.toString());
+    if (!isNaN(fromDate.getTime())) {
+      whereClause.start_date = { [Op.gte]: fromDate };
+    }
+  }
+
+  // Filtro por data (to) - usando start_date
+  if (championshipDateTo) {
+    const toDate = new Date(championshipDateTo.toString());
+    if (!isNaN(toDate.getTime())) {
+      // Ajustar para o final do dia
+      toDate.setHours(23, 59, 59, 999);
+      whereClause.start_date = { ...whereClause.start_date, [Op.lte]: toDate };
+    }
+  }
+
+  // Filtro por busca (search)
+  let searchWhereClause: any = {};
+  if (searchChampionships) {
+    const searchTerm = searchChampionships.toString().toLowerCase();
+    searchWhereClause = {
+      [Op.or]: [
+        { name: { [Op.iLike]: `%${searchTerm}%` } },
+        { description: { [Op.iLike]: `%${searchTerm}%` } }
+      ]
+    };
+  }
+
+  // Determinar ordenação
+  let order: any = [['start_date', 'ASC']];
+  if (sort) {
+    switch (sort.toString()) {
+      case 'date_desc':
+        order = [['start_date', 'DESC']];
+        break;
+      case 'date_asc':
+        order = [['start_date', 'ASC']];
+        break;
+      default:
+        order = [['start_date', 'ASC']];
+    }
+  }
+
+  const championships = await Championship.findAll({
+    where: {
+      ...whereClause,
+      ...searchWhereClause
+    },
+    order
+  });
+
   res.json(championships);
 });
 

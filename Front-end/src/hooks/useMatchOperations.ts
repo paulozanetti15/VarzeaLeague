@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { format, parse as dfParse, isAfter } from 'date-fns';
-import { createMatch, searchCEP, fetchMatches, MatchFormData, Match } from '../services/matchesFriendlyServices';
+import { createMatch, searchCEP, fetchMatches, MatchFormData, Match, updateMatch, getMatch } from '../services/matchesFriendlyServices';
 import { parseDDMMYYYY, toISODateTime } from '../utils/formUtils';
-import { formatDateISOToBR, formatCEP, applyDateMask, applyTimeMask, openDatePicker } from '../utils/formUtils';
+import { formatDateISOToBR, formatCEP, applyDateMask, applyTimeMask } from '../utils/formUtils';
 
 interface User {
   id: number;
@@ -120,10 +120,10 @@ export const useCreateMatch = (usuario: any): UseCreateMatchReturn => {
     if (!formData.date.trim()) errors.date = 'Data é obrigatória';
     if (!formData.time.trim()) errors.time = 'Horário é obrigatório';
     if (!(formData.duration ?? '').trim()) errors.duration = 'Duração é obrigatória';
-    if (!formData.price.trim()) errors.price = 'Preço é obrigatório';
-    if (!formData.modalidade.trim()) errors.modalidade = 'Modalidade é obrigatória';
-    if (!formData.quadra.trim()) errors.quadra = 'Nome da quadra é obrigatório';
-    if (!formData.cep.trim()) errors.cep = 'CEP é obrigatório';
+    if (!(formData.price ?? '').trim()) errors.price = 'Preço é obrigatório';
+    if (!(formData.modalidade ?? '').trim()) errors.modalidade = 'Modalidade é obrigatória';
+    if (!(formData.quadra ?? '').trim()) errors.quadra = 'Nome da quadra é obrigatório';
+    if (!(formData.cep ?? '').trim()) errors.cep = 'CEP é obrigatório';
 
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -247,6 +247,27 @@ export const useMatches = (currentUser: User) => {
   return { matches, loading, error, refetch: fetchMatchesData };
 };
 
+// Função auxiliar para converter minutos para formato HH:MM
+const convertMinutesToHHMM = (minutes: string | number): string => {
+  const totalMinutes = typeof minutes === 'string' ? parseInt(minutes, 10) : minutes;
+  if (isNaN(totalMinutes) || totalMinutes < 0) return '';
+
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+
+  return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+};
+
+// Função auxiliar para converter HH:MM para minutos
+const convertHHMMToMinutes = (time: string): number => {
+  if (!time || !time.includes(':')) return 0;
+
+  const [hours, minutes] = time.split(':').map(Number);
+  if (isNaN(hours) || isNaN(minutes)) return 0;
+
+  return hours * 60 + minutes;
+};
+
 export const useMatchForm = (matchId?: string) => {
   const [formData, setFormData] = useState({
     title: '',
@@ -268,19 +289,21 @@ export const useMatchForm = (matchId?: string) => {
       if (!matchId) return;
       setLoading(true);
       try {
-        const res = await fetchMatches();
-        const match = res.find((m: Match) => m.id.toString() === matchId);
+        const response = await getMatch(matchId);
+        const match = response.data;
+        console.log('Loaded match from getMatch:', match);
         if (match) {
           const formatted = {
             title: match.title || '',
             description: match.description || '',
             date: match.date ? format(new Date(match.date), 'dd/MM/yyyy') : '',
             time: match.date ? format(new Date(match.date), 'HH:mm') : '',
-            duration: match.duration || '',
+            duration: match.duration ? convertMinutesToHHMM(match.duration) : '',
             price: match.price ? String(match.price) : '',
             modalidade: match.modalidade || '',
             nomequadra: match.nomequadra || ''
           };
+          console.log('Initial formatted data:', formatted);
           setFormData(formatted);
           setInitialData(formatted);
         }
@@ -339,9 +362,9 @@ export const useMatchForm = (matchId?: string) => {
       title: formData.title.trim(),
       date: toISODateTime(matchDateTime),
       description: formData.description?.trim(),
-      duration: formData.duration,
+      duration: formData.duration ? convertHHMMToMinutes(formData.duration) : null,
       price: formData.price ? parseFloat(formData.price) : 0,
-      namequadra: formData.nomequadra.trim(),
+      nomequadra: formData.nomequadra.trim(),
       modalidade: formData.modalidade.trim()
     };
 
@@ -364,11 +387,34 @@ export const useMatchForm = (matchId?: string) => {
     setError('');
 
     try {
-      // TODO: Implement update match
       console.log('Updating match:', id, validated.payload);
+      const resp = await updateMatch(id, validated.payload);
+      console.log('Update response:', resp);
+      console.log('Update response data:', resp?.data);
+      // Reload initial data to reflect changes
+      const updated = resp?.data || resp;
+      console.log('Updated match data:', updated);
+      if (updated) {
+        const formatted = {
+          title: updated.title || '',
+          description: updated.description || '',
+          date: updated.date ? format(new Date(updated.date), 'dd/MM/yyyy') : '',
+          time: updated.date ? format(new Date(updated.date), 'HH:mm') : '',
+          duration: updated.duration ? convertMinutesToHHMM(updated.duration) : '',
+          price: updated.price ? String(updated.price) : '',
+          modalidade: updated.modalidade || '',
+          nomequadra: updated.nomequadra || ''
+        };
+        console.log('Formatted data:', formatted);
+        setFormData(formatted);
+        setInitialData(formatted);
+      }
+
       return { success: true };
     } catch (err) {
-      setError('Erro ao atualizar partida');
+      console.error('Erro ao atualizar partida:', err);
+      const axiosErr = err as any;
+      setError(axiosErr?.response?.data?.message || 'Erro ao atualizar partida');
       return { success: false };
     } finally {
       setLoading(false);

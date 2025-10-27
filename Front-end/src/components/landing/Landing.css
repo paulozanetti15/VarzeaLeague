@@ -1,34 +1,37 @@
 .landing-page {
-  margin: 0 !important;
-  padding: 0 !important;
+  margin: 0;
+  padding: 0;
   min-height: 100vh;
   width: 100%;
   /* display: flex; */
   /* flex-direction: column; */
-  background: none !important;
-  background-color: transparent !important;
+  background: none;
+  background-color: transparent;
   overflow-x: hidden;
   position: relative;
 }
 
-.landing-page > * {
-  margin: 0 !important;
-  padding: 0 !important;
-  /* background: none !important; */
-  /* background-color: transparent !important; */
-  border: none !important;
-  box-shadow: none !important;
+.landing-page > .hero,
+.landing-page > .benefits,
+.landing-page > .testimonials,
+.landing-page > .footer {
+  margin: 0;
+  padding: 0;
+  /* background: none; */
+  /* background-color: transparent; */
+  border: none;
+  box-shadow: none;
 }
 
-.landing-page > *:first-child {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
+.landing-page > .hero:first-child {
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .landing-page::before,
 .landing-page::after {
-  display: none !important;
-  content: none !important;
+  display: none;
+  content: none;
 }
 
 /* Outras classes específicas da landing page aqui */ 

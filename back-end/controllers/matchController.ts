@@ -6,16 +6,14 @@ import jwt from 'jsonwebtoken';
 import MatchTeamsModel from '../models/MatchTeamsModel';
 import TeamModel from "../models/TeamModel"
 import Rules from '../models/RulesModel';
+import MatchChampionship from '../models/MatchChampionshipModel';
 import { Op } from 'sequelize';
 
-// Helper: parse duration string 'HH:MM' into minutes
+// Helper: parse duration string (minutes) into minutes
 const parseDurationToMinutes = (duration?: string): number => {
   if (!duration) return 90; // default 1h30
-  const parts = duration.split(':');
-  if (parts.length !== 2) return 90;
-  const hours = parseInt(parts[0], 10) || 0;
-  const minutes = parseInt(parts[1], 10) || 0;
-  return hours * 60 + minutes;
+  const minutes = parseInt(duration, 10);
+  return isNaN(minutes) || minutes <= 0 ? 90 : minutes;
 };
 
 // Compute match end date from start date and duration
@@ -239,28 +237,42 @@ export const checkAndCancelMatchesWithInsufficientTeams = async (req: AuthReques
 
 export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-      const { title, description, date, location, complement, price, Uf, Cep, duration,namequadra,modalidade } = req.body;
+      const { title, description, date, location, complement, price, UF, Cep, duration, namequadra, modalidade, quadra, cep } = req.body;
       console.log(req.body); 
       if (!title || !date || !location) {
         res.status(400).json({ message: 'Campos obrigatórios faltando' });
         return;
       }
 
-      const matchDate = new Date(date);
+      let matchDate: Date;
+      try {
+        // Try parsing as ISO date first, then as BR format
+        if (date.includes('-')) {
+          matchDate = new Date(date);
+        } else {
+          // Parse dd/MM/yyyy format
+          const [day, month, year] = date.split('/').map(Number);
+          matchDate = new Date(year, month - 1, day);
+        }
+        
+        if (isNaN(matchDate.getTime())) {
+          res.status(400).json({ message: 'Formato de data inválido. Use DD/MM/YYYY ou YYYY-MM-DD' });
+          return;
+        }
+      } catch (error) {
+        res.status(400).json({ message: 'Formato de data inválido. Use DD/MM/YYYY ou YYYY-MM-DD' });
+        return;
+      }
+
       if (matchDate <= new Date()) {
         res.status(400).json({ message: 'A data da partida deve ser futura' });
         return;
       }
 
       if (duration) {
-        const durationRegex = /^([0-9]{1,2}):([0-5][0-9])$/;
-        if (!durationRegex.test(duration)) {
-          res.status(400).json({ message: 'Formato de duração inválido. Use HH:MM' });
-          return;
-        }
-        const [hours, minutes] = duration.split(':').map(Number);
-        if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-          res.status(400).json({ message: 'Duração inválida' });
+        const durationNum = parseInt(duration);
+        if (isNaN(durationNum) || durationNum <= 0) {
+          res.status(400).json({ message: 'Duração deve ser um número positivo de minutos' });
           return;
         }
       }
@@ -281,19 +293,24 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
 
       const fullLocation = complement ? `${location} - ${complement}` : location;
 
+      // Provide safe defaults for fields that may be required at the DB level
+      const safeNomeQuadra = (namequadra || quadra || 'Não informado').toString();
+      const safeCep = (Cep || cep || '00000-000').toString();
+      const safeUf = (UF || 'XX').toString();
+
       const match = await MatchModel.create({
         title: title.trim(),
         description: description?.trim(),
         date: matchDate,
-        duration: duration,
+        duration: duration ? String(duration) : null,
         location: fullLocation,
         price: price || null,
-        organizerId: userId,
+        organizerId: Number(userId),
         status: 'aberta',
-        Uf: Uf,
-        nomequadra: namequadra,
+        Uf: safeUf,
+        nomequadra: safeNomeQuadra,
         modalidade: modalidade,
-        Cep: Cep
+        Cep: safeCep
       });
 
       res.status(201).json(match);
@@ -320,7 +337,83 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
   await checkAndStartConfirmedMatches();
     // Check and set matches to 'sem_vagas' when they reach maximum teams
     await checkAndSetSemVagas();
+
+    const { from, to, status, search, sort, matchDateFrom, registrationDateFrom, searchMatches, searchChampionships, friendlyOnly, myMatches } = req.query;
+
+    const whereClause: any = {};
+
+    // Filtro por status
+    if (status) {
+      const statusArray = Array.isArray(status) ? status : status.toString().split(',');
+      whereClause.status = { [Op.in]: statusArray };
+    }
+
+    // Filtro para partidas criadas pelo usuário logado
+    if (myMatches === 'true') {
+      const authReq = req as any;
+      if (authReq.user && authReq.user.id) {
+        whereClause.organizerId = authReq.user.id;
+      }
+    }
+
+    // Filtro por data da partida
+    if (matchDateFrom) {
+      const fromDate = new Date(matchDateFrom.toString());
+      if (!isNaN(fromDate.getTime())) {
+        whereClause.date = { ...whereClause.date, [Op.gte]: fromDate };
+      }
+    }
+
+    // Filtro por data de inscrição (através das regras)
+    let rulesWhereClause: any = {};
+    if (registrationDateFrom) {
+      rulesWhereClause = { rules: {} };
+      const fromDate = new Date(registrationDateFrom.toString());
+      if (!isNaN(fromDate.getTime())) {
+        rulesWhereClause.rules.dataLimite = { ...rulesWhereClause.rules.dataLimite, [Op.gte]: fromDate };
+      }
+    }
+
+    // Filtro por busca (search)
+    let searchWhereClause: any = {};
+    if (searchMatches) {
+      const searchTerm = searchMatches.toString().toLowerCase();
+      searchWhereClause = {
+        [Op.or]: [
+          { title: { [Op.iLike]: `%${searchTerm}%` } },
+          { description: { [Op.iLike]: `%${searchTerm}%` } },
+          { location: { [Op.iLike]: `%${searchTerm}%` } }
+        ]
+      };
+    }
+
+    // Determinar ordenação
+    let order: any = [['date', 'ASC']];
+    if (sort) {
+      switch (sort.toString()) {
+        case 'date_desc':
+          order = [['date', 'DESC']];
+          break;
+        case 'date_asc':
+          order = [['date', 'ASC']];
+          break;
+        default:
+          order = [['date', 'ASC']];
+      }
+    }
+
+    // Determinar a condição where final
+    const finalWhereClause = friendlyOnly === 'true' ? {
+      ...whereClause,
+      ...searchWhereClause,
+      '$matchChampionship.id$': null // Apenas partidas que não têm associação com campeonato
+    } : {
+      ...whereClause,
+      ...searchWhereClause
+    };
+
     const matches = await MatchModel.findAll({
+      where: finalWhereClause,
       include: [
         {
           model: User,
@@ -331,7 +424,15 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
           model: Rules,
           as: 'rules',
           attributes: ['dataLimite'],
-          required: false
+          required: Object.keys(rulesWhereClause).length > 0,
+          where: rulesWhereClause.rules || undefined
+        },
+        // Incluir MatchChampionship para filtrar partidas amistosas
+        {
+          model: MatchChampionship,
+          as: 'matchChampionship',
+          required: false,
+          attributes: []
         }
       ],
       attributes: [
@@ -343,10 +444,11 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
         'description',
         'price',
         'organizerId',
+        'duration',
         'nomequadra',
         'modalidade',
       ],
-      order: [['date', 'ASC']]
+      order
     });
 
     const payload = matches.map((match: any) => {
@@ -518,7 +620,7 @@ export const updateMatch = async (req: Request, res: Response): Promise<void> =>
     }
 
     await match.reload();
-    res.json(match);
+    res.json(match.toJSON());
   } catch (error) {
     console.error('Erro ao atualizar partida:', error);
     res.status(500).json({ message: 'Erro ao atualizar partida' });
@@ -572,31 +674,42 @@ export const deleteMatch = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ message: 'Erro ao excluir partida' });
   }
 };
-export const getMatchesByTeam = async (req: AuthRequest, res: Response) => {
+export const getMatchStatus = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
-    const userId = req.user?.id;
-    if (!userId) {
-      res.status(401).json({ error: 'Usuário não autenticado' });
+    const match = await MatchModel.findByPk(req.params.id);
+
+    if (!match) {
+      res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }
 
-    const rows = await MatchTeamsModel.findAll({
-      where: { teamId: id },
-      include: [
-        {
-          model: MatchModel,
-          as: 'match',
-          attributes: ['id', 'title', 'date', 'location']
-        }
-      ],
-      order: [[{ model: MatchModel as any, as: 'match' } as any, 'date', 'ASC']]
-    });
+    // Verificar e atualizar status baseado na data/hora atual
+    let updatedStatus = match.status;
+    const now = new Date();
 
-    res.status(200).json(rows);
+    if (match.date) {
+      const start = new Date((match as any).date);
+      const end = computeMatchEnd(start, (match as any).duration);
+
+      // Se estiver confirmada e hora atual estiver dentro do intervalo -> em_andamento
+      if (String(match.status) === 'confirmada' && now >= start && now < end) {
+        updatedStatus = 'em_andamento';
+        await match.update({ status: updatedStatus });
+      }
+      // Se estiver em_andamento ou confirmada e passou do fim -> finalizada
+      else if ((String(match.status) === 'em_andamento' || String(match.status) === 'confirmada') && now >= end) {
+        updatedStatus = 'finalizada';
+        await match.update({ status: updatedStatus });
+      }
+    }
+
+    res.status(200).json({
+      id: match.id,
+      status: updatedStatus
+    });
   } catch (error) {
-    console.error('Erro ao listar partidas por time:', error);
-    res.status(500).json({ message: 'Erro ao listar partidas por time' });
+    console.error('Erro ao obter status da partida:', error);
+    res.status(500).json({ message: 'Erro ao obter status da partida' });
   }
-}
+};
  

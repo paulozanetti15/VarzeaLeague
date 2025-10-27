@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { format, parse } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import './CreateMatch.css';
 import RegrasFormRegisterModal from '../../components/Modals/Rules/RegrasFormRegisterModal';
@@ -10,6 +11,8 @@ import {
   ConfigFields,
   PriceLocationFields
 } from '../../features/matches/CreateMatch';
+import { CalendarMonth } from '@mui/icons-material';
+import { openDatePicker } from '../../utils/formUtils';
 
 interface MatchFormData {
   title: string;
@@ -64,6 +67,7 @@ const CreateMatch: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{[k:string]: string}>({});
+  const [pendingMatchData, setPendingMatchData] = useState<any>(null);
 
   const formatarCep = (cep: string): string => {
     cep = cep.replace(/\D/g, '');
@@ -137,7 +141,6 @@ const CreateMatch: React.FC = () => {
     if (!formData.date.trim()) errors.date = 'Data é obrigatória';
     if (!formData.time.trim()) errors.time = 'Horário é obrigatório';
     if (!formData.duration.trim()) errors.duration = 'Duração é obrigatória';
-    if (!formData.price.trim()) errors.price = 'Preço é obrigatório';
     if (!formData.modalidade.trim()) errors.modalidade = 'Modalidade é obrigatória';
     if (!formData.quadra.trim()) errors.quadra = 'Nome da quadra é obrigatório';
     if (!formData.cep.trim()) errors.cep = 'CEP é obrigatório';
@@ -154,28 +157,30 @@ const CreateMatch: React.FC = () => {
       return;
     }
 
-    setLoading(true);
     setError('');
 
+    // Preparar dados da partida e abrir modal de regras antes de criar no backend.
     try {
-      const matchData = {
-        ...formData,
-        date: formatDateISOToBR(formData.date),
-        organizerId: usuario?.id
+      // Converter duração de HH:MM para minutos
+      const durationInMinutes = formData.duration ? convertHHMMToMinutes(formData.duration) : 90;
+
+      const matchDataToCreate = {
+        title: formData.title,
+        description: formData.description,
+        location: formData.location || formData.location,
+        date: formatBRToISO(formData.date),
+        time: formData.time || '00:00',
+        duration: durationInMinutes,
+        price: formData.price || '0',
+        modalidade: formData.modalidade,
+        quadraNome: formData.quadra,
+        userId: usuario?.id
       };
-      const created = await createMatch({ ...matchData, organizerId: String(usuario?.id) });
-      if (created) {
-        setDadosPartida(created);
-        setShowInfoAthleteModal(true);
-        setToastMessage('Partida criada com sucesso!');
-        setToastBg('success');
-        setShowToast(true);
-      }
-    } catch (error: any) {
-      console.error('Erro ao criar partida:', error);
-      setError(error.response?.data?.message || 'Erro ao criar partida');
-    } finally {
-      setLoading(false);
+
+      setPendingMatchData(matchDataToCreate);
+      setShowInfoAthleteModal(true);
+    } catch (err) {
+      setError('Erro ao preparar dados da partida');
     }
   };
 
@@ -188,15 +193,23 @@ const CreateMatch: React.FC = () => {
     }
   };
 
-  const handleOpenDatePicker = () => {
-    const el = hiddenDateInputRef.current;
-    if (!el) return;
-    
-    if (typeof el.showPicker === 'function') {
-      el.showPicker();
-    } else {
-      el.click();
+  const formatBRToISO = (brDate: string): string => {
+    try {
+      const parsed = parse(brDate, 'dd/MM/yyyy', new Date());
+      return format(parsed, 'yyyy-MM-dd');
+    } catch {
+      return brDate;
     }
+  };
+
+  const convertHHMMToMinutes = (hhmm: string): number => {
+    if (!hhmm || !hhmm.includes(':')) return 90;
+    const [hours, minutes] = hhmm.split(':').map(Number);
+    return (hours * 60) + minutes;
+  };
+
+  const handleOpenDatePicker = () => {
+    openDatePicker(hiddenDateInputRef, formData.date);
   };
 
   const handleHiddenDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -227,7 +240,7 @@ const CreateMatch: React.FC = () => {
           <div className="create-match-icon">
             ⚽
           </div>
-          <h1 className="create-match-title">Criar Nova Partida</h1>
+          <h1 className="create-match-title" style={{ color: '#000000' }}>Criar Nova Partida</h1>
           <p className="create-match-subtitle">Organize sua partida e convide outros times</p>
         </div>
 
@@ -257,7 +270,15 @@ const CreateMatch: React.FC = () => {
               {/* Campos básicos em grid 2 colunas */}
               <div className="form-basic-grid">
                 <div className="form-group">
-                  <label className="form-label" htmlFor="title">Título da Partida</label>
+                  <label className="form-label" htmlFor="title">
+                    Título da Partida
+                    <span style={{
+                      color: '#dc3545',
+                      fontSize: '1.2em',
+                      fontWeight: 'bold',
+                      marginLeft: '0.25rem'
+                    }}>*</span>
+                  </label>
                   <input
                     ref={titleInputRef}
                     type="text"
@@ -274,15 +295,44 @@ const CreateMatch: React.FC = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label" htmlFor="modalidade">Modalidade</label>
+                  <label className="form-label" htmlFor="modalidade">
+                    Modalidade
+                    <span style={{
+                      color: '#dc3545',
+                      fontSize: '1.2em',
+                      fontWeight: 'bold',
+                      marginLeft: '0.25rem'
+                    }}>*</span>
+                  </label>
                   <select
                     id="modalidade"
                     name="modalidade"
-                    className="form-control"
+                    className="form-control modalidade-select"
                     value={formData.modalidade}
                     onChange={handleSelect}
                     required
-                    style={fieldErrors.modalidade ? { borderColor: '#e53935' } : undefined}
+                    style={{
+                      width: '100%',
+                      padding: '1.2rem 1.5rem',
+                      border: '2px solid #e2e8f0',
+                      borderRadius: '15px',
+                      background: '#ffffff',
+                      color: '#2d3748',
+                      fontSize: '1rem',
+                      fontWeight: '500',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.08)',
+                      cursor: 'pointer',
+                      backgroundImage: 'url("data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'m6 8 4 4 4-4\'/%3e%3c/svg%3e")',
+                      backgroundPosition: 'right 0.5rem center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: '1.5em 1.5em',
+                      paddingRight: '2.5rem',
+                      WebkitAppearance: 'none',
+                      MozAppearance: 'none',
+                      appearance: 'none',
+                      ...(fieldErrors.modalidade ? { borderColor: '#e53935' } : {})
+                    }}
                   >
                     <option value="">Selecione a modalidade</option>
                     <option value="Fut7">Fut7</option>
@@ -296,7 +346,15 @@ const CreateMatch: React.FC = () => {
               {/* Campos de data em grid 2 colunas */}
               <div className="form-basic-grid">
                 <div className="form-group">
-                  <label className="form-label" htmlFor="date">Data</label>
+                  <label className="form-label" htmlFor="date">
+                    Data
+                    <span style={{
+                      color: '#dc3545',
+                      fontSize: '1.2em',
+                      fontWeight: 'bold',
+                      marginLeft: '0.25rem'
+                    }}>*</span>
+                  </label>
                   <div className="date-input-container">
                     <input
                       type="text"
@@ -314,18 +372,28 @@ const CreateMatch: React.FC = () => {
                     <input
                       ref={hiddenDateInputRef}
                       type="date"
+                      lang="pt-BR"
                       onChange={handleHiddenDateChange}
                       style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
                       aria-hidden="true"
                       tabIndex={-1}
+                      min={new Date().toISOString().split('T')[0]}
                     />
-                    <CalendarMonthIcon className="date-icon" onClick={handleOpenDatePicker} />
+                    <CalendarMonth className="date-icon" onClick={handleOpenDatePicker} />
                   </div>
                   {fieldErrors.date && <span className="field-error">{fieldErrors.date}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label" htmlFor="time">Horário</label>
+                  <label className="form-label" htmlFor="time">
+                    Horário
+                    <span style={{
+                      color: '#dc3545',
+                      fontSize: '1.2em',
+                      fontWeight: 'bold',
+                      marginLeft: '0.25rem'
+                    }}>*</span>
+                  </label>
                   <input
                     type="time"
                     id="time"
@@ -343,25 +411,43 @@ const CreateMatch: React.FC = () => {
               {/* Campos de configuração em grid 2 colunas */}
               <div className="form-basic-grid">
                 <div className="form-group">
-                  <label className="form-label" htmlFor="duration">Duração (min)</label>
+                  <label className="form-label" htmlFor="duration">
+                    Duração
+                    <span style={{
+                      color: '#dc3545',
+                      fontSize: '1.2em',
+                      fontWeight: 'bold',
+                      marginLeft: '0.25rem'
+                    }}>*</span>
+                  </label>
                   <input
-                    type="number"
+                    type="time"
                     id="duration"
                     name="duration"
                     className="form-control"
                     value={formData.duration}
                     onChange={handleInputChange}
-                    placeholder="90"
-                    min="30"
-                    max="180"
                     required
-                    style={fieldErrors.duration ? { borderColor: '#e53935' } : undefined}
+                    style={{
+                      fontSize: '1rem',
+                      fontWeight: '500',
+                      color: '#2d3748',
+                      ...(fieldErrors.duration ? { borderColor: '#e53935' } : {})
+                    }}
                   />
                   {fieldErrors.duration && <span className="field-error">{fieldErrors.duration}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label" htmlFor="quadra">Nome da Quadra</label>
+                  <label className="form-label" htmlFor="quadra">
+                    Nome da Quadra
+                    <span style={{
+                      color: '#dc3545',
+                      fontSize: '1.2em',
+                      fontWeight: 'bold',
+                      marginLeft: '0.25rem'
+                    }}>*</span>
+                  </label>
                   <input
                     type="text"
                     id="quadra"
@@ -380,7 +466,15 @@ const CreateMatch: React.FC = () => {
               {/* Campos de preço e localização em grid 2 colunas */}
               <div className="form-basic-grid">
                 <div className="form-group">
-                  <label className="form-label" htmlFor="price">Preço por Jogador (R$)</label>
+                  <label className="form-label" htmlFor="price">
+                    Preço por Jogador (R$)
+                    <span style={{
+                      color: '#dc3545',
+                      fontSize: '1.2em',
+                      fontWeight: 'bold',
+                      marginLeft: '0.25rem'
+                    }}>*</span>
+                  </label>
                   <input
                     type="number"
                     id="price"
@@ -398,7 +492,15 @@ const CreateMatch: React.FC = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label" htmlFor="cep">CEP</label>
+                  <label className="form-label" htmlFor="cep">
+                    CEP
+                    <span style={{
+                      color: '#dc3545',
+                      fontSize: '1.2em',
+                      fontWeight: 'bold',
+                      marginLeft: '0.25rem'
+                    }}>*</span>
+                  </label>
                   <input
                     type="text"
                     id="cep"
@@ -458,7 +560,11 @@ const CreateMatch: React.FC = () => {
           userId={usuario.id}
           show={showInfoAthleteModal}
           partidaDados={dadosPartida}
-          onHide={() => setShowInfoAthleteModal(false)}
+          matchToCreate={pendingMatchData}
+          onHide={() => {
+            setShowInfoAthleteModal(false);
+            setPendingMatchData(null);
+          }}
         />
       )}
     </div>

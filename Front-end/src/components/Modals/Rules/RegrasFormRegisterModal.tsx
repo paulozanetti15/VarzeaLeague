@@ -12,14 +12,16 @@ interface RegrasFormRegisterModalProps {
   show: boolean;
   onHide: () => void;
   userId: number;
-  partidaDados: MatchData;
+  partidaDados?: any;
+  matchToCreate?: MatchData;
 }
 
 const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({
   show,
   onHide,
   userId,
-  partidaDados
+  partidaDados,
+  matchToCreate
 }) => {
   const navigate = useNavigate();
   const [showToast, setShowToast] = useState(false);
@@ -50,7 +52,7 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({
     if (loading) return;
 
     // Validar formulário
-    if (!validarFormulario(partidaDados.date)) {
+    if (!validarFormulario(partidaDados?.date || matchToCreate?.date)) {
       return;
     }
 
@@ -58,26 +60,49 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({
       setLoading(true);
 
       // Preparar dados das regras
-      const rulesData = {
-        userId,
-        dataLimite: format(parse(formData.dataLimite, 'dd/MM/yyyy', new Date()), 'yyyy-MM-dd'),
-        idadeMinima: parseInt(formData.idadeMinima),
-        idadeMaxima: parseInt(formData.idadeMaxima),
-        genero: formData.genero,
-      };
+      const dataLimiteISO = format(parse(formData.dataLimite, 'dd/MM/yyyy', new Date()), 'yyyy-MM-dd');
 
-      // Criar partida e regras
-      const result = await matchRulesService.createMatchWithRules(partidaDados, rulesData);
+      if (partidaDados && partidaDados.id) {
+        const rulesData = {
+          userId,
+          partidaId: partidaDados.id,
+          dataLimite: dataLimiteISO,
+          idadeMinima: parseInt(formData.idadeMinima),
+          idadeMaxima: parseInt(formData.idadeMaxima),
+          genero: formData.genero,
+        };
 
-      if (result.match && result.rules) {
-        showToastMessage('Partida criada com sucesso!');
-        setTimeout(() => {
-          navigate('/matches');
-        }, 1400);
+        const result = await matchRulesService.createRules(rulesData);
+
+        if (result) {
+          showToastMessage('Regras criadas com sucesso!');
+          setTimeout(() => {
+            navigate('/matches');
+          }, 1400);
+        }
+      } else if (matchToCreate) {
+        const rulesPayload = {
+          userId,
+          dataLimite: dataLimiteISO,
+          idadeMinima: parseInt(formData.idadeMinima),
+          idadeMaxima: parseInt(formData.idadeMaxima),
+          genero: formData.genero,
+        };
+
+        const result = await matchRulesService.createMatchWithRules(matchToCreate, rulesPayload);
+
+        if (result) {
+          showToastMessage('Partida e regras criadas com sucesso!');
+          setTimeout(() => {
+            navigate('/matches');
+          }, 1400);
+        }
+      } else {
+        throw new Error('Dados da partida não informados');
       }
     } catch (error) {
-      console.error('Erro ao criar partida e regras:', error);
-      showToastMessage('Erro ao criar partida e regras. Tente novamente.', 'danger');
+      console.error('Erro ao criar regras:', error);
+      showToastMessage('Erro ao criar regras. Tente novamente.', 'danger');
     } finally {
       setLoading(false);
     }

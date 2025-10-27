@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 import { getJoinedTeams, createPunicao, updatePunicao, updateMatch } from '../../../../services/matchesFriendlyServices';
-import '../PunicaoModal.css';
+import '../PunishmentModal.css';
 
-interface PunicaoPartidaAmistosaModal {
+interface PunishmentFriendlyMatchModal {
   show: boolean;
   onHide: () => void;
   team: any;
@@ -17,7 +17,7 @@ interface Dados {
   team_away: number;
 }
 
-const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({ 
+const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({ 
   show, 
   onHide, 
   team, 
@@ -274,7 +274,6 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
                   <option value="">Selecione o motivo</option>
                   <option value="Desistencia">Desistência</option>
                   <option value="Atraso">Atraso</option>
-                  <option value="Jogadores Insuficientes">Jogadores Insuficientes</option>
                   <option value="Falta de Comparecimento">Falta de Comparecimento</option>
                 </select>
               </div>
@@ -306,4 +305,4 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
   );
 };
 
-export default PunicaoRegisterModal;
+export default PunishmentRegisterModal;

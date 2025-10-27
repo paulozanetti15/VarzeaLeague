@@ -1,0 +1,189 @@
+/* Modal de Confirmação de Exclusão de Punição */
+
+.punishment-delete-modal .modal-dialog {
+  max-width: 450px !important;
+  width: 95% !important;
+  margin: 1rem auto !important;
+}
+
+.punishment-delete-modal .modal-content {
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+  overflow: hidden;
+  background: #ffffff !important;
+}
+
+.punishment-delete-header {
+  background: #dc3545 !important;
+  border-bottom: 1px solid #c82333 !important;
+  padding: 1rem 1.5rem !important;
+}
+
+.punishment-delete-header .btn-close {
+  filter: invert(1) !important;
+  opacity: 0.8 !important;
+}
+
+.punishment-delete-header .btn-close:hover {
+  opacity: 1 !important;
+}
+
+.punishment-delete-title {
+  color: #ffffff !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.punishment-delete-title .fas {
+  color: #ffd700 !important;
+  margin-right: 0.5rem !important;
+}
+
+.punishment-delete-body {
+  padding: 2rem 1.5rem !important;
+  background: #ffffff !important;
+  text-align: center;
+}
+
+.punishment-delete-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.punishment-delete-icon {
+  font-size: 3rem;
+  color: #dc3545;
+  margin-bottom: 0.5rem;
+}
+
+.punishment-delete-message {
+  color: #333333;
+  max-width: 350px;
+}
+
+.punishment-delete-question {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #333333;
+}
+
+.punishment-delete-text {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  color: #666666;
+  font-weight: 400;
+}
+
+.punishment-delete-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #856404;
+}
+
+.punishment-delete-warning .fas {
+  color: #856404;
+  font-size: 1rem;
+}
+
+.punishment-delete-footer {
+  background: #f8f9fa !important;
+  border-top: 1px solid #dee2e6 !important;
+  padding: 1rem 1.5rem !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+}
+
+.punishment-delete-btn-cancel {
+  padding: 0.5rem 1.25rem !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  background: #6c757d !important;
+  border: 1px solid #6c757d !important;
+  color: #ffffff !important;
+  min-width: 100px !important;
+}
+
+.punishment-delete-btn-cancel:hover {
+  background: #5a6268 !important;
+  border-color: #5a6268 !important;
+  transform: translateY(-1px) !important;
+}
+
+.punishment-delete-btn-confirm {
+  padding: 0.5rem 1.25rem !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+  background: #dc3545 !important;
+  border: 1px solid #dc3545 !important;
+  color: #ffffff !important;
+  min-width: 140px !important;
+}
+
+.punishment-delete-btn-confirm:hover {
+  background: #c82333 !important;
+  border-color: #bd2130 !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Responsividade */
+@media (max-width: 576px) {
+  .punishment-delete-modal .modal-dialog {
+    width: 98% !important;
+    margin: 0.5rem auto !important;
+  }
+
+  .punishment-delete-header {
+    padding: 0.875rem 1.25rem !important;
+  }
+
+  .punishment-delete-title {
+    font-size: 1.1rem !important;
+  }
+
+  .punishment-delete-body {
+    padding: 1.5rem 1.25rem !important;
+  }
+
+  .punishment-delete-icon {
+    font-size: 2.5rem;
+  }
+
+  .punishment-delete-question {
+    font-size: 1.2rem;
+  }
+
+  .punishment-delete-text {
+    font-size: 0.95rem;
+  }
+
+  .punishment-delete-footer {
+    padding: 0.875rem 1.25rem !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .punishment-delete-btn-cancel,
+  .punishment-delete-btn-confirm {
+    width: 100% !important;
+    min-width: auto !important;
+  }
+}

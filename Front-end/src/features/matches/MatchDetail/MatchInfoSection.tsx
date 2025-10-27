@@ -1,6 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatDuration } from '../../../utils/formUtils';
 
 interface MatchInfoSectionProps {
   match: any;
@@ -49,7 +50,7 @@ const MatchInfoSection: React.FC<MatchInfoSectionProps> = ({ match }) => {
       {match.duration && (
         <div className="info-row">
           <div className="info-label">Duração:</div>
-          <div className="info-value">{match.duration}</div>
+          <div className="info-value">{formatDuration(match.duration)}</div>
         </div>
       )}
 

@@ -5,7 +5,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { GiSoccerField } from "react-icons/gi";
 import { FaFutbol } from 'react-icons/fa';
-import { Match } from '../../../../services/matchesFriendlyServices';
+import { formatDuration } from '../../../utils/formUtils';
 import { OrganizerBadge } from './OrganizerBadge';
 
 interface MatchCardProps {
@@ -63,7 +63,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, currentUserId }) =>
           {match.duration && (
             <div className="info-row" style={{color: '#ffffff'}}>
               <AccessTimeIcon fontSize="small" />
-              <strong>Duração:</strong> {match.duration}
+              <strong>Duração:</strong> {formatDuration(match.duration)}
             </div>
           )}
           <div className='info-row' style={{color: '#ffffff'}}>

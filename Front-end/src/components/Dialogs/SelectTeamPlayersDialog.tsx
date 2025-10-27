@@ -328,8 +328,8 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
                 Modalidade: <strong>{modalidade}</strong>
               </div>
               <div className="stm-requirements-body">
-                <div>Necessário selecionar no mínimo: <strong>{requirements.gk} goleiro(s)</strong> e <strong>{requirements.line} jogador(es) de linha</strong></div>
-                <div className="stm-requirements-count">Selecionado: <strong>{selectedCounts.gk} goleiro(s)</strong> • <strong>{selectedCounts.line} jogador(es) de linha</strong></div>
+                <div>Seleção mínima necessária: <strong>{requirements.gk} {requirements.gk === 1 ? 'goleiro' : 'goleiros'}</strong> e <strong>{requirements.line} {requirements.line === 1 ? 'jogador de linha' : 'jogadores de linha'}</strong></div>
+                <div className="stm-requirements-count">Selecionado: <strong>{selectedCounts.gk} {selectedCounts.gk === 1 ? 'goleiro' : 'goleiros'}</strong> • <strong>{selectedCounts.line} {selectedCounts.line === 1 ? 'jogador de linha' : 'jogadores de linha'}</strong></div>
               </div>
             </div>
           )}

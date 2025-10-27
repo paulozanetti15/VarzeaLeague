@@ -35,12 +35,6 @@ export const useSumulaPDF = (): UseSumulaPDFReturn => {
     doc.text(`Quadra: ${data.matchLocation || 'Não informado'}`, 20, 61);
     
     // Placar destacado
-    doc.setFillColor(240, 240, 240);
-    doc.rect(60, 67, 90, 15, 'F');
-    doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.setLineWidth(0.5);
-    doc.rect(60, 67, 90, 15);
-    
     doc.setFontSize(16);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     const scoreText = `${data.homeTeamName || 'Time Casa'} ${data.homeScore || 0} x ${data.awayScore || 0} ${data.awayTeamName || 'Time Visitante'}`;

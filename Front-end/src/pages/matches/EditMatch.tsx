@@ -90,7 +90,7 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
         />
       )}
       <div className="form-container">
-        <h1 className="form-title">
+        <h1 className="form-title" style={{ textAlign: 'center', color: '#000000' }}>
           Editar Partida
         </h1>
         
@@ -101,7 +101,15 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
         )}
         <form onSubmit={handleSubmit} style={{width: '100%'}}> 
             <div className="form-group">
-              <label>Título da Partida <span className="required-asterisk" aria-hidden="true">*</span></label>
+              <label>
+                Título da Partida
+                <span style={{
+                  color: '#dc3545',
+                  fontSize: '1.2em',
+                  fontWeight: 'bold',
+                  marginLeft: '0.25rem'
+                }}>*</span>
+              </label>
               <input
                 ref={titleInputRef}
                 type="text"
@@ -127,7 +135,15 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
 
               <div className="form-row">
               <div className="form-group" style={{ flex: 1 }}>
-                <label htmlFor="date">Data <span className="required-asterisk" aria-hidden="true">*</span></label>
+                <label htmlFor="date">
+                  Data
+                  <span style={{
+                    color: '#dc3545',
+                    fontSize: '1.2em',
+                    fontWeight: 'bold',
+                    marginLeft: '0.25rem'
+                  }}>*</span>
+                </label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ position: 'relative', flex: 1 }}>
                     <input
@@ -152,6 +168,7 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
                     <input
                       ref={hiddenDateInputRef}
                       type="date"
+                      lang="pt-BR"
                       onChange={(e) => {
                         const iso = e.target.value; if(!iso) return; const [y,m,d] = iso.split('-');
                         setFormData(prev => ({ ...prev, date: `${d}/${m}/${y}` }));
@@ -192,30 +209,44 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
                 </div>
               </div>
               <div className="form-group" style={{ flex: 1 }}>
-                <label htmlFor="time">Horário <span className="required-asterisk" aria-hidden="true">*</span></label>
+                <label htmlFor="time">
+                  Horário
+                  <span style={{
+                    color: '#dc3545',
+                    fontSize: '1.2em',
+                    fontWeight: 'bold',
+                    marginLeft: '0.25rem'
+                  }}>*</span>
+                </label>
                 <input
-                  type="text"
+                  type="time"
                   id="time"
                   name="time"
                   value={formData.time}
-                  onChange={handleInputChange}
+                  onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
                   required
                   className="form-control"
-                  placeholder="HH:MM"
-                  maxLength={5}
+                  style={{
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    color: '#2d3748'
+                  }}
                 />
               </div>
               <div className="form-group" style={{ flex: 1 }}>
                 <label htmlFor="duration">Duração</label>
                 <input
-                  type="text"
+                  type="time"
                   id="duration"
                   name="duration"
                   value={formData.duration}
-                  onChange={handleInputChange}
+                  onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
                   className="form-control"
-                  placeholder="HH:MM"
-                  maxLength={5}
+                  style={{
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    color: '#2d3748'
+                  }}
                 />
               </div>
             </div>
@@ -233,7 +264,15 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
               />
             </div>
             <div className="form-group">
-              <label>Nome da Quadra <span className="required-asterisk" aria-hidden="true">*</span></label>
+              <label>
+                Nome da Quadra
+                <span style={{
+                  color: '#dc3545',
+                  fontSize: '1.2em',
+                  fontWeight: 'bold',
+                  marginLeft: '0.25rem'
+                }}>*</span>
+              </label>
               <input
                 name="nomequadra"
                 type='text'
@@ -245,22 +284,47 @@ const EditMatch: React.FC<EditMatchProps>  = () => {
               />
             </div>
             <div className="form-group">
-              <label>Modalidade <span className="required-asterisk" aria-hidden="true">*</span></label>
-              <select 
-                style={{            
-                  color: '#0e0202ff',
-                  WebkitTextFillColor: '#f7f6f6ff',
-                  fontSize: '1rem',
-                }}
+              <label>
+                Modalidade
+                <span style={{
+                  color: '#dc3545',
+                  fontSize: '1.2em',
+                  fontWeight: 'bold',
+                  marginLeft: '0.25rem'
+                }}>*</span>
+              </label>
+              <select
                 name="modalidade"
                 onChange={handleSelectChange}
                 value={formData.modalidade}
+                className="form-control modalidade-select"
+                style={{
+                  width: '100%',
+                  padding: '1.2rem 1.5rem',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '15px',
+                  background: '#ffffff',
+                  color: '#2d3748',
+                  fontSize: '1rem',
+                  fontWeight: '500',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.08)',
+                  cursor: 'pointer',
+                  backgroundImage: 'url("data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'m6 8 4 4 4-4\'/%3e%3c/svg%3e")',
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '1.5em 1.5em',
+                  paddingRight: '2.5rem',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                  appearance: 'none'
+                }}
               >
                 <option value="">Selecione a modalidade</option>
                 <option value="Fut7">Fut7</option>
                 <option value="Futsal">Futsal</option>
                 <option value="Futebol campo">Futebol campo</option>
-              </select> 
+              </select>
             </div>
           </div>  
           <div className="btn-container" ref={btnContainerRef}>

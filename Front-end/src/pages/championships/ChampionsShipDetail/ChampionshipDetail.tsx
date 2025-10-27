@@ -8,8 +8,8 @@ import './ChampionshipDetail.css';
 import toast from 'react-hot-toast';
 import { Button, Modal } from 'react-bootstrap';
 import axios from 'axios';
-import PunicaoCampeonatoRegisterModal from '../../../components/Modals/Punicao/Campeonatos/PunicaoCampeonatoRegisterModal';
-import PunicaoCampeonatoModalInfo from '../../../components/Modals/Punicao/Campeonatos/PunicaoCampeonatoModalInfo';
+import PunicaoCampeonatoRegisterModal from '../../../components/Modals/Punishment/Championships/PunishmentChampionshipRegisterModal';
+import PunicaoCampeonatoModalInfo from '../../../components/Modals/Punishment/Championships/PunishmentChampionshipInfoModal';
 import SelectTeamPlayersChampionshipModal from '../../../components/Modals/Teams/SelectTeamPlayersChampionshipModal';
 
 interface Championship {

@@ -59,7 +59,7 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
     ? new Date() > new Date(registrationDeadline) 
     : false;
   const canShowPunishment = canApplyPunishment && hasMinimumTeams && isPastDeadline;
-  const showPunishmentButton = canEdit && canShowPunishment && (isCompleted || !(matchStatus === 'finalizada' && !hasPunishment && !isWo));
+  const showPunishmentButton = canEdit && canShowPunishment && matchStatus !== 'em_andamento' && !(matchStatus === 'finalizada' && !hasPunishment && !isWo);
   const canCreateSumula = userTypeId === 2
   const canViewEvents =userTypeId === 1 || userTypeId === 3;
 
@@ -75,7 +75,7 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
           
           {showPunishmentButton && (
             <Button className="btn-edit" onClick={onPunishment}>
-              Aplicar/Ver Punição
+              {hasPunishment ? 'Ver Punição' : 'Aplicar Punição'}
             </Button>
           )}
           
@@ -112,10 +112,10 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
         {(() => {
           const statusLower = String(matchStatus || '').toLowerCase();
           const allowedStatuses = [ 'finalizada'];
-          const canShowFinalize = allowedStatuses.includes(statusLower) && isCompleted && !isCancelled && canCreateSumula ;
+          const canShowFinalize = allowedStatuses.includes(statusLower) && isCompleted && !isCancelled && canCreateSumula && !hasPunishment;
           return canShowFinalize ? (
             <Button className="btn-finalize" onClick={onCreateSumula}>
-               {!hasSumula ? 'Registrar sumula' : 'Visualizar sumula '}
+               {(!hasSumula && !hasPunishment) ? 'Registrar súmula' : 'Ver súmula'}
             </Button>
           ) : null;
         })()}

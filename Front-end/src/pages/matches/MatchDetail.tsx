@@ -8,14 +8,15 @@ import {
   getJoinedTeams,
   getPunicao,
   leaveTeam,
-  deleteMatch
+  deleteMatch,
+  getMatchStatus
 } from '../../services/matchesFriendlyServices';
 import { useAuth } from '../../hooks/useAuth';
 import ModalTeams from '../../components/Modals/Teams/modelTeams';
 import SelectTeamPlayersModal from '../../components/Dialogs/SelectTeamPlayersDialog';
 import EditRulesModal from '../../components/Modals/Rules/RegrasFormEditModal';
-import PunicaoRegisterModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosoRegisterModal';
-import PunicaoViewModal from '../../components/Modals/Punicao/PartidasAmistosas/PunicaoPartidaAmistosaViewModal';
+import PunicaoRegisterModal from     '../../components/Modals/Punishment/FriendlyMatches/PunishmentFriendlyMatchRegisterModal';
+import PunicaoViewModal from '../../components/Modals/Punishment/FriendlyMatches/PunishmentFriendlyMatchViewModal';
 import { SumulaCreate, SumulaView, SumulaEdit } from '../sumula';
 import {
   MatchHeader,
@@ -132,12 +133,27 @@ const MatchDetail: React.FC = () => {
     const fetchMatchDetails = async () => {
       try {
         setLoading(true);
-  const resp = await fetchMatchById(Number(id));
-  setMatch(resp);
-  checkIfWo(resp);
+        const resp = await fetchMatchById(Number(id));
+        setMatch(resp);
+        checkIfWo(resp);
         await fetchPunishment(id!);
         await getTimeInscrito(id!);
         await checkSumulaExists();
+        
+        // Verificar e atualizar status da partida
+        if (id) {
+          try {
+            const statusResp = await getMatchStatus(id);
+            if (statusResp.status !== resp.status) {
+              // Status foi atualizado, recarregar dados
+              const updatedResp = await fetchMatchById(Number(id));
+              setMatch(updatedResp);
+              checkIfWo(updatedResp);
+            }
+          } catch (statusErr) {
+            console.error('Erro ao verificar status da partida:', statusErr);
+          }
+        }
       } catch (err: any) {
         console.error('Erro ao carregar detalhes:', err);
         if (err.response?.status === 401) {
@@ -190,13 +206,13 @@ const MatchDetail: React.FC = () => {
     }
   };
 
-  const handleLeaveMatch = async (matchId: string | undefined, teamId: number) => {
+  const handleLeaveMatch = async (matchId: string | undefined, teamId: number, teamName: string) => {
     if (!matchId) return;
     const numericMatchId = Number(matchId);
     try {
       const resp = await leaveTeam(numericMatchId, teamId);
       if (resp.status === 200) {
-        toast.success('Time removido da partida com sucesso!');
+        toast.success(`Time "${teamName}" removido da partida com sucesso! A página será atualizada.`);
         setTimeout(() => {
           window.location.reload();
         }, 800);
@@ -465,6 +481,7 @@ const MatchDetail: React.FC = () => {
               setIsEditingSumula(false);
             }}
             onEdit={() => setIsEditingSumula(true)}
+            onSumulaDeleted={() => setHasSumula(false)} // Atualizar estado quando súmula for deletada
           />
         )
       )}

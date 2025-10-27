@@ -1,0 +1,502 @@
+/* ============================================
+   PUNISHMENT FRIENDLY MATCH VIEW MODAL
+   ============================================ */
+
+/* Modal Base */
+.punishment-modal .modal-dialog {
+  max-width: 680px;
+  margin: 1.75rem auto;
+}
+
+.punishment-modal .modal-content {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  background: #ffffff;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.punishment-modal-header {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  border: none;
+  padding: 1.5rem 2rem;
+  position: relative;
+}
+
+.punishment-modal-header::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent);
+}
+
+.punishment-modal-header .modal-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.punishment-modal-header .modal-title i {
+  font-size: 1.5rem;
+  opacity: 0.95;
+}
+
+.punishment-modal-header .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+  padding: 0.75rem;
+  margin: -0.5rem -0.75rem -0.5rem auto;
+}
+
+.punishment-modal-header .btn-close:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* ============================================
+   BODY
+   ============================================ */
+.punishment-modal-body {
+  padding: 2rem;
+  background: #f5f7fa;
+  min-height: 340px;
+}
+
+/* Alert Warning */
+.punishment-modal-body .alert-warning {
+  background: linear-gradient(135deg, #fff9e6 0%, #ffeaa7 100%);
+  border: 2px solid #feca57;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(254, 202, 87, 0.2);
+}
+
+.punishment-modal-body .alert-warning i {
+  color: #f39c12;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.punishment-modal-body .alert-heading {
+  color: #856404;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.punishment-modal-body .alert p {
+  color: #856404;
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+/* ============================================
+   GRID CARDS
+   ============================================ */
+.punishment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+/* Card Base */
+.punishment-card {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+}
+
+.punishment-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.punishment-card-danger {
+  border-color: rgba(220, 53, 69, 0.2);
+}
+
+.punishment-card-danger:hover {
+  border-color: rgba(220, 53, 69, 0.4);
+}
+
+.punishment-card-primary {
+  border-color: rgba(0, 123, 255, 0.2);
+}
+
+.punishment-card-primary:hover {
+  border-color: rgba(0, 123, 255, 0.4);
+}
+
+/* Card Header */
+.punishment-card-header {
+  padding: 1rem 1.5rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.punishment-card-danger .punishment-card-header {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.punishment-card-primary .punishment-card-header {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+/* Card Body */
+.punishment-card-body {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  min-height: 180px;
+  background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+}
+
+/* Card Icon */
+.punishment-card-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.punishment-card:hover .punishment-card-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.punishment-card-danger .punishment-card-icon {
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.15) 0%, rgba(192, 57, 43, 0.15) 100%);
+  color: #e74c3c;
+  box-shadow: 0 4px 16px rgba(231, 76, 60, 0.2);
+}
+
+.punishment-card-primary .punishment-card-icon {
+  background: linear-gradient(135deg, rgba(52, 152, 219, 0.15) 0%, rgba(41, 128, 185, 0.15) 100%);
+  color: #3498db;
+  box-shadow: 0 4px 16px rgba(52, 152, 219, 0.2);
+}
+
+.punishment-card-icon i {
+  font-size: 2rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+/* Card Value */
+.punishment-card-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1.4;
+  word-break: break-word;
+  max-width: 100%;
+  text-align: center;
+  padding: 0 0.5rem;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.punishment-modal-footer {
+  background: #ffffff;
+  border-top: 2px solid #e9ecef;
+  padding: 1.25rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Buttons */
+.punishment-modal-footer .btn {
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-width: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.punishment-modal-footer .btn i {
+  font-size: 0.875rem;
+}
+
+.punishment-modal-footer .btn:active {
+  transform: scale(0.97);
+}
+
+/* Warning Button */
+.punishment-modal-footer .btn-outline-warning {
+  color: #f39c12;
+  border-color: #f39c12;
+  background: transparent;
+}
+
+.punishment-modal-footer .btn-outline-warning:hover {
+  background: #f39c12;
+  border-color: #f39c12;
+  color: #ffffff;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(243, 156, 18, 0.35);
+}
+
+/* Danger Button */
+.punishment-modal-footer .btn-outline-danger {
+  color: #e74c3c;
+  border-color: #e74c3c;
+  background: transparent;
+}
+
+.punishment-modal-footer .btn-outline-danger:hover {
+  background: #e74c3c;
+  border-color: #e74c3c;
+  color: #ffffff;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(231, 76, 60, 0.35);
+}
+
+/* Secondary Button */
+.punishment-modal-footer .btn-secondary {
+  background: #95a5a6;
+  border-color: #95a5a6;
+  color: #ffffff;
+}
+
+.punishment-modal-footer .btn-secondary:hover {
+  background: #7f8c8d;
+  border-color: #7f8c8d;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(127, 140, 141, 0.35);
+}
+
+/* ============================================
+   STATES
+   ============================================ */
+
+/* Empty State */
+.punishment-modal-body .text-center {
+  padding: 3rem 1rem;
+}
+
+.punishment-modal-body .text-center i {
+  opacity: 0.3;
+  margin-bottom: 1.5rem;
+}
+
+.punishment-modal-body .text-center p {
+  font-size: 1.05rem;
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+/* Loading Spinner */
+.spinner-border {
+  border-width: 0.3rem;
+}
+
+.text-danger {
+  color: #e74c3c !important;
+}
+
+.text-muted {
+  color: #95a5a6 !important;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .punishment-modal .modal-dialog {
+    margin: 1rem;
+    max-width: calc(100% - 2rem);
+  }
+
+  .punishment-modal-header {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .punishment-modal-header .modal-title {
+    font-size: 1.15rem;
+  }
+
+  .punishment-modal-header .modal-title i {
+    font-size: 1.25rem;
+  }
+
+  .punishment-modal-body {
+    padding: 1.5rem;
+  }
+
+  .punishment-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .punishment-card-body {
+    padding: 2rem 1.25rem;
+    min-height: 160px;
+  }
+
+  .punishment-card-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .punishment-card-icon i {
+    font-size: 1.75rem;
+  }
+
+  .punishment-card-value {
+    font-size: 1.05rem;
+  }
+
+  .punishment-modal-footer {
+    padding: 1rem 1.5rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .punishment-modal-footer > div {
+    width: 100%;
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .punishment-modal-footer .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .punishment-modal-footer .btn-secondary {
+    width: 100%;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .punishment-modal .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+
+  .punishment-modal-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .punishment-modal-header .modal-title {
+    font-size: 1rem;
+  }
+
+  .punishment-modal-body {
+    padding: 1.25rem;
+  }
+
+  .punishment-modal-body .alert-warning {
+    padding: 1rem;
+  }
+
+  .punishment-modal-body .alert-heading {
+    font-size: 0.9rem;
+  }
+
+  .punishment-modal-body .alert p {
+    font-size: 0.825rem;
+  }
+
+  .punishment-card-body {
+    padding: 1.75rem 1rem;
+    min-height: 150px;
+  }
+
+  .punishment-card-icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .punishment-card-icon i {
+    font-size: 1.5rem;
+  }
+
+  .punishment-card-value {
+    font-size: 1rem;
+  }
+
+  .punishment-modal-footer {
+    padding: 1rem 1.25rem;
+  }
+
+  .punishment-modal-footer > div {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .punishment-modal-footer .btn {
+    width: 100%;
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1200px) {
+  .punishment-modal .modal-dialog {
+    max-width: 720px;
+  }
+
+  .punishment-card-body {
+    padding: 3rem 2rem;
+  }
+
+  .punishment-card-icon {
+    width: 80px;
+    height: 80px;
+  }
+
+  .punishment-card-icon i {
+    font-size: 2.25rem;
+  }
+
+  .punishment-card-value {
+    font-size: 1.25rem;
+  }
+}

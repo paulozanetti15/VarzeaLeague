@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { format, parse as dfParse, isAfter } from 'date-fns';
 import * as matchesService from '../services/matchesFriendlyServices';
 import { parseDDMMYYYY, toISODateTime } from '../utils/formUtils';
+import { time } from 'console';
 
 type FormShape = {
   title?: string;
@@ -100,7 +101,9 @@ export default function useMatchForm(matchId?: string) {
     const parsedDate = parseDDMMYYYY(formData.date || '');
     if (!parsedDate) return { ok: false, message: 'Data inválida. Use o formato DD/MM/AAAA' };
 
-    const [hours, minutes] = (formData.time || '').split(':').map((v: string) => Number(v));
+    const [hours, minutes] = formData.time.split(':').map(Number);
+    parsedDate.setHours(hours || 0, minutes || 0);
+
     if (isNaN(hours) || isNaN(minutes) || hours > 23 || minutes > 59) return { ok: false, message: 'Hora inválida. Use o formato HH:MM' };
 
     const matchDateTime = dfParse(`${formData.date} ${formData.time}`, 'dd/MM/yyyy HH:mm', new Date());
@@ -110,13 +113,15 @@ export default function useMatchForm(matchId?: string) {
 
     const payload = {
       title: formData.title.trim(),
-      date: toISODateTime(matchDateTime),
+      date: parsedDate.toISOString(),
       description: formData.description?.trim(),
+      time: formData.time,
       duration: formData.duration,
       price: formData.price ? parseFloat(formData.price) : 0.0,
-      namequadra: (formData.nomequadra ?? '').trim(),
+      nomequadra: (formData.nomequadra ?? '').trim(),
       modalidade: (formData.modalidade ?? '').trim()
     };
+    console.log(payload)
 
     return { ok: true, payload };
   };

@@ -26,12 +26,52 @@ export const applyDateMask = (value: string): string => {
 };
 
 export const applyTimeMask = (value: string): string => {
+  // Remove all non-numeric characters
   let cleaned = value.replace(/\D/g, '');
-  if (cleaned.length <= 4) {
-    if (cleaned.length > 2) cleaned = cleaned.replace(/(\d{2})(\d{0,2})/, '$1:$2');
+
+  // Limit to 4 digits (HHMM)
+  if (cleaned.length > 4) {
+    cleaned = cleaned.slice(0, 4);
+  }
+
+  // Apply HH:MM format
+  if (cleaned.length >= 3) {
+    // If we have 4 digits, format as HH:MM
+    if (cleaned.length === 4) {
+      const hours = cleaned.slice(0, 2);
+      const minutes = cleaned.slice(2, 4);
+      // Validate hours (00-23) and minutes (00-59)
+      const hoursNum = parseInt(hours, 10);
+      const minutesNum = parseInt(minutes, 10);
+      if (hoursNum >= 0 && hoursNum <= 23 && minutesNum >= 0 && minutesNum <= 59) {
+        return `${hours}:${minutes}`;
+      } else {
+        // If invalid, keep only valid parts
+        return hoursNum >= 0 && hoursNum <= 23 ? `${hours}:${minutes.slice(0, 2)}` : cleaned.slice(0, 2);
+      }
+    }
+    // If we have 3 digits, format as H:MM
+    return `${cleaned.slice(0, 1)}:${cleaned.slice(1, 3)}`;
+  } else if (cleaned.length >= 1) {
+    // If we have 1-2 digits, just return them (will be formatted as HH when more digits are added)
     return cleaned;
   }
-  return value;
+
+  return '';
+};
+
+export const formatDuration = (duration?: string | number): string => {
+  if (!duration) return '';
+  const minutes = typeof duration === 'string' ? parseInt(duration, 10) : duration;
+  if (isNaN(minutes) || minutes <= 0) return '';
+
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+
+  if (hours > 0) {
+    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+  }
+  return `${mins}min`;
 };
 
 export const formatCEP = (cep: string): string => {
@@ -202,7 +242,7 @@ export function parseDDMMYYYY(value: string): Date | null {
 }
 
 export function toISODateTime(date: Date): string {
-  return format(date, "yyyy-MM-dd'T'HH:mm:ss");
+  return format(date, "yyyy-MM-dd'T'HH:mm:ss'Z'");
 }
 
 export function formatToDDMMYYYY(date: Date): string {

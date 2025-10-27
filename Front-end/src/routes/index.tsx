@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { Landing } from '../pages/landing/Landing';
 import { Login } from '../pages/login/Login';
 import UserManagement from '../pages/UserManagement';
-import MatchListing from '../pages/listings/MatchListing';
+import MatchListing from '../pages/search/SearchMatches';
 import Layout from '../components/Layout';
 import TeamCalendar from '../pages/teams/Calendar';
 import ChampionshipList from '../pages/championships/ChampionsShipList/ChampionshipList';

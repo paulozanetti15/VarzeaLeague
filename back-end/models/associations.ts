@@ -150,6 +150,8 @@ export function associateModels() {
   MatchReport.belongsTo(Team,{foreignKey:"team_away",as:"teamAway"});
   
   MatchChampionship.belongsTo(Championship,{foreignKey:"championship_id",as:"championship"});
+  MatchChampionship.belongsTo(Match,{foreignKey:"id",as:"match"});
+  Match.hasOne(MatchChampionship,{foreignKey:"id",as:"matchChampionship"});
   
   MatchChampionshpReport.belongsTo(MatchChampionship,{foreignKey:"match_id",as:"match"});
   MatchChampionshpReport.belongsTo(Team,{foreignKey:"team_home",as:"teamHome"});
