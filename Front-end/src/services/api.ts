@@ -720,6 +720,157 @@ export const api = {
       return handleResponse(response);
     }
   },
+  
+  referees: {
+    list: async (params?: { ativo?: boolean; search?: string }) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const queryParams = new URLSearchParams();
+      if (params?.ativo !== undefined) {
+        queryParams.append('ativo', String(params.ativo));
+      }
+      if (params?.search) {
+        queryParams.append('search', params.search);
+      }
+
+      const url = `${API_URL}/referees${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return handleResponse(response);
+    },
+
+    getById: async (id: number) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await fetch(`${API_URL}/referees/${id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return handleResponse(response);
+    },
+
+    create: async (data: {
+      nome: string;
+      cpf: string;
+      telefone?: string;
+      email?: string;
+      certificacao?: string;
+    }) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await fetch(`${API_URL}/referees`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+      return handleResponse(response);
+    },
+
+    update: async (id: number, data: {
+      nome?: string;
+      cpf?: string;
+      telefone?: string;
+      email?: string;
+      certificacao?: string;
+      ativo?: boolean;
+    }) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await fetch(`${API_URL}/referees/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+      return handleResponse(response);
+    },
+
+    delete: async (id: number) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await fetch(`${API_URL}/referees/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return handleResponse(response);
+    },
+
+    getByMatch: async (matchId: number) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await fetch(`${API_URL}/referees/match/${matchId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return handleResponse(response);
+    },
+
+    assignToMatch: async (matchId: number, refereeId: number, tipo: 'principal' | 'auxiliar') => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await fetch(`${API_URL}/referees/match/${matchId}/referee/${refereeId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ tipo })
+      });
+      return handleResponse(response);
+    },
+
+    removeFromMatch: async (matchId: number, refereeId: number) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await fetch(`${API_URL}/referees/match/${matchId}/referee/${refereeId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      return handleResponse(response);
+    }
+  }
 };
 
 // Removed unused calculatePlayerStats helper
