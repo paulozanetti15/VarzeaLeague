@@ -35,6 +35,7 @@ import HistoricoPage from './pages/Historico/HistoricoPage'
 import { HistoricoProvider } from './context/HistoricoContext';
 import RankingPlayers from './pages/ranking/RankingPlayers'
 import RankingTeams from './pages/ranking/RankingTeams'
+import MvpVotingPage from './pages/matches/MvpVotingPage'
 
 // Componente simples para loading
   const Loading = () => (
@@ -113,6 +114,12 @@ import RankingTeams from './pages/ranking/RankingTeams'
             <Route path="/listings" element={
               <PageTransition>
                 <MatchListing />
+              </PageTransition>
+            } />
+
+            <Route path="/mvp" element={
+              <PageTransition>
+                <MvpVotingPage />
               </PageTransition>
             } />
             

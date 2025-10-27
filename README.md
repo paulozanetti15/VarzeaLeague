@@ -22,3 +22,21 @@
 - Registro de súmulas e estatísticas.
 - Apresentação de rankings e calendários de eventos.
 - Permitir avaliações e visualização pública de informações relevantes.
+
+## 🏅 MVP da Partida (Votação)
+
+Qualquer usuário autenticado pode votar no MVP de partidas finalizadas (amistosas ou de campeonato). A votação é feita por partida, um voto por usuário (pode alterar o voto a qualquer momento).
+
+- Rota do frontend: `/mvp` (menu “Votar MVP” no topo)
+
+APIs disponíveis:
+
+- GET `/api/matches/status/finished/list` — lista as partidas com status `finalizada`
+- GET `/api/matches/:id/players` — lista pública dos jogadores vinculados à partida
+- GET `/api/matches/:id/mvp-votes/summary` — contagem de votos por jogador e líder atual
+- POST `/api/matches/:id/mvp-votes` — registra/atualiza o voto (não requer login; usa cookie anônimo ao votar deslogado)
+
+Notas:
+
+- Se logado, o voto é atrelado ao usuário; se deslogado, é atrelado a um cookie (um voto por navegador/dispositivo por partida).
+- A lista de jogadores respeita soft delete (somente jogadores ativos).

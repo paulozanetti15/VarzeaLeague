@@ -8,6 +8,7 @@ import { finalizeMatch, addGoal, addCard, listEvents, deleteGoalEvent, deleteCar
 import { getMatchPlayersForAdmin } from '../controllers/matchPlayersController';
 import { getMatchRosterPlayers } from '../controllers/matchRosterController';
 import { getPlayerRanking } from '../controllers/playerRankingController';
+import { listFinishedMatches, getMatchPlayersPublic, getMvpSummary, upsertMvpVote } from '../controllers/matchMvpVoteController';
 const router = express.Router();
 
 router.get('/ranking/jogadores', authenticateToken, getPlayerRanking);
@@ -17,6 +18,7 @@ router.post('/check-cancelled', authenticateToken, checkAndCancelMatchesWithInsu
 router.get('/:id/available', authenticateToken, getTeamsAvailable);
 router.post('/', authenticateToken, createMatch);
 router.get('/', listMatches);
+router.get('/status/finished/list', listFinishedMatches);
 router.get('/:id', getMatch);
 router.delete('/:id', authenticateToken, deleteMatch);
 router.post('/:id/join-team', authenticateToken, joinMatchByTeam);
@@ -39,6 +41,9 @@ router.delete('/:id/goals', authenticateToken, clearGoals);
 router.delete('/:id/cards', authenticateToken, clearCards);
 router.get('/:id/players-for-admin', authenticateToken, getMatchPlayersForAdmin);
 router.get('/:id/roster-players', authenticateToken, getMatchRosterPlayers);
+router.get('/:id/players', getMatchPlayersPublic);
+router.get('/:id/mvp-votes/summary', getMvpSummary);
+router.post('/:id/mvp-votes', upsertMvpVote);
 
 router.get('/:idAmistosaPartida/punicao',authenticateToken,busarPunicaoPartidaAmistosa );
 router.post('/:idAmistosaPartida/punicao',authenticateToken,inserirPunicaoPartidaAmistosa );

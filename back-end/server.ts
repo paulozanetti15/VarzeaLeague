@@ -31,6 +31,7 @@ import overviewRoutes from './routes/overviewRoutes';
 import historicoRoutes from './routes/historicoRoutes';
 import MatchChampionship from './models/MatchChampionshipModel';
 import MatchChampionshpReport from './models/MatchReportChampionshipModel';
+import MatchMvpVote from './models/MatchMvpVoteModel';
 dotenv.config();
 // Import status check helpers to run periodically
 import {
@@ -105,10 +106,8 @@ const startServer = async () => {
     await AttendanceModel.sync();
     console.log('Modelo Attendance sincronizado.');
      
-    await FriendlyMatchPenalty.sync()
-    console.log('Modelo Punicao Partida Amistosa sincronizado.');
-    await ChampionshipPenalty.sync();
-    console.log('Modelo Punicao Championship sincronizado.');
+  await FriendlyMatchPenalty.sync()
+  console.log('Modelo Punicao Partida Amistosa sincronizado.');
 
     // Modelos adicionados na modelagem v2
     const { default: ChampionshipModel } = await import('./models/ChampionshipModel');
@@ -130,10 +129,14 @@ const startServer = async () => {
     const { default: MatchEvaluationModel } = await import('./models/MatchEvaluationModel');
     await MatchEvaluationModel.sync();
     console.log('Modelo MatchEvaluation sincronizado.');
+  await MatchMvpVote.sync({ alter: true });
+  console.log('Modelo MatchMvpVote sincronizado.');
     await MatchChampionship.sync();
     console.log('Modelo MatchChampionship sincronizado.');
     await MatchChampionshpReport.sync();
     console.log('Modelo MatchChampionshpReport sincronizado.');
+    await ChampionshipPenalty.sync();
+    console.log('Modelo Punicao Championship sincronizado.');
     
     await seedUserTypes();
 

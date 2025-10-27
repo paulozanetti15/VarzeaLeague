@@ -9,6 +9,7 @@ import Layout from '../components/Layout';
 import TeamCalendar from '../pages/teams/Calendar';
 import ChampionshipList from '../pages/championships/ChampionsShipList/ChampionshipList';
 import ChampionshipForm from '../pages/championships/ChampionshipForm';
+import MvpVotingPage from '../pages/matches/MvpVotingPage';
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -84,6 +85,12 @@ const AppRoutes: React.FC = () => {
         <Route path="/championships" element={
           <Layout>
             <ChampionshipList />
+          </Layout>
+        } />
+
+        <Route path="/mvp" element={
+          <Layout>
+            <MvpVotingPage />
           </Layout>
         } />
 

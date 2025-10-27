@@ -218,6 +218,20 @@ const Navbar = () => {
       )}
       <button
         className="navbar-user-button"
+        onClick={() => handleNavigation('/mvp')}
+      >
+        <EmojiEvents /> Votar MVP
+      </button>
+      {user && (
+        <button
+          className="navbar-user-button"
+          onClick={() => handleNavigation('/mvp')}
+        >
+          <EmojiEvents /> Votar MVP
+        </button>
+      )}
+      <button
+        className="navbar-user-button"
         onClick={handleLogout}
       >
         <Logout /> Sair
@@ -289,6 +303,12 @@ const Navbar = () => {
             onClick={() => handleNavigation('/listings')}
           >
             <Search /> Procurar
+          </button>
+          <button
+            className="navbar-menu-button"
+            onClick={() => handleNavigation('/mvp')}
+          >
+            <EmojiEvents /> Votar MVP
           </button>
         </div>
         <div className="navbar-mobile-menu">
