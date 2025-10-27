@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { api } from '../../services/api';
+import { getChampionshipById } from '../../services/championshipsServices';
 import trophy from '../../assets/championship-trophy.svg';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { format, parse, isValid } from 'date-fns';
@@ -49,7 +49,7 @@ const ChampionshipEditForm: React.FC = () => {
     const fetchChampionship = async () => {
       try {
         setLoading(true);
-        const data = await api.championships.getById(Number(id));
+        const data = await getChampionshipById(Number(id));
         setFormData({
           name: data.name || '',
           description: data.description || '',

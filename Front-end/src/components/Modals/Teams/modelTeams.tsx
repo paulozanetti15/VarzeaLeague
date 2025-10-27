@@ -1,5 +1,5 @@
 import { useState,useEffect } from "react";
-import axios from "axios";
+import { joinTeam, getAvailableForMatch } from '../../../services/matchesFriendlyServices';
 import { Card, Button } from "react-bootstrap";
 import toast from 'react-hot-toast';
 import Modal from "react-bootstrap/Modal";
@@ -12,35 +12,27 @@ const modelTeams = ({ matchid,onHide,show }: ModelTeamsProps) => {
     const [teams, setTeams] = useState<any[]>([]);
  
     const handleJoinWithTeam = async (teamId: number) => {
-        const response=await axios.post(`http://localhost:3001/api/matches/${teamId}/join-team`, {
-            teamId: teamId,
-            matchId: matchid
-        }, {
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-        })
-        if (response.status === 200) {
-            toast.success('Time inscrito na partida com sucesso!');
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
+        try {
+            const resp = await joinTeam(matchid, { teamId, matchId: matchid });
+            if (resp.status === 200) {
+                toast.success('Time inscrito na partida com sucesso!');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                toast.error('Erro ao inscrever time na partida. Tente novamente.');
+            }
+        } catch (err) {
             toast.error('Erro ao inscrever time na partida. Tente novamente.');
-        }  
+        }
     };
     const getAvaiableTimes = async (idmatch:number) => {
         try {
-            const response = await axios.get(`http://localhost:3001/api/matches/${idmatch}/available`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            const teams = response.data;
-            setTeams(teams);
+            const resp = await getAvailableForMatch(idmatch);
+            setTeams(resp.data || []);
         } catch (error) {
-        toast.error('Erro ao buscar times do usuário. Tente novamente mais tarde.');
-        }  
+            toast.error('Erro ao buscar times do usuário. Tente novamente mais tarde.');
+        }
     }  
     const handleClose = () => {
         onHide();

@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { api } from '../../services/api';
+import { createChampionship } from '../../services/championshipsServices';
 import trophy from '../../assets/championship-trophy.svg';
 import './ChampionshipForm.css';
 import { format, parse, isValid } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import GroupsIcon from '@mui/icons-material/Groups';
@@ -105,26 +106,28 @@ const ChampionshipForm: React.FC = () => {
     console.log('=== HANDLE DATE SELECT ===');
     console.log('Received date string:', date);
     console.log('Field:', field);
-    
-    // Verificar se a data está sendo interpretada corretamente
-    const parsedDate = new Date(date);
-    console.log('Parsed date:', parsedDate);
-    console.log('Parsed date ISO:', parsedDate.toISOString());
-    console.log('Parsed date local:', parsedDate.toLocaleDateString());
-    
+
+    // Criar data no timezone local para evitar problemas
+    const [year, month, day] = date.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day); // month - 1 porque Date usa 0-based
+    const localDateString = format(localDate, 'yyyy-MM-dd');
+
+    console.log('Local date:', localDate);
+    console.log('Local date string:', localDateString);
+
     setFormData(prev => {
       console.log('Previous formData:', prev);
       const newData = {
         ...prev,
-        [field]: date
+        [field]: localDateString
       };
       console.log('New formData:', newData);
       return newData;
     });
-    
+
     setShowStartCalendar(false);
     setShowEndCalendar(false);
-    
+
     if (fieldErrors[field]) {
       setFieldErrors(prev => ({
         ...prev,
@@ -166,36 +169,34 @@ const ChampionshipForm: React.FC = () => {
     
     // Gerar 42 dias (6 semanas)
     for (let i = 0; i < 42; i++) {
-      // Criar data usando UTC para evitar problemas de timezone
-      const dayDate = new Date(firstSunday.getTime() + (i * 24 * 60 * 60 * 1000));
-      
-      // Forçar timezone local
-      const localDate = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
-      
-      const dateString = format(localDate, 'yyyy-MM-dd');
-      const isCurrentMonth = localDate.getMonth() === month;
-      const isToday = localDate.getTime() === today.getTime();
+      // Criar data no timezone local para evitar problemas
+      const dayDate = new Date(firstSunday);
+      dayDate.setDate(firstSunday.getDate() + i);
+
+      const dateString = format(dayDate, 'yyyy-MM-dd');
+      const isCurrentMonth = dayDate.getMonth() === month;
+      const isToday = dayDate.getTime() === today.getTime();
       const isSelected = dateString === selectedDate;
-      const isPast = localDate < today && !isToday;
-      const isMinDate = field === 'end_date' && formData.start_date && localDate < new Date(formData.start_date);
-      
+      const isPast = dayDate < today && !isToday;
+      const isMinDate = field === 'end_date' && formData.start_date && dayDate < new Date(formData.start_date + 'T00:00:00');
+
       days.push(
         <button
-          key={`${field}-${i}-${localDate.getDate()}-${localDate.getMonth()}`}
+          key={`${field}-${i}-${dayDate.getDate()}-${dayDate.getMonth()}`}
           type="button"
           className={`calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${isPast || isMinDate ? 'disabled' : ''}`}
           onClick={() => {
             if (!isPast && !isMinDate) {
-              console.log('Clicking date object:', localDate);
+              console.log('Clicking date object:', dayDate);
               console.log('Clicking date string:', dateString);
               console.log('Field:', field);
-              console.log('Formatted for display:', format(localDate, 'dd/MM/yyyy'));
+              console.log('Formatted for display:', format(dayDate, 'dd/MM/yyyy'));
               handleDateSelect(dateString, field);
             }
           }}
           disabled={isPast || isMinDate}
         >
-          {localDate.getDate()}
+          {dayDate.getDate()}
         </button>
       );
     }
@@ -277,7 +278,7 @@ const ChampionshipForm: React.FC = () => {
         end_date: formData.end_date
       };
 
-      await api.post('/championships', submitData);
+      await createChampionship(submitData);
       
       setSuccess('Campeonato criado com sucesso!');
       setTimeout(() => {
@@ -403,7 +404,8 @@ const ChampionshipForm: React.FC = () => {
                       name="start_date"
                       className="form-control date-input"
                       value={formData.start_date ? (() => {
-                        const date = new Date(formData.start_date);
+                        const [year, month, day] = formData.start_date.split('-').map(Number);
+                        const date = new Date(year, month - 1, day);
                         console.log('Displaying start_date:', formData.start_date, 'as date:', date);
                         return format(date, 'dd/MM/yyyy');
                       })() : ''}
@@ -420,7 +422,7 @@ const ChampionshipForm: React.FC = () => {
                             ‹
                           </button>
                           <div className="calendar-month-year">
-                            {format(currentStartMonth, 'MMMM yyyy')}
+                            {format(currentStartMonth, 'MMMM yyyy', { locale: ptBR })}
                           </div>
                           <button type="button" className="nav-btn" onClick={() => navigateMonth('next', 'start_date')}>
                             ›
@@ -454,7 +456,8 @@ const ChampionshipForm: React.FC = () => {
                       name="end_date"
                       className="form-control date-input"
                       value={formData.end_date ? (() => {
-                        const date = new Date(formData.end_date);
+                        const [year, month, day] = formData.end_date.split('-').map(Number);
+                        const date = new Date(year, month - 1, day);
                         console.log('Displaying end_date:', formData.end_date, 'as date:', date);
                         return format(date, 'dd/MM/yyyy');
                       })() : ''}
@@ -471,7 +474,7 @@ const ChampionshipForm: React.FC = () => {
                             ‹
                           </button>
                           <div className="calendar-month-year">
-                            {format(currentEndMonth, 'MMMM yyyy')}
+                            {format(currentEndMonth, 'MMMM yyyy', { locale: ptBR })}
                           </div>
                           <button type="button" className="nav-btn" onClick={() => navigateMonth('next', 'end_date')}>
                             ›

@@ -502,40 +502,65 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  font-weight: 700;
+  color: #1a202c;
+  font-size: 1.1rem;
+  line-height: 1.3;
+  flex-wrap: wrap; /* permite quebra quando o conteúdo é muito longo */
+}
+
+.team-home,
+.team-away {
+  flex: 1 1 0;
+  font-size: 1.05rem; /* ligeiramente menor para acomodar quebras sem estourar o layout */
   font-weight: 600;
-  color: #333;
+  letter-spacing: 0.4px;
+  white-space: normal; /* permite quebra de linha */
+  overflow-wrap: anywhere; /* garante que palavras muito longas quebrem */
+  word-break: break-word;
+  line-height: 1.25;
 }
 
 .team-home {
-  flex: 1;
   text-align: right;
-}
-
-.vs-agenda {
-  color: #666;
-  font-weight: 400;
-  font-size: 0.9rem;
+  padding-right: 0.5rem;
 }
 
 .team-away {
-  flex: 1;
   text-align: left;
+  padding-left: 0.5rem;
+}
+
+.vs-agenda {
+  color: #4a5568;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0 0.5rem;
+  flex: 0 0 auto;
+  align-self: center;
 }
 
 .match-details-agenda {
   display: flex;
-  gap: 1rem;
-  font-size: 0.85rem;
-  color: #666;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  color: #2d3748;
+  margin-top: 0.5rem;
 }
 
 .championship-agenda {
-  font-weight: 500;
+  font-weight: 600;
   color: #00a651;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
 }
 
 .location-agenda {
   font-weight: 500;
+  color: #718096;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .match-status-agenda {

@@ -83,9 +83,15 @@ export const updateRules = async (req, res) => {
         if (!['Masculino', 'Feminino', 'Ambos'].includes(genero)) {
             return res.status(400).json({ message: "Gênero inválido" });
         }
+
+        // Parse dataLimite para garantir que seja Date
+        const parsedDataLimite = new Date(dataLimite);
+        if (isNaN(parsedDataLimite.getTime())) {
+            return res.status(400).json({ message: "Data limite inválida" });
+        }
        
         await Rules.update({
-            dataLimite: dataLimite,
+            dataLimite: parsedDataLimite,
             idadeMinima: parseInt(idadeMinima),
             idadeMaxima: parseInt(idadeMaxima),
             genero: genero

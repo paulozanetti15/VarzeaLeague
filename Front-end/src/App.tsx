@@ -10,7 +10,8 @@ import { ResetPassword } from './pages/reset-password/ResetPassword'
 import CreateMatch from './pages/matches/CreateMatch'
 import MatchList from './pages/matches/MatchList'
 import MatchDetail from './pages/matches/MatchDetail'
-import MatchListing from './pages/listings/MatchListing'
+import MatchListing from './pages/search/SearchMatches'
+import CampeonatoListing from './pages/search/SearchChampionship'
 import TeamList from './pages/teams/TeamList'
 import CreateTeam from './pages/teams/CreateTeam'
 import EditTeam from './pages/teams/EditTeam'
@@ -110,9 +111,15 @@ import RankingTeams from './pages/ranking/RankingTeams'
               </PrivateRoute>
             } />
 
-            <Route path="/listings" element={
+            <Route path="/buscar-partidas" element={
               <PageTransition>
                 <MatchListing />
+              </PageTransition>
+            } />
+            
+            <Route path="/buscar-campeonatos" element={
+              <PageTransition>
+                <CampeonatoListing />
               </PageTransition>
             } />
             

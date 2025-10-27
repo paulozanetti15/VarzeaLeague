@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import {
   Box,
@@ -25,6 +25,7 @@ const defaultStatuses = [
   { value: 'aberta', label: getStatusLabel('aberta') },
   { value: 'sem_vagas', label: getStatusLabel('sem_vagas') },
   { value: 'confirmada', label: getStatusLabel('confirmada') },
+  { value: 'em_andamento', label: getStatusLabel('em_andamento') },
   { value: 'finalizada', label: getStatusLabel('finalizada') },
   { value: 'cancelada', label: getStatusLabel('cancelada') },
 ];
@@ -111,18 +112,35 @@ const ChampionshipCard: React.FC<{ champ: Championship; clickable: boolean }> = 
 const MatchListing: React.FC = () => {
   
   const { user } = useAuth();
-  const canClick = user?.userTypeId === 1 || user?.userTypeId === 3;
+  const location = useLocation();
+  const canClick = user?.userTypeId === 1 || user?.userTypeId === 2 || user?.userTypeId === 3;
   const [loading, setLoading] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
   const [champs, setChamps] = useState<Championship[]>([]);
 
+  // Determinar o tipo inicial baseado na rota
+  const getInitialType = () => {
+    if (location.pathname === '/buscar-campeonatos') {
+      return 'championships';
+    }
+    if (location.pathname === '/buscar-partidas') {
+      return 'matches';
+    }
+    return 'both';
+  };
+
   const [filters, setFilters] = useState({
-    search: '',
-    from: '',
-    to: '',
+    searchMatches: '',
+    searchChampionships: '',
+    matchDateFrom: '',
+    matchDateTo: '',
+    registrationDateFrom: '',
+    registrationDateTo: '',
+    championshipDateFrom: '',
+    championshipDateTo: '',
     statuses: [] as string[],
     sort: 'date_desc',
-    type: 'both',
+    type: getInitialType(),
   });
 
   useEffect(() => {
@@ -145,14 +163,22 @@ const MatchListing: React.FC = () => {
 
   const buildQuery = useMemo(() => {
     const params = new URLSearchParams();
-    if (filters.search) params.set('search', filters.search);
-  // teamId/championshipId removidos dos filtros
+    if (filters.searchMatches) params.set('searchMatches', filters.searchMatches);
+    if (filters.searchChampionships) params.set('searchChampionships', filters.searchChampionships);
     if (filters.statuses.length) params.set('status', filters.statuses.join(','));
-    if (filters.from) params.set('from', filters.from);
-    if (filters.to) params.set('to', filters.to);
+    if (filters.matchDateFrom) params.set('matchDateFrom', filters.matchDateFrom);
+    if (filters.matchDateTo) params.set('matchDateTo', filters.matchDateTo);
+    if (filters.registrationDateFrom) params.set('registrationDateFrom', filters.registrationDateFrom);
+    if (filters.registrationDateTo) params.set('registrationDateTo', filters.registrationDateTo);
+    if (filters.championshipDateFrom) params.set('championshipDateFrom', filters.championshipDateFrom);
+    if (filters.championshipDateTo) params.set('championshipDateTo', filters.championshipDateTo);
     if (filters.sort) params.set('sort', filters.sort);
+    // Adicionar filtro para partidas amistosas apenas na rota /buscar-partidas
+    if (location.pathname === '/buscar-partidas') {
+      params.set('friendlyOnly', 'true');
+    }
     return params.toString();
-  }, [filters]);
+  }, [filters, location.pathname]);
 
   useEffect(() => {
     let mounted = true;
@@ -170,22 +196,32 @@ const MatchListing: React.FC = () => {
         }
 
         const filteredMatches = (data || []).filter((m: Match) => {
-          if (filters.search) {
-            const s = filters.search.toLowerCase();
+          if (filters.searchMatches) {
+            const s = filters.searchMatches.toLowerCase();
             const hay = `${m.title || ''} ${m.description || ''} ${m.location || ''}`.toLowerCase();
             if (!hay.includes(s)) return false;
           }
           // filtros por time/campeonato removidos
           if (filters.statuses.length && !filters.statuses.includes(m.status)) return false;
-          if (filters.from) {
-            const from = new Date(`${filters.from}T00:00:00`);
+          if (filters.matchDateFrom) {
+            const from = new Date(`${filters.matchDateFrom}T00:00:00`);
             const md = m.date ? new Date(m.date) : null;
             if (!md || md < from) return false;
           }
-          if (filters.to) {
-            const to = new Date(`${filters.to}T23:59:59.999`);
+          if (filters.matchDateTo) {
+            const to = new Date(`${filters.matchDateTo}T23:59:59.999`);
             const md = m.date ? new Date(m.date) : null;
             if (!md || md > to) return false;
+          }
+          if (filters.registrationDateFrom) {
+            const from = new Date(`${filters.registrationDateFrom}T00:00:00`);
+            const rd = m.registrationDeadline ? new Date(m.registrationDeadline) : null;
+            if (!rd || rd < from) return false;
+          }
+          if (filters.registrationDateTo) {
+            const to = new Date(`${filters.registrationDateTo}T23:59:59.999`);
+            const rd = m.registrationDeadline ? new Date(m.registrationDeadline) : null;
+            if (!rd || rd > to) return false;
           }
           return true;
         });
@@ -203,18 +239,18 @@ const MatchListing: React.FC = () => {
   }, [buildQuery]);
 
   const filteredChamps = (champs || []).filter((c: any) => {
-    if (filters.search) {
-      const s = filters.search.toLowerCase();
+    if (filters.searchChampionships) {
+      const s = filters.searchChampionships.toLowerCase();
       const hay = `${c.name || ''} ${c.description || ''}`.toLowerCase();
       if (!hay.includes(s)) return false;
     }
-    if (filters.from) {
-      const from = new Date(`${filters.from}T00:00:00`);
+    if (filters.championshipDateFrom) {
+      const from = new Date(`${filters.championshipDateFrom}T00:00:00`);
       const sd = c.start_date ? new Date(c.start_date) : null;
       if (!sd || sd < from) return false;
     }
-    if (filters.to) {
-      const to = new Date(`${filters.to}T23:59:59.999`);
+    if (filters.championshipDateTo) {
+      const to = new Date(`${filters.championshipDateTo}T23:59:59.999`);
       const sd = c.start_date ? new Date(c.start_date) : null;
       if (!sd || sd > to) return false;
     }
@@ -228,9 +264,10 @@ const MatchListing: React.FC = () => {
           <MatchFilters
             filters={filters}
             onChange={(next) => setFilters(next)}
-            onClear={() => setFilters({ search: '', from: '', to: '', statuses: [], sort: 'date_desc', type: 'both' })}
+            onClear={() => setFilters({ searchMatches: '', searchChampionships: '', matchDateFrom: '', matchDateTo: '', registrationDateFrom: '', registrationDateTo: '', championshipDateFrom: '', championshipDateTo: '', statuses: [], sort: 'date_desc', type: getInitialType() })}
             onApply={() => { /* no-op: filters are applied live */ }}
             defaultStatuses={defaultStatuses}
+            showTypeSelector={location.pathname !== '/buscar-partidas' && location.pathname !== '/buscar-campeonatos'}
           />
         </Grid>
         <Grid item xs={12} md={9}>

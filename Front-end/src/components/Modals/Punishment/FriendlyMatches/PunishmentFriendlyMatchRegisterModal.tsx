@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
-import axios from 'axios';
-import '../PunicaoModal.css';
+import { getJoinedTeams, createPunicao, updatePunicao, updateMatch } from '../../../../services/matchesFriendlyServices';
+import '../PunishmentModal.css';
 
-interface PunicaoPartidaAmistosaModal {
+interface PunishmentFriendlyMatchModal {
   show: boolean;
   onHide: () => void;
   team: any;
@@ -17,7 +17,7 @@ interface Dados {
   team_away: number;
 }
 
-const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({ 
+const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({ 
   show, 
   onHide, 
   team, 
@@ -49,14 +49,8 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
       try {
         setLoading(true);
         setError("");
-        
-        const response = await axios.get(`http://localhost:3001/api/matches/${idMatch}/join-team`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        
-        setTeams(response.data || []);
+        const resp = await getJoinedTeams(idMatch);
+        setTeams(resp.data || []);
       } catch (error) {
         console.error("Erro ao buscar times:", error);
         setError("Erro ao carregar times da partida");
@@ -99,18 +93,14 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
         return;
       }
 
-      const response = await axios.post(`http://localhost:3001/api/matches/${idMatch}/punicao`, {
+      const resp = await createPunicao(idMatch, {
         idtime: formData.time,
         motivo: formData.motivo,
         team_home: formData.team_home,
         team_away: formData.team_away
-      }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
       });
       
-      if (response.status === 201) {
+      if (resp.status === 201) {
         setSuccess("Punição aplicada com sucesso! Súmula 3x0 criada e partida finalizada.");
         
         setFormData({
@@ -121,11 +111,7 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
         });
         
         try {
-          await axios.put(`http://localhost:3001/api/matches/${idMatch}`, { status: 'finalizada' }, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
-          });
+          await updateMatch(String(idMatch), { status: 'finalizada' });
         } catch (err) {
           console.error('Erro ao atualizar status da partida para cancelada:', err);
         }
@@ -201,7 +187,7 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
             </div>
           ) : (
             <>
-              <div className="alert alert-info" style={{backgroundColor: 'rgba(33, 150, 243, 0.2)', border: '1px solid rgba(33, 150, 243, 0.4)', color: 'white', marginBottom: '1.5rem'}}>
+              <div className="alert alert-info" style={{backgroundColor: 'rgba(34, 149, 244, 0.2)', border: '1px solid rgba(33, 150, 243, 0.4)', color: 'black', marginBottom: '1.5rem'}}>
                 <i className="fas fa-info-circle me-2"></i>
                 Ao aplicar a punição, uma súmula 3x0 será gerada automaticamente e a partida será finalizada.
               </div>
@@ -288,7 +274,6 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
                   <option value="">Selecione o motivo</option>
                   <option value="Desistencia">Desistência</option>
                   <option value="Atraso">Atraso</option>
-                  <option value="Jogadores Insuficientes">Jogadores Insuficientes</option>
                   <option value="Falta de Comparecimento">Falta de Comparecimento</option>
                 </select>
               </div>
@@ -320,4 +305,4 @@ const PunicaoRegisterModal: React.FC<PunicaoPartidaAmistosaModal> = ({
   );
 };
 
-export default PunicaoRegisterModal;
+export default PunishmentRegisterModal;

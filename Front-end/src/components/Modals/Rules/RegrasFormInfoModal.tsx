@@ -76,7 +76,7 @@ export default function InfoRulesModal({ idpartida, show, onHide }: AthleteFormM
                             <div className="rule-info-label">Idade Máxima</div>
                             <div className="rule-info-value">{idadeMaxima} anos</div>
                         </div>
-                        <div className="rule-info-card">
+                        <div className="rule-info-card genero-card">
                             <div className="rule-info-label">Gênero</div>
                             <div className="rule-info-value">{genero}</div>
                         </div>

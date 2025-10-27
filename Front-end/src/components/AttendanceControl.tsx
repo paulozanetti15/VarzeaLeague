@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getAttendance, postAttendance } from '../services/matchesFriendlyServices';
 
 interface Player {
   id: number;
@@ -39,10 +40,7 @@ const AttendanceControl: React.FC<AttendanceControlProps> = ({ matchId, teamId }
       );
 
       // Buscar status de presença
-      const attendanceResponse = await axios.get(
-        `http://localhost:3001/api/matches/${matchId}/attendance`,
-        { headers }
-      );
+      const attendanceResponse = await getAttendance(matchId);
 
       setPlayers(playersResponse.data);
       setAttendance(attendanceResponse.data);
@@ -55,17 +53,7 @@ const AttendanceControl: React.FC<AttendanceControlProps> = ({ matchId, teamId }
 
   const updateAttendance = async (userId: number, status: 'CONFIRMED' | 'DECLINED') => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `http://localhost:3001/api/matches/${matchId}/attendance`,
-        {
-          userId,
-          status,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      await postAttendance(matchId, { userId, status });
 
       // Atualizar lista de presença
       fetchData();

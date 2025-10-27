@@ -353,7 +353,7 @@
   .match-title {
     color: #333;
     font-size: 1.8rem;
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1.3;
     margin: 0 0 1.5rem 0;
     text-shadow: none;
@@ -423,7 +423,7 @@
   
   .info-row strong {
     min-width: 55px;
-    font-weight: 600;
+    font-weight: 800;
   }
   
   .info-row span {
@@ -966,7 +966,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 9999;
     background: rgba(0, 0, 0, 0.5);
   }
   
@@ -975,13 +975,12 @@
     border-radius: 16px;
     width: 90%;
     max-width: 500px;
-    max-height: 600px;
-    overflow-y: auto;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(33, 150, 243, 0.2);
     color: #333;
-    display: flex;
-    flex-direction: column;
     backdrop-filter: blur(20px);
     margin: auto;
     position: relative;
@@ -1042,15 +1041,16 @@
     background-color: rgba(0, 0, 0, 0.05);
     color: #333;
   }  .filters-modal-body {
-    padding: 1.5rem;
+    padding: 1rem 1.5rem;
     background: transparent;
     overflow-y: auto;
     flex: 1;
+    min-height: 0;
   }
   
   .filter-group {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   }
   
@@ -1135,6 +1135,39 @@
   
   .status-indicator.confirmed {
     background-color: #9c27b0;
+  }
+
+  /* Ícones de status no modal */
+  .status-icon {
+    font-size: 1.2rem;
+    margin-right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .status-icon.open {
+    color: #4caf50;
+  }
+
+  .status-icon.confirmed {
+    color: #9c27b0;
+  }
+
+  .status-icon.in-progress {
+    color: #ff9800;
+  }
+
+  .status-icon.full {
+    color: #ff9800;
+  }
+
+  .status-icon.finished {
+    color: #2e7d32;
+  }
+
+  .status-icon.cancelled {
+    color: #d32f2f;
   }
   
   /* Indicadores de preço */
@@ -1542,12 +1575,10 @@
     min-width: 45px;
     font-weight: 600;
   }
-
+  
   .info-row span {
-    font-weight: 500;
-  }
-
-  @media (max-width: 1400px) {
+    font-weight: 700;
+  }  @media (max-width: 1400px) {
     .match-list-content {
       width: 85%;
     }
@@ -1939,7 +1970,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    margin-right: 6px;
+    margin-right: 70px;
     display: inline-block;
   }
 
@@ -1975,3 +2006,52 @@
     align-items: center;
     gap: 1rem;
   } 
+  
+  /* Filtros de data personalizados */
+  .custom-date-filters {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .date-range-inputs {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .date-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .date-input-group label {
+    color: #333;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .date-input {
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    color: #333;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+  }
+
+  .date-input:focus {
+    outline: none;
+    border-color: #2196F3;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+    background: #ffffff;
+  }
+
+  @media (max-width: 480px) {
+    .date-range-inputs {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+  }

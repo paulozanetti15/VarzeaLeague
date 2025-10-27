@@ -1,5 +1,13 @@
 import { useState, useRef } from 'react';
-import { format, parse, isValid, isAfter, startOfDay, isBefore } from 'date-fns';
+import { format } from 'date-fns';
+import {
+  formatDateISOToBR,
+  applyDateMask,
+  validateDataLimite,
+  validateIdadeRange,
+  validateGenero,
+  openDatePicker
+} from '../utils/formUtils';
 
 export interface RegrasFormData {
   dataLimite: string;
@@ -28,48 +36,19 @@ export const useRegrasForm = (initialData?: Partial<RegrasFormData>) => {
   const [loading, setLoading] = useState(false);
   const hiddenDateInputRef = useRef<HTMLInputElement>(null);
 
-  // Funções de formatação de data
-  const formatDateISOToBR = (iso: string): string => {
-    if (!iso) return '';
-    const [y, m, d] = iso.split('-');
-    return `${d}/${m}/${y}`;
-  };
-
   const handleDataLimiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
-    const dateRegex = /^(\d{0,2})\/(\d{0,2})\/(\d{0,4})$/;
-    let formattedDate = value.replace(/\D/g, '');
+    const formattedDate = applyDateMask(value);
 
-    if (formattedDate.length <= 8) {
-      if (formattedDate.length > 4) {
-        formattedDate = formattedDate.replace(/(\d{2})(\d{2})(\d{0,4})/, '$1/$2/$3');
-      } else if (formattedDate.length > 2) {
-        formattedDate = formattedDate.replace(/(\d{2})(\d{0,2})/, '$1/$2');
-      }
+    setFormData(prev => ({ ...prev, dataLimite: formattedDate }));
 
-      if (dateRegex.test(formattedDate) || formattedDate.length < 10) {
-        setFormData(prev => ({ ...prev, dataLimite: formattedDate }));
-        // Limpar erro quando usuário começa a digitar
-        if (errors.dataLimite) {
-          setErrors(prev => ({ ...prev, dataLimite: undefined }));
-        }
-      }
+    if (errors.dataLimite) {
+      setErrors(prev => ({ ...prev, dataLimite: undefined }));
     }
   };
 
   const handleOpenDatePicker = () => {
-    const el = hiddenDateInputRef.current;
-    if (!el) return;
-    if (formData.dataLimite && formData.dataLimite.length === 10) {
-      const [d, m, y] = formData.dataLimite.split('/');
-      el.value = `${y}-${m}-${d}`;
-    }
-    const anyEl = el as any;
-    if (typeof anyEl.showPicker === 'function') {
-      anyEl.showPicker();
-    } else {
-      el.click();
-    }
+    openDatePicker(hiddenDateInputRef, formData.dataLimite);
   };
 
   const handleHiddenDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,68 +59,20 @@ export const useRegrasForm = (initialData?: Partial<RegrasFormData>) => {
 
   // Funções de validação
   const verificarDataLimite = (dataLimite: string, dataPartida: string): boolean => {
-    const parsedDataLimite = parse(dataLimite, 'dd/MM/yyyy', new Date());
-    const parsedDataPartida = new Date(dataPartida);
-    const hoje = startOfDay(new Date());
-
-    if (!isValid(parsedDataLimite)) {
-      setErrors(prev => ({ ...prev, dataLimite: 'Data limite inválida. Use o formato DD/MM/AAAA' }));
+    const validation = validateDataLimite(dataLimite, dataPartida);
+    if (!validation.isValid) {
+      setErrors(prev => ({ ...prev, dataLimite: validation.error }));
       return false;
     }
-
-    // Não permitir data limite no passado
-    if (isBefore(parsedDataLimite, hoje)) {
-      setErrors(prev => ({ ...prev, dataLimite: 'A data limite não pode ser anterior a hoje' }));
-      return false;
-    }
-
-    // Deve ser estritamente anterior à data da partida
-    if (!isAfter(parsedDataPartida, parsedDataLimite)) {
-      setErrors(prev => ({ ...prev, dataLimite: 'A data limite deve ser anterior à data da partida' }));
-      return false;
-    }
-
-    // Também impedir mesma data da partida (caso lógica futura mude o isAfter)
-    const mesmaDataDaPartida =
-      parsedDataLimite.getFullYear() === parsedDataPartida.getFullYear() &&
-      parsedDataLimite.getMonth() === parsedDataPartida.getMonth() &&
-      parsedDataLimite.getDate() === parsedDataPartida.getDate();
-    if (mesmaDataDaPartida) {
-      setErrors(prev => ({ ...prev, dataLimite: 'A data limite não pode ser no mesmo dia da partida' }));
-      return false;
-    }
-
     return true;
   };
 
   const validarIdades = (): boolean => {
-    const minima = parseInt(formData.idadeMinima);
-    const maxima = parseInt(formData.idadeMaxima);
-
-    if (isNaN(minima) || minima < 0) {
-      setErrors(prev => ({ ...prev, idadeMinima: 'A idade mínima deve ser um número positivo' }));
+    const validation = validateIdadeRange(formData.idadeMinima, formData.idadeMaxima);
+    if (!validation.isValid) {
+      setErrors(prev => ({ ...prev, ...validation.errors }));
       return false;
     }
-
-    if (isNaN(maxima) || maxima < 0) {
-      setErrors(prev => ({ ...prev, idadeMaxima: 'A idade máxima deve ser um número positivo' }));
-      return false;
-    }
-
-    if (minima > maxima) {
-      setErrors(prev => ({
-        ...prev,
-        idadeMinima: 'A idade mínima não pode ser maior que a idade máxima',
-        idadeMaxima: 'A idade máxima não pode ser menor que a idade mínima'
-      }));
-      return false;
-    }
-
-    if (maxima > 100) {
-      setErrors(prev => ({ ...prev, idadeMaxima: 'A idade máxima não pode ser maior que 100 anos' }));
-      return false;
-    }
-
     return true;
   };
 
@@ -161,6 +92,12 @@ export const useRegrasForm = (initialData?: Partial<RegrasFormData>) => {
     // Validar gênero
     if (!formData.genero) {
       setErrors(prev => ({ ...prev, genero: 'Por favor, selecione o gênero da partida' }));
+      return false;
+    }
+
+    const generoValidation = validateGenero(formData.genero);
+    if (!generoValidation.isValid) {
+      setErrors(prev => ({ ...prev, genero: generoValidation.error }));
       return false;
     }
 
@@ -212,8 +149,6 @@ export const useRegrasForm = (initialData?: Partial<RegrasFormData>) => {
     validarFormulario,
     setError,
     clearErrors,
-
-    // Utilitários
     setLoading,
     resetForm,
   };

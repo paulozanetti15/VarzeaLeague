@@ -12,7 +12,7 @@ interface TeamsListProps {
   isCompleted: boolean;
   matchId: string | undefined;
   effectiveMaxTeams: number;
-  onLeaveMatch: (matchId: string | undefined, teamId: number) => void;
+  onLeaveMatch: (matchId: string | undefined, teamId: number, teamName: string) => void;
   onOpenSelectTeamPlayers: () => void;
 }
 

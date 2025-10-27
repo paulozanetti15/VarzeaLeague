@@ -1,5 +1,5 @@
 import React from 'react';
-import { MatchFormData } from '../../../../services/createMatchService';
+import { MatchFormData } from '../../../../services/matchesFriendlyServices';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
 interface DateTimeFieldsProps {

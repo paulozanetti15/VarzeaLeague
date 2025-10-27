@@ -1,4 +1,12 @@
-import { api } from './api';
+import axios from 'axios';
+import { createMatch } from './matchesFriendlyServices';
+
+const API_BASE = 'http://localhost:3001/api';
+
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  return { Authorization: `Bearer ${token}` };
+}
 
 export interface MatchRulesData {
   userId: number;
@@ -23,27 +31,41 @@ export interface MatchData {
 
 class MatchRulesService {
   /**
-   * Cria uma nova partida
+   * Cria regras para uma partida
    */
-  async createMatch(matchData: MatchData) {
+  async createRules(rulesData: MatchRulesData) {
     try {
-      const response = await api.matches.create(matchData);
-      return response;
+      const response = await axios.post(`${API_BASE}/rules`, rulesData, {
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
+      });
+      return response.data;
     } catch (error) {
-      console.error('Erro ao criar partida:', error);
+      console.error('Erro ao criar regras:', error);
       throw error;
     }
   }
 
   /**
-   * Cria regras para uma partida
+   * Cria uma nova partida
    */
-  async createRules(rulesData: MatchRulesData) {
+  async createMatch(matchData: MatchData) {
     try {
-      const response = await api.post('/rules/', rulesData);
+      const matchPayload = {
+        title: matchData.title,
+        description: matchData.description || '',
+        location: matchData.location,
+        date: matchData.date,
+        time: '00:00', // valor padrão
+        duration: '90', // valor padrão
+        price: '0', // valor padrão
+        modalidade: matchData.modalidade,
+        quadra: matchData.quadraNome,
+        organizerId: matchData.userId.toString()
+      };
+      const response = await createMatch(matchPayload);
       return response;
     } catch (error) {
-      console.error('Erro ao criar regras:', error);
+      console.error('Erro ao criar partida:', error);
       throw error;
     }
   }
@@ -83,8 +105,10 @@ class MatchRulesService {
    */
   async getRulesByMatchId(matchId: number) {
     try {
-      const response = await api.get(`/rules/match/${matchId}`);
-      return response;
+      const response = await axios.get(`${API_BASE}/rules/match/${matchId}`, {
+        headers: getAuthHeaders()
+      });
+      return response.data;
     } catch (error) {
       console.error(`Erro ao buscar regras da partida ${matchId}:`, error);
       throw error;
@@ -96,8 +120,10 @@ class MatchRulesService {
    */
   async updateRules(rulesId: number, rulesData: Partial<MatchRulesData>) {
     try {
-      const response = await api.put(`/rules/${rulesId}`, rulesData);
-      return response;
+      const response = await axios.put(`${API_BASE}/rules/${rulesId}`, rulesData, {
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
+      });
+      return response.data;
     } catch (error) {
       console.error(`Erro ao atualizar regras ${rulesId}:`, error);
       throw error;
@@ -109,8 +135,10 @@ class MatchRulesService {
    */
   async deleteRules(rulesId: number) {
     try {
-      const response = await api.delete(`/rules/${rulesId}`);
-      return response;
+      const response = await axios.delete(`${API_BASE}/rules/${rulesId}`, {
+        headers: getAuthHeaders()
+      });
+      return response.data;
     } catch (error) {
       console.error(`Erro ao remover regras ${rulesId}:`, error);
       throw error;

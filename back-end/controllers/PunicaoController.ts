@@ -302,9 +302,9 @@ export const deletarPunicaoPartidaAmistosa=async(req:AuthRequest,res:Response) =
             await sumula.destroy();
         }
 
-        await match.update({ status: 'aberta' });
+        await match.update({ status: 'confirmada' });
 
-        res.status(200).json({ message: "Punição e súmula deletadas com sucesso. Partida reaberta." });
+        res.status(200).json({ message: "Punição e súmula deletadas com sucesso. Partida voltou ao status confirmada." });
     } catch (error) {
       console.error('Erro ao deletar punição:', error);
       res.status(500).json({ message: 'Erro ao deletar punição' });

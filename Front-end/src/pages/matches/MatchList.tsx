@@ -5,7 +5,7 @@ import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import './MatchList.css';
 import { getStatusLabel } from '../../utils/statusLabels';
 import { canCreateMatch } from '../../utils/roleUtils';
-import { useMatches } from '../../hooks/useMatches';
+import { useMatches } from '../../hooks/useMatchOperations';
 import { useFilters } from '../../hooks/useFilters';
 import { MatchCard } from '../../features/matches/MatchList';
 import { AdvancedFiltersModal } from '../../features/matches/MatchList';
@@ -49,13 +49,16 @@ const MatchList: React.FC = () => {
     searchQuery,
     statusFilter,
     priceFilter,
-    dateFilter,
+    matchDateFilter,
+    registrationDateFilter,
     tempStatusFilter,
     tempPriceFilter,
-    tempDateFilter,
+    tempMatchDateFilter,
+    tempRegistrationDateFilter,
     setTempStatusFilter,
     setTempPriceFilter,
-    setTempDateFilter,
+    setTempMatchDateFilter,
+    setTempRegistrationDateFilter,
     handleSearchChange,
     clearSearch,
     applyFilters,
@@ -95,34 +98,28 @@ const MatchList: React.FC = () => {
       }
     }
 
-    if (dateFilter.length > 0) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const nextWeekStart = new Date(today);
-      nextWeekStart.setDate(today.getDate() + 7);
-      const nextWeekEnd = new Date(nextWeekStart);
-      nextWeekEnd.setDate(nextWeekStart.getDate() + 7);
+    // Filtro por data da partida
+    if (matchDateFilter.start) {
       filtered = filtered.filter(match => {
         const matchDate = new Date(match.date);
-        matchDate.setHours(0, 0, 0, 0);
-        if (dateFilter.includes('today')) {
-          return matchDate.getTime() === today.getTime();
-        } else if (dateFilter.includes('tomorrow')) {
-          return matchDate.getTime() === tomorrow.getTime();
-        } else if (dateFilter.includes('week')) {
-          return matchDate >= today && matchDate < nextWeekStart;
-        } else if (dateFilter.includes('weekend')) {
-          return matchDate >= nextWeekStart && matchDate < nextWeekEnd;
-        }
+        const filterDate = new Date(matchDateFilter.start!);
+        // Comparar apenas ano, mês e dia
+        return matchDate.toDateString() === filterDate.toDateString();
+      });
+    }
 
-        return true;
+    // Filtro por data de inscrição (usando data da partida como referência)
+    if (registrationDateFilter.start) {
+      filtered = filtered.filter(match => {
+        const matchDate = new Date(match.date);
+        const filterDate = new Date(registrationDateFilter.start!);
+        // Comparar apenas ano, mês e dia
+        return matchDate.toDateString() === filterDate.toDateString();
       });
     }
 
     setFilteredMatches(filtered);
-  }, [matches, searchQuery, statusFilter, priceFilter, dateFilter]);
+  }, [matches, searchQuery, statusFilter, priceFilter, matchDateFilter, registrationDateFilter]);
 
   const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
@@ -240,9 +237,10 @@ const MatchList: React.FC = () => {
                         <span className="chip-label">Status:</span> {statusFilter.map(s => {
                           switch(s) {
                             case 'aberta': return 'Aberta';
-                            case 'finalizada': return 'Finalizada';
+                            case 'confirmada': return 'Confirmada';
+                            case 'em_andamento': return 'Em Andamento';
                             case 'sem_vagas': return getStatusLabel('sem_vagas');
-                            case 'confirmada': return 'Em andamento';
+                            case 'finalizada': return 'Finalizada';
                             case 'cancelada': return 'Cancelada';
                             default: return s;
                           }
@@ -262,17 +260,15 @@ const MatchList: React.FC = () => {
                   </div>
                 )}
 
-                {dateFilter.length > 0 && (
+                {(matchDateFilter.start) && (
                   <div className="filter-chip">
-                    <span className="chip-label">Data:</span> {dateFilter.map(d => {
-                      switch(d) {
-                        case 'today': return 'Hoje';
-                        case 'tomorrow': return 'Amanhã';
-                        case 'week': return 'Esta semana';
-                        case 'weekend': return 'Fim de semana';
-                        default: return d;
-                      }
-                    }).join(', ')}
+                    <span className="chip-label">Data da partida:</span> {new Date(matchDateFilter.start).toLocaleDateString('pt-BR')}
+                  </div>
+                )}
+
+                {(registrationDateFilter.start) && (
+                  <div className="filter-chip">
+                    <span className="chip-label">Data de inscrição:</span> {new Date(registrationDateFilter.start).toLocaleDateString('pt-BR')}
                   </div>
                 )}
 
@@ -290,10 +286,12 @@ const MatchList: React.FC = () => {
           show={showAdvancedFilters}
           tempStatusFilter={tempStatusFilter}
           tempPriceFilter={tempPriceFilter}
-          tempDateFilter={tempDateFilter}
+          tempMatchDateFilter={tempMatchDateFilter}
+          tempRegistrationDateFilter={tempRegistrationDateFilter}
           setTempStatusFilter={setTempStatusFilter}
           setTempPriceFilter={setTempPriceFilter}
-          setTempDateFilter={setTempDateFilter}
+          setTempMatchDateFilter={setTempMatchDateFilter}
+          setTempRegistrationDateFilter={setTempRegistrationDateFilter}
           applyFilters={handleApplyFilters}
           cancelFilters={handleCancelFilters}
           clearTempFilters={handleClearTempFilters}

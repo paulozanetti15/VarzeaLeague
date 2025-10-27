@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { api } from '../../services/api';
+import { fetchMatches } from '../../services/matchesFriendlyServices';
+import {getAllChampionships} from '../../services/championshipsServices';
 import { useNavigate } from 'react-router-dom';
 import './MatchesWidget.css';
 
@@ -55,8 +56,8 @@ export function MatchesWidget() {
     try {
       // Tentar carregar dados reais
       const [matchesData, championshipsData] = await Promise.allSettled([
-        api.matches.list(),
-        api.championships.list()
+        fetchMatches(),
+        getAllChampionships()
       ]);
 
       if (matchesData.status === 'fulfilled' && matchesData.value?.length > 0) {

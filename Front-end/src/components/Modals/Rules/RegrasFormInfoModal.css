@@ -73,11 +73,32 @@
   justify-content: center;
 }
 
+/* Card específico para Gênero - fundo preto */
+.genero-card {
+  background: #ffffff !important;
+  border-color: #333333 !important;
+}
+
+.genero-card .rule-info-label {
+  color: #666666 !important;
+}
+
+.genero-card .rule-info-value {
+  color: #333333 !important;
+  font-weight: 700 !important;
+}
+
 .rule-info-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
   background: #ffffff;
   border-color: #000000;
+}
+
+/* Hover específico para o card de gênero */
+.genero-card:hover {
+  background: #ffffff !important;
+  border-color: #000000 !important;
 }
 
 .rule-info-label {

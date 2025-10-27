@@ -10,7 +10,7 @@ interface TeamCardProps {
   isAdmin: boolean;
   matchId: string | undefined;
   canLeaveMatch: boolean;
-  onLeaveMatch: (matchId: string | undefined, teamId: number) => void;
+  onLeaveMatch: (matchId: string | undefined, teamId: number, teamName: string) => void;
 }
 
 const TeamCard: React.FC<TeamCardProps> = ({
@@ -45,13 +45,13 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
         <div className="mt-3 action-buttons">
           {(team.captainId === userId && canLeaveMatch) && (
-            <Button size="sm" variant="danger" onClick={() => onLeaveMatch(matchId, team.id)}>
+            <Button size="sm" variant="danger" onClick={() => onLeaveMatch(matchId, team.id, team.name)}>
               Sair da partida
             </Button>
           )}
 
           {((isOrganizer || isAdmin) && team.captainId !== userId && canLeaveMatch) && (
-            <Button size="sm" variant="outline-danger" onClick={() => onLeaveMatch(matchId, team.id)} className="ms-2">
+            <Button size="sm" variant="outline-danger" onClick={() => onLeaveMatch(matchId, team.id, team.name)} className="ms-2">
               Remover time
             </Button>
           )}

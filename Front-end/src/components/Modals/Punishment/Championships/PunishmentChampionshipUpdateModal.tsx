@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 import axios from 'axios';
-import '../PunicaoModal.css';
+import '../PunishmentModal.css';
 
 interface Props {
   show: boolean;
@@ -10,7 +10,7 @@ interface Props {
   championshipId: number;
 }
 
-const PunicaoCampeonatoModalUpdate: React.FC<Props> = ({ show, onHide, onClose, championshipId }) => {
+const PunishmentChampionshipUpdateModal: React.FC<Props> = ({ show, onHide, onClose, championshipId }) => {
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<string>("");
   const [teams, setTeams] = useState<any[]>([]);
@@ -107,4 +107,4 @@ const PunicaoCampeonatoModalUpdate: React.FC<Props> = ({ show, onHide, onClose, 
   );
 };
 
-export default PunicaoCampeonatoModalUpdate;
+export default PunishmentChampionshipUpdateModal;

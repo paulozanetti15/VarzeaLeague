@@ -17,6 +17,7 @@ interface SumulaViewProps {
   show: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
+  onSumulaDeleted?: () => void; // Callback para quando súmula for deletada
 }
 
 export const SumulaView: React.FC<SumulaViewProps> = ({ 
@@ -26,7 +27,8 @@ export const SumulaView: React.FC<SumulaViewProps> = ({
   onEdit,
   show,
   canEdit,
-  canDelete
+  canDelete,
+  onSumulaDeleted
 }) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [matchDate, setMatchDate] = useState('');
@@ -130,6 +132,14 @@ export const SumulaView: React.FC<SumulaViewProps> = ({
     toast.dismiss(loadingToast);
     
     if (success) {
+      // Fechar modal imediatamente após exclusão bem-sucedida
+      if (dialogRef.current) {
+        dialogRef.current.close();
+      }
+      // Notificar componente pai que súmula foi deletada
+      if (onSumulaDeleted) {
+        onSumulaDeleted();
+      }
       onClose();
       toast.success('🗑️ Súmula deletada com sucesso!', {
         duration: 3000,

@@ -54,29 +54,10 @@ Match.init({
   date: {
     type: DataTypes.DATE,
     allowNull: false,
-    validate: {
-      isDate: true,
-      isFuture(value: Date) {
-        if (value <= new Date()) {
-          throw new Error('A data da partida deve ser futura');
-        }
-      }
-    }
   },
   duration: {
     type: DataTypes.STRING,
     allowNull: true,
-    validate: {
-      is: /^([0-9]{1,2}):([0-5][0-9])$/,
-      customValidator(value: string) {
-        if (value) {
-          const [hours, minutes] = value.split(':').map(Number);
-          if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-            throw new Error('Duração inválida. Use o formato HH:MM');
-          }
-        }
-      }
-    }
   },
   location: {
     type: DataTypes.STRING,
@@ -93,31 +74,18 @@ Match.init({
   modalidade : {
    type: DataTypes.STRING,
    allowNull: false,
-   validate: {
-     notEmpty: true,
-   }
   },
   nomequadra: {
     type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: true,
-    }
+    allowNull: true,
   },
   Cep: {
     type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: true,
-    }
+    allowNull: true,
   },
   Uf : {
     type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: true,
-      len: [2, 2]
-    }
+    allowNull: true,
   },
   status: {
     type: DataTypes.ENUM('aberta', 'sem_vagas', 'em_andamento', 'confirmada', 'cancelada', 'finalizada'),

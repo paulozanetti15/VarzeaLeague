@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { api } from '../../../services/api';
+import { getChampionshipTeams, getChampionshipById, deleteChampionship, leaveChampionshipWithTeam } from '../../../services/championshipsServices';
+import { getUserTeams } from '../../../services/teamsServices';
 import trophy from '../../../assets/championship-trophy.svg';
 import './ChampionshipDetail.css';
 import toast from 'react-hot-toast';
 import { Button, Modal } from 'react-bootstrap';
 import axios from 'axios';
-import PunicaoCampeonatoRegisterModal from '../../../components/Modals/Punicao/Campeonatos/PunicaoCampeonatoRegisterModal';
-import PunicaoCampeonatoModalInfo from '../../../components/Modals/Punicao/Campeonatos/PunicaoCampeonatoModalInfo';
+import PunicaoCampeonatoRegisterModal from '../../../components/Modals/Punishment/Championships/PunishmentChampionshipRegisterModal';
+import PunicaoCampeonatoModalInfo from '../../../components/Modals/Punishment/Championships/PunishmentChampionshipInfoModal';
 import SelectTeamPlayersChampionshipModal from '../../../components/Modals/Teams/SelectTeamPlayersChampionshipModal';
 
 interface Championship {
@@ -53,7 +54,7 @@ const ChampionshipDetail: React.FC = () => {
     if (!id) return;
     try {
       console.log('Carregando times do campeonato:', id);
-      const teamsData = await api.championships.getTeams(Number(id));
+      const teamsData = await getChampionshipTeams(Number(id));
       console.log('Times carregados:', teamsData);
       setTeams(teamsData || []);
     } catch (err) {
@@ -64,7 +65,7 @@ const ChampionshipDetail: React.FC = () => {
 
   const loadUserTeams = useCallback(async () => {
     try {
-      const userTeamsData = await api.teams.getUserTeams();
+      const userTeamsData = await getUserTeams();
       setUserTeams(userTeamsData || []);
     } catch (err) {
       console.error('Erro ao carregar times do usuário:', err);
@@ -77,7 +78,7 @@ const ChampionshipDetail: React.FC = () => {
       
       try {
         setLoading(true);
-        const data = await api.championships.getById(Number(id));
+        const data = await getChampionshipById(Number(id));
         setChampionship(data);
 
         // Verificar permissões
@@ -105,7 +106,7 @@ const ChampionshipDetail: React.FC = () => {
     if (!id) return;
     
     try {
-      await api.championships.delete(Number(id));
+      await deleteChampionship(Number(id));
       toast.success('Campeonato excluído com sucesso!');
       navigate('/championships');
     } catch (err: any) {
@@ -132,7 +133,7 @@ const ChampionshipDetail: React.FC = () => {
   const handleLeaveChampionship = async (teamId: number) => {
     try {
       setIsLeavingTeamId(teamId);
-      await api.championships.leaveChampionship(Number(id), teamId);
+      await leaveChampionshipWithTeam(Number(id), teamId);
       toast.success('Time removido do campeonato com sucesso!');
       await loadChampionshipTeams();
     } catch (err: any) {
@@ -388,7 +389,7 @@ const ChampionshipDetail: React.FC = () => {
         onSuccess={async () => {
           await loadChampionshipTeams();
           try {
-            const updated = await api.championships.getById(Number(id));
+            const updated = await getChampionshipById(Number(id));
             setChampionship(updated);
           } catch {}
         }}

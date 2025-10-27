@@ -694,7 +694,7 @@
 .team-stat-card .stat-icon {
   font-size: 1.7rem;
   margin-bottom: 0.35rem;
-  color: #2196F3;
+  color: #000000;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
 
@@ -722,6 +722,7 @@
   align-items: center;
   margin-bottom: 0.5rem;
   width: 100%;
+  min-height: 32px; /* altura mínima para alinhamento */
 }
 
 .player-name-container {
@@ -729,6 +730,7 @@
   align-items: center;
   flex: 1;
   max-width: 70%;
+  min-height: 32px; /* altura mínima para alinhamento */
 }
 
 .player-name {
@@ -742,8 +744,7 @@
 }
 
 .player-position {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #ffffff;
+  color: #000000;
   padding: 0.25rem 0.7rem;
   border-radius: 16px;
   font-size: 0.75rem;
@@ -755,6 +756,9 @@
   white-space: nowrap;
   box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
   border: none;
+  background: #f0f0f0;
+  min-height: 24px; /* altura mínima para alinhamento */
+  flex-shrink: 0;
 }
 
 /* Detalhes do jogador no rodapé do cartão */
@@ -901,11 +905,11 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0 8px;
-  color: #e3f2fd;
+  color: #000000;
 }
 
 .team-stats-table thead th {
-  color: #e3f2fd;
+  color: #000000;
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: none;
@@ -922,7 +926,7 @@
 .team-stats-table tbody td {
   padding: 10px 12px;
   text-align: center;
-  color: #ffffff;
+  color: #000000;
 }
 
 .team-stats-table tbody td:first-child {
@@ -934,4 +938,343 @@
   background: #f8f9fa;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   border-color: #2196F3;
+}
+
+/* ===== Estilos inline movidos para CSS ===== */
+
+/* Error container styles */
+.error-container-inline {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  margin-bottom: 20px;
+}
+
+.error-message-inline {
+  background: rgba(244, 67, 54, 0.1);
+  color: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+.error-message-inline p {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+.error-spacer {
+  height: 15px;
+}
+
+/* Team description styles */
+.team-description-inline {
+  max-width: 600px;
+  margin: 0 auto 1.5rem;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Team location and colors container */
+.team-location-colors {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+}
+
+/* Location badge */
+.location-badge {
+  color: rgba(1, 1, 1, 0.9);
+  font-weight: 500;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+/* Colors container */
+.colors-container {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+/* Color indicators */
+.color-indicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Team stats container */
+.team-stats-inline {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+/* Stat items */
+.stat-inline {
+  background: rgba(33, 150, 243, 0.15);
+  border: 1px solid rgba(33, 150, 243, 0.3);
+  padding: 0.8rem 1.5rem;
+  border-radius: 25px;
+  backdrop-filter: blur(10px);
+}
+
+.stat-inline .stat-icon {
+  color: #64b5f6;
+}
+
+.stat-inline-alt {
+  background: rgba(255, 193, 7, 0.15);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  padding: 0.8rem 1.5rem;
+  border-radius: 25px;
+  backdrop-filter: blur(10px);
+}
+
+.stat-inline-alt .stat-icon {
+  color: #FFD54F;
+}
+
+/* Team players expanded section */
+.team-players-expanded-inline {
+  margin-top: 1.2rem;
+  background-color: #f8f9fa;
+  border-radius: 0.8rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s ease-in-out;
+  border: 1px solid #e0e0e0;
+  overflow: hidden;
+  padding: 1.2rem 1rem 1.5rem 1rem;
+  position: relative;
+}
+
+/* Player item border */
+.team-player-item-border {
+  border-left: 4px solid #2196F3;
+}
+
+/* Team section title with icon */
+.team-section-title-icon {
+  margin-right: 8px;
+  color: #2196F3;
+}
+
+/* Team stats wrapper margin */
+.team-stats-wrapper-margin {
+  margin-top: 1.4rem;
+}
+
+/* Team stats table container */
+.team-stats-table-container {
+  overflow-x: auto;
+}
+
+/* Team no players message */
+.team-no-players-message {
+  text-align: center;
+  padding: 2rem;
+  color: #aaa;
+  font-style: italic;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 1rem;
+  grid-column: span 3;
+}
+
+.team-no-players-message p {
+  margin: 0;
+}
+
+/* Team loading players */
+.team-loading-players-inline {
+  text-align: center;
+  padding: 1.5rem;
+  color: #bbb;
+  font-style: italic;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  margin: 0 1rem;
+  grid-column: span 3;
+}
+
+/* Team banner gradient */
+.team-banner-gradient {
+  background: linear-gradient(135deg, #2196F3, #3f51b5);
+}
+
+/* Team location and colors container */
+.team-location-colors {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+}
+
+/* Location badge */
+.location-badge {
+  color: rgba(1, 1, 1, 0.9);
+  font-weight: 500;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+/* Colors container */
+.colors-container {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+/* Color indicators */
+.color-indicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Team stats container */
+.team-stats-inline {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+/* Stat items */
+.stat-inline {
+  background: rgba(33, 150, 243, 0.15);
+  border: 1px solid rgba(33, 150, 243, 0.3);
+  padding: 0.8rem 1.5rem;
+  border-radius: 25px;
+  backdrop-filter: blur(10px);
+}
+
+.stat-inline .stat-icon {
+  color: #000000;
+}
+
+.stat-inline-alt {
+  background: rgba(255, 193, 7, 0.15);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  padding: 0.8rem 1.5rem;
+  border-radius: 25px;
+  backdrop-filter: blur(10px);
+}
+
+.stat-inline-alt .stat-icon {
+  color: #000000;
+}
+
+/* Stat text */
+.stat-text {
+  font-weight: 600;
+  color: #000000;
+}
+
+/* Team section title with icon */
+.team-section-title-icon {
+  margin-right: 8px;
+  color: #2196F3;
+}
+
+/* Player item border */
+.team-player-item-border {
+  border-left: 4px solid #2196F3;
+}
+
+/* Player icon styles */
+.player-icon {
+  font-size: 1.2rem;
+  margin-right: 8px;
+  color: #000000;
+  flex-shrink: 0;
+}
+
+/* Player position flex shrink */
+.player-position-shrink {
+  flex-shrink: 0;
+}
+
+/* Player detail icons */
+.player-detail-icon {
+  font-size: 0.9rem;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+/* Team no players icon */
+.team-no-players-icon {
+  font-size: 2rem;
+  opacity: 0.3;
+  margin-bottom: 8px;
+}
+
+/* Team action buttons margin */
+.team-action-buttons-margin {
+  margin-top: 1.4rem;
+}
+
+/* Colors container inline (inside location badge) */
+.colors-container-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 0.8rem;
+}
+
+/* Color indicators inline */
+.color-indicator-inline {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  display: inline-block;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
