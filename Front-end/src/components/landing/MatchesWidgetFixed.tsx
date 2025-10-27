@@ -407,6 +407,7 @@ export function MatchesWidgetFixed() {
                         <span className={`status-indicator ${match.status}`}>
                           {match.status === 'live' ? 'AO VIVO' :
                            match.status === 'finished' ? 'ENCERRADO' : 'PRÓXIMO'}
+                           
                         </span>
                       </div>
                     </div>

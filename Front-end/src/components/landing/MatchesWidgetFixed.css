@@ -358,7 +358,14 @@
   gap: 0.35rem;
   font-size: 0.8rem;
   color: #718096;
-  white-space: nowrap;
+  /* permitir quebra e truncamento em até 2 linhas */
+  white-space: normal;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-weight: 700;
 }
 
@@ -613,6 +620,21 @@
   border-bottom: 1px solid #F1F5F9;
   transition: all 0.2s ease;
   cursor: pointer;
+}
+
+/* Garantir que nomes longos na lista da agenda quebrem até 2 linhas com reticências */
+.match-list-item .match-teams .team-home,
+.match-list-item .match-teams .team-away {
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  max-width: 100%;
+  line-height: 1.2;
+  font-weight: 700;
 }
 
 .match-list-item:last-child {
