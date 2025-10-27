@@ -105,17 +105,15 @@ const startServer = async () => {
     await AttendanceModel.sync();
     console.log('Modelo Attendance sincronizado.');
      
-    await FriendlyMatchPenalty.sync()
-    console.log('Modelo Punicao Partida Amistosa sincronizado.');
-    await ChampionshipPenalty.sync();
-    console.log('Modelo Punicao Championship sincronizado.');
+  await FriendlyMatchPenalty.sync();
+  console.log('Modelo Punicao Partida Amistosa sincronizado.');
 
     // Modelos adicionados na modelagem v2
     const { default: ChampionshipModel } = await import('./models/ChampionshipModel');
     await ChampionshipModel.sync();
     console.log('Modelo Championship sincronizado.');
     
-    const { default: MatchReportModel } = await import('./models/MatchReportModel');
+  const { default: MatchReportModel } = await import('./models/MatchReportModel');
     await MatchReportModel.sync();
     console.log('Modelo MatchReport sincronizado.');
     
@@ -127,13 +125,15 @@ const startServer = async () => {
   await MatchCardModel.sync({ alter: true }); // garantir colunas novas (player_id)
     console.log('Modelo MatchCard sincronizado.');
     
-    const { default: MatchEvaluationModel } = await import('./models/MatchEvaluationModel');
+  const { default: MatchEvaluationModel } = await import('./models/MatchEvaluationModel');
     await MatchEvaluationModel.sync();
     console.log('Modelo MatchEvaluation sincronizado.');
     await MatchChampionship.sync();
     console.log('Modelo MatchChampionship sincronizado.');
     await MatchChampionshpReport.sync();
     console.log('Modelo MatchChampionshpReport sincronizado.');
+  await ChampionshipPenalty.sync();
+  console.log('Modelo Punicao Championship sincronizado.');
     
     await seedUserTypes();
 
