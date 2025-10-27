@@ -351,9 +351,7 @@ export default function CreateTeam() {
     await Promise.all(promises);
   };
 
-  const bannerStyle = {
-    background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`,
-  };
+  
 
   return (
     <div className="create-team-container">
@@ -365,7 +363,7 @@ export default function CreateTeam() {
         />
       )}
       
-      <ManageTeamPlayersModal
+      <PlayerModal
         isOpen={isPlayerModalOpen}
         onClose={() => setIsPlayerModalOpen(false)}
         onSave={handleSavePlayer}
