@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMatchesWidget } from '../../hooks/useMatchesWidget';
 import { getToday, isToday, formatMatchDate } from '../../utils/matchesUtils';
@@ -13,85 +14,35 @@ export function MatchesWidgetFixed() {
   const [cardScrollPosition, setCardScrollPosition] = useState(0);
   const [calendarScrollPosition, setCalendarScrollPosition] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, position: 0 });
   const [showAllGames, setShowAllGames] = useState(false);
   const navigate = useNavigate();
 
   const getMatchesForDate = (date: Date) => {
     const normalizedDate = new Date(date);
     normalizedDate.setHours(0, 0, 0, 0);
-
     return matches.filter(match => {
       if (!match.date) return false;
       const matchDate = new Date(match.date);
       matchDate.setHours(0, 0, 0, 0);
-
-      const isSameDay = matchDate.getTime() === normalizedDate.getTime();
-
-      if (isSameDay) {
-        return match.status === 'live' || match.status === 'upcoming' || match.status === 'finished';
-      }
-
-      return false;
+      return matchDate.getTime() === normalizedDate.getTime();
     });
   };
 
+  // Retorna os jogos do dia para o carrossel de destaque
   const getTodayMatches = () => {
-    const todayMatches = getMatchesForDate(getToday());
-
+    const today = getToday();
+    const todayMatches = getMatchesForDate(today);
     if (todayMatches.length === 0) {
-      return matches.filter(match => {
+      return matches.filter((match: any) => {
         const matchDate = new Date(match.date);
-        const today = getToday();
         const tomorrow = new Date(today);
         tomorrow.setDate(today.getDate() + 1);
-
         matchDate.setHours(0, 0, 0, 0);
         return matchDate.getTime() === today.getTime() || matchDate.getTime() === tomorrow.getTime();
       }).slice(0, 4);
     }
-
     return todayMatches.slice(0, 4);
   };
-
-  useEffect(() => {
-    const today = getToday();
-    setSelectedDate(today);
-
-    const todayDay = today.getDate();
-    const initialPosition = Math.max(0, todayDay - 4);
-    setCalendarScrollPosition(initialPosition);
-  }, []);
-
-  // Event listeners para arrastar
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
-        const deltaX = e.clientX - dragStart.x;
-        const barWidth = 300;
-        const daysInMonth = getDaysInMonth();
-        const maxScroll = Math.max(0, daysInMonth.length - 7);
-
-        const sensitivity = maxScroll / barWidth;
-        const newPosition = Math.max(0, Math.min(maxScroll, dragStart.position + (deltaX * sensitivity)));
-        setCalendarScrollPosition(newPosition);
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDragging, dragStart]);
 
   const getDaysInMonth = () => {
     const year = selectedDate.getFullYear();
@@ -131,7 +82,6 @@ export function MatchesWidgetFixed() {
   // Funções para arrastar a barra de rolagem
   const handleDragStart = (e: React.MouseEvent) => {
     setIsDragging(true);
-    setDragStart({ x: e.clientX, position: calendarScrollPosition });
     e.preventDefault();
   };
 
@@ -185,59 +135,48 @@ export function MatchesWidgetFixed() {
                   '--card-transform': `-${cardScrollPosition * (380 + 24)}px`
                 } as React.CSSProperties}
               >
-                {getTodayMatches().map((match) => (
+                {getTodayMatches().map((match: any) => (
                   <div
                     key={match.id}
-                    className="match-card"
+                    className="match-card match-card-globo highlight-card match-card-large"
                     onClick={() => navigate(`/matches/${match.id}`)}
                   >
-                    {/* Header Compacto */}
-                    <div className="card-header-compact">
-                      <div className="championship-badge">{match.championship}</div>
+                    <div className="highlight-title-row">
+                      <span className="highlight-title">{match.title || match.championship}</span>
                     </div>
-
-                    {/* Informação de Data e Hora */}
-                    <div className="match-datetime">
-                      <span>{formatMatchDate(match.date)} • {match.time}</span>
+                    <div className="highlight-date-row">
+                      <span className="highlight-date">Hoje • {match.time}</span>
                     </div>
-
-                    {/* Times Confronto */}
-                    <div className="teams-confrontation">
-                      {/* Time Casa */}
-                      <div className="team-info">
-                        <span className="team-name-compact">{match.homeTeam.name}</span>
-                      </div>
-
-                      {/* VS Central */}
-                      <div className="vs-divider">
-                        <span className="vs-text">VS</span>
-                        {match.score && (
-                          <div className="score-compact">
-                            {match.score.home} - {match.score.away}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Time Visitante */}
-                      <div className="team-info">
-                        <span className="team-name-compact">{match.awayTeam.name}</span>
-                      </div>
+                    <div className="highlight-vs-row align-vs-horizontal">
+                      <span className="highlight-team">{match.homeTeam?.name || '---'}</span>
+                      <span className="highlight-vs-text">VS</span>
+                      <span className="highlight-team">{match.awayTeam?.name || '---'}</span>
                     </div>
-
-                    {/* Footer com Informações */}
-                    <div className="card-footer-compact">
-                      <span className="round-label">{match.round} • {match.category}</span>
-                      {match.location && (
-                        <span className="location-label">
-                          <i className="fas fa-map-marker-alt"></i>
-                          <span className="location-text">{match.location}</span>
-                        </span>
-                      )}
-                      <div className={`status-pill ${match.status}`} role="status" aria-label={`status ${match.status}`}>
-                        {match.status === 'live' && <span className="live-dot"></span>}
+                    <div className="highlight-status-row">
+                      <span className="highlight-matchname">{match.title || match.championship}</span>
+                      <span className="highlight-status-pill status-pill"
+                        style={{ marginLeft: 'auto' }}
+                        role="status"
+                        aria-label={`status ${match.status}`}
+                      >
                         {match.status === 'live' ? 'AO VIVO' :
-                         match.status === 'finished' ? 'ENCERRADO' : 'PRÓXIMO'}
-                      </div>
+                          match.status === 'finished' ? 'ENCERRADO' :
+                          match.status === 'sem_vagas' ? 'SEM VAGAS' :
+                          match.status === 'aberta' ? 'ABERTO' :
+                          match.status === 'cancelada' ? 'CANCELADA' :
+                          'ABERTO'}
+                      </span>
+                    </div>
+                    <div className="highlight-footer footer-bottom-bar">
+                      <span className="footer-type">Amistoso</span>
+                      <span className="footer-location footer-location-bottom">
+                        <i className="fas fa-map-marker-alt"></i>
+                        {match.location}
+                      </span>
+                      <span className={`status-pill ${match.status}`}
+                        style={{ background: match.status === 'cancelada' ? '#fee2e2' : match.status === 'finished' ? '#dcfce7' : '#e0f2fe', color: match.status === 'cancelada' ? '#dc2626' : match.status === 'finished' ? '#16a34a' : '#2563eb' }}>
+                        {match.status === 'cancelada' ? 'CANCELADA' : match.status === 'finished' ? 'ENCERRADO' : 'ABERTO'}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -379,37 +318,40 @@ export function MatchesWidgetFixed() {
           <div className="matches-list">
             {getMatchesForDate(selectedDate).length > 0 ? (
               <>
-                {(showAllGames ? getMatchesForDate(selectedDate) : getMatchesForDate(selectedDate).slice(0, 3)).map((match) => (
+                {(showAllGames ? getMatchesForDate(selectedDate) : getMatchesForDate(selectedDate).slice(0, 3)).map((match: any) => (
                   <div
                     key={match.id}
-                    className="match-list-item"
+                    className="agenda-match-item"
                     onClick={() => navigate(`/matches/${match.id}`)}
                   >
-                    <div className="match-details">
-                      <div className="match-teams">
+                    <div className="match-time-agenda">
+                      <span className="time">{match.time}</span>
+                    </div>
+                    <div className="match-info-agenda">
+                      <div className="teams-agenda">
                         <span className="team-home">{match.homeTeam.name}</span>
-                        <span className="vs-indicator">x</span>
+                        <span className="vs-agenda">x</span>
                         <span className="team-away">{match.awayTeam.name}</span>
                       </div>
-                      <div className="match-meta">
-                        <span className="championship-label">{match.championship}</span>
+                      <div className="match-details-agenda">
+                        <span className="championship-agenda">{match.championship}</span>
                         {match.location && (
-                          <span className="location-label">{match.location}</span>
+                          <span className="location-agenda">
+                            <i className="fas fa-map-marker-alt"></i>
+                            {match.location}
+                          </span>
                         )}
                       </div>
                     </div>
-
-                    <div className="match-time-info">
-                      <div className="match-time">
-                        <span>{match.time}</span>
-                      </div>
-                      <div className="match-status-display">
-                        <span className={`status-indicator ${match.status}`}>
-                          {match.status === 'live' ? 'AO VIVO' :
-                           match.status === 'finished' ? 'ENCERRADO' : 'PRÓXIMO'}
-                           
-                        </span>
-                      </div>
+                    <div className="match-status-agenda">
+                      <span className={`status-agenda ${match.status}`}>
+                        {match.status === 'live' ? 'AO VIVO' :
+                         match.status === 'finished' ? 'ENCERRADO' :
+                         match.status === 'sem_vagas' ? 'SEM VAGAS' :
+                         match.status === 'aberta' ? 'ABERTA' :
+                         match.status === 'cancelada' ? 'CANCELADA' :
+                         'PRÓXIMA'}
+                      </span>
                     </div>
                   </div>
                 ))}

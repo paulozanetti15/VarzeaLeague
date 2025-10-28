@@ -2,6 +2,9 @@ import React from 'react';
 import { Button } from 'react-bootstrap';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+
+import GavelIcon from '@mui/icons-material/Gavel';
+import DescriptionIcon from '@mui/icons-material/Description';
 import './MatchActions.css';
 
 interface MatchActionsProps {
@@ -61,7 +64,7 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
   const canShowPunishment = canApplyPunishment && hasMinimumTeams && isPastDeadline;
   const showPunishmentButton = canEdit && canShowPunishment && matchStatus !== 'em_andamento' && !(matchStatus === 'finalizada' && !hasPunishment && !isWo);
   const canCreateSumula = userTypeId === 2
-  const canViewEvents =userTypeId === 1 || userTypeId === 3;
+  const canViewEvents =userTypeId === 1 || userTypeId === 3 ;
 
   return (
     <div className="match-actions d-flex flex-wrap justify-content-center gap-2 my-3">
@@ -74,7 +77,8 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
           )}
           
           {showPunishmentButton && (
-            <Button className="btn-edit" onClick={onPunishment}>
+            <Button className="btn-edit btn-punishment" onClick={onPunishment}>
+              <GavelIcon style={{ marginRight: 4 }} />
               {hasPunishment ? 'Ver Punição' : 'Aplicar Punição'}
             </Button>
           )}
@@ -112,15 +116,16 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
         {(() => {
           const statusLower = String(matchStatus || '').toLowerCase();
           const allowedStatuses = [ 'finalizada'];
-          const canShowFinalize = allowedStatuses.includes(statusLower) && isCompleted && !isCancelled && canCreateSumula && !hasPunishment;
+          const canShowFinalize = allowedStatuses.includes(statusLower) && isCompleted && !isCancelled && canCreateSumula && hasPunishment;
           return canShowFinalize ? (
-            <Button className="btn-finalize" onClick={onCreateSumula}>
-               {(!hasSumula && !hasPunishment) ? 'Registrar súmula' : 'Ver súmula'}
+            <Button className="btn-finalize btn-sumula" onClick={onCreateSumula}>
+              <DescriptionIcon style={{ marginRight: 4 }} />
+              {(!hasSumula && !hasPunishment) ? 'Registrar súmula' : 'Ver súmula'}
             </Button>
           ) : null;
         })()}
 
-        {canViewEvents && isCompleted && hasSumula && (
+        {canViewEvents && isCompleted && hasSumula &&  (
           <Button className="btn-events" onClick={onViewEvents}>
             Sumula da Partida
           </Button>

@@ -1,3 +1,16 @@
+/* Botão de súmula (verde escuro, diferente do finalize padrão) */
+.btn-sumula {
+  background: linear-gradient(135deg, #1976d2, #1565c0) !important;
+  color: #fff !important;
+  border-color: #1976d2 !important;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+}
+
+.btn-sumula:hover {
+  background: linear-gradient(135deg, #1565c0, #0d47a1) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(25, 118, 210, 0.3);
+}
 .match-actions {
   margin: 2rem 0;
   padding: 1.5rem;

@@ -158,149 +158,174 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
     <Modal
       show={show}
       onHide={onHide}
-      className="regras-modal"
+      className="punishment-modal"
       backdrop="static"
       keyboard={false}
-      size="xl"
+      size="lg"
+      centered
     >
-      <Modal.Body>
-        <div className="modal-content-wrapper">
-          <h2 className="modal-title">Punição por WO</h2>
-          
-          {error && (
-            <div className="error-message">
-              <p>{error}</p>
-            </div>
-          )}
-          
-          {success && (
-            <div className="success-message">
-              <p style={{ justifyContent: 'center', display: 'flex' }}>{success}</p>
-            </div>
-          )}
-          
-          <br/>
-          
-          {loading && !success && !error ? (
-            <div style={{ textAlign: 'center', color: 'white' }}>
-              Carregando...
-            </div>
-          ) : (
-            <>
-              <div className="alert alert-info" style={{backgroundColor: 'rgba(34, 149, 244, 0.2)', border: '1px solid rgba(33, 150, 243, 0.4)', color: 'black', marginBottom: '1.5rem'}}>
-                <i className="fas fa-info-circle me-2"></i>
-                Ao aplicar a punição, uma súmula 3x0 será gerada automaticamente e a partida será finalizada.
-              </div>
-
-              <div className="form-group mb-3">
-                <label className="form-label" style={{color:"white", fontWeight: 600}}>
-                  <i className="fas fa-exclamation-triangle me-2"></i>
-                  Time Punido:
-                </label>
-                <select 
-                  className="form-select" 
-                  name="time" 
-                  onChange={handleSelectChange}
-                  value={formData.time} 
-                  aria-label="Selecione o time punido"
-                  disabled={loading}
-                >
-                  <option value={0}>Selecione o time que receberá a punição</option>
-                  {teams.map((team: any) => (
-                    <option key={team.id} value={team.id}>
-                      {team.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group mb-3">
-                <label className="form-label" style={{color:"white", fontWeight: 600}}>
-                  <i className="fas fa-home me-2"></i>
-                  Time da Casa:
-                </label>
-                <select 
-                  className="form-select" 
-                  name="team_home" 
-                  onChange={handleSelectChange}
-                  value={formData.team_home} 
-                  aria-label="Selecione o time da casa"
-                  disabled={loading}
-                >
-                  <option value={0}>Selecione o time mandante</option>
-                  {teams.map((team: any) => (
-                    <option key={team.id} value={team.id}>
-                      {team.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group mb-3">
-                <label className="form-label" style={{color:"white", fontWeight: 600}}>
-                  <i className="fas fa-plane-departure me-2"></i>
-                  Time Visitante:
-                </label>
-                <select 
-                  className="form-select" 
-                  name="team_away" 
-                  onChange={handleSelectChange}
-                  value={formData.team_away} 
-                  aria-label="Selecione o time visitante"
-                  disabled={loading}
-                >
-                  <option value={0}>Selecione o time visitante</option>
-                  {teams.map((team: any) => (
-                    <option key={team.id} value={team.id}>
-                      {team.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group mb-4">
-                <label className="form-label" style={{color:"white", fontWeight: 600}}>
-                  <i className="fas fa-clipboard-list me-2"></i>
-                  Motivo da Punição:
-                </label>
-                <select 
-                  className="form-select" 
-                  name="motivo" 
-                  onChange={handleSelectChange}
-                  value={formData.motivo}
-                  aria-label="Selecione o motivo"
-                  disabled={loading}
-                >
-                  <option value="">Selecione o motivo</option>
-                  <option value="Desistencia">Desistência</option>
-                  <option value="Atraso">Atraso</option>
-                  <option value="Falta de Comparecimento">Falta de Comparecimento</option>
-                </select>
-              </div>
-            </>
-          )}
-
-          <div className="modal-buttons d-flex gap-2 justify-content-end">
-            <Button 
-              variant="secondary" 
-              onClick={handleClose}
-              disabled={loading}
-            >
-              <i className="fas fa-times me-2"></i>
-              Cancelar
-            </Button>
-            <button
-              type="button"
-              className="btn btn-warning"
-              onClick={() => inserirPunicao(team.id)}
-              disabled={!isFormValid || loading}
-            >
-              <i className="fas fa-gavel me-2"></i>
-              {loading ? "Aplicando..." : "Aplicar Punição WO"}
-            </button>
+      <div className="punishment-modal-header">
+        <h2 className="modal-title">
+          <i className="fas fa-gavel me-2"></i>
+          Punição por WO
+        </h2>
+      </div>
+      <div className="punishment-modal-body">
+        {error && (
+          <div className="alert alert-danger mb-3">
+            <i className="fas fa-exclamation-circle me-2"></i>
+            {error}
           </div>
+        )}
+        {success && (
+          <div className="alert alert-success mb-3">
+            <i className="fas fa-check-circle me-2"></i>
+            {success}
+          </div>
+        )}
+        {loading && !success && !error ? (
+          <div className="text-center py-4">
+            <div className="spinner-border text-warning mb-3" role="status" style={{width: '2.5rem', height: '2.5rem'}}>
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <div className="text-muted">Carregando...</div>
+          </div>
+        ) : (
+          <>
+            <div className="alert alert-warning mb-4">
+              <i className="fas fa-info-circle me-2"></i>
+              Ao aplicar a punição, uma súmula 3x0 será gerada automaticamente e a partida será finalizada.
+            </div>
+            <div className="punishment-grid">
+              <div className="punishment-card punishment-card-danger">
+                <div className="punishment-card-header">
+                  <i className="fas fa-exclamation-triangle me-2"></i>
+                  Time Punido
+                </div>
+                <div className="punishment-card-body">
+                  <div className="punishment-card-icon">
+                    <i className="fas fa-users"></i>
+                  </div>
+                  <select 
+                    className="form-select mt-3" 
+                    name="time" 
+                    onChange={handleSelectChange}
+                    value={formData.time} 
+                    aria-label="Selecione o time punido"
+                    disabled={loading}
+                  >
+                    <option value={0}>Selecione o time que receberá a punição</option>
+                    {teams.map((team: any) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="punishment-card punishment-card-primary">
+                <div className="punishment-card-header">
+                  <i className="fas fa-home me-2"></i>
+                  Time da Casa
+                </div>
+                <div className="punishment-card-body">
+                  <div className="punishment-card-icon">
+                    <i className="fas fa-home"></i>
+                  </div>
+                  <select 
+                    className="form-select mt-3" 
+                    name="team_home" 
+                    onChange={handleSelectChange}
+                    value={formData.team_home} 
+                    aria-label="Selecione o time da casa"
+                    disabled={loading}
+                  >
+                    <option value={0}>Selecione o time mandante</option>
+                    {teams.map((team: any) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="punishment-card punishment-card-primary">
+                <div className="punishment-card-header">
+                  <i className="fas fa-plane-departure me-2"></i>
+                  Time Visitante
+                </div>
+                <div className="punishment-card-body">
+                  <div className="punishment-card-icon">
+                    <i className="fas fa-plane-departure"></i>
+                  </div>
+                  <select 
+                    className="form-select mt-3" 
+                    name="team_away" 
+                    onChange={handleSelectChange}
+                    value={formData.team_away} 
+                    aria-label="Selecione o time visitante"
+                    disabled={loading}
+                  >
+                    <option value={0}>Selecione o time visitante</option>
+                    {teams.map((team: any) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="punishment-card punishment-card-primary">
+                <div className="punishment-card-header">
+                  <i className="fas fa-clipboard-list me-2"></i>
+                  Motivo da Punição
+                </div>
+                <div className="punishment-card-body">
+                  <div className="punishment-card-icon">
+                    <i className="fas fa-clipboard-list"></i>
+                  </div>
+                  <select 
+                    className="form-select mt-3" 
+                    name="motivo" 
+                    onChange={handleSelectChange}
+                    value={formData.motivo}
+                    aria-label="Selecione o motivo"
+                    disabled={loading}
+                  >
+                    <option value="">Selecione o motivo</option>
+                    <option value="Desistencia">Desistência</option>
+                    <option value="Atraso">Atraso</option>
+                    <option value="Falta de Comparecimento">Falta de Comparecimento</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+      <div className="punishment-modal-footer">
+        <div>
+          <Button 
+            variant="secondary" 
+            onClick={handleClose}
+            disabled={loading}
+          >
+            <i className="fas fa-times me-2"></i>
+            Cancelar
+          </Button>
         </div>
-      </Modal.Body>
+        <div>
+          <button
+            type="button"
+            className="btn btn-warning"
+            onClick={() => inserirPunicao(team.id)}
+            disabled={!isFormValid || loading}
+          >
+            <i className="fas fa-gavel me-2"></i>
+            {loading ? "Aplicando..." : "Aplicar Punição WO"}
+          </button>
+        </div>
+      </div>
     </Modal>
   );
 };
