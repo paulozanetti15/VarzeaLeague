@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMatchesWidget } from '../../hooks/useMatchesWidget';
 import { getToday, isToday, formatMatchDate } from '../../utils/matchesUtils';
@@ -20,6 +19,7 @@ export function MatchesWidgetFixed() {
   const getMatchesForDate = (date: Date) => {
     const normalizedDate = new Date(date);
     normalizedDate.setHours(0, 0, 0, 0);
+
     return matches.filter(match => {
       if (!match.date) return false;
       const matchDate = new Date(match.date);
@@ -43,6 +43,45 @@ export function MatchesWidgetFixed() {
     }
     return todayMatches.slice(0, 4);
   };
+
+  useEffect(() => {
+    const today = getToday();
+    setSelectedDate(today);
+
+    const todayDay = today.getDate();
+    const initialPosition = Math.max(0, todayDay - 4);
+    setCalendarScrollPosition(initialPosition);
+  }, []);
+
+  // Event listeners para arrastar
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        const deltaX = e.clientX - dragStart.x;
+        const barWidth = 300;
+        const daysInMonth = getDaysInMonth();
+        const maxScroll = Math.max(0, daysInMonth.length - 7);
+
+        const sensitivity = maxScroll / barWidth;
+        const newPosition = Math.max(0, Math.min(maxScroll, dragStart.position + (deltaX * sensitivity)));
+        setCalendarScrollPosition(newPosition);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragStart]);
 
   const getDaysInMonth = () => {
     const year = selectedDate.getFullYear();

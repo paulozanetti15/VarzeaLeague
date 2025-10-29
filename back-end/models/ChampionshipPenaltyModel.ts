@@ -42,7 +42,7 @@ ChampionshipPenalty.init(
       type: DataTypes.INTEGER,
       field: 'id_match_championship',
       allowNull: true,
-      references: { model: 'match_championships', key: 'id' },
+      references: { model: 'match_championship', key: 'id' },
     },
     motivo: {
       type: DataTypes.STRING,
