@@ -31,7 +31,6 @@ export interface PlayerStats {
   gols?: number;
   amarelos?: number;
   vermelhos?: number;
-  cartoes?: number;
 }
 
 export default Team;

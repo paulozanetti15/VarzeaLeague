@@ -39,9 +39,8 @@ const PlayerStatsTable: React.FC<PlayerStatsTableProps> = ({
               <th>Posição</th>
               <th>Sexo</th>
               <th>Gols</th>
-              <th>Amarelos</th>
-              <th>Vermelhos</th>
-              <th>Cartões</th>
+              <th>Cartões Amarelo</th>
+              <th>Cartões Vermelho</th>
             </tr>
           </thead>
           <tbody>
@@ -53,7 +52,6 @@ const PlayerStatsTable: React.FC<PlayerStatsTableProps> = ({
                 <td>{p.gols || 0}</td>
                 <td>{p.amarelos || 0}</td>
                 <td>{p.vermelhos || 0}</td>
-                <td>{p.cartoes || 0}</td>
               </tr>
             ))}
           </tbody>

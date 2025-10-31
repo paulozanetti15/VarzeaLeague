@@ -33,11 +33,11 @@ export const usePDFGenerator = () => {
       doc.line(margin, 78, 555, 78);
 
       // Table data
-      const headers = [['Jogador', 'Posição', 'Sexo', 'Gols', 'Amarelos', 'Vermelhos', 'Cartões']];
+      const headers = [['Jogador', 'Posição', 'Sexo', 'Gols', 'Cartões Amarelo', 'Cartões Vermelho']];
       const body = playerStats.map((p: any) => [
         p.nome || '-', p.posicao || '-', p.sexo || '-',
         String(p.gols || 0), String(p.amarelos || 0),
-        String(p.vermelhos || 0), String(p.cartoes || 0)
+        String(p.vermelhos || 0)
       ]);
 
       // Generate table
