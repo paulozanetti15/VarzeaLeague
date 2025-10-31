@@ -89,12 +89,13 @@ const TeamsList: React.FC<TeamsListProps> = ({
             gap: '12px',
             marginBottom: '8px'
           }}>
-            <i className="fas fa-times-circle" style={{ fontSize: '28px' }}></i>
-            <strong style={{ fontSize: '18px', fontWeight: 600 }}>Partida Cancelada</strong>
+            <i className="fas fa-times-circle" style={{ fontSize: '28px', color: 'white !important' }}></i>
+            <strong style={{ fontSize: '18px', fontWeight: 600, color: 'white !important' }}>Partida Cancelada</strong>
           </div>
           <p className="mb-0" style={{ 
             fontSize: '15px',
-            lineHeight: '1.5'
+            lineHeight: '1.5',
+            color: 'white !important'
           }}>
             {getCancelReason()}
           </p>

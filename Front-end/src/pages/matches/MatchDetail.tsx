@@ -9,7 +9,8 @@ import {
   getPunicao,
   leaveTeam,
   deleteMatch,
-  getMatchStatus
+  getMatchStatus,
+  updateMatch
 } from '../../services/matchesFriendlyServices';
 import { useAuth } from '../../hooks/useAuth';
 import ModalTeams from '../../components/Modals/Teams/modelTeams';
@@ -262,6 +263,19 @@ const MatchDetail: React.FC = () => {
     setOpenDeleteConfirm(false);
   };
 
+  const handleCancelMatch = async () => {
+    if (!id) return;
+    try {
+      await updateMatch(String(id), { status: 'cancelada' });
+      toast.success('Partida cancelada com sucesso!');
+      // Recarregar a página para atualizar o status
+      window.location.reload();
+    } catch (error) {
+      console.error('Erro ao cancelar partida:', error);
+      toast.error('Erro ao cancelar partida. Tente novamente.');
+    }
+  };
+
   const handleOpenPunicao = async () => {
     if (!id) return;
     
@@ -402,6 +416,7 @@ const MatchDetail: React.FC = () => {
           }}
           onCreateSumula = {()=>setShowEventsModal(true)}
           onViewEvents={handleViewEvents}
+          onCancel={handleCancelMatch}
         />
       </div>
 
@@ -450,12 +465,11 @@ const MatchDetail: React.FC = () => {
           show={showPunicaoInfo}
           onHide={() => setShowPunicaoInfo(false)}
           onClose={handlePunishmentModalClose}
-          team={{ id: Number(id) }}
           idMatch={Number(id)}
         />
       )}
 
-      {showEventsModal && !hasSumula && !punishment && isOrganizer && (
+      {showEventsModal && !hasSumula && isOrganizer && (
         <SumulaCreate
           matchId={Number(match.id)}
           isChampionship={false}

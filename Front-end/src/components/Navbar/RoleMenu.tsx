@@ -35,17 +35,15 @@ const RoleMenu: React.FC = () => {
         ];
       case 2:
         return [
-          { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
-          { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
-          { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
+          { name: 'Minhas Partidas', path: '/matches', icon: <SportsSoccer /> },
+          { name: 'Meus Campeonatos', path: '/championships', icon: <EmojiEvents /> },
         ];
-      case 3:
-        return [
-          { name: 'Times', path: '/teams', icon: <People /> },
-          ...(hasTeam ? [{ name: 'Histórico', path: '/historico', icon: <History /> }] : []),
-          ...(hasTeam ? [{ name: 'Calendário', path: '/calendario', icon: <CalendarMonth /> }] : []),
-          { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
-        ];
+        case 3:
+          return [
+            { name: 'Meu Time ', path: '/teams', icon: <People /> },
+            ...(hasTeam ? [{ name: 'Histórico do Time', path: '/historico', icon: <History /> }] : []),
+            ...(hasTeam ? [{ name: 'Calendário do Time', path: '/calendario', icon: <CalendarMonth /> }] : []),
+          ];
       case 4:
         return [
           { name: 'Ranking', path: '/ranking/jogadores', icon: <People /> },
@@ -55,17 +53,11 @@ const RoleMenu: React.FC = () => {
     }
   }, [user?.userTypeId, hasTeam]);
 
-  const handleNavigation = (path: string) => {
-    if (path.startsWith('/historico') && !hasTeam) {
-      navigate('/teams');
-      return;
-    }
-    navigate(path);
-  };
+
 
   if (!user?.userTypeId) return null;
 
-  if (user.userTypeId === 1 || user.userTypeId === 2) {
+  if (user.userTypeId === 1 || user.userTypeId === 2 || user.userTypeId === 3 ) {
     return (
       <div className="navbar-manage-dropdown">
         <SplitButton id="dropdown-basic-button" title={<><People className="navbar-manage-icon"/> Gerenciar</>}>
@@ -80,21 +72,7 @@ const RoleMenu: React.FC = () => {
     );
   }
 
-  if (user.userTypeId === 3) {
-    return (
-      <>
-        {visiblePages.map((page, index) => (
-          <button
-            key={index}
-            className="navbar-menu-button"
-            onClick={() => handleNavigation(page.path)}
-          >
-            {page.icon} {page.name}
-          </button>
-        ))}
-      </>
-    );
-  }
+  
 
   return null;
 };

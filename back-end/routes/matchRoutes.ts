@@ -12,7 +12,6 @@ const router = express.Router();
 
 router.get('/ranking/jogadores', authenticateToken, getPlayerRanking);
 router.post('/check-cancelled', authenticateToken, checkAndCancelMatchesWithInsufficientTeams);
-
 router.get('/:id/available', authenticateToken, getTeamsAvailable);
 router.post('/', authenticateToken, createMatch);
 router.get('/', listMatches);
@@ -25,7 +24,7 @@ router.get('/:id/join-team', authenticateToken, getMatchTeams);
 router.delete('/:id/join-team/:teamId', authenticateToken, deleteTeamMatch);
 router.get('/:id/check-teams-rule-compliance', authenticateToken, checkTeamsRuleCompliance);
 router.put('/:id', authenticateToken, updateMatch);
-// Rotas que dependem de :id da partida
+
 router.get('/:id/evaluations', listMatchEvaluations); 
 router.get('/:id/evaluations/summary', getMatchEvaluationSummary); 
 router.post('/:id/evaluations', authenticateToken, upsertMatchEvaluation); 

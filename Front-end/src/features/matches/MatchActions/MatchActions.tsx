@@ -5,6 +5,7 @@ import EditIcon from '@mui/icons-material/Edit';
 
 import GavelIcon from '@mui/icons-material/Gavel';
 import DescriptionIcon from '@mui/icons-material/Description';
+import CancelIcon from '@mui/icons-material/Cancel';
 import './MatchActions.css';
 
 interface MatchActionsProps {
@@ -30,6 +31,7 @@ interface MatchActionsProps {
   onViewComments: () => void;
   onViewEvents?: () => void;
   onCreateSumula?: () => void;
+  onCancel?: () => void;
 }
 
 export const MatchActions: React.FC<MatchActionsProps> = ({
@@ -52,7 +54,8 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
   onViewComments,
   onViewEvents,
   hasSumula,
-  onCreateSumula
+  onCreateSumula,
+  onCancel
 }) => {
   const canEditMatchAndRules = userTypeId === 1 || userTypeId === 2;
   const isCancelled = matchStatus === 'cancelada';
@@ -92,6 +95,13 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
               <Button className="btn-edit btn-edit-rules" onClick={onEditRules}>
                 <EditIcon /> Editar Regras
               </Button>
+
+              {!isCompleted && !isCancelled && onCancel && (
+                <Button className="btn-cancel" onClick={onCancel}>
+                  <CancelIcon style={{ marginRight: 4 }} />
+                  Cancelar Partida
+                </Button>
+              )}
             </>
           )}
         </div>
@@ -116,11 +126,11 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
         {(() => {
           const statusLower = String(matchStatus || '').toLowerCase();
           const allowedStatuses = [ 'finalizada'];
-          const canShowFinalize = allowedStatuses.includes(statusLower) && isCompleted && !isCancelled && canCreateSumula && hasPunishment;
+          const canShowFinalize = allowedStatuses.includes(statusLower) && isCompleted && !isCancelled && canCreateSumula;
           return canShowFinalize ? (
             <Button className="btn-finalize btn-sumula" onClick={onCreateSumula}>
               <DescriptionIcon style={{ marginRight: 4 }} />
-              {(!hasSumula && !hasPunishment) ? 'Registrar súmula' : 'Ver súmula'}
+              {!hasSumula ? 'Registrar súmula' : 'Ver súmula'}
             </Button>
           ) : null;
         })()}

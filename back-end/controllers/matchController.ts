@@ -109,6 +109,11 @@ export const checkAndConfirmFullMatches = async (): Promise<void> => {
           if (String((match as any).status) !== 'confirmada') {
             await match.update({ status: 'confirmada' });
           }
+        } else if (teamsCount < 2) {
+          // Cancel match if deadline passed and insufficient teams
+          if (String((match as any).status) !== 'cancelada') {
+            await match.update({ status: 'cancelada' });
+          }
         }
       }
     }
@@ -496,8 +501,10 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
     }
     
     const isPastDeadline = deadline ? now > deadline : false;
+    const matchDate = new Date(match.date);
 
-    if (isPastDeadline && countTeams < 2 && match.status === 'aberta') {
+    if ((isPastDeadline && countTeams < 2 && (match.status === 'aberta' || match.status === 'sem_vagas')) ||
+        (now >= matchDate && isPastDeadline && countTeams < 2)) {
       await match.update({ 
         status: 'cancelada'
       });
@@ -553,22 +560,19 @@ export const updateMatch = async (req: Request, res: Response): Promise<void> =>
 
       await match.reload();
 
-      if (now > deadline) {
-        if (teamsCount < 2 && (match.status === 'aberta' || match.status === 'sem_vagas')) {
+      const matchDate = new Date(match.date);
+
+      if ((now > deadline && teamsCount < 2 && (match.status === 'aberta' || match.status === 'sem_vagas' || match.status === 'confirmada')) ||
+          (now >= matchDate && now > deadline && teamsCount < 2)) {
+        if (match.status !== 'cancelada') {
           await match.update({ 
             status: 'cancelada'
           });
-        } else if (teamsCount >= 2 && match.status !== 'finalizada' && match.status !== 'cancelada') {
-          await match.update({
-            status: 'confirmada'
-          });
         }
-      } else {
-        if (match.status === 'cancelada') {
-          await match.update({ 
-            status: 'aberta'
-          });
-        }
+      } else if (now > deadline && teamsCount >= 2 && match.status !== 'finalizada' && match.status !== 'cancelada') {
+        await match.update({
+          status: 'confirmada'
+        });
       }
     }
 

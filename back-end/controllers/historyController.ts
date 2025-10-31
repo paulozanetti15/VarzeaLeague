@@ -11,9 +11,9 @@ import MatchGoal from "../models/MatchGoalModel";
 import MatchCard from "../models/MatchCardModel";
 import Player from "../models/PlayerModel";
  
-export const buscarPartidasAmistosas= async(req:AuthRequest,res:Response)=>{
+export const getAllFriendlyMatchesHistory= async(req:AuthRequest,res:Response)=>{
     try {
-        const { id } = req.params;
+        const { teamId } = req.params;
         const userId = req.user?.id;
         if (!userId) {
             res.status(401).json({ error: 'Usuário não autenticado' });
@@ -24,14 +24,15 @@ export const buscarPartidasAmistosas= async(req:AuthRequest,res:Response)=>{
             where: {
               [Op.or] : 
               [
-                { team_home: parseInt(id)},
-                { team_away: parseInt(id) }    
+                { team_home: parseInt(teamId)},
+                { team_away: parseInt(teamId) }    
               ]    
             },
             include: [
                 {
                     model: MatchModel,
-                    attributes: ['title', 'location','nomequadra','date']
+                    attributes: ['title', 'location','nomequadra','date'],
+                    required: true
                 },
                 {
                     model: Team,
@@ -52,9 +53,10 @@ export const buscarPartidasAmistosas= async(req:AuthRequest,res:Response)=>{
       console.error(error)
     }    
 }
-export const buscarPartidasCampeonato= async(req:AuthRequest,res:Response)=>{
+export const getAllChampionshipMatchesHistory= async(req:AuthRequest,res:Response)=>{
     try {
-        const { id } = req.params;
+        const { teamId } = req.params;
+        const championshipId = req.query.championshipId ? Number(req.query.championshipId) : null;
         const userId = req.user?.id;
         if (!userId) {
             res.status(401).json({ error: 'Usuário não autenticado' });
@@ -65,8 +67,8 @@ export const buscarPartidasCampeonato= async(req:AuthRequest,res:Response)=>{
             where: {
               [Op.or] : 
               [
-                { team_home: parseInt(id)},
-                { team_away: parseInt(id) }    
+                { team_home: parseInt(teamId)},
+                { team_away: parseInt(teamId) }    
               ]    
             },
             include: [
@@ -74,12 +76,14 @@ export const buscarPartidasCampeonato= async(req:AuthRequest,res:Response)=>{
                     model: MatchChampionship,
                     as:"match",
                     attributes: ['location','nomequadra','date'],
+                    where: championshipId ? { championship_id: championshipId } : undefined,
+                    required: true,
                     include: 
                     [
                         {
                             model: Championship,
                             as:"championship",
-                            attributes: ['name']
+                            attributes: ['id','name', 'start_date', 'end_date']
                         }
                     ]
                 },
@@ -95,12 +99,73 @@ export const buscarPartidasCampeonato= async(req:AuthRequest,res:Response)=>{
                 },    
             ]
         });
-        console.log(buscarPartidasCampeonato)
         res.status(200).json(buscarPartidasCampeonato)     
     } catch (error) {
       res.status(500).json({ message:"Erro para buscar os dados"})
       console.error(error)
     }    
+}
+export const getMatchesByChampionshipHistory= async(req:AuthRequest,res:Response)=>{
+    try {
+        const { teamId,championshipId } = req.params;
+        const userId = req.user?.id;
+
+        if (!userId) {
+            res.status(401).json({ error: 'Usuário não autenticado' });
+            return;
+        }
+        const searchMatchesByChampionship=await  MatchChampionshpReport.findAll({
+            where: {
+                [Op.or]: [
+                    { team_home: teamId },
+                    { team_away: teamId }
+                ]
+            },
+            include: [
+                {
+                    model: MatchChampionship,
+                    as: "match",
+                    attributes: ['location', 'nomequadra', 'date'],
+                    where: championshipId ? { championship_id: parseInt(championshipId) } : undefined,
+                    include: [
+                        {
+                            model: Championship,
+                            as: "championship",
+                            attributes: ['name']
+                        }
+                    ]
+                },
+                {
+                    model: Team,
+                    as: 'teamHome',
+                    attributes: ['name']
+                },
+                {
+                    model: Team,
+                    as: 'teamAway',
+                    attributes: ['name']
+                },
+            ]
+        });
+        const formattedMatches = searchMatchesByChampionship.map(matchReport => {
+            return {
+                matchId: matchReport.dataValues.match.id,
+                location: matchReport.dataValues.match.location,
+                date: matchReport.dataValues.match.date,
+                teamHome: matchReport.dataValues.teamHome.name,
+                teamAway: matchReport.dataValues.teamAway.name,
+                score: {
+                    home: matchReport.dataValues.team_home_score,
+                    away: matchReport.dataValues.team_away_score
+                }
+            };
+        });
+        res.status(200).json(formattedMatches);
+    } catch (error) {
+        res.status(500).json({ message:"Erro para buscar os dados"})
+        console.error(error)
+    }       
+
 }
 export const adicionarSumulaPartidasAmistosas= async(req:AuthRequest,res:Response)=>{
     try {

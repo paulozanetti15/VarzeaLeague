@@ -152,6 +152,20 @@
   box-shadow: 0 6px 16px rgba(255, 193, 7, 0.4);
 }
 
+/* Botão de cancelar */
+.btn-cancel {
+  background: #dc3545 !important;
+  color: white !important;
+  border-color: #dc3545 !important;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+}
+
+.btn-cancel:hover {
+  background: #c82333 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
 /* Botões desabilitados */
 .match-actions button:disabled {
   opacity: 0.5;

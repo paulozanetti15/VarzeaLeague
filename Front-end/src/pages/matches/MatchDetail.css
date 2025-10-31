@@ -263,6 +263,19 @@
     color: #333333 !important;
   }
   
+  /* Sobrescrever cor para alert de cancelamento */
+  .match-description .alert p {
+    color: white !important;
+  }
+  
+  .match-description .alert strong {
+    color: white !important;
+  }
+  
+  .match-description .alert i {
+    color: white !important;
+  }
+  
   .map-section {
     margin-bottom: 25px;
     border-top: 1px solid #ddd;

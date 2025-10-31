@@ -13,6 +13,7 @@ export function MatchesWidgetFixed() {
   const [cardScrollPosition, setCardScrollPosition] = useState(0);
   const [calendarScrollPosition, setCalendarScrollPosition] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<{ x: number; position: number } | null>(null);
   const [showAllGames, setShowAllGames] = useState(false);
   const navigate = useNavigate();
 
@@ -56,12 +57,11 @@ export function MatchesWidgetFixed() {
   // Event listeners para arrastar
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
+      if (isDragging && dragStart) {
         const deltaX = e.clientX - dragStart.x;
         const barWidth = 300;
         const daysInMonth = getDaysInMonth();
         const maxScroll = Math.max(0, daysInMonth.length - 7);
-
         const sensitivity = maxScroll / barWidth;
         const newPosition = Math.max(0, Math.min(maxScroll, dragStart.position + (deltaX * sensitivity)));
         setCalendarScrollPosition(newPosition);
@@ -121,6 +121,7 @@ export function MatchesWidgetFixed() {
   // Funções para arrastar a barra de rolagem
   const handleDragStart = (e: React.MouseEvent) => {
     setIsDragging(true);
+    setDragStart({ x: e.clientX, position: calendarScrollPosition });
     e.preventDefault();
   };
 
@@ -150,7 +151,6 @@ export function MatchesWidgetFixed() {
 
       {/* Conteúdo Principal */}
       <div className="content-container">
-        {/* Seção: Jogos em Destaque */}
         <section className="section">
           <div className="section-header">
             <h2 className="section-title">Jogos em Destaque</h2>
@@ -186,10 +186,14 @@ export function MatchesWidgetFixed() {
                     <div className="highlight-date-row">
                       <span className="highlight-date">Hoje • {match.time}</span>
                     </div>
-                    <div className="highlight-vs-row align-vs-horizontal">
-                      <span className="highlight-team">{match.homeTeam?.name || '---'}</span>
-                      <span className="highlight-vs-text">VS</span>
-                      <span className="highlight-team">{match.awayTeam?.name || '---'}</span>
+                    <div className="highlight-vs-row align-vs-horizontal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0 }}>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center', minWidth: 0 }}>
+                        <span className="highlight-team" style={{ wordBreak: 'break-word', textAlign: 'right', width: '100%' }}>{match.homeTeam?.name || '---'}</span>
+                      </div>
+                      <span className="highlight-vs-text" style={{ margin: '0 12px' }}>VS</span>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', minWidth: 0 }}>
+                        <span className="highlight-team" style={{ wordBreak: 'break-word', textAlign: 'left', width: '100%' }}>{match.awayTeam?.name || '---'}</span>
+                      </div>
                     </div>
                     <div className="highlight-status-row">
                       <span className="highlight-matchname">{match.title || match.championship}</span>

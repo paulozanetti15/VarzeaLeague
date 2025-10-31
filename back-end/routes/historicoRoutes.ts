@@ -1,9 +1,10 @@
-import { buscarPartidasAmistosas,buscarPartidasCampeonato,adicionarSumulaPartidasAmistosas,buscarSumulaPartidaAmistosa,buscarSumulaPartidaCampeonato,deletarSumulaPartidaAmistosa,deletarSumulaPartidaCampeonato,atualizarSumulaPartidaAmistosa,atualizarSumulaPartidaCampeonato } from "../controllers/historicoController";
+import {getAllFriendlyMatchesHistory ,getAllChampionshipMatchesHistory,getMatchesByChampionshipHistory,adicionarSumulaPartidasAmistosas,buscarSumulaPartidaAmistosa,buscarSumulaPartidaCampeonato,deletarSumulaPartidaAmistosa,deletarSumulaPartidaCampeonato,atualizarSumulaPartidaAmistosa,atualizarSumulaPartidaCampeonato } from "../controllers/historyController";
 import { authenticateToken } from '../middleware/auth';
 import express from 'express';
 const router=express.Router();
-router.get("/:id/buscarpartidaamistosa",authenticateToken,buscarPartidasAmistosas)
-router.get("/:id/buscarpartidacampeonato",authenticateToken,buscarPartidasCampeonato)
+router.get("/:teamId/partidas-amistosas",authenticateToken,getAllFriendlyMatchesHistory)
+router.get("/:teamId/partidas-campeonatos",authenticateToken,getAllChampionshipMatchesHistory)
+router.get("/:teamId/partidas-campeonatos/:championshipId",authenticateToken,getMatchesByChampionshipHistory)
 router.get("/sumula/:matchId",authenticateToken,buscarSumulaPartidaAmistosa)
 router.get("/sumula-campeonato/:matchId",authenticateToken,buscarSumulaPartidaCampeonato)
 router.post("/adicionar-sumula",authenticateToken,adicionarSumulaPartidasAmistosas)

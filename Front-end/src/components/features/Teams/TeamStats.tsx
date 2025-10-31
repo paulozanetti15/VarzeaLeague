@@ -8,8 +8,9 @@ import WhatshotIcon from '@mui/icons-material/Whatshot';
 
 interface TeamStatsProps {
   historico: {
+    campeonatosEmDisputa?: number;
+    campeonatosParticipados?: number;
     amistosos?: number;
-    campeonatos?: number;
     vitoriasGeral?: number;
     derrotasGeral?: number;
     empatesGeral?: number;
@@ -34,44 +35,30 @@ const TeamStats: React.FC<TeamStatsProps> = ({
     },
     {
       icon: <MilitaryTechIcon className="stat-icon" />,
-      value: historico?.campeonatos || 0,
+      value: historico?.campeonatosParticipados || 0,
       label: 'Campeonatos Participados',
       title: 'Campeonatos inscritos'
     },
     {
       icon: <TrendingUpIcon className="stat-icon" />,
       value: historico?.vitoriasGeral || 0,
-      label: 'Vitórias',
+      label: 'Vitórias conquistadas',
       title: 'Vitórias',
       valueStyle: { color: '#4caf50' }
     },
     {
       icon: <WhatshotIcon className="stat-icon" />,
       value: historico?.derrotasGeral || 0,
-      label: 'Derrotas',
+      label: 'Derrotas sofridas',
       title: 'Derrotas',
       valueStyle: { color: '#ef5350' }
     },
     {
       icon: <WhatshotIcon className="stat-icon" />,
       value: historico?.empatesGeral || 0,
-      label: 'Empates',
+      label: 'Empates conquistados',
       title: 'Empates',
-      valueStyle: { color: '#f0eaea65' }
-    },
-    {
-      icon: <TrendingUpIcon className="stat-icon" />,
-      value: `${historico?.aproveitamentoCampeonatos || 0}%`,
-      label: 'Aproveitamento em Campeonatos',
-      title: '% de aproveitamento (vitórias/partidas)',
-      isWide: true
-    },
-    {
-      icon: <TrendingUpIcon className="stat-icon" />,
-      value: `${historico?.aproveitamentoAmistosos || 0}%`,
-      label: 'Desempenho em amistosos',
-      title: '% de aproveitamento (vitórias/partidas)',
-      isWide: true
+      valueStyle: { color: '#06050565' }
     }
   ];
 

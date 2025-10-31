@@ -242,25 +242,23 @@ const TeamList = () => {
                                   }}
                                 >
                                   <div className="player-name-position">
-                                    <div className="player-name-container">
+                                    <div className="player-icon-name-row">
                                       <PersonIcon className="player-icon" />
                                       <span className="player-name" title={player.nome}>{player.nome}</span>
                                     </div>
-                                    <span
-                                      className="player-position player-position-shrink"
-                                    >
-                                      {player.posicao}
-                                    </span>
-                                  </div>
-                                  <div className="player-details">
-                                    <span className="player-year">
-                                      <CalendarTodayIcon className="player-detail-icon" />
-                                      {player.ano}
-                                    </span>
-                                    <span className="player-gender">
-                                      <WcIcon className="player-detail-icon" />
-                                      {player.sexo}
-                                    </span>
+                                    <div className="player-info-below">
+                                      <span className="player-position player-position-shrink">
+                                        {player.posicao}
+                                      </span>
+                                      <span className="player-year">
+                                        <CalendarTodayIcon className="player-detail-icon" />
+                                        {player.ano}
+                                      </span>
+                                      <span className="player-gender">
+                                        <WcIcon className="player-detail-icon" />
+                                        {player.sexo}
+                                      </span>
+                                    </div>
                                   </div>
                                 </motion.div>
                               ))}
@@ -304,4 +302,4 @@ const TeamList = () => {
   );
 };
 
-export default TeamList; 
+export default TeamList;
