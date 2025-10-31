@@ -25,6 +25,7 @@ interface HistoricoContextProps {
   empatesCampeonato: number;
   nomesCampeonatos: { id: number; name: string }[];
   partidasFiltradasCampeonatoDisputadas: number;
+  totalPartidasDisputadaEmGeral: number;
 }
 interface PartidaAmistosa {
   id: number;
@@ -95,6 +96,7 @@ export const HistoricoProvider = ({ children }: { children: ReactNode }) => {
   const [campeonatosParticipados, setCampeonatosParticipados] = useState<number>(0);
   const [nomesCampeonatos , setNomesCampeonato] = useState<{ id: number; name: string }[]>([]);
   const [partidasFiltradasCampeonatoDisputadas, setPartidasFiltradasCampeonatoDisputadas] = useState<number>(0);
+  const [totalPartidasDisputadaEmGeral, setTotalPartidasDisputadaEmGeral] = useState<number>(0);
 
   const StatusResultado = (
     idTeamHome: number,
@@ -243,7 +245,7 @@ export const HistoricoProvider = ({ children }: { children: ReactNode }) => {
       const jogosAmistosos = vitoriasPartidasAmistosas + empatesPartidasAmistosas + derrotasPartidasAmistosas;
       const desempenhoAmistosos = jogosAmistosos > 0 ? parseFloat(((vitoriasPartidasAmistosas / jogosAmistosos) * 100).toFixed(2)) : 0;
       setAproveitamentoAmistosos(desempenhoAmistosos);
-
+      setTotalPartidasDisputadaEmGeral(jogosAmistosos + PartidasCampeonatoDisputadas);
     } catch (error) {
       console.error("Erro ao buscar histórico:", error);
     }
@@ -274,7 +276,8 @@ export const HistoricoProvider = ({ children }: { children: ReactNode }) => {
         derrotasCampeonato,
         empatesCampeonato,
         nomesCampeonatos,
-        partidasFiltradasCampeonatoDisputadas
+        partidasFiltradasCampeonatoDisputadas,
+        totalPartidasDisputadaEmGeral
       }}
     >
       {children}

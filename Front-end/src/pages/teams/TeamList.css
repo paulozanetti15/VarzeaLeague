@@ -13,6 +13,23 @@
   padding-top: 1rem; /* espaço adicional para compensar navbar */
 }
 
+.teams-title {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.teams-subtitle {
+  font-size: 1.1rem;
+  color: #666;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
 .top-navigation {
   display: flex;
   justify-content: space-between;
@@ -1134,6 +1151,9 @@
   padding: 0.8rem 1.5rem;
   border-radius: 25px;
   backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
 }
 
 .stat-inline .stat-icon {

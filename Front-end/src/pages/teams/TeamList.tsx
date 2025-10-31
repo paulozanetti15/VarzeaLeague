@@ -23,6 +23,7 @@ import PlayerStatsTable from '../../components/features/Teams/PlayerStatsTable';
 import TeamActionButtons from '../../components/features/Teams/TeamActionButtons';
 
 import './TeamList.css';
+import { hi } from 'date-fns/locale';
 
 const TeamList = () => {
   const { teams, loading, error, teamPlayers, loadingPlayers, fetchTeams, fetchTeamPlayers, fetchTeamPlayerStats } = useTeams();
@@ -188,7 +189,7 @@ const TeamList = () => {
                       </div>
                       <div className="stat-inline-alt">
                         <EmojiEventsIcon className="stat-icon" sx={{ fontSize: 22 }} />
-                        <span className="stat-text">{team.matchCount || 0} Partidas</span>
+                        <span className="stat-text">{historico?.totalPartidasDisputadaEmGeral || 0} Partidas</span>
                       </div>
                     </div>
                     <button 
