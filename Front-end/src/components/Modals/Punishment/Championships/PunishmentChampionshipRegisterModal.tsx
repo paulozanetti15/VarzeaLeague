@@ -78,7 +78,7 @@ const PunicaoCampeonatoRegisterModal: React.FC<Props> = ({ show, onHide, onClose
       if (!formData.id_match_championship) { setError('Selecione a partida do campeonato'); return; }
       if (formData.team_home === formData.team_away) { setError('Times da casa e visitante devem ser diferentes'); return; }
       
-      const resp = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${championshipId}/punicao`, {
+      const resp = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${championshipId}/penalty`, {
         idtime: formData.time,
         motivo: formData.motivo,
         team_home: formData.team_home,

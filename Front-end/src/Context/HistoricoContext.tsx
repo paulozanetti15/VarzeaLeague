@@ -1,5 +1,5 @@
 import { createContext, useState, ReactNode } from "react";
-import axios from "axios";
+import { getTeamFriendlyMatchesHistory, getTeamChampionshipMatchesHistory } from "../services/historyServices";
 
 interface HistoricoContextProps {
   amistosos: number;
@@ -135,20 +135,11 @@ export const HistoricoProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      const responseAllFriendlyMatches = await axios.get(`http://localhost:3001/api/historico/${idTeam}/partidas-amistosas`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      const championshipQuery = championshipId ? `?championshipId=${championshipId}` : '';
-      const responseAllMatchesChampionship = await axios.get(`http://localhost:3001/api/historico/${idTeam}/partidas-campeonatos`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const responseMatchesByChampionship = await axios.get(`http://localhost:3001/api/historico/${idTeam}/partidas-campeonatos/${championshipQuery}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const allFriendlyMatchesData: PartidaAmistosa[] = responseAllFriendlyMatches.data;
-      const allChampionshipMatchesData: PartidasCampeonato[] = responseAllMatchesChampionship.data;
-      const filteredChampionshipMatchesData: PartidasCampeonato[] = responseMatchesByChampionship.data;
+      const allFriendlyMatchesData: PartidaAmistosa[] = await getTeamFriendlyMatchesHistory(idTeam);
+      const allChampionshipMatchesData: PartidasCampeonato[] = await getTeamChampionshipMatchesHistory(idTeam);
+      const filteredChampionshipMatchesData: PartidasCampeonato[] = championshipId 
+        ? await getTeamChampionshipMatchesHistory(idTeam, championshipId)
+        : allChampionshipMatchesData;
       let vitoriasPartidasAmistosas = 0;
       let derrotasPartidasAmistosas = 0;
       let empatesPartidasAmistosas = 0;

@@ -19,25 +19,23 @@ import { authenticateToken } from '../middleware/auth';
 const router = express.Router();
 
 router.post('/', authenticateToken, createChampionship);
-// List and get must be public so non-authenticated users can see championships
 router.get('/', listChampionships);
 router.get('/:id', getChampionship);
 router.put('/:id', authenticateToken, updateChampionship);
 router.delete('/:id', authenticateToken, deleteChampionship);
-router.post('/:id/join-team', authenticateToken, joinTeamInChampionship);
-router.get('/:id/join-team', authenticateToken, getChampionshipTeams);
-router.delete('/:id/join-team/:teamId', authenticateToken, leaveTeamFromChampionship);
+router.put('/:id/publish', authenticateToken, publishChampionship);
 
-// Aplicações de campeonatos
-router.post('/:championshipId/apply', authenticateToken, applyToChampionship);
-router.get('/:championshipId/applications', authenticateToken, getChampionshipApplications);
-router.put('/applications/:applicationId/status', authenticateToken, updateApplicationStatus);
-router.put('/:championshipId/publish', authenticateToken, publishChampionship);
+router.post('/:id/teams', authenticateToken, joinTeamInChampionship);
+router.get('/:id/teams', authenticateToken, getChampionshipTeams);
+router.delete('/:id/teams/:teamId', authenticateToken, leaveTeamFromChampionship);
 
-// Punição em Campeonato (WO etc.)
-router.get('/:idCampeonato/punicao', authenticateToken, busarPunicaoCampeonato);
-router.post('/:idCampeonato/punicao', authenticateToken, inserirPunicaoCampeonato);
-router.put('/:idCampeonato/punicao', authenticateToken, alterarPunicaoCampeonato);
-router.delete('/:idCampeonato/punicao', authenticateToken, deletarPunicaoCampeonato);
+router.post('/:id/applications', authenticateToken, applyToChampionship);
+router.get('/:id/applications', authenticateToken, getChampionshipApplications);
+router.put('/:id/applications/:applicationId/status', authenticateToken, updateApplicationStatus);
+
+router.get('/:id/penalty', authenticateToken, busarPunicaoCampeonato);
+router.post('/:id/penalty', authenticateToken, inserirPunicaoCampeonato);
+router.put('/:id/penalty', authenticateToken, alterarPunicaoCampeonato);
+router.delete('/:id/penalty', authenticateToken, deletarPunicaoCampeonato);
 
 export default router;

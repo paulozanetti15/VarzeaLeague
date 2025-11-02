@@ -30,7 +30,7 @@ const PunishmentChampionshipModalInfo: React.FC<Props> = ({ show, onHide, onClos
       setLoading(true);
   // reset state
       const token = localStorage.getItem('token');
-      const resp = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${championshipId}/punicao`, { headers: { Authorization: `Bearer ${token}` } });
+      const resp = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${championshipId}/penalty`, { headers: { Authorization: `Bearer ${token}` } });
       const row = Array.isArray(resp.data) && resp.data.length ? resp.data[0] : null;
       setPunishment(row);
       if (!row) onClose();

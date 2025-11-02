@@ -128,19 +128,19 @@ export async function getAvailableForMatch(matchId: string | number) {
 
 // -- Punicao (penalty) endpoints
 export async function getPunicao(matchId: string | number) {
-  return axios.get(`${API_BASE}/matches/${matchId}/punicao`, { headers: getAuthHeaders() });
+  return axios.get(`${API_BASE}/friendly-matches/${matchId}/penalty`, { headers: getAuthHeaders() });
 }
 
 export async function createPunicao(matchId: string | number, payload: any) {
-  return axios.post(`${API_BASE}/matches/${matchId}/punicao`, payload, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
+  return axios.post(`${API_BASE}/friendly-matches/${matchId}/penalty`, payload, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
 }
 
 export async function updatePunicao(matchId: string | number, payload: any) {
-  return axios.put(`${API_BASE}/matches/${matchId}/punicao`, payload, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
+  return axios.put(`${API_BASE}/friendly-matches/${matchId}/penalty`, payload, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
 }
 
 export async function deletePunicao(matchId: string | number) {
-  return axios.delete(`${API_BASE}/matches/${matchId}/punicao`, { headers: getAuthHeaders() });
+  return axios.delete(`${API_BASE}/friendly-matches/${matchId}/penalty`, { headers: getAuthHeaders() });
 }
 
 // -- Events / sumula

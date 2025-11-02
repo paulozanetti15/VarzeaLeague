@@ -56,7 +56,7 @@ function CalendarioPage() {
   useEffect(()=>{
     const fetchJogos = async()=>{
       let token = localStorage.getItem('token')
-      const responseGetJogos=await axios.get(`http://localhost:3001/api/matches/teams/${team.id}`,{ 
+      const responseGetJogos=await axios.get(`http://localhost:3001/api/friendly-matches/teams/${team.id}`,{ 
         headers:{ 
           Authorization : `Bearer ${token}`
         }

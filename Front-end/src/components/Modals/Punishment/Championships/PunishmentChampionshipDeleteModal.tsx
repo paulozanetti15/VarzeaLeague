@@ -17,7 +17,7 @@ const PunicaoCampeonatoModalDelete: React.FC<Props> = ({ show, onHide, onClose, 
     try {
       setLoading(true);
       setError("");
-      const resp = await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${championshipId}/punicao`, {
+      const resp = await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${championshipId}/penalty`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       if (resp.status === 200) {

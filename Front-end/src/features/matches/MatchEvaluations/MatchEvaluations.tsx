@@ -22,8 +22,8 @@ export const MatchEvaluations: React.FC<MatchEvaluationsProps> = ({
   const fetchAll = async () => {
     try {
       const [listRes, sumRes] = await Promise.all([
-        fetch(`http://localhost:3001/api/matches/${matchId}/evaluations`).then(r => r.json()),
-        fetch(`http://localhost:3001/api/matches/${matchId}/evaluations/summary`).then(r => r.json())
+        fetch(`http://localhost:3001/api/friendly-matches/${matchId}/evaluations`).then(r => r.json()),
+        fetch(`http://localhost:3001/api/friendly-matches/${matchId}/evaluations/summary`).then(r => r.json())
       ]);
       
       setEvaluations(Array.isArray(listRes) ? listRes : []);
@@ -68,7 +68,7 @@ export const MatchEvaluations: React.FC<MatchEvaluationsProps> = ({
     setLoading(true);
     
     try {
-      const resp = await fetch(`http://localhost:3001/api/matches/${matchId}/evaluations`, {
+      const resp = await fetch(`http://localhost:3001/api/friendly-matches/${matchId}/evaluations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

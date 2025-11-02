@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Table, Form, Row, Col, Badge, Card } from 'react-bootstrap';
 import toast from 'react-hot-toast';
+import { getPlayerRanking } from '../../services/rankingServices';
 
 // Simple skeleton loader component
 const SkeletonRow: React.FC<{ cols: number }> = ({ cols }) => (
@@ -46,14 +47,7 @@ const RankingPlayers: React.FC = () => {
   const fetchRanking = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const resp = await fetch('http://localhost:3001/api/matches/ranking/jogadores', { headers: { Authorization: `Bearer ${token}` }});
-      if (!resp.ok) {
-        toast.error('Falha ao carregar ranking');
-        return;
-      }
-      const json = await resp.json();
-      // Normalizar: se backend antigo, adaptar
+      const json = await getPlayerRanking();
       const ranking = (json.ranking || []).map((r: any) => ({
         type: r.type || (r.playerId ? 'player' : 'user'),
         userId: typeof r.userId === 'number' ? r.userId : (r.userId === null ? null : (r.userId ? Number(r.userId) : null)),

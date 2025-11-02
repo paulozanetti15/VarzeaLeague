@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import sequelize from './config/database';
 import authRoutes from './routes/authRoutes';
-import matchRoutes from './routes/matchRoutes';
+import friendlyMatchRoutes from './routes/friendlyMatchRoutes';
 import userRoutes from './routes/userRoutes';
 import passwordResetRoutes from './routes/passwordResetRoutes';
 import teamRoutes from './routes/teamRoutes';
@@ -28,7 +28,8 @@ import fs from 'fs';
 import championshipRoutes from './routes/championshipRoutes';
 import userTypeRoutes from './routes/userTypeRoutes';
 import overviewRoutes from './routes/overviewRoutes';
-import historicoRoutes from './routes/historicoRoutes';
+import historyRoutes from './routes/historyRoutes';
+import rankingRoutes from './routes/rankingRoutes';
 import MatchChampionship from './models/MatchChampionshipModel';
 import MatchChampionshpReport from './models/MatchReportChampionshipModel';
 dotenv.config();
@@ -58,7 +59,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/matches', matchRoutes);
+app.use('/api/friendly-matches', friendlyMatchRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/teamplayers', TeamPlayerRoutes);
 app.use('/api/teams',teamRoutes);
@@ -68,7 +69,8 @@ app.use('/api/rules', RulesRoutes);
 app.use('/api/championships', championshipRoutes);
 app.use('/api/usertypes', userTypeRoutes);
 app.use('/api/overview', overviewRoutes);
-app.use('/api/historico',historicoRoutes)
+app.use('/api/history', historyRoutes);
+app.use('/api/ranking', rankingRoutes);
 
 const startServer = async () => {
   try {
