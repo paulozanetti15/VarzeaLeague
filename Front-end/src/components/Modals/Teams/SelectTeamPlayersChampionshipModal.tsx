@@ -46,7 +46,7 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
     try {
       const [myTeamsResp, registeredResp] = await Promise.all([
         axios.get(`http://localhost:3001/api/teams`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`http://localhost:3001/api/championships/${championshipId}/join-team`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`http://localhost:3001/api/championships/${championshipId}/teams`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       const myTeams: Team[] = myTeamsResp.data || [];
       const alreadyRegistered: Team[] = registeredResp.data || [];
@@ -135,7 +135,7 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
     }
     try {
       setLoading(true);
-      const resp = await axios.post(`http://localhost:3001/api/championships/${championshipId}/join-team`, {
+      const resp = await axios.post(`http://localhost:3001/api/championships/${championshipId}/teams`, {
         teamId: selectedTeamId,
         championshipId
       }, { headers: { Authorization: `Bearer ${token}` }});

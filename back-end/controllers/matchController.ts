@@ -9,7 +9,6 @@ import Rules from '../models/RulesModel';
 import MatchChampionship from '../models/MatchChampionshipModel';
 import { Op } from 'sequelize';
 
-// Helper: parse duration string (minutes) into minutes
 const parseDurationToMinutes = (duration?: string): number => {
   if (!duration) return 90; // default 1h30
   const minutes = parseInt(duration, 10);

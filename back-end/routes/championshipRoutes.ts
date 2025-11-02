@@ -13,7 +13,7 @@ import {
   updateApplicationStatus,
   publishChampionship
 } from '../controllers/championshipController';
-import { busarPunicaoCampeonato, inserirPunicaoCampeonato, alterarPunicaoCampeonato, deletarPunicaoCampeonato } from '../controllers/PunicaoController';
+import { ChampionshipPenaltyController } from '../controllers/championship/ChampionshipPenaltyController';
 import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
@@ -33,9 +33,9 @@ router.post('/:id/applications', authenticateToken, applyToChampionship);
 router.get('/:id/applications', authenticateToken, getChampionshipApplications);
 router.put('/:id/applications/:applicationId/status', authenticateToken, updateApplicationStatus);
 
-router.get('/:id/penalty', authenticateToken, busarPunicaoCampeonato);
-router.post('/:id/penalty', authenticateToken, inserirPunicaoCampeonato);
-router.put('/:id/penalty', authenticateToken, alterarPunicaoCampeonato);
-router.delete('/:id/penalty', authenticateToken, deletarPunicaoCampeonato);
+router.get('/:id/penalty', authenticateToken, ChampionshipPenaltyController.get);
+router.post('/:id/penalty', authenticateToken, ChampionshipPenaltyController.create);
+router.put('/:id/penalty', authenticateToken, ChampionshipPenaltyController.update);
+router.delete('/:id/penalty', authenticateToken, ChampionshipPenaltyController.delete);
 
 export default router;
