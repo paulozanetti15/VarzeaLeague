@@ -549,3 +549,319 @@ label {
 .dark-theme .breadcrumb-item a {
   color: var(--text-primary);
 }
+
+/* ===== MATCH LIST PAGE ===== */
+.dark-theme .match-list-container {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%) !important;
+  min-height: 100vh;
+}
+
+/* Títulos principais das páginas */
+.dark-theme .page-title,
+.dark-theme .container h1:first-of-type,
+.dark-theme .form-container h1 {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+}
+
+.dark-theme .match-list-container .back-btn,
+.dark-theme .back-btn {
+  background: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-theme .match-list-container .back-btn:hover,
+.dark-theme .back-btn:hover {
+  background: var(--bg-secondary) !important;
+  border-color: #4d94ff !important;
+  color: #4d94ff !important;
+}
+
+.dark-theme .match-list-container .form-container {
+  background: rgba(45, 45, 45, 0.8) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark-theme .match-list-container h1,
+.dark-theme .match-list-container h2,
+.dark-theme .match-list-container h3,
+.dark-theme .match-list-container h4 {
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .match-list-container p,
+.dark-theme .match-list-container span:not(.badge),
+.dark-theme .match-list-container label {
+  color: #e0e0e0 !important;
+}
+
+/* Garantir que labels sejam visíveis */
+.dark-theme .match-list-container label,
+.dark-theme label {
+  color: #e0e0e0 !important;
+  font-weight: 500;
+}
+
+/* Cards de partida */
+.dark-theme .match-card,
+.dark-theme .match-item,
+.dark-theme .match-list-item {
+  background: rgba(45, 45, 45, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark-theme .match-card:hover,
+.dark-theme .match-item:hover {
+  background: rgba(55, 55, 55, 0.95) !important;
+  border-color: #4d94ff !important;
+  box-shadow: 0 6px 20px rgba(77, 148, 255, 0.25) !important;
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+/* Todos os textos dentro dos cards de partida */
+.dark-theme .match-card *,
+.dark-theme .match-item *,
+.dark-theme .match-list-item * {
+  color: inherit;
+}
+
+.dark-theme .match-card h1,
+.dark-theme .match-card h2,
+.dark-theme .match-card h3,
+.dark-theme .match-card h4,
+.dark-theme .match-card h5,
+.dark-theme .match-card h6 {
+  color: #ffffff !important;
+}
+
+.dark-theme .match-card p,
+.dark-theme .match-card span:not(.badge) {
+  color: #e0e0e0 !important;
+}
+
+.dark-theme .match-card small,
+.dark-theme .match-card .text-muted {
+  color: #b0b0b0 !important;
+}
+
+/* Filtros */
+.dark-theme .filter-section,
+.dark-theme .filters-card {
+  background: rgba(45, 45, 45, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark-theme .filter-button,
+.dark-theme .filter-btn {
+  background: rgba(55, 55, 55, 0.9) !important;
+  color: #e0e0e0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  transition: all 0.3s ease;
+}
+
+.dark-theme .filter-button:hover,
+.dark-theme .filter-btn:hover {
+  background: rgba(65, 65, 65, 0.9) !important;
+  border-color: #4d94ff !important;
+  color: #4d94ff !important;
+}
+
+.dark-theme .filter-button.active,
+.dark-theme .filter-btn.active {
+  background: #4d94ff !important;
+  color: #ffffff !important;
+  border-color: #4d94ff !important;
+  font-weight: 600;
+}
+
+/* Tabs de filtro */
+.dark-theme .filter-tabs .nav-link {
+  color: var(--text-secondary) !important;
+  background: transparent !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark-theme .filter-tabs .nav-link.active {
+  background: var(--card-bg) !important;
+  color: #4d94ff !important;
+  border-color: var(--border-color) !important;
+  border-bottom-color: transparent !important;
+}
+
+/* Status badges */
+.dark-theme .status-badge,
+.dark-theme .badge-status {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Empty state */
+.dark-theme .empty-state,
+.dark-theme .no-matches {
+  color: #b0b0b0 !important;
+  background: rgba(45, 45, 45, 0.5) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.2) !important;
+  padding: 2rem;
+  border-radius: 8px;
+}
+
+.dark-theme .empty-state h3,
+.dark-theme .no-matches h3 {
+  color: #e0e0e0 !important;
+}
+
+.dark-theme .empty-state svg,
+.dark-theme .no-matches svg {
+  color: #666 !important;
+  opacity: 0.6;
+}
+
+/* Loading spinner */
+.dark-theme .loading-container {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-theme .loading-spinner {
+  border-color: var(--border-color) !important;
+  border-top-color: #4d94ff !important;
+}
+
+/* Informações de times e placar */
+.dark-theme .team-info,
+.dark-theme .team-name,
+.dark-theme .team-badge {
+  color: #ffffff !important;
+}
+
+.dark-theme .score,
+.dark-theme .match-score {
+  color: #ffffff !important;
+  background: var(--bg-tertiary) !important;
+}
+
+.dark-theme .vs-divider,
+.dark-theme .versus {
+  color: #b0b0b0 !important;
+}
+
+/* Match details */
+.dark-theme .match-details,
+.dark-theme .match-info {
+  background: rgba(55, 55, 55, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+.dark-theme .match-date,
+.dark-theme .match-time,
+.dark-theme .match-location {
+  color: #e0e0e0 !important;
+}
+
+/* Melhorar contraste dos ícones e labels */
+.dark-theme .match-details svg,
+.dark-theme .match-info svg {
+  color: #90caf9 !important;
+}
+
+.dark-theme .match-details strong,
+.dark-theme .match-info strong {
+  color: #ffffff !important;
+}
+
+/* Cards de informação com melhor contraste */
+.dark-theme .info-card,
+.dark-theme .detail-card {
+  background: rgba(45, 45, 45, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark-theme .info-card:hover,
+.dark-theme .detail-card:hover {
+  border-color: rgba(77, 148, 255, 0.5) !important;
+  box-shadow: 0 6px 16px rgba(77, 148, 255, 0.2) !important;
+}
+
+/* Action buttons na match list */
+.dark-theme .match-actions button,
+.dark-theme .match-card button:not(.btn-primary):not(.btn-danger):not(.btn-success) {
+  background: rgba(55, 55, 55, 0.9) !important;
+  color: #e0e0e0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.dark-theme .match-actions button:hover {
+  background: rgba(65, 65, 65, 0.9) !important;
+  border-color: #4d94ff !important;
+  color: #4d94ff !important;
+}
+
+/* Input de busca */
+.dark-theme input[type="text"],
+.dark-theme input[type="search"],
+.dark-theme .search-input,
+.dark-theme .form-control {
+  background: rgba(45, 45, 45, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+.dark-theme input[type="text"]::placeholder,
+.dark-theme input[type="search"]::placeholder,
+.dark-theme .search-input::placeholder,
+.dark-theme .form-control::placeholder {
+  color: #888 !important;
+}
+
+.dark-theme input[type="text"]:focus,
+.dark-theme input[type="search"]:focus,
+.dark-theme .search-input:focus,
+.dark-theme .form-control:focus {
+  background: rgba(55, 55, 55, 0.9) !important;
+  border-color: #4d94ff !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(77, 148, 255, 0.25) !important;
+}
+
+/* Botão Criar Nova Partida */
+.dark-theme .btn-primary {
+  background: linear-gradient(135deg, #4d94ff 0%, #2979ff 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(77, 148, 255, 0.3) !important;
+}
+
+.dark-theme .btn-primary:hover {
+  background: linear-gradient(135deg, #6ba5ff 0%, #4d94ff 100%) !important;
+  box-shadow: 0 6px 16px rgba(77, 148, 255, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+/* Botão Filtros */
+.dark-theme .filter-toggle-btn,
+.dark-theme button[aria-label*="Filtros"],
+.dark-theme button:has(svg):not(.btn-primary):not(.btn-danger) {
+  background: rgba(55, 55, 55, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #e0e0e0 !important;
+}
+
+.dark-theme .filter-toggle-btn:hover {
+  background: rgba(65, 65, 65, 0.9) !important;
+  border-color: #4d94ff !important;
+  color: #4d94ff !important;
+}
+
+
