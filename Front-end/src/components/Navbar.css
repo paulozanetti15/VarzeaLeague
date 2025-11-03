@@ -462,3 +462,89 @@
   margin-right: 6px;
   color: #fff;
 }
+
+/* Theme Toggle Button */
+.navbar-theme-toggle {
+  color: #fff !important;
+  transition: all 0.3s ease;
+  margin-right: 8px;
+}
+
+.navbar-theme-toggle:hover {
+  color: #ffd600 !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  transform: rotate(180deg);
+}
+
+.navbar-theme-toggle svg {
+  font-size: 1.5rem;
+}
+
+.dark-theme .navbar-appbar {
+  background: linear-gradient(90deg, #1a1a1a 0%, #2d2d2d 100%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .navbar-user-drawer {
+  background: #2d2d2d;
+  color: #e9ecef;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .navbar-user-avatar {
+  border-color: #4d94ff;
+  background: #3a3a3a;
+  color: #4d94ff;
+}
+
+.dark-theme .navbar-user-name {
+  color: #e9ecef;
+}
+
+.dark-theme .navbar-user-email {
+  color: #adb5bd;
+}
+
+.dark-theme .navbar-user-role-chip {
+  border-color: #4d94ff;
+  color: #4d94ff;
+}
+
+.dark-theme .navbar-user-button {
+  background: #4d94ff;
+  color: #fff;
+}
+
+.dark-theme .navbar-user-button:hover {
+  background: #3d84ef;
+}
+
+.dark-theme .navbar-drawer {
+  background: rgba(45, 45, 45, 0.95) !important;
+}
+
+.dark-theme .navbar-drawer-title {
+  color: #e9ecef;
+}
+
+.dark-theme .navbar-drawer-item {
+  color: #e9ecef;
+}
+
+.dark-theme .navbar-drawer-item:hover {
+  background-color: rgba(77, 148, 255, 0.1);
+}
+
+.dark-theme .navbar-drawer-item.active {
+  background-color: rgba(77, 148, 255, 0.2);
+  color: #4d94ff;
+}
+
+.dark-theme .navbar-dropdown-item {
+  background-color: #2d2d2d;
+  color: #e9ecef;
+}
+
+.dark-theme .navbar-dropdown-item:hover {
+  background-color: #3a3a3a;
+}

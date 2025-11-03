@@ -5,6 +5,7 @@ import MatchGoal from '../models/MatchGoalModel';
 import MatchCard from '../models/MatchCardModel';
 import User from '../models/UserModel';
 import Player from '../models/PlayerModel';
+import PlayerEligibilityService from '../services/PlayerEligibilityService';
 
 export const finalizeMatch = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -85,6 +86,20 @@ export const addCard = async (req: AuthRequest, res: Response): Promise<void> =>
       resolvedUserId = (userByEmail as any).id;
     }
     const card = await MatchCard.create({ match_id: matchId, user_id: resolvedUserId, player_id: resolvedPlayerId, card_type: cardType, minute });
+    
+    if (resolvedPlayerId) {
+      const suspension = await PlayerEligibilityService.processCardAndCheckSuspension(
+        resolvedPlayerId,
+        matchId,
+        cardType,
+        false
+      );
+      
+      if (suspension) {
+        console.log(`Suspensão automática criada para jogador ${resolvedPlayerId}:`, suspension);
+      }
+    }
+    
     res.status(201).json(card);
   } catch (err) {
     console.error('Erro ao registrar cartão:', err);

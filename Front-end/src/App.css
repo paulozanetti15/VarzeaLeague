@@ -6,6 +6,9 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
   scrollbar-width: thin;
   scrollbar-color: #bbbbbb #f1f1f1;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
  
 body::before {
@@ -28,25 +31,28 @@ body.modal-open {
   flex-direction: column;
   margin: 0 !important;
   padding: 0 !important;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .page-container {
   min-height: calc(100vh - 60px);
   width: 100%;
-  background-color: var(--gray-50);
+  background-color: var(--bg-primary);
   padding: 1.5rem;
   flex: 1;
   margin-top: 0 !important;
+  color: var(--text-primary);
 }
 
 /* Header principal da aplicação */
 .app-header {
-  background-color: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background-color: var(--card-bg);
+  box-shadow: 0 2px 10px var(--shadow);
   position: sticky;
   top: 0;
   z-index: 1000;
-  color: var(--gray-800);
+  color: var(--text-primary);
   height: 60px;
 }
 

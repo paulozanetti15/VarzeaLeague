@@ -21,9 +21,9 @@ import FriendlyMatchPenalty from './FriendlyMatchPenaltyModel';
 import ChampionshipPenalty from './ChampionshipPenaltyModel';
 import Referee from './RefereeModel';
 import MatchReferee from './MatchRefereeModel';
+import PlayerSuspension from './PlayerSuspensionModel';
 
 
-// User <-> Match associations
 export function associateModels() {
   // Associação correta entre User e UserType
   User.belongsTo(UserType, { foreignKey: 'userTypeId', as: 'usertype' });
@@ -179,5 +179,10 @@ export function associateModels() {
 
   Match.hasMany(MatchReferee, { foreignKey: 'match_id', as: 'matchReferees' });
   Referee.hasMany(MatchReferee, { foreignKey: 'referee_id', as: 'refereeMatches' });
+
+  PlayerSuspension.belongsTo(Player, { foreignKey: 'player_id', as: 'player' });
+  PlayerSuspension.belongsTo(Championship, { foreignKey: 'championship_id', as: 'championship' });
+  Player.hasMany(PlayerSuspension, { foreignKey: 'player_id', as: 'suspensions' });
+  Championship.hasMany(PlayerSuspension, { foreignKey: 'championship_id', as: 'suspensions' });
 
 }

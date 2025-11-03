@@ -33,6 +33,8 @@ import {
   PersonAdd,
   FeedOutlined,
   Sports,
+  Brightness4,
+  Brightness7,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -41,6 +43,7 @@ import { History } from '@mui/icons-material';
 import { api } from '../services/api';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { SplitButton } from 'react-bootstrap';
+import { useTheme as useThemeContext } from '../context/ThemeContext';
 import './Navbar.css';
 
 
@@ -48,6 +51,7 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerUserOpen, setDrawerUserOpen] = useState(false);
   const theme = useTheme();
+  const { theme: currentTheme, toggleTheme } = useThemeContext();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -325,6 +329,11 @@ const Navbar = () => {
 
         {user ? (
           <div className="navbar-user-actions">
+            <Tooltip title={currentTheme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}>
+              <IconButton onClick={toggleTheme} className="navbar-theme-toggle">
+                {currentTheme === 'dark' ? <Brightness7 /> : <Brightness4 />}
+              </IconButton>
+            </Tooltip>
             <Tooltip title="Notificações">
               <IconButton className="navbar-notification-button">
                 <Badge badgeContent={3} color="error">
