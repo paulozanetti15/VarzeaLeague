@@ -39,6 +39,12 @@ import {
 } from '../controllers/FriendlyMatchesEventsController';
 import { getMatchPlayersForAdmin } from '../controllers/matchPlayersController';
 import { getMatchRosterPlayers } from '../controllers/matchRosterController';
+import {
+  adicionarSumulaPartidasAmistosas,
+  buscarSumulaPartidaAmistosa,
+  atualizarSumulaPartidaAmistosa,
+  deletarSumulaPartidaAmistosa
+} from '../controllers/TeamHistoryController';
 
 const router = express.Router();
 
@@ -930,5 +936,301 @@ router.put('/:id/penalty', authenticateToken, alterarPunicaoPartidaAmistosa);
  *         description: Não autenticado
  */
 router.delete('/:id/penalty', authenticateToken, deletarPunicaoPartidaAmistosa);
+
+/**
+ * @swagger
+ * /api/friendly-matches/{matchId}/report:
+ *   get:
+ *     summary: Buscar súmula de partida amistosa
+ *     tags: [Partidas Amistosas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: matchId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID da partida amistosa
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Súmula da partida amistosa
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 matchId:
+ *                   type: integer
+ *                 teamHomeId:
+ *                   type: integer
+ *                 teamAwayId:
+ *                   type: integer
+ *                 scoreHome:
+ *                   type: integer
+ *                 scoreAway:
+ *                   type: integer
+ *                 observations:
+ *                   type: string
+ *                 mvpPlayerId:
+ *                   type: integer
+ *       401:
+ *         description: Não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Token não fornecido ou inválido
+ *       404:
+ *         description: Súmula não encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Súmula não encontrada para esta partida
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Erro ao buscar súmula da partida
+ */
+router.get('/:matchId/report', authenticateToken, buscarSumulaPartidaAmistosa);
+
+/**
+ * @swagger
+ * /api/friendly-matches/report:
+ *   post:
+ *     summary: Criar súmula de partida amistosa
+ *     tags: [Partidas Amistosas]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - matchId
+ *               - teamHomeId
+ *               - teamAwayId
+ *               - scoreHome
+ *               - scoreAway
+ *             properties:
+ *               matchId:
+ *                 type: integer
+ *                 example: 1
+ *               teamHomeId:
+ *                 type: integer
+ *                 example: 1
+ *               teamAwayId:
+ *                 type: integer
+ *                 example: 2
+ *               scoreHome:
+ *                 type: integer
+ *                 minimum: 0
+ *                 example: 3
+ *               scoreAway:
+ *                 type: integer
+ *                 minimum: 0
+ *                 example: 2
+ *               observations:
+ *                 type: string
+ *                 example: Ótima partida com muitos gols
+ *               mvpPlayerId:
+ *                 type: integer
+ *                 example: 5
+ *     responses:
+ *       201:
+ *         description: Súmula criada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Súmula criada com sucesso
+ *                 report:
+ *                   type: object
+ *       400:
+ *         description: Dados inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Dados inválidos - todos os campos obrigatórios devem ser preenchidos
+ *       401:
+ *         description: Não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Token não fornecido ou inválido
+ *       404:
+ *         description: Partida não encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Partida não encontrada
+ *       409:
+ *         description: Súmula já existe para esta partida
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Já existe uma súmula para esta partida
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Erro ao criar súmula da partida
+ */
+router.post('/report', authenticateToken, adicionarSumulaPartidasAmistosas);
+
+/**
+ * @swagger
+ * /api/friendly-matches/{matchId}/report:
+ *   put:
+ *     summary: Atualizar súmula de partida amistosa
+ *     tags: [Partidas Amistosas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: matchId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID da partida amistosa
+ *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               scoreHome:
+ *                 type: integer
+ *                 minimum: 0
+ *                 example: 4
+ *               scoreAway:
+ *                 type: integer
+ *                 minimum: 0
+ *                 example: 3
+ *               observations:
+ *                 type: string
+ *                 example: Partida decidida nos acréscimos
+ *               mvpPlayerId:
+ *                 type: integer
+ *                 example: 7
+ *     responses:
+ *       200:
+ *         description: Súmula atualizada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Súmula atualizada com sucesso
+ *       401:
+ *         description: Não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Token não fornecido ou inválido
+ *       404:
+ *         description: Súmula não encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Súmula não encontrada para esta partida
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Erro ao atualizar súmula da partida
+ */
+router.put('/:matchId/report', authenticateToken, atualizarSumulaPartidaAmistosa);
+
+/**
+ * @swagger
+ * /api/friendly-matches/{matchId}/report:
+ *   delete:
+ *     summary: Deletar súmula de partida amistosa
+ *     tags: [Partidas Amistosas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: matchId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID da partida amistosa
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Súmula deletada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Súmula deletada com sucesso
+ *       401:
+ *         description: Não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Token não fornecido ou inválido
+ *       404:
+ *         description: Súmula não encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Súmula não encontrada para esta partida
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Erro ao deletar súmula da partida
+ */
+router.delete('/:matchId/report', authenticateToken, deletarSumulaPartidaAmistosa);
 
 export default router;

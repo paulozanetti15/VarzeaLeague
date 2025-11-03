@@ -90,8 +90,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       const matchData = matchResponse.data;
 
       const sumulaEndpoint = isChampionship
-        ? `http://localhost:3001/api/history/championship-matches/${matchId}/report`
-        : `http://localhost:3001/api/history/friendly-matches/${matchId}/report`;
+        ? `http://localhost:3001/api/championships/matches/${matchId}/report`
+        : `http://localhost:3001/api/friendly-matches/${matchId}/report`;
 
       let homeTeam = 0;
       let awayTeam = 0;
@@ -179,8 +179,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       };
 
       const endpoint = isChampionship
-        ? 'http://localhost:3001/api/history/championship-matches/report'
-        : 'http://localhost:3001/api/history/friendly-matches/report';
+        ? 'http://localhost:3001/api/championships/matches/report'
+        : 'http://localhost:3001/api/friendly-matches/report';
 
       const response = await axios.post(endpoint, sumula, {
         headers: {
@@ -260,8 +260,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       };
 
       const endpoint = isChampionship
-        ? `http://localhost:3001/api/history/championship-matches/${data.matchId}/report`
-        : `http://localhost:3001/api/history/friendly-matches/${data.matchId}/report`;
+        ? `http://localhost:3001/api/championships/matches/${data.matchId}/report`
+        : `http://localhost:3001/api/friendly-matches/${data.matchId}/report`;
 
       const response = await axios.put(endpoint, sumula, {
         headers: {
@@ -316,8 +316,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       }
 
       const endpoint = isChampionship
-        ? `http://localhost:3001/api/history/championship-matches/${matchId}/report`
-        : `http://localhost:3001/api/history/friendly-matches/${matchId}/report`;
+        ? `http://localhost:3001/api/championships/matches/${matchId}/report`
+        : `http://localhost:3001/api/friendly-matches/${matchId}/report`;
 
       const response = await axios.delete(endpoint, {
         headers: { Authorization: `Bearer ${token}` }

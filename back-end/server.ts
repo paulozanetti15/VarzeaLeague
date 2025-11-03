@@ -30,7 +30,6 @@ import fs from 'fs';
 import championshipRoutes from './routes/championshipRoutes';
 import userTypeRoutes from './routes/userTypeRoutes';
 import overviewRoutes from './routes/overviewRoutes';
-import historyRoutes from './routes/historyRoutes';
 import rankingRoutes from './routes/rankingRoutes';
 import MatchChampionship from './models/MatchChampionshipModel';
 import MatchChampionshpReport from './models/MatchReportChampionshipModel';
@@ -77,7 +76,6 @@ app.use('/api/rules', RulesRoutes);
 app.use('/api/championships', championshipRoutes);
 app.use('/api/usertypes', userTypeRoutes);
 app.use('/api/overview', overviewRoutes);
-app.use('/api/history', historyRoutes);
 app.use('/api/ranking', rankingRoutes);
 
 const startServer = async () => {

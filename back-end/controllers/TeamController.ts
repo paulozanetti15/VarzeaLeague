@@ -8,7 +8,7 @@ import path from 'path';
 import fs from 'fs';
 import { AuthRequest } from '../middleware/auth';
 import MatchTeams from '../models/FriendlyMatchTeamsModel';
-import TeamChampionship from '../models/TeamChampionshipsModel';
+import TeamChampionship from '../models/TeamChampionshipModel';
 import MatchChampionshipReport from '../models/MatchReportChampionshipModel';
 
 export default class TeamController {
