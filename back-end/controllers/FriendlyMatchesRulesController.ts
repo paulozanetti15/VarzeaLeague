@@ -1,7 +1,6 @@
-import { get } from "http";
-import Rules from "../models/RulesModel";
-import MatchModel from "../models/MatchModel";
-import MatchTeamsModel from "../models/MatchTeamsModel";
+import Rules from "../models/FriendlyMatchesRulesModel";
+import FriendlyMatchesModel from "../models/FriendlyMatchesModel";
+import FriendlyMatchTeamsModel from "../models/FriendlyMatchTeamsModel";
 import { Op } from "sequelize";
 
 export const insertRules = async (req, res) => {
@@ -28,17 +27,17 @@ export const insertRules = async (req, res) => {
         }
 
         // Verificar se a partida existe
-        const match = await MatchModel.findByPk(partidaId);
+        const match = await FriendlyMatchesModel.findByPk(partidaId);
         if (!match) {
             return res.status(404).json({ message: "Partida não encontrada" });
         }
 
         await Rules.create({
-            partidaId: partidaId,
-            dataLimite: dataLimite,
-            idadeMinima: parseInt(idadeMinima),
-            idadeMaxima: parseInt(idadeMaxima),
-            genero: genero
+            matchId: partidaId,
+            registrationDeadline: dataLimite,
+            minimumAge: parseInt(idadeMinima),
+            maximumAge: parseInt(idadeMaxima),
+            gender: genero
         });   
 
         res.status(201).json({ message: "Regra criada com sucesso!" });
@@ -51,7 +50,7 @@ export const insertRules = async (req, res) => {
 export const deleteRules = async (req, res) => {
     try {
         const { partidaId } = req.params;
-        await Rules.destroy({ where: { partidaId: partidaId } });
+        await Rules.destroy({ where: { matchId: partidaId } });
         res.status(200).json({ message: "Regras deletadas com sucesso!" });
     }
     catch (error) {
@@ -90,12 +89,12 @@ export const updateRules = async (req, res) => {
             return res.status(400).json({ message: "Data limite inválida" });
         }
        
-        await Rules.update({
-            dataLimite: parsedDataLimite,
-            idadeMinima: parseInt(idadeMinima),
-            idadeMaxima: parseInt(idadeMaxima),
-            genero: genero
-        }, { where: { partidaId:id } });
+        await FriendlyMatchesRulesModel.update({
+            registrationDeadline: parsedDataLimite,
+            minimumAge: parseInt(idadeMinima),
+            maximumAge: parseInt(idadeMaxima),
+            gender: genero
+        }, { where: { matchId: id } });
 
         const now = new Date();
         now.setHours(23, 59, 59, 999);
@@ -103,10 +102,10 @@ export const updateRules = async (req, res) => {
         const deadline = new Date(dataLimite);
         deadline.setHours(23, 59, 59, 999);
         
-        const match = await MatchModel.findByPk(id);
+        const match = await FriendlyMatchesModel.findByPk(id);
         
         if (match) {
-            const teamsCount = await MatchTeamsModel.count({
+            const teamsCount = await FriendlyMatchTeamsModel.count({
                 where: { matchId: id }
             });
 
@@ -151,7 +150,7 @@ export const getRuleById = async (req, res) => {
     try {
         const { id } = req.params;
         
-        const regras = await Rules.findOne({ where: { partidaId: id } });
+        const regras = await Rules.findOne({ where: { matchId: id } });
         if (!regras) {
             return res.status(404).json({ message: "Não existem regras cadastradas" });
         }

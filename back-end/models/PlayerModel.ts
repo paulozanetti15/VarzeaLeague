@@ -4,10 +4,10 @@ import User from './UserModel';
 
 interface PlayerAttributes {
   id: number;
-  nome: string;
-  sexo: string;
-  ano: string;
-  posicao: string;
+  name: string;
+  gender: string;
+  year: string;
+  position: string;
   isDeleted: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -17,10 +17,10 @@ interface PlayerCreationAttributes extends Omit<PlayerAttributes, 'id'> {}
 
 class Player extends Model<PlayerAttributes, PlayerCreationAttributes> {
   public id!: number;
-  public nome!: string;
-  public sexo!: string;
-  public ano!: string;
-  public posicao!: string;
+  public name!: string;
+  public gender!: string;
+  public year!: string;
+  public position!: string;
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -33,22 +33,22 @@ Player.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    nome: {
+    name: {
       type: DataTypes.STRING,
       allowNull: false,
       set(value: string) {
-        this.setDataValue('nome', value.trim().toLowerCase());
+        this.setDataValue('name', value.trim().toLowerCase());
       },
     },
-    sexo: {
+    gender: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    ano: {
+    year: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    posicao: {
+    position: {
       type: DataTypes.STRING,
       allowNull: false,
     },

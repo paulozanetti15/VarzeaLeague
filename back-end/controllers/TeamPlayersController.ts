@@ -26,7 +26,7 @@ export const createTeamPlayer = async (req: Request, res: Response): Promise<voi
                     });
                     return { success: true, player };
                 }
-                return { success: false, player, message: `${player?.nome || 'Jogador'} já está vinculado ao time` };
+                return { success: false, player, message: `${player?.name || 'Jogador'} já está vinculado ao time` };
             })
         );
         

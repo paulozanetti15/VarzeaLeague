@@ -58,7 +58,4 @@ ChampionshipPenalty.init(
   }
 );
 
-ChampionshipPenalty.belongsTo(Team, { foreignKey: 'idTime', as: 'team' });
-ChampionshipPenalty.belongsTo(Championship, { foreignKey: 'idChampionship', as: 'championship' });
-
 export default ChampionshipPenalty;

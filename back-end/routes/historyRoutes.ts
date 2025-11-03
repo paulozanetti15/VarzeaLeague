@@ -1,19 +1,31 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth';
-import { HistoryController } from '../controllers/history/HistoryController';
+import {
+  getAllFriendlyMatchesHistory,
+  getAllChampionshipMatchesHistory,
+  getMatchesByChampionshipHistory,
+  adicionarSumulaPartidasAmistosas,
+  buscarSumulaPartidaAmistosa,
+  buscarSumulaPartidaCampeonato,
+  deletarSumulaPartidaAmistosa,
+  deletarSumulaPartidaCampeonato,
+  atualizarSumulaPartidaAmistosa,
+  atualizarSumulaPartidaCampeonato
+} from '../controllers/TeamHistoryController';
 
 const router = express.Router();
 
-router.get('/teams/:teamId/friendly-matches', authenticateToken, HistoryController.getFriendlyMatches);
-router.get('/teams/:teamId/championship-matches', authenticateToken, HistoryController.getChampionshipMatches);
+router.get('/teams/:teamId/friendly-matches', authenticateToken, getAllFriendlyMatchesHistory);
+router.get('/teams/:teamId/championship-matches', authenticateToken, getAllChampionshipMatchesHistory);
+router.get('/teams/:teamId/championships/:championshipId/matches', authenticateToken, getMatchesByChampionshipHistory);
 
-router.get('/friendly-matches/:matchId/report', authenticateToken, HistoryController.getFriendlyMatchReport);
-router.post('/friendly-matches/report', authenticateToken, HistoryController.createFriendlyMatchReport);
-router.put('/friendly-matches/:matchId/report', authenticateToken, HistoryController.updateFriendlyMatchReport);
-router.delete('/friendly-matches/:matchId/report', authenticateToken, HistoryController.deleteFriendlyMatchReport);
+router.get('/friendly-matches/:matchId/report', authenticateToken, buscarSumulaPartidaAmistosa);
+router.post('/friendly-matches/report', authenticateToken, adicionarSumulaPartidasAmistosas);
+router.put('/friendly-matches/:matchId/report', authenticateToken, atualizarSumulaPartidaAmistosa);
+router.delete('/friendly-matches/:matchId/report', authenticateToken, deletarSumulaPartidaAmistosa);
 
-router.get('/championship-matches/:matchId/report', authenticateToken, HistoryController.getChampionshipMatchReport);
-router.put('/championship-matches/:matchId/report', authenticateToken, HistoryController.updateChampionshipMatchReport);
-router.delete('/championship-matches/:matchId/report', authenticateToken, HistoryController.deleteChampionshipMatchReport);
+router.get('/championship-matches/:matchId/report', authenticateToken, buscarSumulaPartidaCampeonato);
+router.put('/championship-matches/:matchId/report', authenticateToken, atualizarSumulaPartidaCampeonato);
+router.delete('/championship-matches/:matchId/report', authenticateToken, deletarSumulaPartidaCampeonato);
 
 export default router;

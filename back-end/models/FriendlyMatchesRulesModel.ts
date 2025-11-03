@@ -1,27 +1,27 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database';
 
-const Rules = sequelize.define('Rules', {
+const FriendlyMatchesRules = sequelize.define('FriendlyMatchesRules', {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
     },
-    partidaId: {
+    matchId: {
         type: DataTypes.INTEGER,
         allowNull: false,
         field: 'partidaid',
         references: {
-            model: 'matches',
+            model: 'FriendlyMatches',
             key: 'id',
         },
     },
-    dataLimite: {
+    registrationDeadline: {
         type: DataTypes.DATE,    
         allowNull: false,
         field: 'datalimiteinscricao'
     },
-    idadeMinima: {
+    minimumAge: {
         type: DataTypes.INTEGER,
         allowNull: false,
         field: 'idade_minima',
@@ -30,7 +30,7 @@ const Rules = sequelize.define('Rules', {
             max: 100
         }
     },
-    idadeMaxima: {
+    maximumAge: {
         type: DataTypes.INTEGER,
         allowNull: false,
         field: 'idade_maxima',
@@ -39,7 +39,7 @@ const Rules = sequelize.define('Rules', {
             max: 100
         }
     },
-    genero: {
+    gender: {
         type: DataTypes.STRING,    
         allowNull: false,
         field: 'sexo',
@@ -54,4 +54,4 @@ const Rules = sequelize.define('Rules', {
     underscored: true
 });
 
-export default Rules;
+export default FriendlyMatchesRules;

@@ -8,8 +8,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'varzealeague_secret';
 interface UserAttributes {
   id: number;
   name: string;
+  cpf: string;
+  phone: string;
   email: string;
   password: string;
+  gender: string;
   userTypeId: number;
 }
 
@@ -37,7 +40,7 @@ export const register: RequestHandler = async (req, res) => {
       phone,
       email,
       password: hashedPassword,
-      sexo,
+      gender: sexo,
       userTypeId: userTypeId || 4, // Usa o userTypeId enviado ou 4 como padrão
     });
 
@@ -47,7 +50,7 @@ export const register: RequestHandler = async (req, res) => {
     const token = jwt.sign({ userId: userJson.id }, JWT_SECRET, {
       expiresIn: '24h',
     });
-    console.log('token', token);
+    
     res.status(201).json({
       message: 'Usuário registrado com sucesso',
       token,
@@ -70,9 +73,7 @@ export const login: RequestHandler = async (req, res) => {
 
     // Validações básicas
     if (!email || !password) {
-      res.status(400).json({ 
-        message: 'Email e senha são obrigatórios' 
-      });
+      res.status(400).json({ message: 'Email e senha são obrigatórios' });
       return;
     }
 
@@ -81,9 +82,7 @@ export const login: RequestHandler = async (req, res) => {
 
     if (!user) {
       // Não revela se o email existe ou não (segurança)
-      res.status(401).json({ 
-        message: 'Email ou senha incorretos' 
-      });
+      res.status(401).json({ message: 'Email ou senha incorretos' });
       return;
     }
 
@@ -92,9 +91,7 @@ export const login: RequestHandler = async (req, res) => {
     // Verificar senha
     const isValidPassword = await bcrypt.compare(password, userJson.password);
     if (!isValidPassword) {
-      res.status(401).json({ 
-        message: 'Email ou senha incorretos' 
-      });
+      res.status(401).json({ message: 'Email ou senha incorretos' });
       return;
     }
 
@@ -118,31 +115,26 @@ export const login: RequestHandler = async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao fazer login:', error);
-    res.status(500).json({ 
-      message: 'Estamos com problemas técnicos. Por favor, tente novamente em alguns instantes.' 
-    });
+    res.status(500).json({ message: 'Erro ao fazer login' });
   }
 };
 
 export const verify: RequestHandler = async (req, res) => {
   try {
-    const authReq = req as any;
     const token = req.query.token as string;
-    jwt.verify(token,JWT_SECRET, async (err: any, decoded: any) => {
+    jwt.verify(token, JWT_SECRET, async (err: any, decoded: any) => {
       if (err) {
-        console.error('Erro ao decodificar token:', err);
-        return res.status(401).json({ error: 'Token inválido ou expirado' });
+        res.status(401).json({ message: 'Token inválido ou expirado' });
+        return;
       }
       const userId = decoded.id;
       if (!userId) {
-        console.error('ID de usuário não encontrado no token');
-        res.status(401).json({ error: 'Usuário não autenticado' });
+        res.status(401).json({ message: 'Usuário não autenticado' });
         return;
       }
       const user = await UserModel.findByPk(userId);
       if (!user) {
-        console.error('Usuário não encontrado');
-        res.status(404).json({ error: 'Usuário não encontrado' });
+        res.status(404).json({ message: 'Usuário não encontrado' });
         return;
       }
 
@@ -158,8 +150,8 @@ export const verify: RequestHandler = async (req, res) => {
       });
     });
   } catch (error) {
-    console.error('Erro na verificação:', error);
-    res.status(500).json({ error: 'Erro ao verificar autenticação' });
+    console.error('Erro ao verificar token:', error);
+    res.status(500).json({ message: 'Erro ao verificar token' });
   }
 };
 

@@ -3,11 +3,11 @@ import bcrypt from 'bcryptjs';
 import User from '../models/UserModel';
 import Team from '../models/TeamModel';
 import TeamUser from '../models/TeamUserModel';
-import Match from '../models/MatchModel';
+import FriendlyMatchesModel from '../models/FriendlyMatchesModel';
 import Championship from '../models/ChampionshipModel';
-import MatchGoal from '../models/MatchGoalModel';
-import MatchCard from '../models/MatchCardModel';
-import MatchReport from '../models/MatchReportModel';
+import FriendlyMatchGoal from '../models/FriendlyMatchGoalModel';
+import FriendlyMatchCard from '../models/FriendlyMatchCardModel';
+import FriendlyMatchReport from '../models/FriendlyMatchReportModel';
 import { AuthRequest } from '../middleware/auth';
 
 export const index = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -18,10 +18,9 @@ export const index = async (req: AuthRequest, res: Response): Promise<void> => {
         attributes: ['name']
       }]
     });
-    res.json(users);
+    res.status(200).json(users);
   } catch (error) {
-    console.error('Erro ao buscar usuários:', error);
-    res.status(500).json({ error: 'Erro ao buscar usuários' });
+    res.status(500).json({ message: 'Erro ao buscar usuários' });
   }
 };
 
@@ -34,7 +33,7 @@ export const store = async (req: AuthRequest, res: Response): Promise<void> => {
     });
 
     if (userExists) {
-      res.status(400).json({ error: 'Email já cadastrado' });
+      res.status(400).json({ message: 'Email já cadastrado' });
       return;
     }
 
@@ -43,7 +42,7 @@ export const store = async (req: AuthRequest, res: Response): Promise<void> => {
     });
 
     if (cpfExists) {
-      res.status(400).json({ error: 'CPF já cadastrado' });
+      res.status(400).json({ message: 'CPF já cadastrado' });
       return;
     }
 
@@ -54,15 +53,14 @@ export const store = async (req: AuthRequest, res: Response): Promise<void> => {
       email,
       cpf,
       phone,
-      sexo,
+      gender: sexo,
       userTypeId,
       password: hashedPassword
     });
 
     res.status(201).json(user);
   } catch (error) {
-    console.error('Erro ao criar usuário:', error);
-    res.status(500).json({ error: 'Erro ao criar usuário' });
+    res.status(500).json({ message: 'Erro ao criar usuário' });
   }
 };
 
@@ -74,7 +72,7 @@ export const update = async (req: AuthRequest, res: Response): Promise<void> => 
     const user = await User.findByPk(id);
 
     if (!user) {
-      res.status(404).json({ error: 'Usuário não encontrado' });
+      res.status(404).json({ message: 'Usuário não encontrado' });
       return;
     }
 
@@ -84,7 +82,7 @@ export const update = async (req: AuthRequest, res: Response): Promise<void> => 
       });
 
       if (emailExists) {
-        res.status(400).json({ error: 'Email já cadastrado' });
+        res.status(400).json({ message: 'Email já cadastrado' });
         return;
       }
     }
@@ -98,10 +96,9 @@ export const update = async (req: AuthRequest, res: Response): Promise<void> => 
 
     await user.update(updateData);
 
-    res.json(user);
+    res.status(200).json(user);
   } catch (error) {
-    console.error('Erro ao atualizar usuário:', error);
-    res.status(500).json({ error: 'Erro ao atualizar usuário' });
+    res.status(500).json({ message: 'Erro ao atualizar usuário' });
   }
 };
 
@@ -112,19 +109,18 @@ export const remove = async (req: AuthRequest, res: Response): Promise<void> => 
     const user = await User.findByPk(id);
 
     if (!user) {
-      res.status(404).json({ error: 'Usuário não encontrado' });
+      res.status(404).json({ message: 'Usuário não encontrado' });
       return;
     }
 
-    // Verificar dependências relacionadas antes de excluir
     const [captainedTeams, teamMemberships, organizedMatches, createdChampionships, goals, cards, reports] = await Promise.all([
       Team.count({ where: { captainId: id } }),
       TeamUser.count({ where: { userId: id } }),
-      Match.count({ where: { organizerId: id } }),
+      FriendlyMatchesModel.count({ where: { organizerId: id } }),
       Championship.count({ where: { created_by: id } }),
-      MatchGoal.count({ where: { user_id: id } }),
-      MatchCard.count({ where: { user_id: id } }),
-      MatchReport.count({ where: { created_by: id } }),
+      FriendlyMatchGoal.count({ where: { user_id: id } }),
+      FriendlyMatchCard.count({ where: { user_id: id } }),
+      FriendlyMatchReport.count({ where: { created_by: id } }),
     ]);
 
     const reasons: string[] = [];
@@ -137,7 +133,7 @@ export const remove = async (req: AuthRequest, res: Response): Promise<void> => 
     if (reports) reasons.push(`${reports} relatório(s) de partida`);
 
     if (reasons.length > 0) {
-      res.status(400).json({ error: `Impossível excluir usuário. Existem registros relacionados: ${reasons.join(', ')}. Remova ou reatribua-os antes de tentar excluir.` });
+      res.status(400).json({ message: `Impossível excluir usuário. Existem registros relacionados: ${reasons.join(', ')}. Remova ou reatribua-os antes de tentar excluir.` });
       return;
     }
 
@@ -145,8 +141,7 @@ export const remove = async (req: AuthRequest, res: Response): Promise<void> => 
 
     res.status(200).json({ message: 'Usuário excluído com sucesso' });
   } catch (error) {
-    console.error('Erro ao deletar usuário:', error);
-    res.status(500).json({ error: 'Erro ao deletar usuário' });
+    res.status(500).json({ message: 'Erro ao deletar usuário' });
   }
 };
 
@@ -160,12 +155,11 @@ export const getById = async (req: AuthRequest, res: Response): Promise<void> =>
       }]
     });
     if (!user) {
-      res.status(404).json({ error: 'Usuário não encontrado' });
+      res.status(404).json({ message: 'Usuário não encontrado' });
       return;
     }
-    res.json(user);
+    res.status(200).json(user);
   } catch (error) {
-    console.error('Erro ao buscar usuário:', error);
-    res.status(500).json({ error: 'Erro ao buscar usuário' });
+    res.status(500).json({ message: 'Erro ao buscar usuário' });
   }
 };

@@ -59,15 +59,4 @@ TeamUser.init(
   }
 );
 
-// Definir associações
-TeamUser.belongsTo(User, { 
-  foreignKey: 'userId',
-  as: 'user'
-});
-
-TeamUser.belongsTo(Team, {
-  foreignKey: 'teamId',
-  as: 'team'
-});
-
 export default TeamUser; 

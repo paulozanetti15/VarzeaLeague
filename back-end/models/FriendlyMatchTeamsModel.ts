@@ -7,7 +7,7 @@ interface MatchTeamsAttributes {
   teamId: number;
 }
 
-class MatchTeams extends Model<MatchTeamsAttributes> implements MatchTeamsAttributes {
+class FriendlyMatchTeams extends Model<MatchTeamsAttributes> implements MatchTeamsAttributes {
   public matchId!: number;
   public teamId!: number;
 
@@ -17,17 +17,17 @@ class MatchTeams extends Model<MatchTeamsAttributes> implements MatchTeamsAttrib
   }
 
   // Example static method to find all players for a specific match
-  public static async findByMatchId(matchId: number): Promise<MatchTeams[]> {
-    return await MatchTeams.findAll({ where: { matchId } });
+  public static async findByMatchId(matchId: number): Promise<MatchTeamsAttributes[]> {
+    return await FriendlyMatchTeams.findAll({ where: { matchId } });
   }
 }
-MatchTeams.init({
+FriendlyMatchTeams.init({
   matchId: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     field: 'match_id',
     references: {
-      model: 'matches',
+      model: 'FriendlyMatches',
       key: 'id'
     },
     onDelete: 'CASCADE',
@@ -51,4 +51,4 @@ MatchTeams.init({
   underscored: true
 });
 
-export default MatchTeams; 
+export default FriendlyMatchTeams; 

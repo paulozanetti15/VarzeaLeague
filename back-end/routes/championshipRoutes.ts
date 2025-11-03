@@ -1,4 +1,5 @@
 import express from 'express';
+import { authenticateToken } from '../middleware/auth';
 import { 
   createChampionship, 
   listChampionships, 
@@ -13,8 +14,12 @@ import {
   updateApplicationStatus,
   publishChampionship
 } from '../controllers/championshipController';
-import { ChampionshipPenaltyController } from '../controllers/championship/ChampionshipPenaltyController';
-import { authenticateToken } from '../middleware/auth';
+import {
+  inserirPunicaoCampeonato,
+  buscarPunicaoCampeonato,
+  alterarPunicaoCampeonato,
+  deletarPunicaoCampeonato
+} from '../controllers/ChampionshipPunishmentController';
 
 const router = express.Router();
 
@@ -33,9 +38,9 @@ router.post('/:id/applications', authenticateToken, applyToChampionship);
 router.get('/:id/applications', authenticateToken, getChampionshipApplications);
 router.put('/:id/applications/:applicationId/status', authenticateToken, updateApplicationStatus);
 
-router.get('/:id/penalty', authenticateToken, ChampionshipPenaltyController.get);
-router.post('/:id/penalty', authenticateToken, ChampionshipPenaltyController.create);
-router.put('/:id/penalty', authenticateToken, ChampionshipPenaltyController.update);
-router.delete('/:id/penalty', authenticateToken, ChampionshipPenaltyController.delete);
+router.get('/:id/penalty', authenticateToken, buscarPunicaoCampeonato);
+router.post('/:id/penalty', authenticateToken, inserirPunicaoCampeonato);
+router.put('/:id/penalty', authenticateToken, alterarPunicaoCampeonato);
+router.delete('/:id/penalty', authenticateToken, deletarPunicaoCampeonato);
 
 export default router;

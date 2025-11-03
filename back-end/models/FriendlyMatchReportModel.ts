@@ -14,7 +14,7 @@ MatchReport.init({
     allowNull: false,
     field: 'match_id',
     references: {
-      model: 'matches',
+      model: 'FriendlyMatches',
       key: 'id'
     },
     onDelete: 'CASCADE',

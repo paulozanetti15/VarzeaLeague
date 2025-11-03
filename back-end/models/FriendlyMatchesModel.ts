@@ -2,7 +2,7 @@ import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
 
 import User from './UserModel';
-import MatchPlayer from './MatchTeamsModel';
+import MatchPlayer from './FriendlyMatchTeamsModel';
 
 class Match extends Model {
   public id!: number;
@@ -71,11 +71,11 @@ Match.init({
     type: DataTypes.STRING,
     allowNull: true,
   },
-  modalidade : {
+   matchType: {
    type: DataTypes.STRING,
    allowNull: false,
   },
-  nomequadra: {
+  square: {
     type: DataTypes.STRING,
     allowNull: true,
   },

@@ -99,15 +99,15 @@ Team.init(
       allowNull: false,
       defaultValue: false
     },
-    cep:{
+    CEP:{
       type: DataTypes.STRING,
       allowNull: false,
     },
-    estado: {
+    state: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    cidade: {
+    city: {
       type: DataTypes.STRING,
       allowNull: true,
     }

@@ -1,9 +1,9 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/database';
 
-class MatchCard extends Model {}
+class FriendlyMatchCard extends Model {}
 
-MatchCard.init({
+FriendlyMatchCard.init({
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -37,4 +37,4 @@ MatchCard.init({
   timestamps: true,
 });
 
-export default MatchCard;
+export default FriendlyMatchCard;

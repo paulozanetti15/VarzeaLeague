@@ -44,7 +44,7 @@ User.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
-  sexo: {
+  gender: {
     type: DataTypes.STRING,
     allowNull: false,
   },

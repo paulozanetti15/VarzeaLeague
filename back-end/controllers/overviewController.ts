@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import sequelize from '../config/database';
-import MatchModel from '../models/MatchModel';
+import FriendlyMatchesModel from '../models/FriendlyMatchesModel';
 import TeamModel from '../models/TeamModel';
 import PlayerModel from '../models/PlayerModel';
-import MatchGoalModel from '../models/MatchGoalModel';
-import MatchCardModel from '../models/MatchCardModel';
-import MatchTeams from '../models/MatchTeamsModel';
+import FriendlyMatchGoalModel from '../models/FriendlyMatchGoalModel';
+import FriendlyMatchCardModel from '../models/FriendlyMatchCardModel';
+import FriendlyMatchTeamsModel from '../models/FriendlyMatchTeamsModel';
 
 export const getOverview = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -19,10 +19,10 @@ export const getOverview = async (req: Request, res: Response): Promise<void> =>
 
     let matchIdsFilter: number[] | undefined;
     if (teamId) {
-      const teamMatches = await MatchTeams.findAll({ where: { teamId }, attributes: ['matchId'], raw: true });
+      const teamMatches = await FriendlyMatchTeamsModel.findAll({ where: { teamId }, attributes: ['matchId'], raw: true });
       matchIdsFilter = teamMatches.map((tm: any) => Number(tm.matchId)).filter(Boolean);
       if (matchIdsFilter.length === 0) {
-        res.json({
+        res.status(200).json({
           kpis: { totalMatches: 0, upcomingMatches: 0, pastMatches: 0, totalTeams: 0, totalPlayers: 0, totalGoals: 0, totalCards: 0 },
           matchesByMonth: [], goalsByMonth: [], cardsByMonth: [], statusBreakdown: [], nextMatches: [], recentMatches: []
         });
@@ -74,19 +74,19 @@ export const getOverview = async (req: Request, res: Response): Promise<void> =>
       recentMatches,
       statusRaw
     ] = await Promise.all([
-      MatchModel.count({ where: matchWhere }),
+      FriendlyMatchesModel.count({ where: matchWhere }),
       TeamModel.count(),
       PlayerModel.count(),
-      MatchGoalModel.count({ where: Object.keys(totalGoalsWhere).length ? totalGoalsWhere : undefined }).catch(()=>0),
-      MatchCardModel.count({ where: Object.keys(totalCardsWhere).length ? totalCardsWhere : undefined }).catch(()=>0),
-      MatchModel.count({ where: upcomingWhere }),
-      MatchModel.count({ where: pastWhere }),
-      MatchModel.findAll({ where: matchesSinceWhere, attributes: ['id','date'], raw: true }).catch(()=>[] as any[]),
-      MatchGoalModel.findAll({ where: goalsWhere, attributes: ['id','created_at'], raw: true }).catch(()=>[] as any[]),
-      MatchCardModel.findAll({ where: cardsWhere, attributes: ['id','created_at','card_type'], raw: true }).catch(()=>[] as any[]),
-      MatchModel.findAll({ where: upcomingWhere, order: [['date', 'ASC']], limit: 5, attributes: ['id','title','date','location','status'], raw: true }).catch(()=>[] as any[]),
-      MatchModel.findAll({ where: pastWhere, order: [['date', 'DESC']], limit: 5, attributes: ['id','title','date','location','status'], raw: true }).catch(()=>[] as any[]),
-      MatchModel.findAll({ attributes: ['status', [sequelize.fn('COUNT', sequelize.col('status')), 'count']], where: matchWhere, group: ['status'], raw: true }).catch(()=>[] as any[])
+      FriendlyMatchGoalModel.count({ where: Object.keys(totalGoalsWhere).length ? totalGoalsWhere : undefined }).catch(()=>0),
+      FriendlyMatchCardModel.count({ where: Object.keys(totalCardsWhere).length ? totalCardsWhere : undefined }).catch(()=>0),
+      FriendlyMatchesModel.count({ where: upcomingWhere }),
+      FriendlyMatchesModel.count({ where: pastWhere }),
+      FriendlyMatchesModel.findAll({ where: matchesSinceWhere, attributes: ['id','date'], raw: true }).catch(()=>[] as any[]),
+      FriendlyMatchGoalModel.findAll({ where: goalsWhere, attributes: ['id','created_at'], raw: true }).catch(()=>[] as any[]),
+      FriendlyMatchCardModel.findAll({ where: cardsWhere, attributes: ['id','created_at','card_type'], raw: true }).catch(()=>[] as any[]),
+      FriendlyMatchesModel.findAll({ where: upcomingWhere, order: [['date', 'ASC']], limit: 5, attributes: ['id','title','date','location','status'], raw: true }).catch(()=>[] as any[]),
+      FriendlyMatchesModel.findAll({ where: pastWhere, order: [['date', 'DESC']], limit: 5, attributes: ['id','title','date','location','status'], raw: true }).catch(()=>[] as any[]),
+      FriendlyMatchesModel.findAll({ attributes: ['status', [sequelize.fn('COUNT', sequelize.col('status')), 'count']], where: matchWhere, group: ['status'], raw: true }).catch(()=>[] as any[])
     ]);
 
     const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -138,7 +138,6 @@ export const getOverview = async (req: Request, res: Response): Promise<void> =>
       recentMatches
     });
   } catch (error) {
-    console.error('Erro ao obter overview:', error);
     res.status(500).json({ message: 'Erro ao obter overview' });
   }
 };
@@ -151,7 +150,7 @@ export const searchOverviewEntities = async (req: Request, res: Response): Promi
     const like = { [Op.like]: `%${q}%` } as any;
 
     const [matches, teams] = await Promise.all([
-      MatchModel.findAll({ where: { title: like }, attributes: ['id','title','date'], limit: 10, order: [['date','DESC']], raw: true }),
+      FriendlyMatchesModel.findAll({ where: { title: like }, attributes: ['id','title','date'], limit: 10, order: [['date','DESC']], raw: true }),
       TeamModel.findAll({ where: { name: like }, attributes: ['id','name'], limit: 10, order: [['name','ASC']], raw: true })
     ]);
 
@@ -160,9 +159,8 @@ export const searchOverviewEntities = async (req: Request, res: Response): Promi
       ...teams.map((t: any) => ({ type: 'team', id: t.id, label: t.name }))
     ];
 
-    res.json(results);
-  } catch (err) {
-    console.error('Erro ao buscar entidades do overview:', err);
+    res.status(200).json(results);
+  } catch (error) {
     res.status(500).json({ message: 'Erro na busca' });
   }
 };

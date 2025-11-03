@@ -1,113 +1,102 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import Team from '../models/TeamModel';
 import User from '../models/UserModel';
 import Player from '../models/PlayerModel';
 import TeamPlayer from '../models/TeamPlayerModel';
-import { Op, Sequelize, fn, col } from 'sequelize';
-import multer from 'multer';
+import { Op, fn, col } from 'sequelize';
 import path from 'path';
 import fs from 'fs';
 import { AuthRequest } from '../middleware/auth';
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv'
-import MatchTeams from '../models/MatchTeamsModel';
-import TeamChampionship from '../models/TeamChampionshipModel';
-import MatchChampionshpReport from '../models/MatchReportChampionshipModel';
-dotenv.config();
-export class TeamController {
-  static async create(req: AuthRequest, res: Response): Promise<void> {
+import MatchTeams from '../models/FriendlyMatchTeamsModel';
+import TeamChampionship from '../models/TeamChampionshipsModel';
+import MatchChampionshipReport from '../models/MatchReportChampionshipModel';
+
+export default class TeamController {
+  static async createTeam(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { name, description, primaryColor, secondaryColor, estado, cidade, cep } = req.body;
-      let jogadores = req.body.jogadores;
-      if (typeof jogadores === 'string') {
-        try {
-          jogadores = JSON.parse(jogadores);
-        } catch (e) {
-          jogadores = [];
-        }
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        res.status(401).json({ message: 'Usuário não autenticado' });
+        return;
       }
+
       let bannerFilename = null;
       if (req.file) {
         bannerFilename = req.file.filename;
       }
-      const token = req.headers.authorization?.replace('Bearer ', '');
-      if (!token) {
-        res.status(401).json({ error: 'Token não fornecido' });
+
+      if (!name) {
+        res.status(400).json({ message: 'Nome do time é obrigatório' });
         return;
       }
-      let decodedPayload;
-      try {
-        decodedPayload = jwt.decode(token);
-      } catch (decodeErr) {
-        res.status(401).json({ error: 'Token inválido' });
+
+      const existingActiveTeam = await Team.findOne({
+        where: { name: name.trim(), isDeleted: false }
+      });
+
+      if (existingActiveTeam) {
+        res.status(400).json({ message: 'Este nome de time já está em uso. Escolha outro nome.' });
         return;
       }
-      let captainId = decodedPayload.id;
-      if (!captainId) {
-        res.status(401).json({ error: 'Usuário não autenticado' });
-        return;
-      }
-      if (name) {
-        const existingActiveTeam = await Team.findOne({
-          where: { name: name.trim(), isDeleted: false }
+
+      const existingDeletedTeam = await Team.findOne({
+        where: { name: name.trim(), isDeleted: true }
+      });
+
+      if (existingDeletedTeam) {
+        const agora = new Date();
+        agora.setHours(agora.getHours() - 3);
+        await existingDeletedTeam.update({
+          description,
+          captainId: userId,
+          isDeleted: false,
+          updatedAt: agora,
+          state: estado,
+          city: cidade,
+          CEP: cep,
+          primaryColor,
+          secondaryColor,
+          banner: bannerFilename
         });
-        if (existingActiveTeam) {
-          res.status(400).json({ error: 'Este nome de time já está em uso. Escolha outro nome.' });
+
+        await existingDeletedTeam.addUser(userId);
+        
+        const teamWithAssociations = await Team.findByPk(existingDeletedTeam.id, {
+          include: [
+            {
+              model: Player,
+              as: 'players',
+              through: { attributes: [] }
+            }
+          ]
+        });
+        
+        if (!teamWithAssociations) {
+          res.status(500).json({ message: 'Erro ao criar time' });
           return;
         }
-        const existingDeletedTeam = await Team.findOne({
-          where: { name: name.trim(), isDeleted: true }
-        });
-        if (existingDeletedTeam) {
-          const agora = new Date();
-          agora.setHours(agora.getHours() - 3);
-          await existingDeletedTeam.update({
-            description,
-            captainId,
-            isDeleted: false,
-            updatedAt: agora,
-            estado,
-            cidade,
-            cep,
-            primaryColor,
-            secondaryColor,
-            banner: bannerFilename
-          });
-          
-         
-          
-          // Adicionar o usuário ao time (se já não for capitão)
-          await existingDeletedTeam.addUser(captainId);
-          
-          const teamWithAssociations = await Team.findByPk(existingDeletedTeam.id, {
-            include: [
-              {
-                model: Player,
-                as: 'players',
-                through: { attributes: [] }
-              }
-            ]
-          });
-          const plainTeam = teamWithAssociations.get({ plain: true });
-          res.status(201).json(plainTeam);
-          return;
-        }
+
+        const plainTeam = teamWithAssociations.get({ plain: true });
+        res.status(201).json(plainTeam);
+        return;
       }
+
       const team = await Team.create({
         name: name.trim(),
         description,
-        captainId,
+        captainId: userId,
         primaryColor,
         secondaryColor,
         isDeleted: false,
         banner: bannerFilename,
-        estado,
-        cidade,
-        cep
+        state: estado,
+        city: cidade,
+        CEP: cep
       });
       
-      // Adicionar o capitão como usuário do time
-      await team.addUser(captainId);
+      await team.addUser(userId);
       
       const teamWithPlayers = await Team.findByPk(team.id, {
         include: [
@@ -120,15 +109,14 @@ export class TeamController {
       });
       
       if (!teamWithPlayers) {
-        res.status(500).json({ error: 'Erro ao criar time' });
+        res.status(500).json({ message: 'Erro ao criar time' });
         return;
       }
       
       const plainTeam = teamWithPlayers.get({ plain: true });
       res.status(201).json(plainTeam);
     } catch (error) {
-      console.error('Erro ao criar time:', error);
-      res.status(500).json({ error: 'Erro ao criar time' });
+      res.status(500).json({ message: 'Erro ao criar time' });
     }
   }
 
@@ -136,15 +124,13 @@ export class TeamController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        res.status(401).json({ error: 'Usuário não autenticado' });
+        res.status(401).json({ message: 'Usuário não autenticado' });
         return;
       }
       
-      // Buscar todos os times que não estão deletados
       const allTeams = await Team.findAll({
         where: {
           isDeleted: false,
-          // Buscar times onde o usuário é capitão
           [Op.or]: [
             { captainId: userId }
           ]
@@ -171,11 +157,10 @@ export class TeamController {
         ]
       });
       
-      // Buscar times onde o usuário é um membro (através da tabela de associação)
       const teamsWhereUserIsMember = await Team.findAll({
         where: {
           isDeleted: false,
-          captainId: { [Op.ne]: userId } // Excluir times onde o usuário já é capitão
+          captainId: { [Op.ne]: userId }
         },
         include: [
           {
@@ -200,7 +185,6 @@ export class TeamController {
         ]
       });
       
-      // Combinar os resultados (sem duplicatas)
       const combinedTeams = [...allTeams];
       
       teamsWhereUserIsMember.forEach(team => {
@@ -208,6 +192,7 @@ export class TeamController {
           combinedTeams.push(team);
         }
       });
+
       const formattedTeams = await Promise.all(
         combinedTeams.map(async team => {
           const plainTeam = team.get({ plain: true });
@@ -221,15 +206,14 @@ export class TeamController {
             ...plainTeam,
             banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
             isCurrentUserCaptain: isCaptain,
-            quantidadePartidas: quantidadePartidas // This is now a number, not a Promise
+            quantidadePartidas: quantidadePartidas
           };
         })
       );
       
-      res.json(formattedTeams);
+      res.status(200).json(formattedTeams);
     } catch (error) {
-      console.error('Erro ao listar times:', error);
-      res.status(500).json({ error: 'Erro ao listar times' });
+      res.status(500).json({ message: 'Erro ao listar times' });
     }
   }
 
@@ -239,9 +223,10 @@ export class TeamController {
       const userId = req.user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Usuário não autenticado' });
+        res.status(401).json({ message: 'Usuário não autenticado' });
         return;
-      }     
+      }
+
       const team = await Team.findOne({
         where: {
           id,
@@ -270,15 +255,18 @@ export class TeamController {
       });
 
       if (!team) {
-        res.status(404).json({ error: 'Time não encontrado' });
+        res.status(404).json({ message: 'Time não encontrado' });
         return;
       }
+
       const isCaptain = team.captainId === userId;
-      const isPlayer = team.users.some(player => player.id === userId);
+      const isPlayer = team.users.some(user => user.id === userId);
+
       if (!isCaptain && !isPlayer) {
-        res.status(403).json({ error: 'Você não tem permissão para ver este time' });
+        res.status(403).json({ message: 'Você não tem permissão para ver este time' });
         return;
       }
+
       const plainTeam = team.get({ plain: true });
       
       const formattedTeam = {
@@ -286,10 +274,10 @@ export class TeamController {
         banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null,
         isCurrentUserCaptain: isCaptain
       };
-      res.json(formattedTeam);
+
+      res.status(200).json(formattedTeam);
     } catch (error) {
-      console.error('Erro ao buscar time:', error);
-      res.status(500).json({ error: 'Erro ao buscar time' });
+      res.status(500).json({ message: 'Erro ao buscar time' });
     }
   }
 
@@ -302,13 +290,15 @@ export class TeamController {
       });
       
       if (!team) {
-        res.status(404).json({ error: 'Time não encontrado' });
+        res.status(404).json({ message: 'Time não encontrado' });
         return;
       }
+
       if (team.captainId !== userId) {
-        res.status(403).json({ error: 'Apenas o capitão pode atualizar o time' });
+        res.status(403).json({ message: 'Apenas o capitão pode atualizar o time' });
         return;
       }
+
       if (req.body.name) {
         const existingTeam = await Team.findOne({
           where: { 
@@ -318,25 +308,23 @@ export class TeamController {
           }
         });
         if (existingTeam) {
-          res.status(400).json({ error: 'Este nome de time já está em uso' });
+          res.status(400).json({ message: 'Este nome de time já está em uso' });
           return;
         }
       }
+
       const agora = new Date();
       agora.setHours(agora.getHours() - 3);
       
-      // Processar jogadores do FormData
       let jogadoresUpdate = [];
       if (req.body.jogadores) {
         try {
           jogadoresUpdate = JSON.parse(req.body.jogadores);
         } catch (e) {
-          console.error('Erro ao processar jogadores:', e);
           jogadoresUpdate = [];
         }
       }
 
-      // Preservar o banner atual se não houver um novo arquivo
       let bannerFilename = team.banner;
       if (req.file) {
         if (team.banner !== null) {
@@ -347,29 +335,25 @@ export class TeamController {
         }
         bannerFilename = req.file.filename;
       } 
+
       const updateData: any = {
         name: req.body.name?.trim(),
         description: req.body.description,
         primaryColor: req.body.primaryColor,
         secondaryColor: req.body.secondaryColor,
-        estado: req.body.estado,
-        cidade: req.body.cidade,
-        cep: req.body.cep,
+        state: req.body.estado,
+        city: req.body.cidade,
+        CEP: req.body.cep,
         updatedAt: agora
       };
 
-      // Só incluir o banner se ele existir
       if (bannerFilename) {
         updateData.banner = bannerFilename;
-        console.log('Banner incluído nos dados de atualização:', bannerFilename);
-      } else {
-        console.log('Nenhum banner incluído nos dados de atualização');
       }
-      await team.update(updateData);
-      console.log('Time atualizado com sucesso');
 
-      // Atualizar associações de jogadores (apenas associar/desassociar, não criar/editar)
-      if (jogadoresUpdate) {
+      await team.update(updateData);
+
+      if (jogadoresUpdate.length > 0) {
         await TeamController.handlePlayersAssociations(parseInt(id), jogadoresUpdate);
       }
       
@@ -385,7 +369,7 @@ export class TeamController {
       });
       
       if (!updatedTeam) {
-        res.status(500).json({ error: 'Erro ao atualizar time' });
+        res.status(500).json({ message: 'Erro ao atualizar time' });
         return;
       }
       
@@ -395,10 +379,9 @@ export class TeamController {
         banner: plainTeam.banner ? `/uploads/teams/${plainTeam.banner}` : null
       };
       
-      res.json(formattedTeam);
+      res.status(200).json(formattedTeam);
     } catch (error) {
-      console.error('Erro detalhado ao atualizar time:', error);
-      res.status(500).json({ error: 'Erro ao atualizar time' });
+      res.status(500).json({ message: 'Erro ao atualizar time' });
     }
   }
 
@@ -410,8 +393,7 @@ export class TeamController {
 
       if (!confirm) {
         res.status(400).json({ 
-          error: 'Confirmação necessária',
-          message: 'Para deletar o time, envie confirm: true no corpo da requisição'
+          message: 'Confirmação necessária. Para deletar o time, envie confirm: true no corpo da requisição'
         });
         return;
       }
@@ -424,23 +406,21 @@ export class TeamController {
       });
       
       if (!team) {
-        res.status(404).json({ error: 'Time não encontrado' });
+        res.status(404).json({ message: 'Time não encontrado' });
         return;
       }
 
       if (team.captainId !== userId) {
-        res.status(403).json({ error: 'Apenas o capitão pode deletar o time' });
+        res.status(403).json({ message: 'Apenas o capitão pode deletar o time' });
         return;
       }
 
-      // Remover associações entre o time e seus jogadores
       await TeamPlayer.destroy({
         where: {
           teamId: id
         }
       });
       
-      // Efetivamente excluir o time do banco de dados
       await team.destroy();
       
       res.status(200).json({ 
@@ -451,8 +431,7 @@ export class TeamController {
         }
       });
     } catch (error) {
-      console.error('Erro ao deletar time:', error);
-      res.status(500).json({ error: 'Erro ao deletar time' });
+      res.status(500).json({ message: 'Erro ao deletar time' });
     }
   }
 
@@ -462,24 +441,21 @@ export class TeamController {
       const userId = req.user?.id;
       
       if (!userId) {
-        res.status(401).json({ error: 'Usuário não autenticado' });
+        res.status(401).json({ message: 'Usuário não autenticado' });
         return;
       }
       
-      // Verificar se o time existe
       const team = await Team.findByPk(teamId);
       if (!team) {
-        res.status(404).json({ error: 'Time não encontrado' });
+        res.status(404).json({ message: 'Time não encontrado' });
         return;
       }
       
-      // Verificar se o usuário é o capitão do time
       if (team.captainId !== userId) {
-        res.status(403).json({ error: 'Apenas o capitão pode remover jogadores do time' });
+        res.status(403).json({ message: 'Apenas o capitão pode remover jogadores do time' });
         return;
       }
       
-      // Verificar se o jogador existe e está associado ao time
       const playerTeam = await TeamPlayer.findOne({
         where: {
           teamId: teamId,
@@ -488,151 +464,148 @@ export class TeamController {
       });
       
       if (!playerTeam) {
-        res.status(404).json({ error: 'Jogador não encontrado neste time' });
+        res.status(404).json({ message: 'Jogador não encontrado neste time' });
         return;
       }
       
-      // Remover a associação entre o jogador e o time
       await playerTeam.destroy();
       
       res.status(200).json({ success: true, message: 'Jogador removido do time com sucesso' });
     } catch (error) {
-      console.error('Erro ao remover jogador do time:', error);
-      res.status(500).json({ error: 'Erro ao remover jogador do time' });
+      res.status(500).json({ message: 'Erro ao remover jogador do time' });
     }
   }
-static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
-  try{
-    const userId = req.user?.id;
-    const { id } = req.params
-    if (!userId) {
-      res.status(401).json({ error: 'Usuário não autenticado' });
-      return;
-    }
-    const team = await Team.findOne({
-      where:{ captainId:id}
-    })
-    res.status(200).json(team)
-    }
-  catch{
-      res.status(500).json({error:'Erro ao buscar dados do time'})
+  static async getTeamCaptain(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id;
+      const { id } = req.params;
+
+      if (!userId) {
+        res.status(401).json({ message: 'Usuário não autenticado' });
+        return;
+      }
+
+      const team = await Team.findOne({
+        where: { captainId: id }
+      });
+
+      res.status(200).json(team);
+    } catch (error) {
+      res.status(500).json({ message: 'Erro ao buscar dados do time' });
     }
   }
 
-  static async getTeamRanking(req: AuthRequest, res:Response) : Promise<void> {
-    try{
-      let teamsRanking=[]
-      let nameTeam=""
+  static async getTeamRanking(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const teamsRanking = [];
+      let nameTeam = "";
       const userId = req.user?.id;
-      const { id } = req.params
+      const { id } = req.params;
+
       if (!userId) {
-        res.status(401).json({ error: 'Usuário não autenticado' });
+        res.status(401).json({ message: 'Usuário não autenticado' });
         return;
       }
-      //Buscar times que disputaram o campeonato
-      let teams=await TeamChampionship.findAll({where:{
-          ChampionshipId:id
-      }})
+
+      const teams = await TeamChampionship.findAll({
+        where: {
+          championshipId: id
+        }
+      });
+
       const uniqueTeamIds = [...new Set(teams.map(team => team.dataValues.teamId))];
-      for (const teamId of uniqueTeamIds ){
-        let totalGoalsScore=0
-        let totalGoalsAgainst =0
-        let saldoGoals=0
-        let pontuacaoTeam=0
-        let countVitoria=0
-        let countDerrota=0
-        let countEmpate=0
-        const partidas = await MatchChampionshpReport.findAll({
+
+      for (const teamId of uniqueTeamIds) {
+        let totalGoalsScore = 0;
+        let totalGoalsAgainst = 0;
+        let saldoGoals = 0;
+        let pontuacaoTeam = 0;
+        let countVitoria = 0;
+        let countDerrota = 0;
+        let countEmpate = 0;
+
+        const partidas = await MatchChampionshipReport.findAll({
           where: {
             [Op.or]: [
-                { team_home: teamId },
-                { team_away: teamId }
+              { team_home: teamId },
+              { team_away: teamId }
             ]
           },
-          include: 
-          [
+          include: [
             {
               model: Team,
-              as:'teamHome',
+              as: 'teamHome',
               attributes: ['name']
             },
             {
               model: Team,
-              as:'teamAway',
+              as: 'teamAway',
               attributes: ['name']
-            },   
+            }
           ]
-        })   
-        partidas.map((partida)=>{
-          
-          if(partida.dataValues.team_home===teamId)
-          { 
+        });
+
+        partidas.forEach((partida) => {
+          if (partida.dataValues.team_home === teamId) {
             const goalsFeitos = partida.dataValues.teamHome_score || 0;
-            const goalsSofridos = partida.dataValues.teamAway_score || 0;   
+            const goalsSofridos = partida.dataValues.teamAway_score || 0;
             totalGoalsScore += goalsFeitos;
             totalGoalsAgainst += goalsSofridos;
             nameTeam = partida.dataValues.teamHome.name;
-            if(goalsFeitos>goalsSofridos){
-              pontuacaoTeam += 3;
-              countVitoria +=1;
-              
-            }
-            else if(goalsSofridos===goalsFeitos){
-              pontuacaoTeam += 1;
-              countEmpate +=1;
-            }
-            else{
-              countDerrota +=1
-            } 
 
-          }
-          else if(partida.dataValues.team_away===teamId)
-          { 
+            if (goalsFeitos > goalsSofridos) {
+              pontuacaoTeam += 3;
+              countVitoria += 1;
+            } else if (goalsSofridos === goalsFeitos) {
+              pontuacaoTeam += 1;
+              countEmpate += 1;
+            } else {
+              countDerrota += 1;
+            }
+          } else if (partida.dataValues.team_away === teamId) {
             const goalsFeitos = partida.dataValues.teamAway_score || 0;
             const goalsSofridos = partida.dataValues.teamHome_score || 0;
 
-            if(goalsFeitos>goalsSofridos){
+            if (goalsFeitos > goalsSofridos) {
               pontuacaoTeam += 3;
-              countVitoria+=1;
-            }
-            else if(goalsSofridos===goalsFeitos){
+              countVitoria += 1;
+            } else if (goalsSofridos === goalsFeitos) {
               pontuacaoTeam += 1;
-              countEmpate+=1;
+              countEmpate += 1;
+            } else {
+              countDerrota += 1;
             }
-            else{
-              countDerrota +=1;
-            }
-            
-            totalGoalsScore += goalsFeitos
-            totalGoalsAgainst += goalsSofridos
-            nameTeam=partida.dataValues.teamAway.name
+
+            totalGoalsScore += goalsFeitos;
+            totalGoalsAgainst += goalsSofridos;
+            nameTeam = partida.dataValues.teamAway.name;
           }
-          saldoGoals=totalGoalsScore-totalGoalsAgainst
-          
-        })
+          saldoGoals = totalGoalsScore - totalGoalsAgainst;
+        });
+
         teamsRanking.push({
-          pontuacaoTime:pontuacaoTeam,
+          pontuacaoTime: pontuacaoTeam,
           nomeTime: nameTeam,
           goalsScore: totalGoalsScore,
           againstgoals: totalGoalsAgainst,
           countVitorias: countVitoria,
           countDerrotas: countDerrota,
-          countEmpates : countEmpate,
+          countEmpates: countEmpate,
           saldogoals: saldoGoals
         });
       }
-      const sortedteamsRanking=teamsRanking.sort((a,b)=>{
-        if(b.pontuacaoTime!==a.pontuacaoTime){
-          return b.pontuacaoTime- a.pontuacaoTime
+
+      const sortedteamsRanking = teamsRanking.sort((a, b) => {
+        if (b.pontuacaoTime !== a.pontuacaoTime) {
+          return b.pontuacaoTime - a.pontuacaoTime;
+        } else {
+          return b.saldogoals - a.saldogoals;
         }
-        else{
-           return b.saldoGoals- a.saldoGoals
-        }
-      })
-      res.status(200).json(sortedteamsRanking)
-    }
-    catch{
-      res.status(500).json({error:'Erro ao buscar dados do time'})
+      });
+
+      res.status(200).json(sortedteamsRanking);
+    } catch (error) {
+      res.status(500).json({ message: 'Erro ao buscar dados do time' });
     }
   }
 
@@ -659,7 +632,7 @@ static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
       // Buscar jogadores do time
       const teamPlayers = await TeamPlayer.findAll({
         where: { teamId: id },
-        include: [{ model: Player, as: 'player', attributes: ['id','nome','posicao','sexo'] }] as any
+        include: [{ model: Player, as: 'player', attributes: ['id','name','position','gender'] }] as any
       });
 
       const playerIds = teamPlayers.map((tp: any) => tp.playerId);
@@ -673,18 +646,25 @@ static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
         raw: true
       });
       const matchIds: number[] = matchTeamRows.map((r: any) => Number(r.matchId)).filter((n) => !Number.isNaN(n));
-      if (matchIds.length === 0) { res.json({ teamId: Number(id), total: teamPlayers.length, stats: teamPlayers.map((tp: any) => ({
-        playerId: tp.playerId,
-        nome: tp.player?.nome || 'N/A',
-        posicao: tp.player?.posicao || null,
-        sexo: tp.player?.sexo || null,
-        gols: 0,
-        amarelos: 0,
-        vermelhos: 0,
-        cartoes: 0,
-      })) }); return; }
+      if (matchIds.length === 0) { 
+        res.json({ 
+          teamId: Number(id), 
+          total: teamPlayers.length, 
+          stats: teamPlayers.map((tp: any) => ({
+            playerId: tp.playerId,
+            nome: tp.player?.name || 'N/A',
+            posicao: tp.player?.position || null,
+            sexo: tp.player?.gender || null,
+            gols: 0,
+            amarelos: 0,
+            vermelhos: 0,
+            cartoes: 0,
+          })) 
+        });
+        return;
+      }
 
-      const goals = await (await import('../models/MatchGoalModel')).default.findAll({
+      const goals = await (await import('../models/FriendlyMatchGoalModel')).default.findAll({
         attributes: ['player_id', [fn('COUNT', col('id')), 'gols']],
         where: {
           player_id: playerIds,
@@ -692,7 +672,7 @@ static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
         },
         group: ['player_id']
       });
-      const yellowCards = await (await import('../models/MatchCardModel')).default.findAll({
+      const yellowCards = await (await import('../models/FriendlyMatchCardModel')).default.findAll({
         attributes: ['player_id', [fn('COUNT', col('id')), 'amarelos']],
         where: {
           player_id: playerIds,
@@ -701,7 +681,7 @@ static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
         },
         group: ['player_id']
       });
-      const redCards = await (await import('../models/MatchCardModel')).default.findAll({
+      const redCards = await (await import('../models/FriendlyMatchCardModel')).default.findAll({
         attributes: ['player_id', [fn('COUNT', col('id')), 'vermelhos']],
         where: {
           player_id: playerIds,
@@ -725,9 +705,9 @@ static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
         const vermelhos = rMap[pid] || 0;
         return {
           playerId: tp.playerId,
-          nome: tp.player?.nome || 'N/A',
-          posicao: tp.player?.posicao || null,
-          sexo: tp.player?.sexo || null,
+          nome: tp.player?.name || 'N/A',
+          posicao: tp.player?.position || null,
+          sexo: tp.player?.gender || null,
           gols,
           amarelos,
           vermelhos,
@@ -737,15 +717,11 @@ static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
 
       res.json({ teamId: Number(id), total: stats.length, stats });
     } catch (error) {
-      console.error('Erro ao gerar estatísticas de jogadores do time:', error);
-      res.status(500).json({ error: 'Erro ao gerar estatísticas' });
+      res.status(500).json({ message: 'Erro ao gerar estatísticas' });
     }
   }
 
-  // Helper privado para gerenciar associações de jogadores com o time
-  // NÃO cria nem atualiza jogadores - apenas associa/desassocia jogadores já existentes
   private static async handlePlayersAssociations(teamId: number, jogadoresUpdate: any[]): Promise<void> {
-    // Buscar jogadores atualmente associados ao time
     const currentPlayers = await Player.findAll({
       include: [
         {
@@ -757,17 +733,14 @@ static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
       ]
     });
 
-    // IDs dos jogadores que devem permanecer associados
     const playerIdsToKeep = jogadoresUpdate
-      .filter((j: any) => j.id) // Apenas jogadores que já existem
+      .filter((j: any) => j.id)
       .map((j: any) => j.id);
 
-    // Adicionar novos jogadores ao time (apenas associação, jogadores já devem existir)
     for (const playerId of playerIdsToKeep) {
       const alreadyAssociated = currentPlayers.some(p => p.id === playerId);
       
       if (!alreadyAssociated) {
-        // Verificar se o jogador existe
         const playerExists = await Player.findByPk(playerId);
         if (playerExists && !playerExists.isDeleted) {
           await TeamPlayer.create({ teamId: teamId, playerId: playerId });
@@ -775,7 +748,6 @@ static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
       }
     }
 
-    // Remover associações de jogadores que não estão mais na lista
     for (const player of currentPlayers) {
       if (!playerIdsToKeep.includes(player.id)) {
         await TeamPlayer.destroy({ where: { teamId: teamId, playerId: player.id } });
