@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import { API_BASE_URL } from '../config/api';
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
@@ -8,7 +7,7 @@ function getAuthHeaders() {
 }
 
 export async function getTeamFriendlyMatchesHistory(teamId: number) {
-  const response = await axios.get(`${API_BASE}/history/teams/${teamId}/friendly-matches`, {
+  const response = await axios.get(`${API_BASE_URL}/team-history/${teamId}/friendly-matches`, {
     headers: getAuthHeaders()
   });
   return response.data;
@@ -16,8 +15,8 @@ export async function getTeamFriendlyMatchesHistory(teamId: number) {
 
 export async function getTeamChampionshipMatchesHistory(teamId: number, championshipId?: number) {
   const url = championshipId 
-    ? `${API_BASE}/history/teams/${teamId}/championship-matches?championshipId=${championshipId}`
-    : `${API_BASE}/history/teams/${teamId}/championship-matches`;
+    ? `${API_BASE_URL}/team-history/${teamId}/championships/${championshipId}/matches`
+    : `${API_BASE_URL}/team-history/${teamId}/championship-matches`;
     
   const response = await axios.get(url, {
     headers: getAuthHeaders()
@@ -26,49 +25,49 @@ export async function getTeamChampionshipMatchesHistory(teamId: number, champion
 }
 
 export async function getFriendlyMatchReport(matchId: number) {
-  const response = await axios.get(`${API_BASE}/history/friendly-matches/${matchId}/report`, {
+  const response = await axios.get(`${API_BASE_URL}/friendly-match-reports/${matchId}`, {
     headers: getAuthHeaders()
   });
   return response.data;
 }
 
 export async function createFriendlyMatchReport(reportData: any) {
-  const response = await axios.post(`${API_BASE}/history/friendly-matches/report`, reportData, {
+  const response = await axios.post(`${API_BASE_URL}/friendly-match-reports`, reportData, {
     headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
   });
   return response.data;
 }
 
 export async function updateFriendlyMatchReport(matchId: number, reportData: any) {
-  const response = await axios.put(`${API_BASE}/history/friendly-matches/${matchId}/report`, reportData, {
+  const response = await axios.put(`${API_BASE_URL}/friendly-match-reports/${matchId}`, reportData, {
     headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
   });
   return response.data;
 }
 
 export async function deleteFriendlyMatchReport(matchId: number) {
-  const response = await axios.delete(`${API_BASE}/history/friendly-matches/${matchId}/report`, {
+  const response = await axios.delete(`${API_BASE_URL}/friendly-match-reports/${matchId}`, {
     headers: getAuthHeaders()
   });
   return response.data;
 }
 
 export async function getChampionshipMatchReport(matchId: number) {
-  const response = await axios.get(`${API_BASE}/history/championship-matches/${matchId}/report`, {
+  const response = await axios.get(`${API_BASE_URL}/championship-reports/${matchId}`, {
     headers: getAuthHeaders()
   });
   return response.data;
 }
 
 export async function updateChampionshipMatchReport(matchId: number, reportData: any) {
-  const response = await axios.put(`${API_BASE}/history/championship-matches/${matchId}/report`, reportData, {
+  const response = await axios.put(`${API_BASE_URL}/championship-reports/${matchId}`, reportData, {
     headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
   });
   return response.data;
 }
 
 export async function deleteChampionshipMatchReport(matchId: number) {
-  const response = await axios.delete(`${API_BASE}/history/championship-matches/${matchId}/report`, {
+  const response = await axios.delete(`${API_BASE_URL}/championship-reports/${matchId}`, {
     headers: getAuthHeaders()
   });
   return response.data;

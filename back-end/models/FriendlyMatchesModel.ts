@@ -18,8 +18,8 @@ class Match extends Model {
   public organizerId!: number;
   public Uf!: string;
   public Cep!: string;
-  public quadra!: string;
-  public modalidade!: string;
+  public square!: string;
+  public matchType!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 

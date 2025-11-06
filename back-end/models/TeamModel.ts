@@ -38,9 +38,9 @@ class Team extends Model<TeamAttributes, TeamCreationAttributes> {
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
-  public estado!: string | null;
-  public cidade!: string | null;
-  public cep!: string | null;
+  public state!: string | null;
+  public city!: string | null;
+  public CEP!: string | null;
 
   // Métodos de associação
   public addPlayer!: BelongsToManyAddAssociationMixin<Player, number>;

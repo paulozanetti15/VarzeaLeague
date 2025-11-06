@@ -8,7 +8,7 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Jogadores
- *   description: Gerenciamento de jogadores e vínculos com times
+ *   description: Gerenciamento completo de jogadores - criação, consulta, atualização, remoção e vínculos com times
  */
 
 router.use(authenticateToken);
@@ -28,24 +28,32 @@ router.use(authenticateToken);
  *           schema:
  *             type: object
  *             required:
- *               - nome
- *               - sexo
- *               - ano
+ *               - name
+ *               - gender
+ *               - year
  *             properties:
- *               nome:
+ *               name:
  *                 type: string
+ *                 description: Nome do jogador (coluna 'name' no BD)
  *                 example: Carlos Oliveira
- *               sexo:
+ *               gender:
  *                 type: string
+ *                 description: Gênero do jogador (coluna 'gender' no BD)
  *                 enum: [Masculino, Feminino]
  *                 example: Masculino
- *               ano:
+ *               year:
  *                 type: string
+ *                 description: Ano de nascimento (coluna 'year' no BD)
  *                 pattern: '^\d{4}$'
  *                 example: '1995'
- *               posicao:
+ *               position:
  *                 type: string
+ *                 description: Posição do jogador (coluna 'position' no BD)
  *                 example: Atacante
+ *               teamId:
+ *                 type: integer
+ *                 description: ID do time para vincular o jogador (opcional)
+ *                 example: 1
  *     responses:
  *       201:
  *         description: Jogador criado com sucesso
@@ -57,10 +65,10 @@ router.use(authenticateToken);
  *                 message:
  *                   type: string
  *                   example: Jogador criado com sucesso
-                 player:
-                   $ref: '#/components/schemas/Player'
+ *                 player:
+ *                   $ref: '#/components/schemas/Player'
  *       400:
- *         description: Dados inválidos ou jogador já existe
+ *         description: Dados inválidos
  *         content:
  *           application/json:
  *             schema:
@@ -69,9 +77,6 @@ router.use(authenticateToken);
  *               dadosInvalidos:
  *                 value:
  *                   message: Nome, sexo e ano são obrigatórios
- *               jogadorExiste:
- *                 value:
- *                   message: Jogador com este nome já existe
  *               anoInvalido:
  *                 value:
  *                   message: Ano deve ter 4 dígitos
@@ -83,6 +88,19 @@ router.use(authenticateToken);
  *               $ref: '#/components/schemas/Error'
  *             example:
  *               message: Token não fornecido ou inválido
+ *       409:
+ *         description: Conflito - Jogador já existe
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               jogadorExiste:
+ *                 value:
+ *                   message: Já existe um jogador com este nome vinculado a outro time
+ *               jogadorNoMesmoTime:
+ *                 value:
+ *                   message: Já existe um jogador com este nome neste time
  *       500:
  *         description: Erro interno do servidor ao criar jogador
  *         content:
@@ -129,9 +147,9 @@ router.post('/', PlayerController.create);
  *                             type: integer
  *                           playerId:
  *                             type: integer
-                           createdAt:
-                             type: string
-                             format: date-time
+ *                           createdAt:
+ *                             type: string
+ *                             format: date-time
  *       404:
  *         description: Time não encontrado
  *         content:
@@ -159,106 +177,7 @@ router.post('/', PlayerController.create);
  */
 router.get('/team/:teamId', PlayerController.getPlayersFromTeam);
 
-/**
- * @swagger
- * /api/players/add-to-team:
- *   post:
- *     summary: Adicionar jogador a um time
- *     description: Vincula um jogador existente ou cria um novo e vincula ao time
- *     tags: [Jogadores]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - teamId
- *               - nome
- *               - sexo
- *               - ano
- *             properties:
- *               teamId:
- *                 type: integer
- *                 example: 1
- *               playerId:
- *                 type: integer
- *                 description: ID do jogador existente (opcional)
- *                 example: 5
- *               nome:
- *                 type: string
- *                 example: Pedro Santos
- *               sexo:
- *                 type: string
- *                 enum: [Masculino, Feminino]
- *                 example: Masculino
- *               ano:
- *                 type: string
- *                 example: '1998'
- *               posicao:
- *                 type: string
- *                 example: Meio-campo
- *     responses:
- *       201:
- *         description: Jogador adicionado ao time
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
-                 player:
-                   $ref: '#/components/schemas/Player'
- *       400:
- *         description: Jogador já está vinculado ao time ou dados inválidos
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             examples:
- *               jogadorJaVinculado:
- *                 value:
- *                   message: Jogador já está vinculado a este time
- *               dadosInvalidos:
- *                 value:
- *                   message: Dados do jogador são inválidos
- *               jogadorVinculadoOutroTime:
- *                 value:
- *                   message: Jogador já está vinculado a outro time
- *       404:
- *         description: Time ou jogador não encontrado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             examples:
- *               timeNaoEncontrado:
- *                 value:
- *                   message: Time não encontrado
- *               jogadorNaoEncontrado:
- *                 value:
- *                   message: Jogador não encontrado
- *       401:
- *         description: Não autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Token não fornecido ou inválido
- *       500:
- *         description: Erro interno do servidor ao adicionar jogador ao time
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Erro ao adicionar jogador ao time
- */
-router.post('/add-to-team', PlayerController.addToTeam);
+
 
 /**
  * @swagger
@@ -287,9 +206,9 @@ router.post('/add-to-team', PlayerController.addToTeam);
  *             schema:
  *               type: object
  *               properties:
-                 message:
-                   type: string
-                   example: Jogador removido do time com sucesso
+ *                 message:
+ *                   type: string
+ *                   example: Jogador removido do time com sucesso
  *       404:
  *         description: Time ou jogador não encontrado, ou vínculo não existe
  *         content:
@@ -335,37 +254,83 @@ router.delete('/team/:teamId/player/:playerId', PlayerController.removeFromTeam)
 
 /**
  * @swagger
- * /api/players/{id}:
+ * /api/players/team/{teamId}/update-all:
  *   put:
- *     summary: Atualizar dados do jogador
+ *     summary: Atualizar todos os jogadores de um time (em lote)
+ *     description: Permite atualizar ou adicionar múltiplos jogadores ao time de uma vez. Apenas o capitão do time pode realizar esta operação.
  *     tags: [Jogadores]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: teamId
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID do time
+ *         example: 1
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - players
  *             properties:
- *               nome:
- *                 type: string
- *               sexo:
- *                 type: string
- *                 enum: [Masculino, Feminino]
- *               ano:
- *                 type: string
- *               posicao:
- *                 type: string
+ *               players:
+ *                 type: array
+ *                 description: Array de jogadores para atualizar/criar
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       description: ID do jogador (opcional - se não fornecido, cria novo jogador)
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       description: Nome do jogador (coluna 'name' no BD)
+ *                       example: Carlos Oliveira
+ *                       required: true
+ *                     gender:
+ *                       type: string
+ *                       description: Gênero do jogador (coluna 'gender' no BD)
+ *                       enum: [Masculino, Feminino]
+ *                       example: Masculino
+ *                       required: true
+ *                     year:
+ *                       type: string
+ *                       description: Ano de nascimento (coluna 'year' no BD)
+ *                       example: '1996'
+ *                       required: true
+ *                     position:
+ *                       type: string
+ *                       description: Posição do jogador (coluna 'position' no BD)
+ *                       example: Zagueiro
+ *                       required: true
+ *           examples:
+ *             atualizacaoCompleta:
+ *               summary: Atualização de múltiplos jogadores
+ *               value:
+ *                 players:
+ *                   - id: 1
+ *                     name: Carlos Oliveira
+ *                     gender: Masculino
+ *                     year: '1995'
+ *                     position: Atacante
+ *                   - id: 2
+ *                     name: João Silva
+ *                     gender: Masculino
+ *                     year: '1998'
+ *                     position: Goleiro
+ *                   - name: Pedro Santos
+ *                     gender: Masculino
+ *                     year: '2000'
+ *                     position: Zagueiro
  *     responses:
  *       200:
- *         description: Jogador atualizado
+ *         description: Jogadores atualizados com sucesso
  *         content:
  *           application/json:
  *             schema:
@@ -373,29 +338,38 @@ router.delete('/team/:teamId/player/:playerId', PlayerController.removeFromTeam)
  *               properties:
  *                 message:
  *                   type: string
-                 player:
-                   $ref: '#/components/schemas/Player'
+ *                   example: Jogadores atualizados com sucesso
+ *                 players:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Player'
  *       404:
- *         description: Jogador não encontrado
+ *         description: Time não encontrado
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Jogador não encontrado
+ *               message: Time não encontrado
  *       400:
- *         description: Dados inválidos
+ *         description: Dados inválidos ou erro ao processar jogadores
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             examples:
- *               dadosInvalidos:
+ *               listaInvalida:
  *                 value:
- *                   message: Dados inválidos para atualização
- *               anoInvalido:
+ *                   message: Lista de jogadores inválida
+ *               camposObrigatorios:
  *                 value:
- *                   message: Ano deve ter 4 dígitos
+ *                   error: Alguns jogadores não puderam ser processados
+ *                   details:
+ *                     errors:
+ *                       - player:
+ *                           name: João
+ *                         erro: Todos os campos são obrigatórios (name, gender, year, position)
+ *                     success: []
  *       401:
  *         description: Não autenticado
  *         content:
@@ -404,6 +378,22 @@ router.delete('/team/:teamId/player/:playerId', PlayerController.removeFromTeam)
  *               $ref: '#/components/schemas/Error'
  *             example:
  *               message: Token não fornecido ou inválido
+ *       403:
+ *         description: Sem permissão para atualizar este jogador
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Apenas o capitão do time pode atualizar jogadores
+ *       409:
+ *         description: Conflito - Nome já existe no time
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Já existe um jogador com este nome neste time
  *       500:
  *         description: Erro interno do servidor ao atualizar jogador
  *         content:
@@ -413,7 +403,7 @@ router.delete('/team/:teamId/player/:playerId', PlayerController.removeFromTeam)
  *             example:
  *               message: Erro ao atualizar jogador
  */
-router.put('/:id', PlayerController.update);
+router.put('/team/:id/update-all', PlayerController.update);
 
 /**
  * @swagger
@@ -437,9 +427,9 @@ router.put('/:id', PlayerController.update);
  *             schema:
  *               type: object
  *               properties:
-                 message:
-                   type: string
-                   example: Jogador deletado com sucesso
+ *                 message:
+ *                   type: string
+ *                   example: Jogador deletado com sucesso
  *       404:
  *         description: Jogador não encontrado
  *         content:

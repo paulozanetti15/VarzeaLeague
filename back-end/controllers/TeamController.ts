@@ -14,7 +14,7 @@ import MatchChampionshipReport from '../models/MatchReportChampionshipModel';
 export default class TeamController {
   static async createTeam(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { name, description, primaryColor, secondaryColor, estado, cidade, cep } = req.body;
+      const { name, description, primaryColor, secondaryColor, state, city, CEP } = req.body;
       const userId = req.user?.id;
       
       if (!userId) {
@@ -37,7 +37,7 @@ export default class TeamController {
       });
 
       if (existingActiveTeam) {
-        res.status(400).json({ message: 'Este nome de time já está em uso. Escolha outro nome.' });
+        res.status(409).json({ message: 'Este nome de time já está em uso. Escolha outro nome.' });
         return;
       }
 
@@ -53,9 +53,9 @@ export default class TeamController {
           captainId: userId,
           isDeleted: false,
           updatedAt: agora,
-          state: estado,
-          city: cidade,
-          CEP: cep,
+          state,
+          city,
+          CEP,
           primaryColor,
           secondaryColor,
           banner: bannerFilename
@@ -91,9 +91,9 @@ export default class TeamController {
         secondaryColor,
         isDeleted: false,
         banner: bannerFilename,
-        state: estado,
-        city: cidade,
-        CEP: cep
+        state,
+        city,
+        CEP
       });
       
       await team.addUser(userId);
@@ -219,7 +219,7 @@ export default class TeamController {
 
   static async getTeam(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const { teamId } = req.params;
       const userId = req.user?.id;
       
       if (!userId) {
@@ -229,7 +229,7 @@ export default class TeamController {
 
       const team = await Team.findOne({
         where: {
-          id,
+          id: teamId,
           isDeleted: false
         },
         include: [
@@ -283,10 +283,10 @@ export default class TeamController {
 
   static async updateTeam(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const { teamId } = req.params;
       const userId = req.user?.id;
       const team = await Team.findOne({
-        where: { id, isDeleted: false }
+        where: { id: teamId, isDeleted: false }
       });
       
       if (!team) {
@@ -303,7 +303,7 @@ export default class TeamController {
         const existingTeam = await Team.findOne({
           where: { 
             name: req.body.name.trim(), 
-            id: { [Op.ne]: id }, 
+            id: { [Op.ne]: teamId }, 
             isDeleted: false 
           }
         });
@@ -354,11 +354,11 @@ export default class TeamController {
       await team.update(updateData);
 
       if (jogadoresUpdate.length > 0) {
-        await TeamController.handlePlayersAssociations(parseInt(id), jogadoresUpdate);
+        await TeamController.handlePlayersAssociations(parseInt(teamId), jogadoresUpdate);
       }
       
       const updatedTeam = await Team.findOne({
-        where: { id: id, isDeleted: false },
+        where: { id: teamId, isDeleted: false },
         include: [
           {
             model: Player,
@@ -387,7 +387,7 @@ export default class TeamController {
 
   static async deleteTeam(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const { teamId } = req.params;
       const { confirm } = req.body;
       const userId = req.user?.id;
 
@@ -400,7 +400,7 @@ export default class TeamController {
 
       const team = await Team.findOne({
         where: {
-          id,
+          id: teamId,
           isDeleted: false
         }
       });
@@ -417,7 +417,7 @@ export default class TeamController {
 
       await TeamPlayer.destroy({
         where: {
-          teamId: id
+          teamId: teamId
         }
       });
       
@@ -426,7 +426,7 @@ export default class TeamController {
       res.status(200).json({ 
         message: 'Time deletado com sucesso',
         team: {
-          id: parseInt(id),
+          id: parseInt(teamId),
           name: team.name
         }
       });
@@ -478,7 +478,7 @@ export default class TeamController {
   static async getTeamCaptain(req: AuthRequest, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
-      const { id } = req.params;
+      const { idteamCaptain } = req.params;
 
       if (!userId) {
         res.status(401).json({ message: 'Usuário não autenticado' });
@@ -486,7 +486,7 @@ export default class TeamController {
       }
 
       const team = await Team.findOne({
-        where: { captainId: id }
+        where: { captainId: idteamCaptain }
       });
 
       res.status(200).json(team);
@@ -500,7 +500,7 @@ export default class TeamController {
       const teamsRanking = [];
       let nameTeam = "";
       const userId = req.user?.id;
-      const { id } = req.params;
+      const { championshipId } = req.params;
 
       if (!userId) {
         res.status(401).json({ message: 'Usuário não autenticado' });
@@ -509,7 +509,7 @@ export default class TeamController {
 
       const teams = await TeamChampionship.findAll({
         where: {
-          championshipId: id
+          championshipId: championshipId
         }
       });
 
@@ -611,14 +611,13 @@ export default class TeamController {
 
   static async getPlayerStats(req: AuthRequest, res: Response): Promise<void> {
     try {
-  const { id } = req.params; // team id
-  const teamIdNum = Number(id);
+  const { teamId } = req.params;
+  const teamIdNum = Number(teamId);
       const userId = req.user?.id;
       if (!userId) { res.status(401).json({ error: 'Usuário não autenticado' }); return; }
 
-      // Verificar se o usuário tem acesso ao time (capitão ou membro)
       const team = await Team.findOne({
-        where: { id, isDeleted: false },
+        where: { id: teamId, isDeleted: false },
         include: [
           { model: User, as: 'users', attributes: ['id'], through: { attributes: [] } },
           { model: User, as: 'captain', attributes: ['id'] }
@@ -629,17 +628,14 @@ export default class TeamController {
       const isMember = (team as any).users?.some((u: any) => u.id === userId);
       if (!isCaptain && !isMember) { res.status(403).json({ error: 'Acesso negado a este time' }); return; }
 
-      // Buscar jogadores do time
       const teamPlayers = await TeamPlayer.findAll({
-        where: { teamId: id },
+        where: { teamId: teamId },
         include: [{ model: Player, as: 'player', attributes: ['id','name','position','gender'] }] as any
       });
 
       const playerIds = teamPlayers.map((tp: any) => tp.playerId);
-      if (playerIds.length === 0) { res.json({ teamId: Number(id), total: 0, stats: [] }); return; }
+      if (playerIds.length === 0) { res.json({ teamId: Number(teamId), total: 0, stats: [] }); return; }
 
-      // Agregar gols e cartões por player_id
-      // Buscar os IDs de partidas nas quais o time participou, para filtrar corretamente
       const matchTeamRows = await MatchTeams.findAll({
         where: { teamId: teamIdNum },
         attributes: ['matchId'],
@@ -648,7 +644,7 @@ export default class TeamController {
       const matchIds: number[] = matchTeamRows.map((r: any) => Number(r.matchId)).filter((n) => !Number.isNaN(n));
       if (matchIds.length === 0) { 
         res.json({ 
-          teamId: Number(id), 
+          teamId: Number(teamId), 
           total: teamPlayers.length, 
           stats: teamPlayers.map((tp: any) => ({
             playerId: tp.playerId,
@@ -715,7 +711,7 @@ export default class TeamController {
         };
       }).sort((a: any, b: any) => b.gols - a.gols || b.cartoes - a.cartoes || a.nome.localeCompare(b.nome));
 
-      res.json({ teamId: Number(id), total: stats.length, stats });
+      res.json({ teamId: Number(teamId), total: stats.length, stats });
     } catch (error) {
       res.status(500).json({ message: 'Erro ao gerar estatísticas' });
     }

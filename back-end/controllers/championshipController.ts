@@ -47,20 +47,50 @@ export const createChampionship = async (req: Request, res: Response) => {
       return;
     }
 
+    const tiposValidos = ['Liga', 'Mata-Mata'];
+    if (!tiposValidos.includes(tipo)) {
+      res.status(409).json({ 
+        message: `Tipo de campeonato inválido. Use: ${tiposValidos.join(', ')}` 
+      });
+      return;
+    }
+
     if (!genero) {
       res.status(400).json({ message: 'Gênero é obrigatório' });
       return;
     }
 
-    // Validações específicas por tipo
-    if (tipo === 'liga') {
+    const normalizedName = name.trim().toLowerCase();
+    const existingChampionship = await Championship.findOne({
+      where: {
+        name: {
+          [Op.like]: normalizedName
+        }
+      }
+    });
+
+    if (existingChampionship) {
+      res.status(409).json({ message: 'Já existe um campeonato com este nome' });
+      return;
+    }
+
+    const tipoNormalizado = tipo.toLowerCase();
+    let tipoBD: 'liga' | 'mata-mata';
+    
+    if (tipoNormalizado === 'liga') {
+      tipoBD = 'liga';
+    } else {
+      tipoBD = 'mata-mata';
+    }
+
+    if (tipoBD === 'liga') {
       if (!num_equipes_liga || num_equipes_liga < 4 || num_equipes_liga > 20) {
         res.status(400).json({ message: 'Para Liga, especifique entre 4 e 20 equipes' });
         return;
       }
     }
 
-    if (tipo === 'mata-mata' && fase_grupos) {
+    if (tipoBD === 'mata-mata' && fase_grupos) {
       if (!num_grupos || num_grupos < 2 || num_grupos > 8) {
         res.status(400).json({ message: 'Número de grupos deve ser entre 2 e 8' });
         return;
@@ -84,7 +114,6 @@ export const createChampionship = async (req: Request, res: Response) => {
     const decoded = jwt.verify(token, JWT_SECRET) as { id: string | number };
     const created_by = Number(decoded.id);
     
-    // Date validations (server side authoritative)
     if (!start_date) {
       res.status(400).json({ message: 'Data de início é obrigatória' });
       return;
@@ -125,29 +154,43 @@ export const createChampionship = async (req: Request, res: Response) => {
       modalidade: modalidade.trim(),
       nomequadra: nomequadra.trim(),
       created_by,
-      tipo,
-      fase_grupos: fase_grupos || false,
+      tipo: tipoBD,
+      fase_grupos: tipoBD === 'mata-mata' ? (fase_grupos || false) : false,
       max_teams: max_teams || 8,
-      genero,
-      num_grupos: fase_grupos ? num_grupos : null,
-      times_por_grupo: fase_grupos ? times_por_grupo : null,
-      num_equipes_liga: tipo === 'liga' ? num_equipes_liga : null,
+      genero: genero.toLowerCase() as 'masculino' | 'feminino' | 'misto',
+      num_grupos: tipoBD === 'mata-mata' && fase_grupos ? num_grupos : null,
+      times_por_grupo: tipoBD === 'mata-mata' && fase_grupos ? times_por_grupo : null,
+      num_equipes_liga: tipoBD === 'liga' ? num_equipes_liga : null,
       status: 'draft'
     });
     
     res.status(201).json(championship);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao criar campeonato' });
+    res.status(500).json({ 
+      message: 'Erro ao criar campeonato',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
 };
 
 export const listChampionships = async (req: Request, res: Response) => {
   try {
-    const { from, to, search, sort, championshipDateFrom, championshipDateTo, searchChampionships } = req.query;
+    const { 
+      from, 
+      to, 
+      search, 
+      sort, 
+      championshipDateFrom, 
+      championshipDateTo, 
+      searchChampionships,
+      tipo,
+      genero,
+      modalidade,
+      status
+    } = req.query;
 
     const whereClause: any = {};
 
-    // Filtro por data (from) - usando start_date
     if (championshipDateFrom) {
       const fromDate = new Date(championshipDateFrom.toString());
       if (!isNaN(fromDate.getTime())) {
@@ -155,29 +198,49 @@ export const listChampionships = async (req: Request, res: Response) => {
       }
     }
 
-    // Filtro por data (to) - usando start_date
     if (championshipDateTo) {
       const toDate = new Date(championshipDateTo.toString());
       if (!isNaN(toDate.getTime())) {
-        // Ajustar para o final do dia
         toDate.setHours(23, 59, 59, 999);
         whereClause.start_date = { ...whereClause.start_date, [Op.lte]: toDate };
       }
     }
 
-    // Filtro por busca (search)
-    let searchWhereClause: any = {};
-    if (searchChampionships) {
-      const searchTerm = searchChampionships.toString().toLowerCase();
-      searchWhereClause = {
-        [Op.or]: [
-          { name: { [Op.iLike]: `%${searchTerm}%` } },
-          { description: { [Op.iLike]: `%${searchTerm}%` } }
-        ]
-      };
+    if (tipo) {
+      const tipoNormalizado = tipo.toString().toLowerCase();
+      if (tipoNormalizado === 'liga') {
+        whereClause.tipo = 'liga';
+      } else if (tipoNormalizado === 'mata-mata') {
+        whereClause.tipo = 'mata-mata';
+      }
     }
 
-    // Determinar ordenação
+    if (genero) {
+      const generoNormalizado = genero.toString().toLowerCase();
+      if (['masculino', 'feminino', 'misto'].includes(generoNormalizado)) {
+        whereClause.genero = generoNormalizado;
+      }
+    }
+
+    if (modalidade) {
+      whereClause.modalidade = { [Op.like]: `%${modalidade.toString()}%` };
+    }
+
+    if (status) {
+      const statusNormalizado = status.toString().toLowerCase();
+      if (['draft', 'open', 'closed', 'in_progress', 'finished'].includes(statusNormalizado)) {
+        whereClause.status = statusNormalizado;
+      }
+    }
+
+    if (searchChampionships) {
+      const searchTerm = searchChampionships.toString();
+      whereClause[Op.or] = [
+        { name: { [Op.like]: `%${searchTerm}%` } },
+        { description: { [Op.like]: `%${searchTerm}%` } }
+      ];
+    }
+
     let order: any = [['start_date', 'ASC']];
     if (sort) {
       switch (sort.toString()) {
@@ -193,16 +256,17 @@ export const listChampionships = async (req: Request, res: Response) => {
     }
 
     const championships = await Championship.findAll({
-      where: {
-        ...whereClause,
-        ...searchWhereClause
-      },
+      where: whereClause,
       order
     });
 
     res.json(championships);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao listar campeonatos' });
+    console.error('Erro ao listar campeonatos:', error);
+    res.status(500).json({ 
+      message: 'Erro ao listar campeonatos',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
 };
 
@@ -223,7 +287,21 @@ export const getChampionship = async (req: Request, res: Response) => {
 export const updateChampionship = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, description, start_date, end_date, modalidade, nomequadra } = req.body;
+    const { 
+      name, 
+      description, 
+      start_date, 
+      end_date, 
+      modalidade, 
+      nomequadra,
+      tipo,
+      genero,
+      fase_grupos,
+      max_teams,
+      num_grupos,
+      times_por_grupo,
+      num_equipes_liga
+    } = req.body;
     
     const championship = await Championship.findByPk(id);
     if (!championship) {
@@ -231,7 +309,6 @@ export const updateChampionship = async (req: Request, res: Response) => {
       return;
     }
     
-    // Ownership check
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) {
       res.status(401).json({ message: 'Token ausente' });
@@ -251,7 +328,6 @@ export const updateChampionship = async (req: Request, res: Response) => {
       return;
     }
 
-    // Field validations
     if (name !== undefined && !name.trim()) {
       res.status(400).json({ message: 'Nome do campeonato é obrigatório' });
       return;
@@ -266,6 +342,35 @@ export const updateChampionship = async (req: Request, res: Response) => {
       res.status(400).json({ message: 'Nome da quadra é obrigatório' });
       return;
     }
+
+    if (tipo !== undefined) {
+      const tiposValidos = ['Liga', 'Mata-Mata'];
+      if (!tiposValidos.includes(tipo)) {
+        res.status(409).json({ 
+          message: `Tipo de campeonato inválido. Use: ${tiposValidos.join(', ')}` 
+        });
+        return;
+      }
+    }
+    
+    if (name !== undefined) {
+      const normalizedName = name.trim().toLowerCase();
+      const existingChampionship = await Championship.findOne({
+        where: {
+          name: {
+            [Op.like]: normalizedName
+          },
+          id: {
+            [Op.ne]: id
+          }
+        }
+      });
+
+      if (existingChampionship) {
+        res.status(409).json({ message: 'Já existe outro campeonato com este nome' });
+        return;
+      }
+    }
     
     const updateData: any = {};
     if (name !== undefined) updateData.name = name.trim();
@@ -275,7 +380,73 @@ export const updateChampionship = async (req: Request, res: Response) => {
     if (modalidade !== undefined) updateData.modalidade = modalidade.trim();
     if (nomequadra !== undefined) updateData.nomequadra = nomequadra.trim();
     
-    // Date logic if provided
+    if (tipo !== undefined) {
+      const tipoNormalizado = tipo.toLowerCase();
+      if (tipoNormalizado === 'liga') {
+        updateData.tipo = 'liga';
+      } else {
+        updateData.tipo = 'mata-mata';
+      }
+    }
+
+    if (genero !== undefined) {
+      updateData.genero = genero.toLowerCase();
+    }
+
+    if (fase_grupos !== undefined) {
+      updateData.fase_grupos = fase_grupos;
+    }
+
+    if (max_teams !== undefined) {
+      updateData.max_teams = max_teams;
+    }
+
+    if (num_grupos !== undefined) {
+      updateData.num_grupos = num_grupos;
+    }
+
+    if (times_por_grupo !== undefined) {
+      updateData.times_por_grupo = times_por_grupo;
+    }
+
+    if (num_equipes_liga !== undefined) {
+      updateData.num_equipes_liga = num_equipes_liga;
+    }
+
+    const tipoBD = updateData.tipo || championship.tipo;
+    
+    if (tipoBD === 'liga') {
+      if (num_equipes_liga !== undefined && (num_equipes_liga < 4 || num_equipes_liga > 20)) {
+        res.status(400).json({ message: 'Para Liga, especifique entre 4 e 20 equipes' });
+        return;
+      }
+      updateData.num_grupos = null;
+      updateData.times_por_grupo = null;
+    }
+
+    if (tipoBD === 'mata-mata') {
+      updateData.num_equipes_liga = null;
+      
+      const usaFaseGrupos = fase_grupos !== undefined ? fase_grupos : championship.fase_grupos;
+      
+      if (usaFaseGrupos) {
+        const finalNumGrupos = num_grupos !== undefined ? num_grupos : championship.num_grupos;
+        const finalTimesPorGrupo = times_por_grupo !== undefined ? times_por_grupo : championship.times_por_grupo;
+        
+        if (finalNumGrupos && (finalNumGrupos < 2 || finalNumGrupos > 8)) {
+          res.status(400).json({ message: 'Número de grupos deve ser entre 2 e 8' });
+          return;
+        }
+        if (finalTimesPorGrupo && (finalTimesPorGrupo < 3 || finalTimesPorGrupo > 6)) {
+          res.status(400).json({ message: 'Times por grupo deve ser entre 3 e 6' });
+          return;
+        }
+      } else {
+        updateData.num_grupos = null;
+        updateData.times_por_grupo = null;
+      }
+    }
+    
     if (updateData.start_date || updateData.end_date) {
       const currentStart = updateData.start_date ? new Date(updateData.start_date) : new Date((championship as any).start_date);
       const currentEnd = updateData.end_date ? new Date(updateData.end_date) : new Date((championship as any).end_date);
@@ -374,12 +545,12 @@ export const joinTeamInChampionship = async (req: Request, res: Response): Promi
     
     const exists = await TeamChampionship.findOne({ where: { teamId, championshipId: id } });
     if (exists) {
-      res.status(400).json({ message: 'O time já está inscrito neste campeonato' });
+      res.status(409).json({ message: 'O time já está inscrito neste campeonato' });
       return;
     }
     
     await TeamChampionship.create({ teamId, championshipId: id });
-    res.json({ message: 'Time inscrito no campeonato com sucesso' });
+    res.status(201).json({ message: 'Time inscrito no campeonato com sucesso' });
   } catch (error) {
     res.status(500).json({ message: 'Erro ao inscrever time no campeonato' });
   }
@@ -435,7 +606,7 @@ export const leaveTeamFromChampionship = async (req: Request, res: Response): Pr
 
 export const applyToChampionship = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { championshipId } = req.params;
+    const { id } = req.params;
     const { teamId } = req.body;
 
     if (!teamId) {
@@ -452,14 +623,17 @@ export const applyToChampionship = async (req: Request, res: Response): Promise<
     const decoded = jwt.verify(token, JWT_SECRET) as { id: string | number };
     const userId = Number(decoded.id);
 
-    const championship = await Championship.findByPk(parseInt(championshipId));
+    const championship = await Championship.findByPk(parseInt(id));
     if (!championship) {
       res.status(404).json({ message: 'Campeonato não encontrado' });
       return;
     }
 
     if (championship.status !== 'open') {
-      res.status(400).json({ message: 'Este campeonato não está aceitando aplicações no momento' });
+      res.status(400).json({ 
+        message: `Este campeonato não está aceitando aplicações no momento. Status atual: ${championship.status}`,
+        hint: championship.status === 'draft' ? 'O campeonato precisa ser publicado primeiro' : undefined
+      });
       return;
     }
 
@@ -470,16 +644,16 @@ export const applyToChampionship = async (req: Request, res: Response): Promise<
     }
 
     const existingApplication = await ChampionshipApplication.findOne({
-      where: { championship_id: parseInt(championshipId), team_id: teamId }
+      where: { championship_id: parseInt(id), team_id: teamId }
     });
 
     if (existingApplication) {
-      res.status(400).json({ message: 'Este time já aplicou para este campeonato' });
+      res.status(409).json({ message: 'Este time já aplicou para este campeonato' });
       return;
     }
 
     const application = await ChampionshipApplication.create({
-      championship_id: parseInt(championshipId),
+      championship_id: parseInt(id),
       team_id: teamId,
       status: 'pending'
     });
@@ -492,7 +666,7 @@ export const applyToChampionship = async (req: Request, res: Response): Promise<
 
 export const getChampionshipApplications = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { championshipId } = req.params;
+    const { id } = req.params;
 
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) {
@@ -504,7 +678,7 @@ export const getChampionshipApplications = async (req: Request, res: Response): 
       const decoded = jwt.verify(token, JWT_SECRET) as { id: string | number };
       const userId = Number(decoded.id);
 
-      const championship = await Championship.findByPk(parseInt(championshipId));
+      const championship = await Championship.findByPk(parseInt(id));
       if (!championship) {
         res.status(404).json({ message: 'Campeonato não encontrado' });
         return;
@@ -516,7 +690,7 @@ export const getChampionshipApplications = async (req: Request, res: Response): 
       }
 
       const applications = await ChampionshipApplication.findAll({
-        where: { championship_id: parseInt(championshipId) },
+        where: { championship_id: parseInt(id) },
         include: [
           {
             model: Team,
@@ -574,6 +748,23 @@ export const updateApplicationStatus = async (req: Request, res: Response): Prom
         return;
       }
 
+      if (application.status === status) {
+        res.status(409).json({ 
+          message: `Esta candidatura já está com o status "${status}"`,
+          currentStatus: application.status
+        });
+        return;
+      }
+
+      if (application.status !== 'pending') {
+        res.status(409).json({ 
+          message: `Não é possível alterar candidatura com status "${application.status}"`,
+          currentStatus: application.status,
+          hint: 'Apenas candidaturas pendentes podem ser aprovadas ou rejeitadas'
+        });
+        return;
+      }
+
       application.status = status;
       if (status === 'approved') {
         application.approved_at = new Date();
@@ -595,7 +786,7 @@ export const updateApplicationStatus = async (req: Request, res: Response): Prom
 
 export const publishChampionship = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { championshipId } = req.params;
+    const { id } = req.params;
 
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) {
@@ -607,7 +798,7 @@ export const publishChampionship = async (req: Request, res: Response): Promise<
       const decoded = jwt.verify(token, JWT_SECRET) as { id: string | number };
       const userId = Number(decoded.id);
 
-      const championship = await Championship.findByPk(parseInt(championshipId));
+      const championship = await Championship.findByPk(parseInt(id));
       if (!championship) {
         res.status(404).json({ message: 'Campeonato não encontrado' });
         return;
@@ -619,14 +810,20 @@ export const publishChampionship = async (req: Request, res: Response): Promise<
       }
 
       if (championship.status !== 'draft') {
-        res.status(400).json({ message: 'Apenas campeonatos em rascunho podem ser publicados' });
+        res.status(400).json({ 
+          message: 'Apenas campeonatos em rascunho podem ser publicados',
+          currentStatus: championship.status
+        });
         return;
       }
 
       championship.status = 'open';
       await championship.save();
 
-      res.json(championship);
+      res.json({ 
+        message: 'Campeonato publicado com sucesso! Agora está aberto para inscrições.',
+        championship 
+      });
     } catch (jwtError) {
       res.status(401).json({ message: 'Token inválido' });
       return;

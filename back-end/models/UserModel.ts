@@ -9,7 +9,7 @@ class User extends Model {
   public phone!: string;
   public email!: string;
   public password!: string;
-  public sexo!: string; 
+  public gender!: string; 
   public resetPasswordExpires?: Date;
   public resetPasswordToken?: string;
   public readonly createdAt!: Date;

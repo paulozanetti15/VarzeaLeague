@@ -1,7 +1,5 @@
 import axios from 'axios';
-// date-fns not required here
-
-const API_BASE = 'http://localhost:3001/api';
+import { API_BASE_URL } from '../config/api';
 
 export interface MatchFormData {
   title: string;
@@ -17,8 +15,8 @@ export interface MatchFormData {
   city?: string;
   category?: string;
   number?: string;
-  quadra?: string;
-  modalidade?: string;
+  square?: string;
+  matchType?: string;
 }
 
 export interface Match {
@@ -33,8 +31,8 @@ export interface Match {
   duration?: string;
   organizerId?: number;
   organizer?: { id: number; name: string };
-  modalidade?: string;
-  nomequadra?: string;
+  matchType?: string;
+  square?: string;
 }
 
 function getAuthHeaders() {
@@ -44,7 +42,7 @@ function getAuthHeaders() {
 
 // -- Create Match related
 export async function createMatch(matchData: MatchFormData & { organizerId: string }): Promise<any> {
-  const resp = await axios.post(`${API_BASE}/friendly-matches`, matchData, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
+  const resp = await axios.post(`${API_BASE_URL}/friendly-matches`, matchData, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
   return resp.data;
 }
 
@@ -61,7 +59,7 @@ export async function fetchMatches(filters?: Record<string, string>): Promise<Ma
     Object.entries(filters).forEach(([k, v]) => { if (v) params.append(k, v); });
   }
   const url = `/friendly-matches${params.toString() ? `?${params.toString()}` : ''}`;
-  const response = await axios.get(`${API_BASE}${url}`, { headers: getAuthHeaders() });
+  const response = await axios.get(`${API_BASE_URL}${url}`, { headers: getAuthHeaders() });
   return response.data || [];
 }
 
@@ -71,28 +69,28 @@ export async function fetchMatchesFiltered(filters?: Record<string, string>): Pr
     Object.entries(filters).forEach(([k, v]) => { if (v) params.append(k, v); });
   }
   const url = `/friendly-matches/filtered${params.toString() ? `?${params.toString()}` : ''}`;
-  const response = await axios.get(`${API_BASE}${url}`, { headers: getAuthHeaders() });
+  const response = await axios.get(`${API_BASE_URL}${url}`, { headers: getAuthHeaders() });
   return response.data || [];
 }
 
 export async function fetchMatchesByOrganizer(): Promise<Match[]> {
-  const response = await axios.get(`${API_BASE}/friendly-matches/organizer`, { headers: getAuthHeaders() });
+  const response = await axios.get(`${API_BASE_URL}/friendly-matches/organizer`, { headers: getAuthHeaders() });
   return response.data || [];
 }
 
 export async function fetchMatchById(id: number): Promise<Match> {
-  const response = await axios.get(`${API_BASE}/friendly-matches/${id}`, { headers: getAuthHeaders() });
+  const response = await axios.get(`${API_BASE_URL}/friendly-matches/${id}`, { headers: getAuthHeaders() });
   return response.data;
 }
 
 export async function getMatchStatus(matchId: string | number): Promise<{ id: number; status: string }> {
-  const response = await axios.get(`${API_BASE}/friendly-matches/${matchId}/status`, { headers: getAuthHeaders() });
+  const response = await axios.get(`${API_BASE_URL}/friendly-matches/${matchId}/status`, { headers: getAuthHeaders() });
   return response.data;
 }
 
 export async function loadPlayersForMatch(matchId: number): Promise<any[]> {
   try {
-    const response = await axios.get(`${API_BASE}/friendly-matches/${matchId}/players`, { headers: getAuthHeaders() });
+    const response = await axios.get(`${API_BASE_URL}/friendly-matches/${matchId}/players`, { headers: getAuthHeaders() });
     return response.data?.players || [];
   } catch (err) {
     console.error(err);
@@ -101,64 +99,64 @@ export async function loadPlayersForMatch(matchId: number): Promise<any[]> {
 }
 
 export async function getMatch(matchId: string) {
-  return axios.get(`${API_BASE}/friendly-matches/${matchId}`, { headers: getAuthHeaders() });
+  return axios.get(`${API_BASE_URL}/friendly-matches/${matchId}`, { headers: getAuthHeaders() });
 }
 
 export async function updateMatch(matchId: string, payload: any) {
-  return axios.put(`${API_BASE}/friendly-matches/${matchId}`, payload, { headers: getAuthHeaders() });
+  return axios.put(`${API_BASE_URL}/friendly-matches/${matchId}`, payload, { headers: getAuthHeaders() });
 }
 
 export async function getJoinedTeams(matchId: string | number) {
-  return axios.get(`${API_BASE}/friendly-matches/${matchId}/teams`, { headers: getAuthHeaders() });
+  return axios.get(`${API_BASE_URL}/friendly-matches/${matchId}/teams`, { headers: getAuthHeaders() });
 }
 
 export async function joinTeam(matchId: string | number, payload: any) {
-  return axios.post(`${API_BASE}/friendly-matches/${matchId}/teams`, payload, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
+  return axios.post(`${API_BASE_URL}/friendly-matches/${matchId}/teams`, payload, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
 }
 
 export async function leaveTeam(matchId: string | number, teamId: number) {
-  return axios.delete(`${API_BASE}/friendly-matches/${matchId}/teams/${teamId}`, { headers: getAuthHeaders() });
+  return axios.delete(`${API_BASE_URL}/friendly-matches/${matchId}/teams/${teamId}`, { headers: getAuthHeaders() });
 }
 
 export async function getAvailableForMatch(matchId: string | number) {
-  return axios.get(`${API_BASE}/friendly-matches/${matchId}/available`, { headers: getAuthHeaders() });
+  return axios.get(`${API_BASE_URL}/friendly-matches/${matchId}/available`, { headers: getAuthHeaders() });
 }
 
 // -- Punicao (penalty) endpoints
 export async function getPunicao(matchId: string | number) {
-  return axios.get(`${API_BASE}/friendly-matches/${matchId}/penalty`, { headers: getAuthHeaders() });
+  return axios.get(`${API_BASE_URL}/punishments/friendly-matches/${matchId}`, { headers: getAuthHeaders() });
 }
 
 export async function createPunicao(matchId: string | number, payload: any) {
-  return axios.post(`${API_BASE}/friendly-matches/${matchId}/penalty`, payload, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
+  return axios.post(`${API_BASE_URL}/punishments/friendly-matches/${matchId}`, payload, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
 }
 
 export async function updatePunicao(matchId: string | number, payload: any) {
-  return axios.put(`${API_BASE}/friendly-matches/${matchId}/penalty`, payload, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
+  return axios.put(`${API_BASE_URL}/punishments/friendly-matches/${matchId}`, payload, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
 }
 
 export async function deletePunicao(matchId: string | number) {
-  return axios.delete(`${API_BASE}/friendly-matches/${matchId}/penalty`, { headers: getAuthHeaders() });
+  return axios.delete(`${API_BASE_URL}/punishments/friendly-matches/${matchId}`, { headers: getAuthHeaders() });
 }
 
 export async function getMatchEvents(matchId: string | number) {
-  return axios.get(`${API_BASE}/friendly-matches/${matchId}/events`, { headers: getAuthHeaders() });
+  return axios.get(`${API_BASE_URL}/friendly-matches/${matchId}/events`, { headers: getAuthHeaders() });
 }
 
 export async function finalizeMatch(matchId: string | number) {
-  return axios.post(`${API_BASE}/friendly-matches/${matchId}/finalize`, {}, { headers: getAuthHeaders() });
+  return axios.post(`${API_BASE_URL}/friendly-matches/${matchId}/finalize`, {}, { headers: getAuthHeaders() });
 }
 
 export async function deleteMatch(matchId: string | number) {
-  return axios.delete(`${API_BASE}/friendly-matches/${matchId}`, { headers: getAuthHeaders() });
+  return axios.delete(`${API_BASE_URL}/friendly-matches/${matchId}`, { headers: getAuthHeaders() });
 }
 
 export async function getAttendance(matchId: string | number) {
-  return axios.get(`${API_BASE}/friendly-matches/${matchId}/attendance`, { headers: getAuthHeaders() });
+  return axios.get(`${API_BASE_URL}/friendly-matches/${matchId}/attendance`, { headers: getAuthHeaders() });
 }
 
 export async function postAttendance(matchId: string | number, payload: any) {
-  return axios.post(`${API_BASE}/friendly-matches/${matchId}/attendance`, payload, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
+  return axios.post(`${API_BASE_URL}/friendly-matches/${matchId}/attendance`, payload, { headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' } });
 }
 
 

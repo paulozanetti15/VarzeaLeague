@@ -1,7 +1,6 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 import { createMatch } from './matchesFriendlyServices';
-
-const API_BASE = 'http://localhost:3001/api';
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
@@ -23,8 +22,8 @@ export interface MatchData {
   location: string;
   maxPlayers: number;
   description?: string;
-  modalidade?: string;
-  quadraNome?: string;
+  matchType?: string;
+  square?: string;
   genero?: string;
   userId: number;
 }
@@ -35,9 +34,10 @@ class MatchRulesService {
    */
   async createRules(rulesData: MatchRulesData) {
     try {
-      const response = await axios.post(`${API_BASE}/rules`, rulesData, {
+      const response = await axios.post(`${API_BASE_URL}/rules`, rulesData, {
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
-      });
+
+      }); 
       return response.data;
     } catch (error) {
       console.error('Erro ao criar regras:', error);
@@ -55,11 +55,11 @@ class MatchRulesService {
         description: matchData.description || '',
         location: matchData.location,
         date: matchData.date,
-        time: '00:00', // valor padrão
-        duration: '90', // valor padrão
-        price: '0', // valor padrão
-        modalidade: matchData.modalidade,
-        quadra: matchData.quadraNome,
+        time: '00:00',
+        duration: '90',
+        price: '0',
+        matchType: matchData.matchType,
+        square: matchData.square,
         organizerId: matchData.userId.toString()
       };
       const response = await createMatch(matchPayload);
@@ -105,7 +105,7 @@ class MatchRulesService {
    */
   async getRulesByMatchId(matchId: number) {
     try {
-      const response = await axios.get(`${API_BASE}/rules/match/${matchId}`, {
+      const response = await axios.get(`${API_BASE_URL}/rules/match/${matchId}`, {
         headers: getAuthHeaders()
       });
       return response.data;
@@ -120,7 +120,7 @@ class MatchRulesService {
    */
   async updateRules(rulesId: number, rulesData: Partial<MatchRulesData>) {
     try {
-      const response = await axios.put(`${API_BASE}/rules/${rulesId}`, rulesData, {
+      const response = await axios.put(`${API_BASE_URL}/rules/${rulesId}`, rulesData, {
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
       });
       return response.data;
@@ -135,7 +135,7 @@ class MatchRulesService {
    */
   async deleteRules(rulesId: number) {
     try {
-      const response = await axios.delete(`${API_BASE}/rules/${rulesId}`, {
+      const response = await axios.delete(`${API_BASE_URL}/rules/${rulesId}`, {
         headers: getAuthHeaders()
       });
       return response.data;

@@ -89,7 +89,7 @@ router.get('/', authenticateToken, TeamController.listTeams);
 
 /**
  * @swagger
- * /api/teams/{id}:
+ * /api/teams/{teamId}:
  *   get:
  *     summary: Buscar detalhes de um time
  *     tags: [Times]
@@ -97,7 +97,7 @@ router.get('/', authenticateToken, TeamController.listTeams);
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: teamId
  *         required: true
  *         schema:
  *           type: integer
@@ -165,7 +165,7 @@ router.get('/', authenticateToken, TeamController.listTeams);
  *             example:
  *               message: Erro ao buscar time
  */
-router.get('/:id', authenticateToken, TeamController.getTeam);
+router.get('/:teamId', authenticateToken, TeamController.getTeam);
 
 /**
  * @swagger
@@ -196,13 +196,13 @@ router.get('/:id', authenticateToken, TeamController.getTeam);
  *               secondaryColor:
  *                 type: string
  *                 example: '#FFFF00'
- *               estado:
+ *               state:
  *                 type: string
  *                 example: SP
- *               cidade:
+ *               city:
  *                 type: string
  *                 example: São Paulo
- *               cep:
+ *               CEP:
  *                 type: string
  *                 example: 01000-000
  *               banner:
@@ -216,14 +216,6 @@ router.get('/:id', authenticateToken, TeamController.getTeam);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Team'
- *       400:
- *         description: Nome do time já está em uso
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Este nome de time já está em uso. Escolha outro nome.
  *       401:
  *         description: Não autenticado
  *         content:
@@ -232,6 +224,14 @@ router.get('/:id', authenticateToken, TeamController.getTeam);
  *               $ref: '#/components/schemas/Error'
  *             example:
  *               message: Usuário não autenticado
+ *       409:
+ *         description: Nome do time já está em uso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Este nome de time já está em uso. Escolha outro nome.
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -245,7 +245,7 @@ router.post('/', authenticateToken, upload.single('banner'), TeamController.crea
 
 /**
  * @swagger
- * /api/teams/{id}:
+ * /api/teams/{teamId}:
  *   put:
  *     summary: Atualizar dados do time (apenas capitão)
  *     tags: [Times]
@@ -253,11 +253,12 @@ router.post('/', authenticateToken, upload.single('banner'), TeamController.crea
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: teamId
  *         required: true
  *         schema:
  *           type: integer
  *         description: ID do time
+ *         example: 1
  *     requestBody:
  *       required: true
  *       content:
@@ -267,25 +268,29 @@ router.post('/', authenticateToken, upload.single('banner'), TeamController.crea
  *             properties:
  *               name:
  *                 type: string
+ *                 example: Time Atualizado
  *               description:
  *                 type: string
+ *                 example: Descrição atualizada do time
  *               primaryColor:
  *                 type: string
+ *                 example: '#FF0000'
  *               secondaryColor:
  *                 type: string
- *               estado:
+ *                 example: '#FFFFFF'
+ *               state:
  *                 type: string
- *               cidade:
+ *                 example: PR
+ *               city:
  *                 type: string
- *               cep:
+ *                 example: Curitiba
+ *               CEP:
  *                 type: string
- *               jogadores:
- *                 type: string
- *                 description: 'Array JSON de jogadores com seus IDs'
- *                 example: '[{"id": 1}, {"id": 2}]'
+ *                 example: 80000-000
  *               banner:
  *                 type: string
  *                 format: binary
+ *                 description: Nova imagem do banner do time (opcional)
  *     responses:
  *       200:
  *         description: Time atualizado com sucesso
@@ -293,6 +298,18 @@ router.post('/', authenticateToken, upload.single('banner'), TeamController.crea
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Team'
+ *             example:
+ *               id: 1
+ *               name: Time Atualizado FC
+ *               description: Descrição atualizada do time
+ *               banner: uploads/teams/banner-1234567890.jpg
+ *               primaryColor: '#FF0000'
+ *               secondaryColor: '#FFFFFF'
+ *               captainId: 1
+ *               city: Curitiba
+ *               state: PR
+ *               CEP: 80000-000
+ *               isDeleted: false
  *       403:
  *         description: Apenas o capitão pode atualizar o time
  *         content:
@@ -317,6 +334,14 @@ router.post('/', authenticateToken, upload.single('banner'), TeamController.crea
  *               $ref: '#/components/schemas/Error'
  *             example:
  *               message: Usuário não autenticado
+ *       409:
+ *         description: Nome do time já está em uso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Este nome de time já está em uso. Escolha outro nome.
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -326,11 +351,11 @@ router.post('/', authenticateToken, upload.single('banner'), TeamController.crea
  *             example:
  *               message: Erro ao atualizar time
  */
-router.put('/:id', authenticateToken, upload.single('banner'), TeamController.updateTeam);
+router.put('/:teamId', authenticateToken, upload.single('banner'), TeamController.updateTeam);
 
 /**
  * @swagger
- * /api/teams/{id}:
+ * /api/teams/{teamId}:
  *   delete:
  *     summary: Deletar time (soft delete, apenas capitão)
  *     tags: [Times]
@@ -338,11 +363,12 @@ router.put('/:id', authenticateToken, upload.single('banner'), TeamController.up
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: teamId
  *         required: true
  *         schema:
  *           type: integer
  *         description: ID do time
+ *         example: 1
  *     requestBody:
  *       required: true
  *       content:
@@ -399,76 +425,11 @@ router.put('/:id', authenticateToken, upload.single('banner'), TeamController.up
  *             example:
  *               message: Erro ao deletar time
  */
-router.delete('/:id', authenticateToken, TeamController.deleteTeam);
+router.delete('/:teamId', authenticateToken, TeamController.deleteTeam);
 
 /**
  * @swagger
- * /api/teams/{teamId}/players/{playerId}:
- *   delete:
- *     summary: Remover jogador do time (apenas capitão)
- *     tags: [Times]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: teamId
- *         required: true
- *         schema:
- *           type: integer
- *       - in: path
- *         name: playerId
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Jogador removido com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Jogador removido com sucesso
- *       403:
- *         description: Apenas o capitão pode remover jogadores
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Apenas o capitão pode remover jogadores
- *       404:
- *         description: Time ou jogador não encontrado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Time ou jogador não encontrado
- *       401:
- *         description: Não autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Usuário não autenticado
- *       500:
- *         description: Erro interno do servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Erro ao remover jogador
- */
-router.delete('/:teamId/players/:playerId', authenticateToken, TeamController.removePlayerFromTeam);
-
-/**
- * @swagger
- * /api/teams/{id}/teamCaptain:
+ * /api/teams/{idteamCaptain}/teamCaptain:
  *   get:
  *     summary: Buscar dados do capitão do time
  *     tags: [Times]
@@ -476,10 +437,12 @@ router.delete('/:teamId/players/:playerId', authenticateToken, TeamController.re
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: idteamCaptain
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID do Capitão do time
+ *         example: 1
  *     responses:
  *       200:
  *         description: Dados do capitão
@@ -512,22 +475,24 @@ router.delete('/:teamId/players/:playerId', authenticateToken, TeamController.re
  *             example:
  *               message: Erro ao buscar capitão do time
  */
-router.get('/:id/teamCaptain', authenticateToken, TeamController.getTeamCaptain);
+router.get('/:idteamCaptain/teamCaptain', authenticateToken, TeamController.getTeamCaptain);
 
 /**
  * @swagger
- * /api/teams/{id}/championship-ranking:
+ * /api/teams/{championshipId}/championship-ranking:
  *   get:
- *     summary: Buscar ranking do time em campeonatos
+ *     summary: Buscar ranking de um campeonato
  *     tags: [Times]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: championshipId
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID do campeonato
+ *         example: 1
  *     responses:
  *       200:
  *         description: Ranking do time
@@ -558,20 +523,20 @@ router.get('/:id/teamCaptain', authenticateToken, TeamController.getTeamCaptain)
  *               $ref: '#/components/schemas/Error'
  *             example:
  *               message: Usuário não autenticado
- *       500:
- *         description: Erro interno do servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Erro ao buscar ranking do time
+       500:
+         description: Erro interno do servidor
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/Error'
+             example:
+               message: Erro ao buscar ranking do campeonato
  */
-router.get('/:id/championship-ranking', authenticateToken, TeamController.getTeamRanking);
+router.get('/:championshipId/championship-ranking', authenticateToken, TeamController.getTeamRanking);
 
 /**
  * @swagger
- * /api/teams/{id}/player-stats:
+ * /api/teams/{teamId}/player-stats:
  *   get:
  *     summary: Buscar estatísticas dos jogadores do time
  *     tags: [Times]
@@ -579,10 +544,12 @@ router.get('/:id/championship-ranking', authenticateToken, TeamController.getTea
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: teamId
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID do time
+ *         example: 1
  *     responses:
  *       200:
  *         description: Estatísticas dos jogadores
@@ -623,18 +590,18 @@ router.get('/:id/championship-ranking', authenticateToken, TeamController.getTea
  *               message: Usuário não autenticado
  *       500:
  *         description: Erro interno do servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Erro ao buscar estatísticas dos jogadores
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/Error'
+             example:
+               message: Erro ao buscar estatísticas dos jogadores
  */
-router.get('/:id/player-stats', authenticateToken, TeamController.getPlayerStats);
+router.get('/:teamId/player-stats', authenticateToken, TeamController.getPlayerStats);
 
 /**
  * @swagger
- * /api/teams/{id}/history/friendly-matches:
+ * /api/teams/{teamId}/history/friendly-matches:
  *   get:
  *     summary: Listar histórico de partidas amistosas de um time
  *     tags: [Times]
@@ -642,7 +609,7 @@ router.get('/:id/player-stats', authenticateToken, TeamController.getPlayerStats
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: teamId
  *         required: true
  *         schema:
  *           type: integer
@@ -711,11 +678,11 @@ router.get('/:id/player-stats', authenticateToken, TeamController.getPlayerStats
  *             example:
  *               message: Erro ao buscar histórico de partidas amistosas
  */
-router.get('/:id/history/friendly-matches', authenticateToken, getAllFriendlyMatchesHistory);
+router.get('/:teamId/history/friendly-matches', authenticateToken, getAllFriendlyMatchesHistory);
 
 /**
  * @swagger
- * /api/teams/{id}/history/championship-matches:
+ * /api/teams/{teamId}/history/championship-matches:
  *   get:
  *     summary: Listar histórico de partidas de campeonatos de um time
  *     tags: [Times]
@@ -723,7 +690,7 @@ router.get('/:id/history/friendly-matches', authenticateToken, getAllFriendlyMat
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: teamId
  *         required: true
  *         schema:
  *           type: integer
@@ -781,11 +748,11 @@ router.get('/:id/history/friendly-matches', authenticateToken, getAllFriendlyMat
  *             example:
  *               message: Erro ao buscar histórico de partidas de campeonatos
  */
-router.get('/:id/history/championship-matches', authenticateToken, getAllChampionshipMatchesHistory);
+router.get('/:teamId/history/championship-matches', authenticateToken, getAllChampionshipMatchesHistory);
 
 /**
  * @swagger
- * /api/teams/{id}/history/championships/{championshipId}/matches:
+ * /api/teams/{teamId}/history/championships/{championshipId}/matches:
  *   get:
  *     summary: Listar partidas de um time em um campeonato específico
  *     tags: [Times]
@@ -793,7 +760,7 @@ router.get('/:id/history/championship-matches', authenticateToken, getAllChampio
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: teamId
  *         required: true
  *         schema:
  *           type: integer
@@ -857,6 +824,6 @@ router.get('/:id/history/championship-matches', authenticateToken, getAllChampio
  *             example:
  *               message: Erro ao buscar partidas do campeonato
  */
-router.get('/:id/history/championships/:championshipId/matches', authenticateToken, getMatchesByChampionshipHistory);
+router.get('/:teamId/history/championships/:championshipId/matches', authenticateToken, getMatchesByChampionshipHistory);
 
 export default router;

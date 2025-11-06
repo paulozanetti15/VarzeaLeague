@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE = 'http://localhost:3001/api';
+import { API_BASE_URL } from '../config/api';
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
@@ -15,7 +14,7 @@ export interface Championship {
 
 // Championships services
 export async function getAllChampionships() {
-  const response = await axios.get(`${API_BASE}/championships`, {
+  const response = await axios.get(`${API_BASE_URL}/championships`, {
     headers: getAuthHeaders()
   });
 
@@ -23,7 +22,7 @@ export async function getAllChampionships() {
 }
 
 export async function createChampionship(champData: any) {
-  const response = await axios.post(`${API_BASE}/championships`, champData, {
+  const response = await axios.post(`${API_BASE_URL}/championships`, champData, {
     headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
   });
 
@@ -31,7 +30,7 @@ export async function createChampionship(champData: any) {
 }
 
 export async function getChampionshipById(champId: number) {
-  const response = await axios.get(`${API_BASE}/championships/${champId}`, {
+  const response = await axios.get(`${API_BASE_URL}/championships/${champId}`, {
     headers: getAuthHeaders()
   });
 
@@ -39,7 +38,7 @@ export async function getChampionshipById(champId: number) {
 }
 
 export async function updateChampionship(champId: number, champData: any) {
-  const response = await axios.put(`${API_BASE}/championships/${champId}`, champData, {
+  const response = await axios.put(`${API_BASE_URL}/championships/${champId}`, champData, {
     headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
   });
 
@@ -47,7 +46,7 @@ export async function updateChampionship(champId: number, champData: any) {
 }
 
 export async function deleteChampionship(champId: number) {
-  const response = await axios.delete(`${API_BASE}/championships/${champId}`, {
+  const response = await axios.delete(`${API_BASE_URL}/championships/${champId}`, {
     headers: getAuthHeaders()
   });
 
@@ -55,7 +54,7 @@ export async function deleteChampionship(champId: number) {
 }
 
 export async function joinChampionship(champId: number) {
-  const response = await axios.post(`${API_BASE}/championships/${champId}/join`, {}, {
+  const response = await axios.post(`${API_BASE_URL}/championships/${champId}/join`, {}, {
     headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
   });
 
@@ -63,7 +62,7 @@ export async function joinChampionship(champId: number) {
 }
 
 export async function joinChampionshipWithTeam(champId: number, teamId: number) {
-  const response = await axios.post(`${API_BASE}/championships/${champId}/join-team`, { teamId }, {
+  const response = await axios.post(`${API_BASE_URL}/championships/${champId}/join-team`, { teamId }, {
     headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
   });
 
@@ -71,7 +70,7 @@ export async function joinChampionshipWithTeam(champId: number, teamId: number) 
 }
 
 export async function leaveChampionshipWithTeam(champId: number, teamId: number) {
-  const response = await axios.delete(`${API_BASE}/championships/${champId}/join-team/${teamId}`, {
+  const response = await axios.delete(`${API_BASE_URL}/championships/${champId}/join-team/${teamId}`, {
     headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
   });
 
@@ -79,7 +78,7 @@ export async function leaveChampionshipWithTeam(champId: number, teamId: number)
 }
 
 export async function leaveChampionship(champId: number) {
-  const response = await axios.post(`${API_BASE}/championships/${champId}/leave`, {}, {
+  const response = await axios.post(`${API_BASE_URL}/championships/${champId}/leave`, {}, {
     headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
   });
 
@@ -87,7 +86,7 @@ export async function leaveChampionship(champId: number) {
 }
 
 export async function getChampionshipTeams(champId: number) {
-  const response = await axios.get(`${API_BASE}/championships/${champId}/join-team`, {
+  const response = await axios.get(`${API_BASE_URL}/championships/${champId}/join-team`, {
     headers: getAuthHeaders()
   });
 

@@ -3,6 +3,7 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import axios from 'axios';
 import { useEffect } from 'react';
+import { API_BASE_URL } from '../../../config/api';
 import './RegrasFormInfoModal.css';
 
 interface AthleteFormModalProps {
@@ -20,7 +21,7 @@ export default function InfoRulesModal({ idpartida, show, onHide }: AthleteFormM
     useEffect(() => {
         const fetchingDados = async () => {
             try {
-                const response = await axios.get(`http://localhost:3001/api/rules/${idpartida}`, {
+                const response = await axios.get(`${API_BASE_URL}/rules/${idpartida}`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`
                     }

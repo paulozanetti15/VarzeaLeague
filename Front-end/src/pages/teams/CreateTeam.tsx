@@ -321,9 +321,6 @@ export default function CreateTeam() {
     const promises = formData.jogadores.map(async (jogador) => {
       try {
         const created = await createPlayer({ nome: jogador.nome, sexo: jogador.sexo, ano: jogador.ano, posicao: jogador.posicao, teamId: id });
-        if (created?.id) {
-          await linkPlayerToTeam(id, created.id);
-        }
         setToastMessage(`Jogador ${jogador.nome} adicionado com sucesso!`);
         setToastBg('success');
         setShowToast(true);

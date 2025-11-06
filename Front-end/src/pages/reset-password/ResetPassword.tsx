@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import './ResetPassword.css';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config/api';
+import './ResetPassword.css';
 
 interface ResetPasswordProps {
   onBackToLogin: () => void;
@@ -32,7 +33,7 @@ export function ResetPassword({ onBackToLogin }: ResetPasswordProps) {
     
     try {
       setLoading(true);
-      const response = await axios.put('http://localhost:3001/api/password-reset/reset', {
+      const response = await axios.put(`${API_BASE_URL}/password-reset/reset`, {
         token: token,
         newPassword,
       });

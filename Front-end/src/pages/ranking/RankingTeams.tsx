@@ -3,6 +3,7 @@ import { Container, Table, Form, Row, Col, Badge, Card } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
+import { API_BASE_URL } from '../../config/api';
 
 // Simple skeleton loader component
 const SkeletonRow: React.FC<{ cols: number }> = ({ cols }) => (
@@ -51,7 +52,7 @@ const RankingPlayers: React.FC = () => {
   const token = localStorage.getItem('token');
   const fetchChampionship=async(id:string) =>{
     
-    const response = await axios.get(`http://localhost:3001/api/championships/${id}`, {
+    const response = await axios.get(`${API_BASE_URL}/championships/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -63,7 +64,7 @@ const RankingPlayers: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const getTeams = await axios.get('http://localhost:3001/api/teams/1/championship-ranking', { 
+      const getTeams = await axios.get(`${API_BASE_URL}/teams/1/championship-ranking`, { 
         headers: { Authorization: `Bearer ${token}` }
       });
       

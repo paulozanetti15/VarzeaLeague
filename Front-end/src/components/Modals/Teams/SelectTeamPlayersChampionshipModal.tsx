@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../../hooks/useAuth';
+import { API_BASE_URL } from '../../../config/api';
 import '../../Dialogs/SelectTeamPlayersDialog.css';
 
 interface SelectTeamPlayersChampionshipModalProps {
@@ -45,8 +46,8 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
     setTeamsLoading(true);
     try {
       const [myTeamsResp, registeredResp] = await Promise.all([
-        axios.get(`http://localhost:3001/api/teams`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`http://localhost:3001/api/championships/${championshipId}/teams`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_BASE_URL}/teams`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_BASE_URL}/championships/${championshipId}/teams`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       const myTeams: Team[] = myTeamsResp.data || [];
       const alreadyRegistered: Team[] = registeredResp.data || [];
@@ -66,7 +67,7 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
     setPlayers([]);
     setSelectedPlayers([]);
     try {
-      const resp = await axios.get(`http://localhost:3001/api/players/team/${teamId}`, {
+      const resp = await axios.get(`${API_BASE_URL}/players/team/${teamId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPlayers(resp.data);
@@ -135,7 +136,7 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
     }
     try {
       setLoading(true);
-      const resp = await axios.post(`http://localhost:3001/api/championships/${championshipId}/teams`, {
+      const resp = await axios.post(`${API_BASE_URL}/championships/${championshipId}/teams`, {
         teamId: selectedTeamId,
         championshipId
       }, { headers: { Authorization: `Bearer ${token}` }});

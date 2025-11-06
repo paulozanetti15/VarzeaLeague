@@ -20,7 +20,7 @@ export const createTeamPlayer = async (req: Request, res: Response): Promise<voi
                 });
 
                 if (!existingPlayer) {
-                    const created = await TeamPlayer.create({
+                    await TeamPlayer.create({
                         teamId: teamId,
                         playerId: jogador.playerId
                     });

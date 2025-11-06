@@ -5,7 +5,6 @@ import User from '../models/UserModel';
 import FriendlyMatchTeamsModel from '../models/FriendlyMatchTeamsModel';
 import TeamModel from '../models/TeamModel';
 import FriendlyMatchesRulesModel from '../models/FriendlyMatchesRulesModel';
-import MatchChampionship from '../models/MatchChampionshipModel';
 import { Op } from 'sequelize';
 import { 
   updateAllMatchStatuses,
@@ -86,7 +85,7 @@ export const checkAndCancelMatchesWithInsufficientTeams = async (req: AuthReques
 
 export const createMatch = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { 
+    const {
       title, 
       description, 
       date, 
@@ -95,9 +94,8 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
       UF, 
       Cep, 
       duration, 
-      nomequadra,
-      quadra, 
-      modalidade, 
+      square,
+      matchType, 
       cep, 
       number,
       complement 
@@ -128,7 +126,7 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
     } catch (error) {
       res.status(400).json({ 
         message: 'Formato de data inválido. Use DD/MM/YYYY ou YYYY-MM-DD' 
-      });
+        });
       return;
     }
 
@@ -160,17 +158,31 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    if (!modalidade?.trim()) {
+    if (!matchType?.trim()) {
       res.status(400).json({ message: 'Modalidade é obrigatória' });
       return;
     }
 
+    const existingMatch = await FriendlyMatchesModel.findOne({
+      where: {
+        title: title.trim()
+      }
+    });
+
+    if (existingMatch) {
+      res.status(409).json({ 
+        message: 'Já existe uma partida com este nome',
+        hint: 'Escolha um nome diferente para criar uma nova partida'
+      });
+      return;
+    }
+
     const fullLocation = complement ? `${location} - ${complement}` : location;
-    const safeNomeQuadra = (nomequadra || quadra || 'Não informado').toString();
+    const safeSquare = (square || 'Não informado').toString();
     const safeCep = (Cep || cep || '00000-000').toString();
     const safeUf = (UF || 'XX').toString();
     const safeNumber = (number || '').toString();
-
+    console.log(req.body)
     const match = await FriendlyMatchesModel.create({
       title: title.trim(),
       description: description?.trim(),
@@ -183,12 +195,10 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
       organizerId: Number(userId),
       status: 'aberta',
       Uf: safeUf,
-      nomequadra: safeNomeQuadra,
-      modalidade: modalidade.trim(),
+      square: safeSquare,
+      matchType: matchType.trim(),
       Cep: safeCep
-    });
-
-    res.status(201).json(match);
+    });    res.status(201).json(match);
   } catch (error) {
     res.status(500).json({ message: 'Erro ao criar partida amistosa' });
   }
@@ -210,12 +220,6 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
           as: 'rules',
           attributes: ['id', 'registrationDeadline', 'minimumAge', 'maximumAge', 'gender'],
           required: false
-        },
-        {
-          model: MatchChampionship,
-          as: 'matchChampionship',
-          required: false,
-          attributes: ['id', 'registrationDeadline', 'minimumAge', 'maximumAge', 'gender'],
         },
         {
           model: FriendlyMatchTeamsModel,
@@ -260,6 +264,7 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
 
     res.status(200).json(payload);
   } catch (error) {
+    console.error('Erro ao listar partidas amistosas:', error);
     res.status(500).json({ message: 'Erro ao listar partidas amistosas' });
   }
 };
@@ -488,12 +493,6 @@ export const getMatchesByOrganizer = async (req: AuthRequest, res: Response): Pr
           required: false
         },
         {
-          model: MatchChampionship,
-          as: 'matchChampionship',
-          required: false,
-          attributes: []
-        },
-        {
           model: FriendlyMatchTeamsModel,
           as: 'matchTeams',
           include: [
@@ -583,9 +582,9 @@ export const getFilteredMatches = async (req: AuthRequest, res: Response): Promi
     if (searchMatches) {
       const searchTerm = searchMatches.toString().toLowerCase();
       whereClause[Op.or] = [
-        { title: { [Op.iLike]: `%${searchTerm}%` } },
-        { description: { [Op.iLike]: `%${searchTerm}%` } },
-        { location: { [Op.iLike]: `%${searchTerm}%` } }
+        { title: { [Op.like]: `%${searchTerm}%` } },
+        { description: { [Op.like]: `%${searchTerm}%` } },
+        { location: { [Op.like]: `%${searchTerm}%` } }
       ];
     }
 
@@ -603,13 +602,8 @@ export const getFilteredMatches = async (req: AuthRequest, res: Response): Promi
       }
     }
 
-    const finalWhereClause = friendlyOnly === 'true' ? {
-      ...whereClause,
-      '$matchChampionship.id$': null
-    } : whereClause;
-
     const matches = await FriendlyMatchesModel.findAll({
-      where: finalWhereClause,
+      where: whereClause,
       include: [
         {
           model: User,
@@ -622,12 +616,6 @@ export const getFilteredMatches = async (req: AuthRequest, res: Response): Promi
           attributes: ['id', 'registrationDeadline'],
           required: !!rulesWhereClause,
           where: rulesWhereClause
-        },
-        {
-          model: MatchChampionship,
-          as: 'matchChampionship',
-          required: false,
-          attributes: []
         },
         {
           model: FriendlyMatchTeamsModel,

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import './ForgotPassword.css';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config/api';
+import './ForgotPassword.css';
 
 interface ForgotPasswordProps {
   onBackToLogin?: () => void;
@@ -40,8 +41,7 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
       return;
     }
 
-    // Aqui você implementará a lógica de envio do email de recuperação
-    axios.post('http://localhost:3001/api/password-reset/request-reset', { email })
+    axios.post(`${API_BASE_URL}/password-reset/request-reset`, { email })
       .then(response => {
         setIsSubmitted(true);
       })

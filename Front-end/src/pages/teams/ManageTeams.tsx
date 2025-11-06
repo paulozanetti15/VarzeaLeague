@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import AddIcon from '@mui/icons-material/Add';
+import { API_BASE_URL } from '../../config/api';
 import './ManageTeams.css';
 
 const ManageTeams = () => {
@@ -20,7 +21,7 @@ const ManageTeams = () => {
         return;
       }
 
-      const response = await axios.get('http://localhost:3001/api/teams', {
+      const response = await axios.get(`${API_BASE_URL}/teams`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

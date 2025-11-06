@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../../config/api';
 import type { Team } from '../../../features/sumula/types';
 import type { Player } from '../../../features/sumula/types';
 import type { SumulaData } from '../../../features/sumula/types';
@@ -34,8 +35,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       }
 
       const endpoint = isChampionship 
-        ? `http://localhost:3001/api/championships/${matchId}/teams`
-        : `http://localhost:3001/api/friendly-matches/${matchId}/teams`;
+        ? `${API_BASE_URL}/championships/${matchId}/teams`
+        : `${API_BASE_URL}/friendly-matches/${matchId}/teams`;
 
       const response = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` }
@@ -57,8 +58,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       if (!token) return;
 
       const endpoint = isChampionship
-        ? `http://localhost:3001/api/championships/${matchId}/roster`
-        : `http://localhost:3001/api/friendly-matches/${matchId}/roster`;
+        ? `${API_BASE_URL}/championships/${matchId}/roster`
+        : `${API_BASE_URL}/friendly-matches/${matchId}/roster`;
 
       const response = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` }
@@ -78,8 +79,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       if (!token) return null;
 
       const matchEndpoint = isChampionship
-        ? `http://localhost:3001/api/championships/${matchId}`
-        : `http://localhost:3001/api/friendly-matches/${matchId}`;
+        ? `${API_BASE_URL}/championships/${matchId}`
+        : `${API_BASE_URL}/friendly-matches/${matchId}`;
 
       const matchResponse = await axios.get(matchEndpoint, {
         headers: { Authorization: `Bearer ${token}` }
@@ -90,8 +91,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       const matchData = matchResponse.data;
 
       const sumulaEndpoint = isChampionship
-        ? `http://localhost:3001/api/championships/matches/${matchId}/report`
-        : `http://localhost:3001/api/friendly-matches/${matchId}/report`;
+        ? `${API_BASE_URL}/championship-reports/${matchId}`
+        : `${API_BASE_URL}/friendly-match-reports/${matchId}`;
 
       let homeTeam = 0;
       let awayTeam = 0;
@@ -179,8 +180,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       };
 
       const endpoint = isChampionship
-        ? 'http://localhost:3001/api/championships/matches/report'
-        : 'http://localhost:3001/api/friendly-matches/report';
+        ? `${API_BASE_URL}/championship-reports`
+        : `${API_BASE_URL}/friendly-match-reports`;
 
       const response = await axios.post(endpoint, sumula, {
         headers: {
@@ -190,14 +191,13 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       });
 
       if (response.status === 201) {
-        // Limpar goals e cards existentes antes de adicionar novos
         const goalsEndpoint = isChampionship
-          ? `http://localhost:3001/api/championships/${data.matchId}/events/goals`
-          : `http://localhost:3001/api/friendly-matches/${data.matchId}/events/goals`;
+          ? `${API_BASE_URL}/championships/${data.matchId}/events/goals`
+          : `${API_BASE_URL}/friendly-matches/${data.matchId}/events/goals`;
 
         const cardsEndpoint = isChampionship
-          ? `http://localhost:3001/api/championships/${data.matchId}/events/cards`
-          : `http://localhost:3001/api/friendly-matches/${data.matchId}/events/cards`;
+          ? `${API_BASE_URL}/championships/${data.matchId}/events/cards`
+          : `${API_BASE_URL}/friendly-matches/${data.matchId}/events/cards`;
 
         // Remover todos os goals existentes
         try {
@@ -260,8 +260,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       };
 
       const endpoint = isChampionship
-        ? `http://localhost:3001/api/championships/matches/${data.matchId}/report`
-        : `http://localhost:3001/api/friendly-matches/${data.matchId}/report`;
+        ? `${API_BASE_URL}/championship-reports/${data.matchId}`
+        : `${API_BASE_URL}/friendly-match-reports/${data.matchId}`;
 
       const response = await axios.put(endpoint, sumula, {
         headers: {
@@ -272,8 +272,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
 
       if (response.status === 200) {
         const goalsEndpoint = isChampionship
-          ? `http://localhost:3001/api/championships/${data.matchId}/events/goals`
-          : `http://localhost:3001/api/friendly-matches/${data.matchId}/events/goals`;
+          ? `${API_BASE_URL}/championships/${data.matchId}/events/goals`
+          : `${API_BASE_URL}/friendly-matches/${data.matchId}/events/goals`;
 
         await Promise.all(data.goals.map(goal => 
           axios.post(goalsEndpoint, {
@@ -283,8 +283,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
         ));
 
         const cardsEndpoint = isChampionship
-          ? `http://localhost:3001/api/championships/${data.matchId}/events/cards`
-          : `http://localhost:3001/api/friendly-matches/${data.matchId}/events/cards`;
+          ? `${API_BASE_URL}/championships/${data.matchId}/events/cards`
+          : `${API_BASE_URL}/friendly-matches/${data.matchId}/events/cards`;
 
         await Promise.all(data.cards.map(card =>
           axios.post(cardsEndpoint, {
@@ -316,8 +316,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       }
 
       const endpoint = isChampionship
-        ? `http://localhost:3001/api/championships/matches/${matchId}/report`
-        : `http://localhost:3001/api/friendly-matches/${matchId}/report`;
+        ? `${API_BASE_URL}/championship-reports/${matchId}`
+        : `${API_BASE_URL}/friendly-match-reports/${matchId}`;
 
       const response = await axios.delete(endpoint, {
         headers: { Authorization: `Bearer ${token}` }

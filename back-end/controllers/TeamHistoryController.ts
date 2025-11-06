@@ -31,7 +31,7 @@ export const getAllFriendlyMatchesHistory= async(req:AuthRequest,res:Response)=>
             include: [
                 {
                     model: FriendlyMatchesModel,
-                    attributes: ['title', 'location','quadra','date'],
+                    attributes: ['title', 'location','square','date'],
                     required: true
                 },
                 {

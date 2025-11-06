@@ -1,7 +1,6 @@
 
 import axios from 'axios';
-
-const API_BASE = 'http://localhost:3001/api';
+import { API_BASE_URL } from '../config/api';
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
@@ -14,7 +13,7 @@ export interface User {
   email: string;
   cpf: string;
   phone: string;
-  sexo: string;
+  gender: string;
   userTypeId: number;
   usertype?: {
     name: string;
@@ -26,7 +25,7 @@ export interface CreateUserData {
   email: string;
   cpf: string;
   phone: string;
-  sexo: string;
+  gender: string;
   userTypeId: string;
   password: string;
 }
@@ -37,7 +36,7 @@ export interface UpdateUserData extends Omit<CreateUserData, 'password'> {
 
 export const getUsers = async (): Promise<User[]> => {
   try {
-    const response = await axios.get(`${API_BASE}/user`, {
+    const response = await axios.get(`${API_BASE_URL}/user`, {
       headers: getAuthHeaders()
     });
     return response?.data ?? [];
@@ -49,7 +48,7 @@ export const getUsers = async (): Promise<User[]> => {
 
 export const createUser = async (userData: CreateUserData): Promise<User> => {
   try {
-    const response = await axios.post(`${API_BASE}/user`, userData, {
+    const response = await axios.post(`${API_BASE_URL}/user`, userData, {
       headers: {
         ...getAuthHeaders(),
         'Content-Type': 'application/json'
@@ -64,7 +63,7 @@ export const createUser = async (userData: CreateUserData): Promise<User> => {
 
 export const updateUser = async (userId: number, userData: UpdateUserData): Promise<User> => {
   try {
-    const response = await axios.put(`${API_BASE}/user/${userId}`, userData, {
+    const response = await axios.put(`${API_BASE_URL}/user/${userId}`, userData, {
       headers: {
         ...getAuthHeaders(),
         'Content-Type': 'application/json'
@@ -79,7 +78,7 @@ export const updateUser = async (userId: number, userData: UpdateUserData): Prom
 
 export const deleteUser = async (userId: number): Promise<void> => {
   try {
-    await axios.delete(`${API_BASE}/user/${userId}`, {
+    await axios.delete(`${API_BASE_URL}/user/${userId}`, {
       headers: getAuthHeaders()
     });
   } catch (error: any) {

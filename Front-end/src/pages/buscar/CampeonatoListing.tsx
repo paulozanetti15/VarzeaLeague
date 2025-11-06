@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../config/api';
 import { Box, Grid, CircularProgress, Avatar, Chip, Typography, Paper, Stack } from '@mui/material';
 import MatchFilters from '../../features/matches/MatchFilters/MatchFilters';
 import { format } from 'date-fns';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 type Championship = any;
 
@@ -74,7 +73,7 @@ const CampeonatoListing: React.FC = () => {
       setLoading(true);
       try {
         const qs = buildQuery ? `?${buildQuery}` : '';
-        const res = await fetch(`${API_URL}/championships${qs}`);
+        const res = await fetch(`${API_BASE_URL}/championships${qs}`);
         if (res.ok) {
           const data = await res.json();
           if (mounted) setChamps(Array.isArray(data) ? data : []);

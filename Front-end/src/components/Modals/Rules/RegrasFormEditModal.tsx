@@ -4,6 +4,7 @@ import { Button, Modal } from 'react-bootstrap';
 import axios from 'axios';
 import './RegrasStyles.css';
 import { format, parse, isValid, isAfter, startOfDay, isBefore } from 'date-fns';
+import { API_BASE_URL } from '../../../config/api';
 
 
 
@@ -166,7 +167,7 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
 
     try {
         const response=await axios.put(
-          `http://localhost:3001/api/rules/${partidaDados.id}`,
+          `${API_BASE_URL}/rules/${partidaDados.id}`,
           {
             userId: userId,
             partidaId:partidaDados.id,
@@ -197,7 +198,7 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
   };
   const carregarRegras = async (partidaDados:any) => {
     try {
-      const response = await axios.get(`http://localhost:3001/api/rules/${partidaDados.id}`, {
+      const response = await axios.get(`${API_BASE_URL}/rules/${partidaDados.id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }

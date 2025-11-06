@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 import axios from 'axios';
+import { API_BASE_URL } from '../../../../config/api';
 import '../PunishmentModal.css';
 
 interface Props {
@@ -47,10 +48,10 @@ const PunicaoCampeonatoRegisterModal: React.FC<Props> = ({ show, onHide, onClose
         setLoading(true);
         setError("");
         const [teamsResp, matchesResp] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${championshipId}/join-team`, {
+          axios.get(`${API_BASE_URL}/championships/${championshipId}/join-team`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
           }),
-          axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${championshipId}/matches`, {
+          axios.get(`${API_BASE_URL}/championships/${championshipId}/matches`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
           })
         ]);
@@ -78,7 +79,7 @@ const PunicaoCampeonatoRegisterModal: React.FC<Props> = ({ show, onHide, onClose
       if (!formData.id_match_championship) { setError('Selecione a partida do campeonato'); return; }
       if (formData.team_home === formData.team_away) { setError('Times da casa e visitante devem ser diferentes'); return; }
       
-      const resp = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${championshipId}/penalty`, {
+      const resp = await axios.post(`${API_BASE_URL}/punishments/championships/${championshipId}`, {
         idtime: formData.time,
         motivo: formData.motivo,
         team_home: formData.team_home,

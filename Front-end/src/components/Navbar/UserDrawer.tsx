@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Avatar, Typography, Drawer, useTheme } from '@mui/material';
 import { Person, Logout } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
@@ -12,17 +13,17 @@ interface UserDrawerProps {
 
 const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose }) => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    logout();
     onClose();
+    logout();
   };
 
   const handleNavigation = (path: string) => {
-    // Note: navigation logic should be handled by parent or useNavigate here
-    // For now, keeping simple
     onClose();
+    navigate(path);
   };
 
   if (!user) return null;

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_BASE_URL } from '../../config/api';
 import './CreateTeam.css';
 import PaletteIcon from '@mui/icons-material/Palette';
 import ImageIcon from '@mui/icons-material/Image';
@@ -83,12 +84,11 @@ export default function EditTeam() {
           navigate('/login');
           return;
         }
-        const response = await axios.get(`http://localhost:3001/api/teams/${id}`, {
+        const response = await axios.get(`${API_BASE_URL}/teams/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         
-        // Buscar explicitamente os jogadores do time
-        const responsePlayer = await axios.get(`http://localhost:3001/api/teamplayers/${id}`, {
+        const responsePlayer = await axios.get(`${API_BASE_URL}/team-players/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         
@@ -395,9 +395,8 @@ export default function EditTeam() {
       if (formData.logo) {
         submitFormData.append('banner', formData.logo);
       }
-      // Primeiro atualiza os dados do time (sem enviar jogadores)
       const responseTeam = await axios.put(
-        `http://localhost:3001/api/teams/${id}`,
+        `${API_BASE_URL}/teams/${id}`,
         submitFormData,
         {
           headers: {
@@ -413,7 +412,7 @@ export default function EditTeam() {
 
       if (formattedJogadores && formattedJogadores.length > 0) {
         const responsePlayers = await axios.put(
-          `http://localhost:3001/api/players/${id}`,
+          `${API_BASE_URL}/players/${id}`,
           { jogadores: formattedJogadores },
           {
             headers: {
@@ -509,8 +508,7 @@ export default function EditTeam() {
         return;
       }
       
-      // Chamar o endpoint para remover o jogador do time
-      await axios.delete(`http://localhost:3001/api/teamplayers/${id}/player/${playerId}`, {
+      await axios.delete(`${API_BASE_URL}/team-players/${id}/player/${playerId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       // Atualizar também a lista no formData
@@ -931,7 +929,7 @@ export default function EditTeam() {
                       
                       await axios({
                         method: 'delete',
-                        url: `http://localhost:3001/api/teams/${id}`,
+                        url: `${API_BASE_URL}/teams/${id}`,
                         headers: {
                           'Authorization': `Bearer ${token}`,
                           'Content-Type': 'application/json'

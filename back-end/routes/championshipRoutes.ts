@@ -14,17 +14,6 @@ import {
   updateApplicationStatus,
   publishChampionship
 } from '../controllers/championshipController';
-import {
-  inserirPunicaoCampeonato,
-  buscarPunicaoCampeonato,
-  alterarPunicaoCampeonato,
-  deletarPunicaoCampeonato
-} from '../controllers/ChampionshipPunishmentController';
-import {
-  buscarSumulaPartidaCampeonato,
-  atualizarSumulaPartidaCampeonato,
-  deletarSumulaPartidaCampeonato
-} from '../controllers/TeamHistoryController';
 
 const router = express.Router();
 
@@ -60,7 +49,7 @@ const router = express.Router();
  *             properties:
  *               name:
  *                 type: string
- *                 example: Copa Várzea 2025
+ *                 example: Campeonato Várzea 2025
  *               description:
  *                 type: string
  *                 example: Campeonato de futebol society
@@ -81,8 +70,8 @@ const router = express.Router();
  *                 example: Arena Sports Center
  *               tipo:
  *                 type: string
- *                 enum: [Liga, Copa, Mata-Mata]
- *                 example: Copa
+ *                 enum: [Liga, Mata-Mata]
+ *                 example: Mata-Mata
  *               genero:
  *                 type: string
  *                 enum: [Masculino, Feminino, Misto]
@@ -115,19 +104,39 @@ const router = express.Router();
  *                   example: 1
  *                 name:
  *                   type: string
- *                   example: Copa Várzea 2025
+ *                   example: Campeonato Várzea 2025
  *       400:
  *         description: Dados inválidos
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               campoObrigatorio:
+ *                 value:
+ *                   message: Nome do campeonato é obrigatório
+ *               dataInvalida:
+ *                 value:
+ *                   message: Data de início não pode ser no passado
  *       401:
  *         description: Não autenticado
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       409:
+ *         description: Conflito - Campeonato com este nome já existe
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               nomeDuplicado:
+ *                 value:
+ *                   message: Já existe um campeonato com este nome
+ *               tipoInvalido:
+ *                 value:
+ *                   message: Tipo de campeonato inválido. Use Liga, Mata-Mata
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -145,16 +154,60 @@ router.post('/', authenticateToken, createChampionship);
  *     tags: [Campeonatos]
  *     parameters:
  *       - in: query
- *         name: status
+ *         name: championshipDateFrom
  *         schema:
  *           type: string
- *           enum: [Rascunho, Publicado, Em Andamento, Finalizado]
- *         description: Filtrar por status do campeonato
+ *           format: date
+ *         description: Filtrar por data de início (a partir de)
+ *         example: 2025-01-01
+ *       - in: query
+ *         name: championshipDateTo
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filtrar por data de início (até)
+ *         example: 2025-12-31
+ *       - in: query
+ *         name: searchChampionships
+ *         schema:
+ *           type: string
+ *         description: Buscar por nome ou descrição
+ *         example: Campeonato
+ *       - in: query
+ *         name: tipo
+ *         schema:
+ *           type: string
+ *           enum: [Liga, Mata-Mata]
+ *         description: Filtrar por tipo do campeonato
+ *         example: Liga
+ *       - in: query
+ *         name: genero
+ *         schema:
+ *           type: string
+ *           enum: [Masculino, Feminino, Misto]
+ *         description: Filtrar por gênero
+ *         example: Masculino
  *       - in: query
  *         name: modalidade
  *         schema:
  *           type: string
+ *           enum: [Futebol de Campo, Futebol Society, Futsal]
  *         description: Filtrar por modalidade
+ *         example: Futebol Society
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [draft, open, closed, in_progress, finished]
+ *         description: Filtrar por status do campeonato
+ *         example: open
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [date_asc, date_desc]
+ *         description: Ordenação por data
+ *         example: date_desc
  *     responses:
  *       200:
  *         description: Lista de campeonatos
@@ -170,7 +223,7 @@ router.post('/', authenticateToken, createChampionship);
  *                     example: 1
  *                   name:
  *                     type: string
- *                     example: Copa Várzea 2025
+ *                     example: Campeonato Várzea 2025
  *                   description:
  *                     type: string
  *                     example: Campeonato de futebol society
@@ -224,7 +277,7 @@ router.get('/', listChampionships);
  *                   example: 1
  *                 name:
  *                   type: string
- *                   example: Copa Várzea 2025
+ *                   example: Campeonato Várzea 2025
  *                 description:
  *                   type: string
  *                   example: Campeonato de futebol society
@@ -278,7 +331,7 @@ router.get('/:id', getChampionship);
  *             properties:
  *               name:
  *                 type: string
- *                 example: Copa Várzea 2025 Atualizada
+ *                 example: Campeonato Várzea 2025 Atualizado
  *               description:
  *                 type: string
  *                 example: Descrição atualizada
@@ -290,9 +343,36 @@ router.get('/:id', getChampionship);
  *                 type: string
  *                 format: date
  *                 example: 2025-04-01
+ *               modalidade:
+ *                 type: string
+ *                 enum: [Futebol de Campo, Futebol Society, Futsal]
+ *                 example: Futebol Society
+ *               nomequadra:
+ *                 type: string
+ *                 example: Arena Sports Center
+ *               tipo:
+ *                 type: string
+ *                 enum: [Liga, Mata-Mata]
+ *                 example: Mata-Mata
+ *               genero:
+ *                 type: string
+ *                 enum: [Masculino, Feminino, Misto]
+ *                 example: Masculino
+ *               fase_grupos:
+ *                 type: boolean
+ *                 example: true
  *               max_teams:
  *                 type: integer
- *                 example: 20
+ *                 example: 16
+ *               num_grupos:
+ *                 type: integer
+ *                 example: 4
+ *               times_por_grupo:
+ *                 type: integer
+ *                 example: 4
+ *               num_equipes_liga:
+ *                 type: integer
+ *                 example: 10
  *     responses:
  *       200:
  *         description: Campeonato atualizado com sucesso
@@ -304,18 +384,47 @@ router.get('/:id', getChampionship);
  *                 message:
  *                   type: string
  *                   example: Campeonato atualizado com sucesso
+ *       400:
+ *         description: Dados inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               campoVazio:
+ *                 value:
+ *                   message: Nome do campeonato é obrigatório
+ *               dataPassado:
+ *                 value:
+ *                   message: Data de início não pode ser no passado
  *       401:
  *         description: Não autenticado
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Sem permissão para editar
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Apenas o criador pode editar este campeonato
  *       404:
  *         description: Campeonato não encontrado
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       409:
+ *         description: Conflito - Nome de campeonato já existe
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Já existe outro campeonato com este nome
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -462,11 +571,15 @@ router.put('/:id/publish', authenticateToken, publishChampionship);
  *                   type: string
  *                   example: Time inscrito no campeonato com sucesso
  *       400:
- *         description: Erro na inscrição (time já inscrito, campeonato lotado, etc)
+ *         description: Dados inválidos
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               campoObrigatorio:
+ *                 value:
+ *                   message: teamId é obrigatório
  *       401:
  *         description: Não autenticado
  *         content:
@@ -479,6 +592,16 @@ router.put('/:id/publish', authenticateToken, publishChampionship);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       409:
+ *         description: Time já está inscrito neste campeonato
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               jaInscrito:
+ *                 value:
+ *                   message: O time já está inscrito neste campeonato
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -646,11 +769,18 @@ router.delete('/:id/teams/:teamId', authenticateToken, leaveTeamFromChampionship
  *                 application:
  *                   type: object
  *       400:
- *         description: Candidatura já existe ou campeonato não aceita candidaturas
+ *         description: Campeonato não aceita candidaturas
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               campeonatoFechado:
+ *                 value:
+ *                   message: Este campeonato não está aceitando aplicações no momento
+ *               campoObrigatorio:
+ *                 value:
+ *                   message: ID do time é obrigatório
  *       401:
  *         description: Não autenticado
  *         content:
@@ -663,6 +793,16 @@ router.delete('/:id/teams/:teamId', authenticateToken, leaveTeamFromChampionship
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       409:
+ *         description: Time já aplicou para este campeonato
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               jaAplicou:
+ *                 value:
+ *                   message: Este time já aplicou para este campeonato
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -775,8 +915,12 @@ router.get('/:id/applications', authenticateToken, getChampionshipApplications);
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [Aprovado, Rejeitado]
- *                 example: Aprovado
+ *                 enum: [approved, rejected]
+ *                 example: approved
+ *               rejection_reason:
+ *                 type: string
+ *                 description: Motivo da rejeição (obrigatório quando status é rejected)
+ *                 example: Time não atende aos requisitos do campeonato
  *     responses:
  *       200:
  *         description: Status da candidatura atualizado
@@ -794,18 +938,44 @@ router.get('/:id/applications', authenticateToken, getChampionshipApplications);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               statusInvalido:
+ *                 value:
+ *                   message: Status deve ser "approved" ou "rejected"
  *       401:
  *         description: Não autenticado
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: Candidatura não encontrada
+ *       403:
+ *         description: Sem permissão (apenas criador do campeonato)
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Candidatura ou campeonato não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       409:
+ *         description: Candidatura já está no status desejado ou não pode ser alterada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               jaNoStatus:
+ *                 value:
+ *                   message: Esta candidatura já está com o status "approved"
+ *                   currentStatus: approved
+ *               naoPermiteAlterar:
+ *                 value:
+ *                   message: Não é possível alterar candidatura com status "approved"
+ *                   currentStatus: approved
+ *                   hint: Apenas candidaturas pendentes podem ser aprovadas ou rejeitadas
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -815,582 +985,5 @@ router.get('/:id/applications', authenticateToken, getChampionshipApplications);
  */
 router.put('/:id/applications/:applicationId/status', authenticateToken, updateApplicationStatus);
 
-/**
- * @swagger
- * /api/championships/{id}/penalty:
- *   get:
- *     summary: Buscar punições de um campeonato
- *     tags: [Campeonatos]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID do campeonato
- *         example: 1
- *     responses:
- *       200:
- *         description: Lista de punições do campeonato
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                     example: 1
- *                   championshipId:
- *                     type: integer
- *                     example: 1
- *                   teamId:
- *                     type: integer
- *                     example: 5
- *                   playerId:
- *                     type: integer
- *                     example: 10
- *                   tipo:
- *                     type: string
- *                     enum: [Advertência, Suspensão, Multa, Desclassificação]
- *                     example: Suspensão
- *                   descricao:
- *                     type: string
- *                     example: Suspensão por cartão vermelho
- *                   jogos_suspensos:
- *                     type: integer
- *                     example: 2
- *       401:
- *         description: Não autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: Campeonato não encontrado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Erro interno do servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.get('/:id/penalty', authenticateToken, buscarPunicaoCampeonato);
-
-/**
- * @swagger
- * /api/championships/{id}/penalty:
- *   post:
- *     summary: Adicionar punição em um campeonato
- *     tags: [Campeonatos]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID do campeonato
- *         example: 1
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - teamId
- *               - tipo
- *               - descricao
- *             properties:
- *               teamId:
- *                 type: integer
- *                 description: ID do time punido
- *                 example: 5
- *               playerId:
- *                 type: integer
- *                 description: ID do jogador punido (opcional)
- *                 example: 10
- *               tipo:
- *                 type: string
- *                 enum: [Advertência, Suspensão, Multa, Desclassificação]
- *                 example: Suspensão
- *               descricao:
- *                 type: string
- *                 example: Suspensão por acúmulo de cartões amarelos
- *               jogos_suspensos:
- *                 type: integer
- *                 description: Número de jogos de suspensão (para tipo Suspensão)
- *                 example: 1
- *               valor_multa:
- *                 type: number
- *                 description: Valor da multa (para tipo Multa)
- *                 example: 100.00
- *     responses:
- *       201:
- *         description: Punição adicionada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Punição adicionada com sucesso
- *                 penalty:
- *                   type: object
- *       400:
- *         description: Dados inválidos
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       401:
- *         description: Não autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: Campeonato, time ou jogador não encontrado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Erro interno do servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.post('/:id/penalty', authenticateToken, inserirPunicaoCampeonato);
-
-/**
- * @swagger
- * /api/championships/{id}/penalty:
- *   put:
- *     summary: Atualizar punição de um campeonato
- *     tags: [Campeonatos]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID do campeonato
- *         example: 1
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - penaltyId
- *             properties:
- *               penaltyId:
- *                 type: integer
- *                 example: 15
- *               tipo:
- *                 type: string
- *                 enum: [Advertência, Suspensão, Multa, Desclassificação]
- *                 example: Advertência
- *               descricao:
- *                 type: string
- *                 example: Punição reduzida a advertência
- *               jogos_suspensos:
- *                 type: integer
- *                 example: 0
- *     responses:
- *       200:
- *         description: Punição atualizada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Punição atualizada com sucesso
- *       401:
- *         description: Não autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: Punição não encontrada
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Erro interno do servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.put('/:id/penalty', authenticateToken, alterarPunicaoCampeonato);
-
-/**
- * @swagger
- * /api/championships/{id}/penalty:
- *   delete:
- *     summary: Deletar punição de um campeonato
- *     tags: [Campeonatos]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID do campeonato
- *         example: 1
- *       - in: query
- *         name: penaltyId
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID da punição a ser deletada
- *         example: 15
- *     responses:
- *       200:
- *         description: Punição deletada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Punição deletada com sucesso
- *       401:
- *         description: Não autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: Punição não encontrada
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Erro interno do servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.delete('/:id/penalty', authenticateToken, deletarPunicaoCampeonato);
-
-/**
- * @swagger
- * /api/championships/matches/{matchId}/report:
- *   get:
- *     summary: Buscar súmula de partida de campeonato
- *     description: Retorna os dados da súmula de uma partida de campeonato específica incluindo jogadores, gols, cartões e avaliações
- *     tags: [Championships]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: matchId
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID da partida de campeonato
- *         example: 45
- *     responses:
- *       200:
- *         description: Súmula da partida encontrada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 teamA:
- *                   type: object
- *                   properties:
- *                     teamId:
- *                       type: integer
- *                       example: 1
- *                     name:
- *                       type: string
- *                       example: "Flamengo FC"
- *                     players:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           playerId:
- *                             type: integer
- *                             example: 10
- *                           name:
- *                             type: string
- *                             example: "Carlos Silva"
- *                           goals:
- *                             type: integer
- *                             example: 2
- *                           yellowCards:
- *                             type: integer
- *                             example: 0
- *                           redCards:
- *                             type: integer
- *                             example: 0
- *                           rating:
- *                             type: number
- *                             format: float
- *                             example: 8.5
- *                 teamB:
- *                   type: object
- *                   properties:
- *                     teamId:
- *                       type: integer
- *                       example: 2
- *                     name:
- *                       type: string
- *                       example: "Botafogo United"
- *                     players:
- *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           playerId:
- *                             type: integer
- *                             example: 15
- *                           name:
- *                             type: string
- *                             example: "João Santos"
- *                           goals:
- *                             type: integer
- *                             example: 1
- *                           yellowCards:
- *                             type: integer
- *                             example: 1
- *                           redCards:
- *                             type: integer
- *                             example: 0
- *                           rating:
- *                             type: number
- *                             format: float
- *                             example: 7.0
- *       401:
- *         description: Não autorizado - Token de autenticação ausente ou inválido
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               error: "Token de autenticação não fornecido"
- *       404:
- *         description: Partida não encontrada ou sem súmula cadastrada
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               error: "Súmula da partida #45 não encontrada"
- *       500:
- *         description: Erro interno do servidor ao buscar súmula
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               error: "Erro ao buscar súmula da partida de campeonato"
- */
-router.get('/matches/:matchId/report', authenticateToken, buscarSumulaPartidaCampeonato);
-
-/**
- * @swagger
- * /api/championships/matches/{matchId}/report:
- *   put:
- *     summary: Atualizar súmula de partida de campeonato
- *     description: Atualiza os dados da súmula de uma partida de campeonato incluindo jogadores, gols, cartões e avaliações
- *     tags: [Championships]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: matchId
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID da partida de campeonato
- *         example: 45
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - teamA
- *               - teamB
- *             properties:
- *               teamA:
- *                 type: object
- *                 properties:
- *                   players:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         playerId:
- *                           type: integer
- *                           example: 10
- *                         goals:
- *                           type: integer
- *                           example: 2
- *                         yellowCards:
- *                           type: integer
- *                           example: 0
- *                         redCards:
- *                           type: integer
- *                           example: 0
- *                         rating:
- *                           type: number
- *                           format: float
- *                           example: 8.5
- *               teamB:
- *                 type: object
- *                 properties:
- *                   players:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         playerId:
- *                           type: integer
- *                           example: 15
- *                         goals:
- *                           type: integer
- *                           example: 1
- *                         yellowCards:
- *                           type: integer
- *                           example: 1
- *                         redCards:
- *                           type: integer
- *                           example: 0
- *                         rating:
- *                           type: number
- *                           format: float
- *                           example: 7.0
- *     responses:
- *       200:
- *         description: Súmula da partida atualizada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Súmula da partida #45 atualizada com sucesso"
- *       400:
- *         description: Dados inválidos fornecidos
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               error: "Dados de jogadores do Time A são obrigatórios"
- *       401:
- *         description: Não autorizado - Token de autenticação ausente ou inválido
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               error: "Token de autenticação não fornecido"
- *       404:
- *         description: Partida não encontrada
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               error: "Partida de campeonato #45 não encontrada"
- *       500:
- *         description: Erro interno do servidor ao atualizar súmula
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               error: "Erro ao atualizar súmula da partida de campeonato"
- */
-router.put('/matches/:matchId/report', authenticateToken, atualizarSumulaPartidaCampeonato);
-
-/**
- * @swagger
- * /api/championships/matches/{matchId}/report:
- *   delete:
- *     summary: Deletar súmula de partida de campeonato
- *     description: Remove completamente os dados da súmula de uma partida de campeonato (jogadores, gols, cartões e avaliações)
- *     tags: [Championships]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: matchId
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID da partida de campeonato
- *         example: 45
- *     responses:
- *       200:
- *         description: Súmula da partida deletada com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Súmula da partida #45 deletada com sucesso"
- *       401:
- *         description: Não autorizado - Token de autenticação ausente ou inválido
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               error: "Token de autenticação não fornecido"
- *       404:
- *         description: Partida não encontrada ou sem súmula cadastrada
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               error: "Súmula da partida #45 não encontrada para deletar"
- *       500:
- *         description: Erro interno do servidor ao deletar súmula
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               error: "Erro ao deletar súmula da partida de campeonato"
- */
-router.delete('/matches/:matchId/report', authenticateToken, deletarSumulaPartidaCampeonato);
 
 export default router;

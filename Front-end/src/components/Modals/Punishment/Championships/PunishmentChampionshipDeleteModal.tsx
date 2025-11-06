@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 import axios from 'axios';
+import { API_BASE_URL } from '../../../../config/api';
 
 interface Props {
   show: boolean;
@@ -17,7 +18,7 @@ const PunicaoCampeonatoModalDelete: React.FC<Props> = ({ show, onHide, onClose, 
     try {
       setLoading(true);
       setError("");
-      const resp = await axios.delete(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${championshipId}/penalty`, {
+      const resp = await axios.delete(`${API_BASE_URL}/punishments/championships/${championshipId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       if (resp.status === 200) {

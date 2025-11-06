@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import { API_BASE_URL } from '../config/api';
 
 export type MonthCount = { month: string; count: number };
 export type CardsByMonth = { month: string; yellow: number; red: number };
@@ -34,7 +33,7 @@ export const useDashboardStore = () => {
     setLoadingOverview(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/overview`, { signal });
+      const res = await fetch(`${API_BASE_URL}/overview`, { signal });
       if (!res.ok) throw new Error(`Erro ${res.status}`);
       const data = await res.json();
       setOverview(data as OverviewData);

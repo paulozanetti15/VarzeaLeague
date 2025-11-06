@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import { API_BASE_URL } from '../config/api';
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
@@ -8,7 +7,7 @@ function getAuthHeaders() {
 }
 
 export async function getPlayerRanking() {
-  const response = await axios.get(`${API_BASE}/ranking/players`, {
+  const response = await axios.get(`${API_BASE_URL}/ranking/players`, {
     headers: getAuthHeaders()
   });
   return response.data;

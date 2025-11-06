@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { API_BASE_URL } from '../../../config/api';
 import StarRating from './StarRating';
 
 interface MatchEvaluationsSectionProps {
@@ -18,8 +19,8 @@ const MatchEvaluationsSection: React.FC<MatchEvaluationsSectionProps> = ({ match
   const fetchAll = async () => {
     try {
       const [listRes, sumRes] = await Promise.all([
-        fetch(`http://localhost:3001/api/friendly-matches/${matchId}/evaluations`).then(r => r.json()),
-        fetch(`http://localhost:3001/api/friendly-matches/${matchId}/evaluations/summary`).then(r => r.json())
+        fetch(`${API_BASE_URL}/friendly-matches/${matchId}/evaluations`).then(r => r.json()),
+        fetch(`${API_BASE_URL}/friendly-matches/${matchId}/evaluations/summary`).then(r => r.json())
       ]);
       setEvaluations(Array.isArray(listRes) ? listRes : []);
       if (sumRes && typeof sumRes.average !== 'undefined') setSummary(sumRes);
@@ -55,7 +56,7 @@ const MatchEvaluationsSection: React.FC<MatchEvaluationsSectionProps> = ({ match
     }
     setLoading(true);
     try {
-      const resp = await fetch(`http://localhost:3001/api/friendly-matches/${matchId}/evaluations`, {
+      const resp = await fetch(`${API_BASE_URL}/friendly-matches/${matchId}/evaluations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ rating: myRating, comment: myComment })

@@ -135,7 +135,7 @@ router.get('/:id', authenticateToken, getById);
  *               - password
  *               - cpf
  *               - phone
- *               - sexo
+ *               - gender
  *               - userTypeId
  *             properties:
  *               name:
@@ -151,16 +151,20 @@ router.get('/:id', authenticateToken, getById);
  *                 example: Senha123!
  *               cpf:
  *                 type: string
+ *                 pattern: '^\d{3}\.\d{3}\.\d{3}-\d{2}$'
  *                 example: 987.654.321-00
  *               phone:
  *                 type: string
+ *                 pattern: '^\(\d{2}\) \d{4,5}-\d{4}$'
  *                 example: (41) 98888-8888
- *               sexo:
+ *               gender:
  *                 type: string
  *                 enum: [Masculino, Feminino]
  *                 example: Feminino
  *               userTypeId:
  *                 type: integer
+ *                 enum: [1, 2, 3, 4]
+ *                 description: 'Tipo de usuário: 1=Admin Master, 2=Admin Eventos, 3=Admin Times, 4=Usuário Comum'
  *                 example: 3
  *     responses:
  *       201:
@@ -170,18 +174,33 @@ router.get('/:id', authenticateToken, getById);
  *             schema:
  *               $ref: '#/components/schemas/User'
  *       400:
- *         description: Email ou CPF já cadastrado
+ *         description: Dados inválidos
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             examples:
- *               emailExiste:
+ *               camposFaltando:
  *                 value:
- *                   message: Email já cadastrado
- *               cpfExiste:
+ *                   message: Todos os campos obrigatórios devem ser preenchidos
+ *               cpfInvalido:
  *                 value:
- *                   message: CPF já cadastrado
+ *                   message: CPF inválido (use formato XXX.XXX.XXX-XX ou 11 dígitos)
+ *               generoInvalido:
+ *                 value:
+ *                   message: Gênero inválido (use Masculino ou Feminino)
+ *               telefoneInvalido:
+ *                 value:
+ *                   message: Telefone inválido (use formato (XX) XXXXX-XXXX)
+ *               userTypeInvalido:
+ *                 value:
+ *                   message: Tipo de usuário inválido (use 1, 2, 3 ou 4)
+ *               senhaInvalida:
+ *                 value:
+ *                   message: Senha inválida (mínimo 6 caracteres com maiúsculas, minúsculas, números e caracteres especiais)
+ *               multiplosErros:
+ *                 value:
+ *                   message: CPF inválido (use formato XXX.XXX.XXX-XX ou 11 dígitos), Gênero inválido (use Masculino ou Feminino)
  *       401:
  *         description: Não autenticado
  *         content:
@@ -198,6 +217,22 @@ router.get('/:id', authenticateToken, getById);
  *               $ref: '#/components/schemas/Error'
  *             example:
  *               message: Sem permissão para criar usuários
+ *       409:
+ *         description: Conflito - Nome, Email ou CPF já cadastrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               nomeExiste:
+ *                 value:
+ *                   message: Nome já cadastrado
+ *               emailExiste:
+ *                 value:
+ *                   message: Email já cadastrado
+ *               cpfExiste:
+ *                 value:
+ *                   message: CPF já cadastrado
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -239,16 +274,23 @@ router.post('/', authenticateToken, store);
  *                 example: joao.novo@example.com
  *               phone:
  *                 type: string
+ *                 pattern: '^\(\d{2}\) \d{4,5}-\d{4}$'
  *                 example: (41) 97777-7777
- *               sexo:
+ *               gender:
  *                 type: string
  *                 enum: [Masculino, Feminino]
- *               userTypeId:
- *                 type: integer
+ *                 example: Masculino
  *               password:
  *                 type: string
  *                 format: password
- *                 description: Opcional - apenas se quiser alterar a senha
+ *                 minLength: 6
+ *                 description: Nova senha (opcional, será criptografada automaticamente)
+ *                 example: NovaSenha@123
+ *               userTypeId:
+ *                 type: integer
+ *                 enum: [1, 2, 3, 4]
+ *                 description: 'Tipo de usuário: 1=Admin Master, 2=Admin Eventos, 3=Admin Times, 4=Usuário Comum'
+ *                 example: 3
  *     responses:
  *       200:
  *         description: Usuário atualizado com sucesso
@@ -256,6 +298,28 @@ router.post('/', authenticateToken, store);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Dados inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               cpfInvalido:
+ *                 value:
+ *                   message: CPF inválido (use formato XXX.XXX.XXX-XX ou 11 dígitos)
+ *               generoInvalido:
+ *                 value:
+ *                   message: Gênero inválido (use Masculino ou Feminino)
+ *               telefoneInvalido:
+ *                 value:
+ *                   message: Telefone inválido (use formato (XX) XXXXX-XXXX)
+ *               userTypeInvalido:
+ *                 value:
+ *                   message: Tipo de usuário inválido (use 1, 2, 3 ou 4)
+ *               senhaInvalida:
+ *                 value:
+ *                   message: Senha inválida (mínimo 6 caracteres com maiúsculas, minúsculas, números e caracteres especiais)
  *       404:
  *         description: Usuário não encontrado
  *         content:
@@ -264,6 +328,22 @@ router.post('/', authenticateToken, store);
  *               $ref: '#/components/schemas/Error'
  *             example:
  *               message: Usuário não encontrado
+ *       409:
+ *         description: Conflito - Nome, Email ou CPF já cadastrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               nomeExiste:
+ *                 value:
+ *                   message: Nome já cadastrado
+ *               emailExiste:
+ *                 value:
+ *                   message: Email já cadastrado
+ *               cpfExiste:
+ *                 value:
+ *                   message: CPF já cadastrado
  *       401:
  *         description: Não autenticado
  *         content:

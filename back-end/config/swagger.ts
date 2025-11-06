@@ -8,8 +8,8 @@ const options: swaggerJsdoc.Options = {
       version: '1.0.0',
       description: 'API para gerenciamento de partidas amistosas, campeonatos, times e jogadores de futebol amador',
       contact: {
-        name: 'VarzeaLeague Team',
-        email: 'contato@varzealeague.com'
+        name: 'Varze aLeague ',
+        
       }
     },
     servers: [
@@ -34,14 +34,17 @@ const options: swaggerJsdoc.Options = {
       schemas: {
         Error: {
           type: 'object',
+          required: ['message'],
           properties: {
             message: {
               type: 'string',
-              description: 'Mensagem de erro'
+              description: 'Mensagem de erro amigável para o usuário',
+              example: 'Erro ao processar requisição'
             },
             error: {
               type: 'string',
-              description: 'Detalhes do erro'
+              description: 'Detalhes técnicos do erro (presente apenas em erros 4xx, omitido em 5xx por segurança)',
+              example: 'ValidationError: Campo obrigatório não fornecido'
             }
           }
         },
@@ -69,11 +72,15 @@ const options: swaggerJsdoc.Options = {
               type: 'string',
               example: '(41) 99999-9999'
             },
+            gender: {
+              type: 'string',
+              example: 'Masculino'
+            },
             userTypeId: { 
               type: 'integer',
               description: '1=Admin Master, 2=Admin Eventos, 3=Admin Times, 4=Usuário Comum',
               example: 4
-            }
+            },
           }
         },
         Team: {
@@ -108,17 +115,21 @@ const options: swaggerJsdoc.Options = {
               type: 'integer',
               example: 1
             },
-            cidade: { 
+            city: { 
               type: 'string',
               example: 'Curitiba'
             },
-            estado: { 
+            state: { 
               type: 'string',
               example: 'PR'
             },
-            cep: { 
+            CEP: { 
               type: 'string',
               example: '80000-000'
+            },
+            isDeleted: {
+              type: 'boolean',
+              example: false
             }
           }
         },
@@ -129,22 +140,26 @@ const options: swaggerJsdoc.Options = {
               type: 'integer',
               example: 1
             },
-            nome: { 
+            name: { 
               type: 'string',
               example: 'Carlos Oliveira'
             },
-            sexo: { 
+            gender: { 
               type: 'string', 
               enum: ['Masculino', 'Feminino'],
               example: 'Masculino'
             },
-            ano: { 
+            year: { 
               type: 'string',
               example: '1995'
             },
-            posicao: { 
+            position: { 
               type: 'string',
               example: 'Atacante'
+            },
+            isDeleted: {
+              type: 'boolean',
+              example: false
             }
           }
         },
@@ -171,7 +186,15 @@ const options: swaggerJsdoc.Options = {
             },
             location: { 
               type: 'string',
-              example: 'Campo do Bairro - Rua Principal, 123'
+              example: 'Rua Principal'
+            },
+            number: {
+              type: 'string',
+              example: '123'
+            },
+            complement: {
+              type: 'string',
+              example: 'Próximo ao mercado'
             },
             status: { 
               type: 'string', 
@@ -186,19 +209,30 @@ const options: swaggerJsdoc.Options = {
             },
             duration: { 
               type: 'string',
+              nullable: true,
               example: '90'
             },
             organizerId: { 
               type: 'integer',
               example: 1
             },
-            modalidade: { 
+            matchType: { 
               type: 'string',
               example: 'Futebol Society'
             },
-            nomequadra: { 
+            square: { 
               type: 'string',
               example: 'Arena Sports'
+            },
+            Cep: {
+              type: 'string',
+              nullable: true,
+              example: '80000-000'
+            },
+            Uf: {
+              type: 'string',
+              nullable: true,
+              example: 'PR'
             }
           }
         },
@@ -240,10 +274,43 @@ const options: swaggerJsdoc.Options = {
               type: 'string',
               example: 'Arena Central'
             },
+            tipo: {
+              type: 'string',
+              enum: ['liga', 'mata-mata'],
+              example: 'liga'
+            },
+            fase_grupos: {
+              type: 'boolean',
+              example: false
+            },
+            max_teams: {
+              type: 'integer',
+              example: 8
+            },
             genero: {
               type: 'string',
-              enum: ['Masculino', 'Feminino', 'Misto'],
-              example: 'Masculino'
+              enum: ['masculino', 'feminino', 'misto'],
+              example: 'masculino'
+            },
+            status: {
+              type: 'string',
+              enum: ['draft', 'open', 'closed', 'in_progress', 'finished'],
+              example: 'draft'
+            },
+            num_grupos: {
+              type: 'integer',
+              nullable: true,
+              example: 4
+            },
+            times_por_grupo: {
+              type: 'integer',
+              nullable: true,
+              example: 4
+            },
+            num_equipes_liga: {
+              type: 'integer',
+              nullable: true,
+              example: 10
             }
           }
         },
@@ -258,27 +325,22 @@ const options: swaggerJsdoc.Options = {
               type: 'integer',
               example: 1
             },
-            minPlayers: {
-              type: 'integer',
-              example: 5
+            registrationDeadline: {
+              type: 'string',
+              format: 'date-time',
+              example: '2025-01-20T00:00:00.000Z'
             },
-            maxPlayers: {
+            minimumAge: {
               type: 'integer',
-              example: 11
-            },
-            minAge: {
-              type: 'integer',
-              nullable: true,
               example: 18
             },
-            maxAge: {
+            maximumAge: {
               type: 'integer',
-              nullable: true,
               example: 45
             },
-            allowedGender: {
+            gender: {
               type: 'string',
-              enum: ['Masculino', 'Feminino', 'Misto'],
+              enum: ['Masculino', 'Feminino', 'Ambos'],
               example: 'Masculino'
             }
           }

@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE = 'http://localhost:3001/api';
+import { API_BASE_URL } from '../config/api';
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
@@ -15,7 +14,7 @@ export interface Team {
 
 // Teams services
 export async function getUserTeams() {
-  const response = await axios.get(`${API_BASE}/teams`, {
+  const response = await axios.get(`${API_BASE_URL}/teams`, {
     headers: getAuthHeaders()
   });
 
@@ -34,7 +33,7 @@ export async function getUserTeams() {
 }
 
 export async function getAllTeams() {
-  const response = await axios.get(`${API_BASE}/teams`, {
+  const response = await axios.get(`${API_BASE_URL}/teams`, {
     headers: getAuthHeaders()
   });
 
@@ -42,7 +41,7 @@ export async function getAllTeams() {
 }
 
 export async function getTeamById(teamId: number) {
-  const response = await axios.get(`${API_BASE}/teams/${teamId}`, {
+  const response = await axios.get(`${API_BASE_URL}/teams/${teamId}`, {
     headers: getAuthHeaders()
   });
 
@@ -50,14 +49,14 @@ export async function getTeamById(teamId: number) {
 }
 
 export async function createTeam(payload: Record<string, any>) {
-  const response = await axios.post(`${API_BASE}/teams`, payload, {
+  const response = await axios.post(`${API_BASE_URL}/teams`, payload, {
     headers: getAuthHeaders()
   });
   return response.data;
 }
 
 export async function updateTeam(teamId: number, payload: { name: string; description?: string }) {
-  const response = await axios.put(`${API_BASE}/teams/${teamId}`, payload, {
+  const response = await axios.put(`${API_BASE_URL}/teams/${teamId}`, payload, {
     headers: getAuthHeaders()
   });
   return response.data;
@@ -66,7 +65,7 @@ export async function updateTeam(teamId: number, payload: { name: string; descri
 export async function uploadTeamLogo(teamId: number, file: File) {
   const fd = new FormData();
   fd.append('logo', file);
-  const response = await axios.post(`${API_BASE}/teams/${teamId}/logo`, fd, {
+  const response = await axios.post(`${API_BASE_URL}/teams/${teamId}/logo`, fd, {
     headers: {
       ...getAuthHeaders(),
       'Content-Type': 'multipart/form-data'
@@ -76,7 +75,7 @@ export async function uploadTeamLogo(teamId: number, file: File) {
 }
 
 export async function getTeamPlayerStats(teamId: number) {
-  const response = await axios.get(`${API_BASE}/teams/${teamId}/player-stats`, {
+  const response = await axios.get(`${API_BASE_URL}/teams/${teamId}/player-stats`, {
     headers: getAuthHeaders()
   });
 
@@ -84,7 +83,7 @@ export async function getTeamPlayerStats(teamId: number) {
 }
 
 export async function getTeamPlayers(teamId: number) {
-  const response = await axios.get(`${API_BASE}/teamplayers/${teamId}`, {
+  const response = await axios.get(`${API_BASE_URL}/team-players/${teamId}`, {
     headers: getAuthHeaders()
   });
 

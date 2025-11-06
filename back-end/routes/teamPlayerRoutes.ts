@@ -16,14 +16,14 @@ export const teamPlayerRoutes = express.Router();
 
 /**
  * @swagger
- * /api/team-players/{id}:
+ * /api/team-players/{teamId}:
  *   get:
  *     summary: Buscar todos os jogadores de um time (elenco)
  *     description: Retorna a lista completa de jogadores vinculados a um time específico com suas informações detalhadas
  *     tags: [Jogadores de Times]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: teamId
  *         required: true
  *         schema:
  *           type: integer
@@ -115,10 +115,10 @@ export const teamPlayerRoutes = express.Router();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Erro ao buscar jogadores do time
+             example:
+               message: Erro ao buscar jogadores do time
  */
-teamPlayerRoutes.get('/:id', getTeamsPlayers);
+teamPlayerRoutes.get('/:teamId', getTeamsPlayers);
 
 /**
  * @swagger
@@ -274,14 +274,14 @@ teamPlayerRoutes.delete('/:teamId/player/:playerId', deleteTeamPlayer);
 
 /**
  * @swagger
- * /api/team-players/{id}:
+ * /api/team-players/{teamId}:
  *   post:
  *     summary: Adicionar jogadores a um time
  *     description: Vincula um ou mais jogadores a um time. Se o jogador não existir no sistema, ele será criado automaticamente. Se já existir, será apenas vinculado ao time.
  *     tags: [Jogadores de Times]
  *     parameters:
  *       - in: path
- *         name: id
+ *         name: teamId
  *         required: true
  *         schema:
  *           type: integer
@@ -351,23 +351,7 @@ teamPlayerRoutes.delete('/:teamId/player/:playerId', deleteTeamPlayer);
  *                     ano: "1998"
  *                     posicao: Goleira
  *                     numero: 1
- *             vincularJogadoresExistentes:
- *               summary: Vincular jogadores já cadastrados no sistema
- *               value:
- *                 players:
- *                   - id: 5
- *                   - id: 8
- *                   - id: 12
- *             misto:
- *               summary: Adicionar novos e vincular existentes
- *               value:
- *                 players:
- *                   - id: 5
- *                   - nome: João Pedro
- *                     sexo: Masculino
- *                     ano: "2000"
- *                     posicao: Meio-Campo
- *                     numero: 8
+ *            
  *     responses:
  *       201:
  *         description: Jogadores adicionados com sucesso
@@ -471,9 +455,9 @@ teamPlayerRoutes.delete('/:teamId/player/:playerId', deleteTeamPlayer);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Erro ao adicionar jogadores ao time
+             example:
+               message: Erro ao adicionar jogadores ao time
  */
-teamPlayerRoutes.post('/:id', createTeamPlayer);
+teamPlayerRoutes.post('/:teamId', createTeamPlayer);
 
 export default teamPlayerRoutes;

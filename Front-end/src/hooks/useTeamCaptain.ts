@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 
 interface Team {
   id: number;
@@ -24,7 +25,7 @@ export const useTeamCaptain = () => {
           return;
         }
 
-        const response = await axios.get(`http://localhost:3001/api/teams/${idUser}/teamCaptain`, {
+        const response = await axios.get(`${API_BASE_URL}/teams/${idUser}/teamCaptain`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 

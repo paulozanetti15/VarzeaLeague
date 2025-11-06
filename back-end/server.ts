@@ -22,6 +22,10 @@ import RulesModel from './models/FriendlyMatchesRulesModel';
 import AttendanceModel from './models/FriendlyMatchEvaluationModel';
 import RulesRoutes from './routes/matchRulesRoutes'; 
 import TeamPlayerRoutes from './routes/teamPlayerRoutes';
+import friendlyMatchReportRoutes from './routes/friendlyMatchReportRoutes';
+import championshipReportRoutes from './routes/championshipReportRoutes';
+import teamHistoryRoutes from './routes/teamHistoryRoutes';
+import punishmentRoutes from './routes/punishmentRoutes';
 import { seedUserTypes } from './seeds/userTypes';
 import { associateModels } from './models/associations'; 
 import FriendlyMatchPenalty from './models/FriendlyMatchPenaltyModel';
@@ -68,7 +72,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 app.use('/api/auth', authRoutes);
 app.use('/api/friendly-matches', friendlyMatchRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
-app.use('/api/teamplayers', TeamPlayerRoutes);
+app.use('/api/team-players', TeamPlayerRoutes);
 app.use('/api/teams',teamRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/players', playerRoutes);
@@ -77,6 +81,10 @@ app.use('/api/championships', championshipRoutes);
 app.use('/api/usertypes', userTypeRoutes);
 app.use('/api/overview', overviewRoutes);
 app.use('/api/ranking', rankingRoutes);
+app.use('/api/friendly-match-reports', friendlyMatchReportRoutes);
+app.use('/api/championship-reports', championshipReportRoutes);
+app.use('/api/team-history', teamHistoryRoutes);
+app.use('/api/punishments', punishmentRoutes);
 
 const startServer = async () => {
   try {

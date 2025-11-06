@@ -4,6 +4,7 @@ import { fetchMatchById, getJoinedTeams, getAvailableForMatch, joinTeam } from '
 import { Button, Spinner } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
+import { API_BASE_URL } from '../../config/api';
 import './SelectTeamPlayersDialog.css';
 
 interface SelectTeamPlayersModalProps {
@@ -53,7 +54,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
 
   const fetchRules = async () => {
     try {
-      const resp = await axios.get(`http://localhost:3001/api/rules/${matchId}`, {
+      const resp = await axios.get(`${API_BASE_URL}/rules/${matchId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setRules(resp.data);
@@ -76,7 +77,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
     setTeamsLoading(true);
     try {
       const [myTeamsResp, registeredResp, availableResp] = await Promise.all([
-        axios.get(`http://localhost:3001/api/teams`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_BASE_URL}/teams`, { headers: { Authorization: `Bearer ${token}` } }),
         getJoinedTeams(matchId),
         getAvailableForMatch(matchId)
       ]);
@@ -106,7 +107,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
     setPlayers([]);
     setSelectedPlayers([]);
     try {
-      const resp = await axios.get(`http://localhost:3001/api/players/team/${teamId}`, {
+      const resp = await axios.get(`${API_BASE_URL}/players/team/${teamId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPlayers(resp.data);
