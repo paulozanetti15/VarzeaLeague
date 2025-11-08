@@ -1,58 +1,53 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import Match from '../models/FriendlyMatchesModel';
-import MatchGoal from '../models/FriendlyMatchGoalModel';
-import MatchCard from '../models/FriendlyMatchCardModel';
+import MatchChampionship from '../models/MatchChampionshipModel';
+import MatchGoal from '../models/ChampionshipMatchGoalModel';
+import MatchCard from '../models/ChampionshipMatchCardModel';
 import User from '../models/UserModel';
 import Player from '../models/PlayerModel';
+import Championship from '../models/ChampionshipModel';
 
-export const finalizeMatch = async (req: AuthRequest, res: Response): Promise<void> => {
+export const listEvents = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const matchId = Number(req.params.matchId || req.params.id);
-    const userId = req.user?.id;
+    const matchId = Number(req.params.matchId);
     
-    if (!userId) {
-      res.status(401).json({ message: 'Usuário não autenticado' });
+    if (isNaN(matchId) || !matchId) {
+      res.status(400).json({ message: 'ID da partida inválido' });
       return;
     }
     
-    const match = await Match.findByPk(matchId);
-    if (!match) {
-      res.status(404).json({ message: 'Partida não encontrada' });
-      return;
-    }
-    
-    if (match.status === 'finalizada') {
-      res.status(409).json({ message: 'Esta partida já foi finalizada' });
-      return;
-    }
-    
-    const user = await User.findByPk(userId);
-    const isAdmin = (user as any)?.userTypeId === 1;
-    
-    if (match.organizerId !== userId && !isAdmin) {
-      res.status(403).json({ message: 'Você não tem permissão para finalizar esta partida' });
-      return;
-    }
-    
-    await match.update({ status: 'finalizada' });
-    
-    res.status(200).json({
-      message: 'Partida finalizada com sucesso',
-      match
+    const goals = await MatchGoal.findAll({
+      where: { match_id: matchId },
+      order: [['id', 'ASC']],
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'name'] },
+        { model: Player, as: 'player', attributes: ['id', 'name'] }
+      ]
     });
-  } catch (error) {
-    console.error('Erro ao finalizar partida:', error);
-    res.status(500).json({
-      message: 'Erro ao finalizar partida',
-      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    
+    const cards = await MatchCard.findAll({
+      where: { match_id: matchId },
+      order: [['id', 'ASC']],
+      include: [
+        { model: User, as: 'user', attributes: ['id', 'name'] },
+        { model: Player, as: 'player', attributes: ['id', 'name'] }
+      ]
+    });
+
+    res.status(200).json({ goals, cards });
+  } catch (err) {
+    console.error('Error in listEvents (Championship):', err);
+    console.error('Error stack:', err instanceof Error ? err.stack : 'No stack trace');
+    res.status(500).json({ 
+      message: 'Erro ao listar eventos',
+      error: err instanceof Error ? err.message : String(err)
     });
   }
 };
 
 export const addGoal = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const matchId = Number(req.params.matchId || req.params.id);
+    const matchId = Number(req.params.matchId);
     const { playerId, userId, email, minute } = req.body as { playerId?: number; userId?: number; email?: string; minute?: number };
     
     if (!req.user?.id) {
@@ -62,12 +57,6 @@ export const addGoal = async (req: AuthRequest, res: Response): Promise<void> =>
     
     if (isNaN(matchId) || !matchId) {
       res.status(400).json({ message: 'ID da partida inválido' });
-      return;
-    }
-    
-    const match = await Match.findByPk(matchId);
-    if (!match) {
-      res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }
     
@@ -131,13 +120,18 @@ export const addGoal = async (req: AuthRequest, res: Response): Promise<void> =>
     
     res.status(201).json(goal);
   } catch (err) {
-    res.status(500).json({ message: 'Erro ao registrar gol' });
+    console.error('Error in addGoal (Championship):', err);
+    console.error('Error stack:', err instanceof Error ? err.stack : 'No stack trace');
+    res.status(500).json({ 
+      message: 'Erro ao registrar gol',
+      error: err instanceof Error ? err.message : String(err)
+    });
   }
 };
 
 export const addCard = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const matchId = Number(req.params.matchId || req.params.id);
+    const matchId = Number(req.params.matchId);
     const { playerId, userId, email, cardType, minute } = req.body as {
       playerId?: number;
       userId?: number;
@@ -153,12 +147,6 @@ export const addCard = async (req: AuthRequest, res: Response): Promise<void> =>
     
     if (isNaN(matchId) || !matchId) {
       res.status(400).json({ message: 'ID da partida inválido' });
-      return;
-    }
-    
-    const match = await Match.findByPk(matchId);
-    if (!match) {
-      res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }
     
@@ -230,7 +218,7 @@ export const addCard = async (req: AuthRequest, res: Response): Promise<void> =>
     
     res.status(201).json(card);
   } catch (err) {
-    console.error('Error in addCard (Friendly):', err);
+    console.error('Error in addCard (Championship):', err);
     console.error('Error stack:', err instanceof Error ? err.stack : 'No stack trace');
     res.status(500).json({ 
       message: 'Erro ao registrar cartão',
@@ -239,47 +227,9 @@ export const addCard = async (req: AuthRequest, res: Response): Promise<void> =>
   }
 };
 
-export const listEvents = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const matchId = Number(req.params.matchId || req.params.id);
-    
-    if (isNaN(matchId) || !matchId) {
-      res.status(400).json({ message: 'ID da partida inválido' });
-      return;
-    }
-    
-    const goals = await MatchGoal.findAll({
-      where: { match_id: matchId },
-      order: [['id', 'ASC']],
-      include: [
-        { model: User, as: 'user', attributes: ['id', 'name'] },
-        { model: Player, as: 'player', attributes: ['id', 'name'] }
-      ]
-    });
-    
-    const cards = await MatchCard.findAll({
-      where: { match_id: matchId },
-      order: [['id', 'ASC']],
-      include: [
-        { model: User, as: 'user', attributes: ['id', 'name'] },
-        { model: Player, as: 'player', attributes: ['id', 'name'] }
-      ]
-    });
-
-    res.status(200).json({ goals, cards });
-  } catch (err) {
-    console.error('Error in listEvents:', err);
-    console.error('Error stack:', err instanceof Error ? err.stack : 'No stack trace');
-    res.status(500).json({ 
-      message: 'Erro ao listar eventos',
-      error: err instanceof Error ? err.message : String(err)
-    });
-  }
-};
-
 export const deleteGoalEvent = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const matchId = Number(req.params.matchId || req.params.id);
+    const matchId = Number(req.params.matchId);
     const goalId = Number(req.params.goalId);
     
     if (!req.user?.id) {
@@ -287,16 +237,23 @@ export const deleteGoalEvent = async (req: AuthRequest, res: Response): Promise<
       return;
     }
     
-    const match = await Match.findByPk(matchId);
+    const match = await MatchChampionship.findByPk(matchId);
     if (!match) {
-      res.status(404).json({ message: 'Partida não encontrada' });
+      res.status(404).json({ message: 'Partida de campeonato não encontrada' });
+      return;
+    }
+
+    const championship = await Championship.findByPk((match as any).championship_id);
+    if (!championship) {
+      res.status(404).json({ message: 'Campeonato não encontrado' });
       return;
     }
     
     const requester = await User.findByPk(req.user.id);
     const isAdmin = (requester as any)?.userTypeId === 1;
+    const isCreator = Number((championship as any).created_by) === req.user.id;
     
-    if (match.organizerId !== req.user.id && !isAdmin) {
+    if (!isCreator && !isAdmin) {
       res.status(403).json({ message: 'Você não tem permissão para remover eventos desta partida' });
       return;
     }
@@ -310,13 +267,18 @@ export const deleteGoalEvent = async (req: AuthRequest, res: Response): Promise<
     await goal.destroy();
     res.status(200).json({ message: 'Gol removido com sucesso' });
   } catch (err) {
-    res.status(500).json({ message: 'Erro ao remover gol' });
+    console.error('Error in deleteGoalEvent (Championship):', err);
+    console.error('Error stack:', err instanceof Error ? err.stack : 'No stack trace');
+    res.status(500).json({ 
+      message: 'Erro ao remover gol',
+      error: err instanceof Error ? err.message : String(err)
+    });
   }
 };
 
 export const deleteCardEvent = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const matchId = Number(req.params.matchId || req.params.id);
+    const matchId = Number(req.params.matchId);
     const cardId = Number(req.params.cardId);
     
     if (!req.user?.id) {
@@ -324,16 +286,23 @@ export const deleteCardEvent = async (req: AuthRequest, res: Response): Promise<
       return;
     }
     
-    const match = await Match.findByPk(matchId);
+    const match = await MatchChampionship.findByPk(matchId);
     if (!match) {
-      res.status(404).json({ message: 'Partida não encontrada' });
+      res.status(404).json({ message: 'Partida de campeonato não encontrada' });
+      return;
+    }
+
+    const championship = await Championship.findByPk((match as any).championship_id);
+    if (!championship) {
+      res.status(404).json({ message: 'Campeonato não encontrado' });
       return;
     }
     
     const requester = await User.findByPk(req.user.id);
     const isAdmin = (requester as any)?.userTypeId === 1;
+    const isCreator = Number((championship as any).created_by) === req.user.id;
     
-    if (match.organizerId !== req.user.id && !isAdmin) {
+    if (!isCreator && !isAdmin) {
       res.status(403).json({ message: 'Você não tem permissão para remover eventos desta partida' });
       return;
     }
@@ -347,29 +316,41 @@ export const deleteCardEvent = async (req: AuthRequest, res: Response): Promise<
     await card.destroy();
     res.status(200).json({ message: 'Cartão removido com sucesso' });
   } catch (err) {
-    res.status(500).json({ message: 'Erro ao remover cartão' });
+    console.error('Error in deleteCardEvent (Championship):', err);
+    console.error('Error stack:', err instanceof Error ? err.stack : 'No stack trace');
+    res.status(500).json({ 
+      message: 'Erro ao remover cartão',
+      error: err instanceof Error ? err.message : String(err)
+    });
   }
 };
 
 export const clearGoals = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const matchId = Number(req.params.matchId || req.params.id);
+    const matchId = Number(req.params.matchId);
     
     if (!req.user?.id) {
       res.status(401).json({ message: 'Usuário não autenticado' });
       return;
     }
     
-    const match = await Match.findByPk(matchId);
+    const match = await MatchChampionship.findByPk(matchId);
     if (!match) {
-      res.status(404).json({ message: 'Partida não encontrada' });
+      res.status(404).json({ message: 'Partida de campeonato não encontrada' });
+      return;
+    }
+
+    const championship = await Championship.findByPk((match as any).championship_id);
+    if (!championship) {
+      res.status(404).json({ message: 'Campeonato não encontrado' });
       return;
     }
     
     const requester = await User.findByPk(req.user.id);
     const isAdmin = (requester as any)?.userTypeId === 1;
+    const isCreator = Number((championship as any).created_by) === req.user.id;
     
-    if (match.organizerId !== req.user.id && !isAdmin) {
+    if (!isCreator && !isAdmin) {
       res.status(403).json({ message: 'Você não tem permissão para limpar eventos desta partida' });
       return;
     }
@@ -377,29 +358,41 @@ export const clearGoals = async (req: AuthRequest, res: Response): Promise<void>
     await MatchGoal.destroy({ where: { match_id: matchId } });
     res.status(200).json({ message: 'Todos os gols foram removidos com sucesso' });
   } catch (err) {
-    res.status(500).json({ message: 'Erro ao limpar gols' });
+    console.error('Error in clearGoals (Championship):', err);
+    console.error('Error stack:', err instanceof Error ? err.stack : 'No stack trace');
+    res.status(500).json({ 
+      message: 'Erro ao limpar gols',
+      error: err instanceof Error ? err.message : String(err)
+    });
   }
 };
 
 export const clearCards = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const matchId = Number(req.params.matchId || req.params.id);
+    const matchId = Number(req.params.matchId);
     
     if (!req.user?.id) {
       res.status(401).json({ message: 'Usuário não autenticado' });
       return;
     }
     
-    const match = await Match.findByPk(matchId);
+    const match = await MatchChampionship.findByPk(matchId);
     if (!match) {
-      res.status(404).json({ message: 'Partida não encontrada' });
+      res.status(404).json({ message: 'Partida de campeonato não encontrada' });
+      return;
+    }
+
+    const championship = await Championship.findByPk((match as any).championship_id);
+    if (!championship) {
+      res.status(404).json({ message: 'Campeonato não encontrado' });
       return;
     }
     
     const requester = await User.findByPk(req.user.id);
     const isAdmin = (requester as any)?.userTypeId === 1;
+    const isCreator = Number((championship as any).created_by) === req.user.id;
     
-    if (match.organizerId !== req.user.id && !isAdmin) {
+    if (!isCreator && !isAdmin) {
       res.status(403).json({ message: 'Você não tem permissão para limpar eventos desta partida' });
       return;
     }
@@ -407,6 +400,11 @@ export const clearCards = async (req: AuthRequest, res: Response): Promise<void>
     await MatchCard.destroy({ where: { match_id: matchId } });
     res.status(200).json({ message: 'Todos os cartões foram removidos com sucesso' });
   } catch (err) {
-    res.status(500).json({ message: 'Erro ao limpar cartões' });
+    console.error('Error in clearCards (Championship):', err);
+    console.error('Error stack:', err instanceof Error ? err.stack : 'No stack trace');
+    res.status(500).json({ 
+      message: 'Erro ao limpar cartões',
+      error: err instanceof Error ? err.message : String(err)
+    });
   }
 };

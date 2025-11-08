@@ -144,19 +144,21 @@ export const getOverview = async (req: Request, res: Response): Promise<void> =>
 
 export const searchOverviewEntities = async (req: Request, res: Response): Promise<void> => {
   try {
-    const q = String(req.query.q || '').trim();
+    const q = String(req.query.search || '').trim();
     if (!q) { res.json([]); return; }
 
     const like = { [Op.like]: `%${q}%` } as any;
 
-    const [matches, teams] = await Promise.all([
+    const [matches, teams, players] = await Promise.all([
       FriendlyMatchesModel.findAll({ where: { title: like }, attributes: ['id','title','date'], limit: 10, order: [['date','DESC']], raw: true }),
-      TeamModel.findAll({ where: { name: like }, attributes: ['id','name'], limit: 10, order: [['name','ASC']], raw: true })
+      TeamModel.findAll({ where: { name: like }, attributes: ['id','name'], limit: 10, order: [['name','ASC']], raw: true }),
+      PlayerModel.findAll({ where: { name: like }, attributes: ['id','name','position'], limit: 10, order: [['name','ASC']], raw: true })
     ]);
 
     const results = [
       ...matches.map((m: any) => ({ type: 'match', id: m.id, label: m.title, date: m.date })),
-      ...teams.map((t: any) => ({ type: 'team', id: t.id, label: t.name }))
+      ...teams.map((t: any) => ({ type: 'team', id: t.id, label: t.name })),
+      ...players.map((p: any) => ({ type: 'player', id: p.id, label: p.name, position: p.position }))
     ];
 
     res.status(200).json(results);

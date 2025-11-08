@@ -46,16 +46,16 @@ export const punishmentRoutes = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - idtime
- *               - motivo
+ *               - idTeam
+ *               - reason
  *               - team_home
  *               - team_away
  *             properties:
- *               idtime:
+ *               idTeam:
  *                 type: integer
  *                 description: ID do time punido (que levará WO)
  *                 example: 1
- *               motivo:
+ *               reason:
  *                 type: string
  *                 description: Motivo da punição
  *                 example: "Time não compareceu à partida"
@@ -70,8 +70,8 @@ export const punishmentRoutes = express.Router();
  *           examples:
  *             timeMandanteNaoCompareceu:
  *               value:
- *                 idtime: 1
- *                 motivo: "Time mandante não compareceu"
+ *                 idTeam: 1
+ *                 reason: "Time mandante não compareceu"
  *                 team_home: 1
  *                 team_away: 2
  *     responses:
@@ -203,11 +203,11 @@ punishmentRoutes.post('/friendly-matches/:idAmistosaPartida', authenticateToken,
  *                 properties:
  *                   id:
  *                     type: integer
- *                   idtime:
+ *                   idTeam:
  *                     type: integer
- *                   motivo:
+ *                   reason:
  *                     type: string
- *                   idmatch:
+ *                   idMatch:
  *                     type: integer
  *                   team:
  *                     type: object
@@ -222,9 +222,9 @@ punishmentRoutes.post('/friendly-matches/:idAmistosaPartida', authenticateToken,
  *                     type: integer
  *             example:
  *               - id: 1
- *                 idtime: 1
- *                 motivo: "Time não compareceu"
- *                 idmatch: 1
+ *                 idTeam: 1
+ *                 reason: "Time não compareceu"
+ *                 idMatch: 1
  *                 team:
  *                   id: 1
  *                   name: "FC Exemplo"
@@ -301,10 +301,10 @@ punishmentRoutes.get('/friendly-matches/:idAmistosaPartida', authenticateToken, 
  *           schema:
  *             type: object
  *             properties:
- *               idtime:
+ *               idTeam:
  *                 type: integer
  *                 description: Novo ID do time punido
- *               motivo:
+ *               reason:
  *                 type: string
  *                 description: Novo motivo
  *               team_home:
@@ -526,21 +526,21 @@ punishmentRoutes.delete('/friendly-matches/:idAmistosaPartida', authenticateToke
  *           schema:
  *             type: object
  *             required:
- *               - id_match_championship
- *               - idtime
- *               - motivo
+ *               - match_championship_id
+ *               - team_id
+ *               - reason
  *               - team_home
  *               - team_away
  *             properties:
- *               id_match_championship:
+ *               match_championship_id:
  *                 type: integer
  *                 description: ID da partida do campeonato
  *                 example: 5
- *               idtime:
+ *               team_id:
  *                 type: integer
  *                 description: ID do time punido
  *                 example: 2
- *               motivo:
+ *               reason:
  *                 type: string
  *                 description: Motivo da punição
  *                 example: "Acúmulo de cartões vermelhos"
@@ -668,10 +668,10 @@ punishmentRoutes.post('/championships/:idCampeonato', authenticateToken, inserir
 
 /**
  * @swagger
- * /api/punishments/championships/{idCampeonato}:
+ * /api/punishments/championships/{idCampeonato}/match/{match_championship_id}:
  *   get:
- *     summary: Buscar punições do campeonato
- *     description: Retorna todas as punições aplicadas no campeonato
+ *     summary: Buscar punição de campeonato por partida
+ *     description: Retorna a punição aplicada a uma partida específica do campeonato
  *     tags: [Punições]
  *     security:
  *       - bearerAuth: []
@@ -682,9 +682,15 @@ punishmentRoutes.post('/championships/:idCampeonato', authenticateToken, inserir
  *         schema:
  *           type: integer
  *         example: 1
+ *       - in: path
+ *         name: match_championship_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 5
  *     responses:
  *       200:
- *         description: Lista de punições
+ *         description: Punição encontrada
  *         content:
  *           application/json:
  *             schema:
@@ -694,11 +700,13 @@ punishmentRoutes.post('/championships/:idCampeonato', authenticateToken, inserir
  *                 properties:
  *                   id:
  *                     type: integer
- *                   idtime:
+ *                   team_id:
  *                     type: integer
- *                   motivo:
+ *                   reason:
  *                     type: string
- *                   idchampionship:
+ *                   championship_id:
+ *                     type: integer
+ *                   match_championship_id:
  *                     type: integer
  *                   championshipPenaltyTeam:
  *                     type: object
@@ -721,7 +729,7 @@ punishmentRoutes.post('/championships/:idCampeonato', authenticateToken, inserir
  *                 value:
  *                   message: Sessão expirada
  *       404:
- *         description: Campeonato não encontrado
+ *         description: Campeonato ou punição não encontrada
  *         content:
  *           application/json:
  *             schema:
@@ -731,12 +739,12 @@ punishmentRoutes.post('/championships/:idCampeonato', authenticateToken, inserir
  *                 summary: ID inexistente
  *                 value:
  *                   message: Campeonato não encontrado
- *               campeonatoDeletado:
- *                 summary: Campeonato removido
+ *               punicaoNaoEncontrada:
+ *                 summary: Punição não encontrada
  *                 value:
- *                   message: Campeonato inativo ou deletado
+ *                   message: Punição não encontrada para esta partida
  *       500:
- *         description: Erro ao buscar punições
+ *         description: Erro ao buscar punição
  *         content:
  *           application/json:
  *             schema:
@@ -745,20 +753,20 @@ punishmentRoutes.post('/championships/:idCampeonato', authenticateToken, inserir
  *               erroBancoDados:
  *                 summary: Erro de consulta
  *                 value:
- *                   message: Erro ao consultar punições no banco de dados
+ *                   message: Erro ao consultar punição no banco de dados
  *               erroServidor:
  *                 summary: Erro genérico
  *                 value:
- *                   message: Erro ao buscar punições do campeonato
+ *                   message: Erro ao buscar punição do campeonato
  */
-punishmentRoutes.get('/championships/:idCampeonato', authenticateToken, buscarPunicaoCampeonato);
+punishmentRoutes.get('/championships/:idCampeonato/match/:match_championship_id', authenticateToken, buscarPunicaoCampeonato);
 
 /**
  * @swagger
- * /api/punishments/championships/{idCampeonato}:
+ * /api/punishments/championships/{idCampeonato}/match/{match_championship_id}:
  *   put:
- *     summary: Atualizar punição de campeonato
- *     description: Atualiza o time punido e/ou motivo da punição no campeonato
+ *     summary: Atualizar punição de campeonato por partida
+ *     description: Atualiza o time punido e/ou motivo da punição em uma partida específica do campeonato
  *     tags: [Punições]
  *     security:
  *       - bearerAuth: []
@@ -769,6 +777,12 @@ punishmentRoutes.get('/championships/:idCampeonato', authenticateToken, buscarPu
  *         schema:
  *           type: integer
  *         example: 1
+ *       - in: path
+ *         name: match_championship_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 5
  *     requestBody:
  *       required: true
  *       content:
@@ -776,9 +790,9 @@ punishmentRoutes.get('/championships/:idCampeonato', authenticateToken, buscarPu
  *           schema:
  *             type: object
  *             properties:
- *               idtime:
+ *               team_id:
  *                 type: integer
- *               motivo:
+ *               reason:
  *                 type: string
  *     responses:
  *       200:
@@ -865,14 +879,15 @@ punishmentRoutes.get('/championships/:idCampeonato', authenticateToken, buscarPu
  *                 value:
  *                   message: Erro ao atualizar punição
  */
-punishmentRoutes.put('/championships/:idCampeonato', authenticateToken, alterarPunicaoCampeonato);
+punishmentRoutes.put('/championships/:idCampeonato/match/:match_championship_id', authenticateToken, alterarPunicaoCampeonato);
+
 
 /**
  * @swagger
- * /api/punishments/championships/{idCampeonato}:
+ * /api/punishments/championships/{idCampeonato}/match/{match_championship_id}:
  *   delete:
- *     summary: Deletar punição de campeonato
- *     description: Remove a punição e a súmula gerada automaticamente
+ *     summary: Deletar punição de campeonato por partida
+ *     description: Remove a punição e a súmula gerada automaticamente para uma partida específica do campeonato
  *     tags: [Punições]
  *     security:
  *       - bearerAuth: []
@@ -883,11 +898,11 @@ punishmentRoutes.put('/championships/:idCampeonato', authenticateToken, alterarP
  *         schema:
  *           type: integer
  *         example: 1
- *       - in: query
- *         name: idMatchChampionship
+ *       - in: path
+ *         name: match_championship_id
+ *         required: true
  *         schema:
  *           type: integer
- *         description: ID da partida específica (opcional)
  *         example: 5
  *     responses:
  *       200:
@@ -907,10 +922,6 @@ punishmentRoutes.put('/championships/:idCampeonato', authenticateToken, alterarP
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             examples:
- *               idMatchFaltando:
- *                 summary: ID da partida não fornecido
- *                 value:
- *                   message: ID da partida do campeonato é obrigatório
  *               partidaIniciada:
  *                 summary: Partida já começou
  *                 value:
@@ -982,6 +993,6 @@ punishmentRoutes.put('/championships/:idCampeonato', authenticateToken, alterarP
  *                 value:
  *                   message: Erro ao deletar punição
  */
-punishmentRoutes.delete('/championships/:idCampeonato', authenticateToken, deletarPunicaoCampeonato);
+punishmentRoutes.delete('/championships/:idCampeonato/match/:match_championship_id', authenticateToken, deletarPunicaoCampeonato);
 
 export default punishmentRoutes;

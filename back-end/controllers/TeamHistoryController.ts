@@ -9,6 +9,8 @@ import MatchChampionship from "../models/MatchChampionshipModel";
 import Championship from "../models/ChampionshipModel";
 import FriendlyMatchGoal from "../models/FriendlyMatchGoalModel";
 import FriendlyMatchCard from "../models/FriendlyMatchCardModel";
+import ChampionshipMatchGoal from "../models/ChampionshipMatchGoalModel";
+import ChampionshipMatchCard from "../models/ChampionshipMatchCardModel";
 import Player from "../models/PlayerModel";
  
 export const getAllFriendlyMatchesHistory= async(req:AuthRequest,res:Response)=>{
@@ -73,7 +75,7 @@ export const getAllChampionshipMatchesHistory= async(req:AuthRequest,res:Respons
             include: [
                 {
                     model: MatchChampionship,
-                    as:"match",
+                    as:"championshipMatch",
                     attributes: ['location','quadra','date'],
                     where: championshipId ? { championship_id: championshipId } : undefined,
                     required: true,
@@ -81,7 +83,7 @@ export const getAllChampionshipMatchesHistory= async(req:AuthRequest,res:Respons
                     [
                         {
                             model: Championship,
-                            as:"championship",
+                            as:"matchChampionship",
                             attributes: ['id','name', 'start_date', 'end_date']
                         }
                     ]
@@ -100,7 +102,12 @@ export const getAllChampionshipMatchesHistory= async(req:AuthRequest,res:Respons
         });
         res.status(200).json(buscarPartidasCampeonato)     
     } catch (error) {
-        res.status(500).json({ message: 'Erro ao buscar partidas de campeonato' });
+        console.error('Error in getAllChampionshipMatchesHistory:', error);
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+        res.status(500).json({ 
+            message: 'Erro ao buscar partidas de campeonato',
+            error: error instanceof Error ? error.message : String(error)
+        });
     }    
 }
 export const getMatchesByChampionshipHistory= async(req:AuthRequest,res:Response)=>{
@@ -122,13 +129,13 @@ export const getMatchesByChampionshipHistory= async(req:AuthRequest,res:Response
             include: [
                 {
                     model: MatchChampionship,
-                    as: "match",
+                    as: "championshipMatch",
                     attributes: ['location', 'quadra', 'date'],
                     where: championshipId ? { championship_id: parseInt(championshipId) } : undefined,
                     include: [
                         {
                             model: Championship,
-                            as: "championship",
+                            as: "matchChampionship",
                             attributes: ['name']
                         }
                     ]
@@ -147,9 +154,9 @@ export const getMatchesByChampionshipHistory= async(req:AuthRequest,res:Response
         });
         const formattedMatches = searchMatchesByChampionship.map(matchReport => {
             return {
-                matchId: matchReport.dataValues.match.id,
-                location: matchReport.dataValues.match.location,
-                date: matchReport.dataValues.match.date,
+                matchId: matchReport.dataValues.championshipMatch.id,
+                location: matchReport.dataValues.championshipMatch.location,
+                date: matchReport.dataValues.championshipMatch.date,
                 teamHome: matchReport.dataValues.reportTeamHome.name,
                 teamAway: matchReport.dataValues.reportTeamAway.name,
                 score: {
@@ -172,18 +179,45 @@ export const adicionarSumulaPartidasAmistosas= async(req:AuthRequest,res:Respons
             return;
         }
 
+        const matchId = req.body.match_id;
+        
+        if (!matchId) {
+            res.status(400).json({ message: 'ID da partida é obrigatório' });
+            return;
+        }
+
+        const match = await FriendlyMatchesModel.findByPk(matchId);
+        if (!match) {
+            res.status(404).json({ message: 'Partida não encontrada' });
+            return;
+        }
+
+        const existingSumula = await FriendlyMatchReport.findOne({
+            where: { match_id: matchId }
+        });
+        
+        if (existingSumula) {
+            res.status(409).json({ message: 'Já existe uma súmula para esta partida' });
+            return;
+        }
+
         await FriendlyMatchReport.create({
-            match_id  : req.body.match_id ,
+            match_id  : matchId ,
             team_home : req.body.team_home , 
             team_away : req.body.team_away,
-            teamHome_score : req.body.team_home_score,
-            teamAway_score : req.body.team_away_score,
+            teamHome_score : req.body.teamHome_score || req.body.team_home_score,
+            teamAway_score : req.body.teamAway_score || req.body.team_away_score,
             created_by : userId
         });
         
         res.status(201).json({message : "Súmula adicionada com sucesso"});
     } catch (error) {
-        res.status(500).json({ message: 'Erro ao adicionar súmula' });
+        console.error('Error in adicionarSumulaPartidasAmistosas:', error);
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+        res.status(500).json({ 
+            message: 'Erro ao adicionar súmula',
+            error: error instanceof Error ? error.message : String(error)
+        });
     }    
 }
 
@@ -324,7 +358,7 @@ export const buscarSumulaPartidaCampeonato = async(req: AuthRequest, res: Respon
             return;
         }
 
-        const goals = await FriendlyMatchGoal.findAll({
+        const goals = await ChampionshipMatchGoal.findAll({
             where: { match_id: parseInt(matchId) },
             include: [
                 {
@@ -343,7 +377,7 @@ export const buscarSumulaPartidaCampeonato = async(req: AuthRequest, res: Respon
             ]
         });
 
-        const cards = await FriendlyMatchCard.findAll({
+        const cards = await ChampionshipMatchCard.findAll({
             where: { match_id: parseInt(matchId) },
             include: [
                 {
@@ -453,11 +487,11 @@ export const deletarSumulaPartidaCampeonato = async(req: AuthRequest, res: Respo
             return;
         }
 
-        await FriendlyMatchGoal.destroy({
+        await ChampionshipMatchGoal.destroy({
             where: { match_id: parseInt(matchId) }
         });
 
-        await FriendlyMatchCard.destroy({
+        await ChampionshipMatchCard.destroy({
             where: { match_id: parseInt(matchId) }
         });
 
@@ -535,11 +569,11 @@ export const atualizarSumulaPartidaCampeonato = async(req: AuthRequest, res: Res
             teamAway_score: req.body.teamAway_score,
         });
 
-        await FriendlyMatchGoal.destroy({
+        await ChampionshipMatchGoal.destroy({
             where: { match_id: parseInt(matchId) }
         });
 
-        await FriendlyMatchCard.destroy({
+        await ChampionshipMatchCard.destroy({
             where: { match_id: parseInt(matchId) }
         });
 

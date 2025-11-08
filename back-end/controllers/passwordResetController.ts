@@ -25,7 +25,7 @@ export const requestPasswordReset = async (req: AuthRequest, res: Response): Pro
       resetPasswordToken: hash,
       resetPasswordExpires: resetPasswordExpires
     });
-    res.status(200).json({ message: 'Token de recuperação gerado com sucesso' });
+    
     const emailSent = await sendPasswordResetEmail(email, resetToken);
     
     if (!emailSent) {
@@ -33,7 +33,7 @@ export const requestPasswordReset = async (req: AuthRequest, res: Response): Pro
       return;
     }
     
-    res.status(200).json({ message: 'Email de recuperação enviado com sucesso' });
+    res.status(201).json({ message: 'Email de recuperação enviado com sucesso' });
   } catch (error) {
     res.status(500).json({ message: 'Erro ao solicitar recuperação de senha' });
   }
@@ -90,9 +90,11 @@ export const resetPassword = async (req: AuthRequest, res: Response): Promise<vo
 }; 
 export const updatePassword = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { password } = req.body;
+    const { password, newPassword, currentPassword } = req.body;
     
-    if (!password) {
+    const newPass = newPassword || password;
+    
+    if (!newPass) {
       res.status(400).json({ message: 'Nova senha é obrigatória' });
       return;
     }
@@ -109,15 +111,25 @@ export const updatePassword = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
     
-    const currentPassword = currentUser.get('password') as string;
-    const isSamePassword = await bcrypt.compare(password, currentPassword);
+    const userCurrentPassword = currentUser.get('password') as string;
+    
+    if (currentPassword) {
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, userCurrentPassword);
+      
+      if (!isCurrentPasswordValid) {
+        res.status(400).json({ message: 'Senha atual incorreta' });
+        return;
+      }
+    }
+    
+    const isSamePassword = await bcrypt.compare(newPass, userCurrentPassword);
     
     if (isSamePassword) {
       res.status(400).json({ message: 'A nova senha não pode ser igual à senha atual' });
       return;
     }
     
-    const hashedNewPassword = await bcrypt.hash(password, 10);
+    const hashedNewPassword = await bcrypt.hash(newPass, 10);
     
     await UserModel.update({
       password: hashedNewPassword

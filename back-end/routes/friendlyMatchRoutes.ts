@@ -18,7 +18,8 @@ import {
 } from '../controllers/FriendlyMatchesController';
 import {
   listMatchEvaluations,
-  upsertMatchEvaluation,
+  createMatchEvaluation,
+  updateMatchEvaluation,
   getMatchEvaluationSummary
 } from '../controllers/FriendlyMatchesEvaluationController';
 import {
@@ -253,16 +254,19 @@ router.get('/:id',authenticateToken, getMatch);
  *               location:
  *                 type: string
  *                 example: Novo local - Arena Sports Center
- *               status:
- *                 type: string
- *                 enum: [aberta, sem_vagas, confirmada, em_andamento, finalizada, cancelada]
- *                 example: confirmada
  *               duration:
  *                 type: string
  *                 example: "120"
  *               price:
  *                 type: number
  *                 example: 40.00
+ *               matchType:
+ *                 type: string
+ *                 enum: [Futebol de Campo, Futebol Society, Futsal]
+ *                 example: Futebol de Campo
+ *               square:
+ *                 type: string
+ *                 example: Arena Sports Center
  *     responses:
  *       200:
  *         description: Partida atualizada com sucesso
@@ -270,6 +274,14 @@ router.get('/:id',authenticateToken, getMatch);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/FriendlyMatch'
+ *       400:
+ *         description: Dados inválidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: A data da partida deve ser futura
  *       401:
  *         description: Não autenticado
  *         content:
@@ -288,6 +300,20 @@ router.get('/:id',authenticateToken, getMatch);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       409:
+ *         description: Partida duplicada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 hint:
+ *                   type: string
+ *             example:
+ *               message: Já existe uma partida com este nome
+ *               hint: Escolha um nome diferente para atualizar a partida
  *       500:
  *         description: Erro interno do servidor
  *         content:
@@ -355,18 +381,19 @@ router.delete('/:id', authenticateToken, deleteMatch);
  * @swagger
  * /api/friendly-matches/{id}/teams:
  *   post:
- *     summary: Inscrever time na partida
+ *     summary: Inscrever time na partida amistosa
  *     tags: [Partidas Amistosas]
  *     security:
  *       - bearerAuth: []
+ *     description: Inscreve um time na partida. Apenas o capitão do time ou administrador podem realizar esta ação.
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID da partida
- *         example: 1
+ *         description: ID da partida amistosa
+ *         example: 42
  *     requestBody:
  *       required: true
  *       content:
@@ -378,8 +405,8 @@ router.delete('/:id', authenticateToken, deleteMatch);
  *             properties:
  *               teamId:
  *                 type: integer
- *                 example: 5
- *                 description: ID do time a ser inscrito
+ *                 example: 15
+ *                 description: ID do time a ser inscrito na partida
  *     responses:
  *       201:
  *         description: Time inscrito com sucesso
@@ -390,37 +417,100 @@ router.delete('/:id', authenticateToken, deleteMatch);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Time inscrito na partida com sucesso
+ *             example:
+ *               message: Time inscrito na partida com sucesso
  *       400:
- *         description: Partida sem vagas
+ *         description: Dados inválidos ou partida sem vagas
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             examples:
+ *               semVagas:
+ *                 summary: Partida completa
+ *                 value:
+ *                   message: Partida já está completa
+ *               partidaCancelada:
+ *                 summary: Partida cancelada
+ *                 value:
+ *                   message: Esta partida foi cancelada e não aceita mais inscrições
+ *               prazoEncerrado:
+ *                 summary: Prazo encerrado
+ *                 value:
+ *                   message: O prazo de inscrição para esta partida já encerrou
  *       401:
  *         description: Não autenticado
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Usuário não autenticado
+ *       403:
+ *         description: Sem permissão
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             examples:
+ *               semPermissao:
+ *                 summary: Não é capitão
+ *                 value:
+ *                   message: Apenas o criador do time pode inscrever este time na partida
+ *               naoQualifica:
+ *                 summary: Time não se qualifica
+ *                 value:
+ *                   message: Time não se qualifica nas regras de gênero da partida
  *       404:
- *         description: Partida ou time não encontrado
+ *         description: Recurso não encontrado
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             examples:
+ *               partidaNaoEncontrada:
+ *                 summary: Partida não encontrada
+ *                 value:
+ *                   message: Partida não encontrada
+ *               timeNaoEncontrado:
+ *                 summary: Time não encontrado
+ *                 value:
+ *                   message: Time não encontrado ou foi removido
  *       409:
- *         description: Time já inscrito nesta partida
+ *         description: Conflito
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             examples:
+ *               timeJaInscrito:
+ *                 summary: Time já inscrito
+ *                 value:
+ *                   message: Time já está inscrito nesta partida
+ *               conflitoHorario:
+ *                 summary: Conflito de horário
+ *                 value:
+ *                   message: Time já possui outra partida agendada neste horário
  *       500:
  *         description: Erro interno do servidor
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Erro ao inscrever time na partida
  */
 router.post('/:id/teams', authenticateToken, joinMatchByTeam);
 
@@ -432,13 +522,14 @@ router.post('/:id/teams', authenticateToken, joinMatchByTeam);
  *     tags: [Partidas Amistosas]
  *     security:
  *       - bearerAuth: []
+ *     description: Retorna a lista de todos os times que estão inscritos na partida amistosa
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID da partida
+ *         description: ID da partida amistosa
  *         example: 1
  *     responses:
  *       200:
@@ -453,32 +544,45 @@ router.post('/:id/teams', authenticateToken, joinMatchByTeam);
  *                   id:
  *                     type: integer
  *                     example: 1
- *                   matchId:
- *                     type: integer
- *                     example: 1
- *                   teamId:
+ *                   name:
+ *                     type: string
+ *                     example: Time Exemplo FC
+ *                   captainId:
  *                     type: integer
  *                     example: 5
- *                   team:
- *                     $ref: '#/components/schemas/Team'
+ *                   banner:
+ *                     type: string
+ *                     example: banner.jpg
  *       401:
  *         description: Não autenticado
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Token de autenticação inválido ou expirado
  *       404:
  *         description: Partida não encontrada
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Partida não encontrada
  *       500:
  *         description: Erro interno do servidor
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 error:
+ *                   type: string
+ *             example:
+ *               message: Erro ao obter times da partida
+ *               error: Detalhes do erro
  */
 router.get('/:id/teams', authenticateToken, getMatchTeams);
 
@@ -486,32 +590,92 @@ router.get('/:id/teams', authenticateToken, getMatchTeams);
  * @swagger
  * /api/friendly-matches/{id}/teams/{teamId}:
  *   delete:
- *     summary: Remover time da partida
+ *     summary: Remover time da partida amistosa
  *     tags: [Partidas Amistosas]
  *     security:
  *       - bearerAuth: []
+ *     description: Remove um time inscrito da partida. Apenas o capitão do time, organizador da partida ou administrador podem realizar esta ação.
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID da partida
+ *         description: ID da partida amistosa
+ *         example: 42
  *       - in: path
  *         name: teamId
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID do time
+ *         description: ID do time a ser removido
+ *         example: 15
  *     responses:
  *       200:
  *         description: Time removido com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Time removido da partida com sucesso
  *       401:
  *         description: Não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Token de autenticação inválido ou expirado
  *       403:
  *         description: Sem permissão para remover este time
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             example:
+ *               message: Apenas o capitão do time, organizador da partida ou administrador podem remover o time
  *       404:
- *         description: Time não encontrado na partida
+ *         description: Recurso não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             examples:
+ *               partidaNaoEncontrada:
+ *                 summary: Partida não encontrada
+ *                 value:
+ *                   message: Partida não encontrada
+ *               timeNaoEncontrado:
+ *                 summary: Time não encontrado
+ *                 value:
+ *                   message: Time não encontrado
+ *               timeNaoInscrito:
+ *                 summary: Time não está inscrito na partida
+ *                 value:
+ *                   message: Time não está inscrito nesta partida
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 error:
+ *                   type: string
+ *             example:
+ *               message: Erro ao remover time da partida
+ *               error: Detalhes do erro
  */
 router.delete('/:id/teams/:teamId', authenticateToken, deleteTeamMatch);
 
@@ -523,14 +687,15 @@ router.delete('/:id/teams/:teamId', authenticateToken, deleteTeamMatch);
  *     tags: [Partidas Amistosas]
  *     security:
  *       - bearerAuth: []
- *     description: Retorna times do usuário que podem ser inscritos na partida
+ *     description: Retorna times que ainda não estão inscritos na partida e podem ser inscritos
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID da partida
+ *         description: ID da partida amistosa
+ *         example: 42
  *     responses:
  *       200:
  *         description: Lista de times disponíveis
@@ -542,6 +707,26 @@ router.delete('/:id/teams/:teamId', authenticateToken, deleteTeamMatch);
  *                 $ref: '#/components/schemas/Team'
  *       401:
  *         description: Não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Token de autenticação inválido ou expirado
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 error:
+ *                   type: string
+ *             example:
+ *               message: Erro ao obter times disponíveis
+ *               error: Detalhes do erro
  */
 router.get('/:id/teams/available', authenticateToken, getTeamsAvailable);
 
@@ -553,33 +738,68 @@ router.get('/:id/teams/available', authenticateToken, getTeamsAvailable);
  *     tags: [Partidas Amistosas]
  *     security:
  *       - bearerAuth: []
- *     description: Valida se os times inscritos atendem aos requisitos (gênero, idade, número de jogadores)
+ *     description: Valida se os times inscritos atendem aos requisitos de gênero e categoria. Remove automaticamente times que não estão em conformidade.
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID da partida
+ *         description: ID da partida amistosa
+ *         example: 42
  *     responses:
  *       200:
- *         description: Times em conformidade com as regras
+ *         description: Todos os times estão em conformidade com as regras
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 compliant:
- *                   type: boolean
- *                   example: true
- *                 teams:
- *                   type: array
- *                   items:
- *                     type: object
- *       403:
- *         description: Um ou mais times não atendem às regras
+ *                 message:
+ *                   type: string
+ *             example:
+ *               message: Todos os times estão em conformidade com as regras
  *       401:
  *         description: Não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Token de autenticação inválido ou expirado
+ *       403:
+ *         description: Um ou mais times não atendem às regras e foram removidos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *             example:
+ *               message: Time Exemplo FC não se qualifica nas regras da partida
+ *       404:
+ *         description: Regras da partida não encontradas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Regras da partida não encontradas
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 error:
+ *                   type: string
+ *             example:
+ *               message: Erro ao verificar conformidade das regras
+ *               error: Detalhes do erro
  */
 router.get('/:id/teams/compliance', authenticateToken, checkTeamsRuleCompliance);
 
@@ -587,51 +807,76 @@ router.get('/:id/players', authenticateToken, getMatchPlayersForAdmin);
 /**
  * @swagger
  * /api/friendly-matches/{id}/finalize:
- *   post:
+ *   put:
  *     summary: Finalizar partida
  *     tags: [Partidas Amistosas]
  *     security:
  *       - bearerAuth: []
- *     description: Marca a partida como finalizada e registra o resultado
- *     parameters:idas Amistosas]
- *     description: Marca a partida como finalizada e registra o resultado
+ *     description: Marca a partida como finalizada. Apenas o organizador da partida ou administrador podem finalizar.
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID da partida
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               teamHomeId:
- *                 type: integer
- *                 example: 1
- *               teamAwayId:
- *                 type: integer
- *                 example: 2
- *               goalsHome:
- *                 type: integer
- *                 example: 3
- *               goalsAway:
- *                 type: integer
- *                 example: 2
+ *         description: ID da partida amistosa
+ *         example: 42
  *     responses:
  *       200:
  *         description: Partida finalizada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 match:
+ *                   $ref: '#/components/schemas/FriendlyMatch'
+ *             example:
+ *               message: Partida finalizada com sucesso
  *       401:
  *         description: Não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Usuário não autenticado
  *       403:
  *         description: Sem permissão para finalizar
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Você não tem permissão para finalizar esta partida
  *       404:
  *         description: Partida não encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Partida não encontrada
+ *       409:
+ *         description: Partida já foi finalizada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Esta partida já foi finalizada
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Erro ao finalizar partida
  */
-router.post('/:id/finalize', authenticateToken, finalizeMatch);
+router.put('/:id/finalize', authenticateToken, finalizeMatch);
 
 /**
  * @swagger
@@ -639,12 +884,16 @@ router.post('/:id/finalize', authenticateToken, finalizeMatch);
  *   get:
  *     summary: Listar avaliações da partida
  *     tags: [Partidas Amistosas]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID da partida
+ *         example: 1
  *     responses:
  *       200:
  *         description: Lista de avaliações
@@ -656,6 +905,16 @@ router.post('/:id/finalize', authenticateToken, finalizeMatch);
  *                 $ref: '#/components/schemas/Evaluation'
  *       401:
  *         description: Não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 router.get('/:id/evaluations', authenticateToken, listMatchEvaluations);
 
@@ -663,14 +922,19 @@ router.get('/:id/evaluations', authenticateToken, listMatchEvaluations);
  * @swagger
  * /api/friendly-matches/{id}/evaluations:
  *   post:
- *     summary: Criar ou atualizar avaliação da partida
+ *     summary: Criar avaliação da partida
  *     tags: [Partidas Amistosas]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Cria uma nova avaliação para a partida. Apenas participantes podem avaliar.
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID da partida
+ *         example: 1
  *     requestBody:
  *       required: true
  *       content:
@@ -685,16 +949,143 @@ router.get('/:id/evaluations', authenticateToken, listMatchEvaluations);
  *                 minimum: 1
  *                 maximum: 5
  *                 example: 4
+ *                 description: Nota de 1 a 5
  *               comment:
  *                 type: string
  *                 example: Ótima organização!
+ *                 description: Comentário opcional sobre a partida
  *     responses:
- *       200:
- *         description: Avaliação registrada
+ *       201:
+ *         description: Avaliação criada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Evaluation'
+ *       400:
+ *         description: Rating inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Rating deve ser 1-5
  *       401:
  *         description: Não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Usuário não é participante da partida
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Apenas participantes podem avaliar
+ *       404:
+ *         description: Partida não encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       409:
+ *         description: Usuário já avaliou esta partida
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Você já avaliou esta partida
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-router.post('/:id/evaluations', authenticateToken, upsertMatchEvaluation);
+router.post('/:id/evaluations', authenticateToken, createMatchEvaluation);
+
+/**
+ * @swagger
+ * /api/friendly-matches/{id}/evaluations:
+ *   put:
+ *     summary: Atualizar avaliação da partida
+ *     tags: [Partidas Amistosas]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Atualiza a avaliação existente do usuário para a partida
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID da partida
+ *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - rating
+ *             properties:
+ *               rating:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 5
+ *                 example: 5
+ *                 description: Nova nota de 1 a 5
+ *               comment:
+ *                 type: string
+ *                 example: Avaliação atualizada - excelente!
+ *                 description: Novo comentário opcional
+ *     responses:
+ *       200:
+ *         description: Avaliação atualizada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Evaluation'
+ *       400:
+ *         description: Rating inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Rating deve ser 1-5
+ *       401:
+ *         description: Não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Partida ou avaliação não encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               partidaNaoEncontrada:
+ *                 summary: Partida não encontrada
+ *                 value:
+ *                   message: Partida não encontrada
+ *               avaliacaoNaoEncontrada:
+ *                 summary: Avaliação não encontrada
+ *                 value:
+ *                   message: Avaliação não encontrada
+ *       500:
+ *         description: Erro interno do servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.put('/:id/evaluations', authenticateToken, updateMatchEvaluation);
 
 /**
  * @swagger

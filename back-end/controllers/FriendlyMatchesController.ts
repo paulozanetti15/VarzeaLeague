@@ -370,6 +370,23 @@ export const updateMatch = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
+    if (req.body.title) {
+      const existingMatch = await FriendlyMatchesModel.findOne({
+        where: {
+          title: req.body.title.trim(),
+          id: { [Op.ne]: id }
+        }
+      });
+
+      if (existingMatch) {
+        res.status(409).json({ 
+          message: 'Já existe uma partida com este nome',
+          hint: 'Escolha um nome diferente para atualizar a partida'
+        });
+        return;
+      }
+    }
+
     if (req.body.date) {
       const newMatchDate = new Date(req.body.date);
       if (newMatchDate <= new Date()) {

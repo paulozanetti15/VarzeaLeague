@@ -62,20 +62,18 @@ const router = express.Router();
  *                 team_away:
  *                   type: integer
  *                   example: 2
- *                 goals_home:
+ *                 teamHome_score:
  *                   type: integer
  *                   example: 3
- *                 goals_away:
+ *                 teamAway_score:
  *                   type: integer
  *                   example: 2
- *                 observations:
- *                   type: string
- *                   nullable: true
- *                   example: Partida equilibrada com muitas chances de gol
- *                 mvp_player_id:
+ *                 is_penalty:
+ *                   type: boolean
+ *                   example: false
+ *                 created_by:
  *                   type: integer
- *                   nullable: true
- *                   example: 5
+ *                   example: 1
  *                 teamHome:
  *                   type: object
  *                   properties:
@@ -100,10 +98,10 @@ const router = express.Router();
  *                   match_id: 1
  *                   team_home: 1
  *                   team_away: 2
- *                   goals_home: 3
- *                   goals_away: 2
- *                   observations: Ótima partida
- *                   mvp_player_id: 5
+ *                   teamHome_score: 3
+ *                   teamAway_score: 2
+ *                   is_penalty: false
+ *                   created_by: 1
  *                   teamHome:
  *                     id: 1
  *                     name: Time dos Campeões
@@ -167,63 +165,57 @@ router.get('/:matchId', authenticateToken, buscarSumulaPartidaAmistosa);
  *           schema:
  *             type: object
  *             required:
- *               - matchId
- *               - teamHomeId
- *               - teamAwayId
- *               - scoreHome
- *               - scoreAway
+ *               - match_id
+ *               - team_home
+ *               - team_away
+ *               - teamHome_score
+ *               - teamAway_score
  *             properties:
- *               matchId:
+ *               match_id:
  *                 type: integer
  *                 description: ID da partida amistosa
  *                 example: 1
- *               teamHomeId:
+ *               team_home:
  *                 type: integer
  *                 description: ID do time mandante
  *                 example: 1
- *               teamAwayId:
+ *               team_away:
  *                 type: integer
  *                 description: ID do time visitante
  *                 example: 2
- *               scoreHome:
+ *               teamHome_score:
  *                 type: integer
  *                 minimum: 0
  *                 description: Gols marcados pelo time mandante
  *                 example: 3
- *               scoreAway:
+ *               teamAway_score:
  *                 type: integer
  *                 minimum: 0
  *                 description: Gols marcados pelo time visitante
  *                 example: 2
- *               observations:
- *                 type: string
- *                 nullable: true
- *                 description: Observações gerais sobre a partida
- *                 example: Partida equilibrada com muitas jogadas
- *               mvpPlayerId:
- *                 type: integer
- *                 nullable: true
- *                 description: ID do jogador destaque da partida
- *                 example: 5
+ *               is_penalty:
+ *                 type: boolean
+ *                 description: Indica se a partida foi decidida nos pênaltis
+ *                 default: false
+ *                 example: false
  *           examples:
  *             sumulaBasica:
  *               summary: Súmula apenas com placar
  *               value:
- *                 matchId: 1
- *                 teamHomeId: 1
- *                 teamAwayId: 2
- *                 scoreHome: 3
- *                 scoreAway: 2
+ *                 match_id: 1
+ *                 team_home: 1
+ *                 team_away: 2
+ *                 teamHome_score: 3
+ *                 teamAway_score: 2
  *             sumulaCompleta:
  *               summary: Súmula com todos os dados
  *               value:
- *                 matchId: 1
- *                 teamHomeId: 1
- *                 teamAwayId: 2
- *                 scoreHome: 4
- *                 scoreAway: 1
- *                 observations: Vitória dominante do time mandante
- *                 mvpPlayerId: 7
+ *                 match_id: 1
+ *                 team_home: 1
+ *                 team_away: 2
+ *                 teamHome_score: 4
+ *                 teamAway_score: 1
+ *                 is_penalty: false
  *     responses:
  *       201:
  *         description: Súmula criada com sucesso
@@ -253,8 +245,10 @@ router.get('/:matchId', authenticateToken, buscarSumulaPartidaAmistosa);
  *                 match_id: 1
  *                 team_home: 1
  *                 team_away: 2
- *                 goals_home: 3
- *                 goals_away: 2
+ *                 teamHome_score: 3
+ *                 teamAway_score: 2
+ *                 is_penalty: false
+ *                 created_by: 1
  *       400:
  *         description: Dados inválidos ou súmula já existe
  *         content:
@@ -266,10 +260,6 @@ router.get('/:matchId', authenticateToken, buscarSumulaPartidaAmistosa);
  *                 summary: Dados faltando ou inválidos
  *                 value:
  *                   message: Dados obrigatórios não fornecidos
- *               sumulaExistente:
- *                 summary: Súmula já cadastrada
- *                 value:
- *                   message: Já existe uma súmula para esta partida
  *               placarNegativo:
  *                 summary: Placar com valores negativos
  *                 value:
@@ -309,6 +299,15 @@ router.get('/:matchId', authenticateToken, buscarSumulaPartidaAmistosa);
  *                   message: Partida não encontrada
  *               timeNaoEncontrado:
  *                 value:
+ *                   message: Time não encontrado
+ *       409:
+ *         description: Conflito - Súmula já existe
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Já existe uma súmula para esta partida
  *                   message: Um dos times não foi encontrado
  *       500:
  *         description: Erro interno ao criar súmula
@@ -345,35 +344,37 @@ router.post('/', authenticateToken, adicionarSumulaPartidasAmistosas);
  *           schema:
  *             type: object
  *             properties:
- *               scoreHome:
+ *               team_home:
  *                 type: integer
- *                 minimum: 0
- *                 example: 4
- *               scoreAway:
+ *                 description: ID do time mandante
+ *                 example: 1
+ *               team_away:
  *                 type: integer
- *                 minimum: 0
+ *                 description: ID do time visitante
  *                 example: 2
- *               observations:
- *                 type: string
- *                 nullable: true
- *                 example: Jogo muito disputado
- *               mvpPlayerId:
+ *               team_home_score:
  *                 type: integer
- *                 nullable: true
- *                 example: 8
+ *                 minimum: 0
+ *                 description: Gols marcados pelo time mandante
+ *                 example: 4
+ *               team_away_score:
+ *                 type: integer
+ *                 minimum: 0
+ *                 description: Gols marcados pelo time visitante
+ *                 example: 2
  *           examples:
  *             atualizarPlacar:
  *               summary: Apenas atualizar placar
  *               value:
- *                 scoreHome: 5
- *                 scoreAway: 3
+ *                 team_home_score: 5
+ *                 team_away_score: 3
  *             atualizarTudo:
  *               summary: Atualizar todos os campos
  *               value:
- *                 scoreHome: 4
- *                 scoreAway: 2
- *                 observations: Partida emocionante com virada no segundo tempo
- *                 mvpPlayerId: 10
+ *                 team_home: 1
+ *                 team_away: 2
+ *                 team_home_score: 4
+ *                 team_away_score: 2
  *     responses:
  *       200:
  *         description: Súmula atualizada com sucesso
@@ -738,6 +739,19 @@ router.get('/:matchId/events', authenticateToken, listEvents);
  *               jogadorNaoEncontrado:
  *                 value:
  *                   message: Jogador não encontrado
+ *       409:
+ *         description: Conflito - Gol duplicado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               golDuplicadoJogador:
+ *                 value:
+ *                   message: Já existe um gol registrado para este jogador neste minuto
+ *               golDuplicadoUsuario:
+ *                 value:
+ *                   message: Já existe um gol registrado para este usuário neste minuto
  *       500:
  *         description: Erro ao registrar gol
  *         content:
@@ -1019,6 +1033,19 @@ router.delete('/:matchId/events/goals', authenticateToken, clearGoals);
  *               jogadorNaoEncontrado:
  *                 value:
  *                   message: Jogador não encontrado
+ *       409:
+ *         description: Conflito - Cartão duplicado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               cartaoDuplicadoJogador:
+ *                 value:
+ *                   message: Já existe um cartão deste tipo registrado para este jogador neste minuto
+ *               cartaoDuplicadoUsuario:
+ *                 value:
+ *                   message: Já existe um cartão deste tipo registrado para este usuário neste minuto
  *       500:
  *         description: Erro ao registrar cartão
  *         content:

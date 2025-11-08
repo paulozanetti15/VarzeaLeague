@@ -5,101 +5,117 @@ import { Op } from "sequelize";
 
 export const insertRules = async (req, res) => {
     try {
-        const { dataLimite, idadeMinima, idadeMaxima, genero, partidaId } = req.body;
+        const { registrationDeadline, minimumAge, maximumAge, gender, matchId } = req.body;
         
-        // Validações
-        if (!dataLimite || !idadeMinima || !idadeMaxima || !genero || !partidaId) {
+        if (!registrationDeadline || !minimumAge || !maximumAge || !gender || !matchId) {
             return res.status(400).json({ message: "Todos os campos são obrigatórios" });
         }
 
-        // Validação das idades
-        if (parseInt(idadeMinima) < 0 || parseInt(idadeMaxima) > 100) {
+        if (parseInt(minimumAge) < 0 || parseInt(maximumAge) > 100) {
             return res.status(400).json({ message: "Idades devem estar entre 0 e 100 anos" });
         }
 
-        if (parseInt(idadeMinima) > parseInt(idadeMaxima)) {
+        if (parseInt(minimumAge) > parseInt(maximumAge)) {
             return res.status(400).json({ message: "Idade mínima não pode ser maior que idade máxima" });
         }
 
-        // Validação do gênero
-        if (!['Masculino', 'Feminino', 'Ambos'].includes(genero)) {
+        if (!['Masculino', 'Feminino', 'Ambos'].includes(gender)) {
             return res.status(400).json({ message: "Gênero inválido" });
         }
 
-        // Verificar se a partida existe
-        const match = await FriendlyMatchesModel.findByPk(partidaId);
+        const match = await FriendlyMatchesModel.findByPk(matchId);
         if (!match) {
             return res.status(404).json({ message: "Partida não encontrada" });
         }
 
-        await Rules.create({
-            matchId: partidaId,
-            registrationDeadline: dataLimite,
-            minimumAge: parseInt(idadeMinima),
-            maximumAge: parseInt(idadeMaxima),
-            gender: genero
+        const existingRules = await Rules.findOne({ where: { matchId } });
+        if (existingRules) {
+            return res.status(409).json({ message: "Regras já existem para esta partida" });
+        }
+
+        const newRules = await Rules.create({
+            matchId: matchId,
+            registrationDeadline: registrationDeadline,
+            minimumAge: parseInt(minimumAge),
+            maximumAge: parseInt(maximumAge),
+            gender: gender
         });   
 
-        res.status(201).json({ message: "Regra criada com sucesso!" });
+        res.status(201).json({ 
+            message: "Regra criada com sucesso!",
+            rules: newRules
+        });
     } catch (error) {
         console.error("Erro ao criar regra:", error);
-        res.status(500).json({ message: "Erro ao criar regra", error });
+        res.status(500).json({ 
+            message: "Erro ao criar regra",
+            error: error instanceof Error ? error.message : 'Erro desconhecido'
+        });
     }
 }
 
 export const deleteRules = async (req, res) => {
     try {
-        const { partidaId } = req.params;
-        await Rules.destroy({ where: { matchId: partidaId } });
+        const { id } = req.params;
+        
+        const rules = await Rules.findOne({ where: { matchId: id } });
+        if (!rules) {
+            return res.status(404).json({ message: "Regras não encontradas" });
+        }
+        
+        await rules.destroy();
         res.status(200).json({ message: "Regras deletadas com sucesso!" });
-    }
-    catch (error) {
+    } catch (error) {
         console.error("Erro ao deletar regras:", error);
-        res.status(500).json({ message: "Erro ao deletar as regras", error });
+        res.status(500).json({ 
+            message: "Erro ao deletar as regras",
+            error: error instanceof Error ? error.message : 'Erro desconhecido'
+        });
     }
 }
 
 export const updateRules = async (req, res) => {
     try {
         const { id } = req.params;
-        const { idadeMinima, idadeMaxima, genero, dataLimite } = req.body;
+        const { minimumAge, maximumAge, gender, registrationDeadline } = req.body;
 
-        // Validações
-        if (!dataLimite || !idadeMinima || !idadeMaxima || !genero) {
+        if (!registrationDeadline || !minimumAge || !maximumAge || !gender) {
             return res.status(400).json({ message: "Todos os campos são obrigatórios" });
         }
 
-        // Validação das idades
-        if (parseInt(idadeMinima) < 0 || parseInt(idadeMaxima) > 100) {
+        if (parseInt(minimumAge) < 0 || parseInt(maximumAge) > 100) {
             return res.status(400).json({ message: "Idades devem estar entre 0 e 100 anos" });
         }
 
-        if (parseInt(idadeMinima) > parseInt(idadeMaxima)) {
+        if (parseInt(minimumAge) > parseInt(maximumAge)) {
             return res.status(400).json({ message: "Idade mínima não pode ser maior que idade máxima" });
         }
 
-        // Validação do gênero
-        if (!['Masculino', 'Feminino', 'Ambos'].includes(genero)) {
+        if (!['Masculino', 'Feminino', 'Ambos'].includes(gender)) {
             return res.status(400).json({ message: "Gênero inválido" });
         }
 
-        // Parse dataLimite para garantir que seja Date
-        const parsedDataLimite = new Date(dataLimite);
-        if (isNaN(parsedDataLimite.getTime())) {
+        const parsedDeadline = new Date(registrationDeadline);
+        if (isNaN(parsedDeadline.getTime())) {
             return res.status(400).json({ message: "Data limite inválida" });
         }
+
+        const rules = await Rules.findOne({ where: { matchId: id } });
+        if (!rules) {
+            return res.status(404).json({ message: "Regras não encontradas" });
+        }
        
-        await FriendlyMatchesRulesModel.update({
-            registrationDeadline: parsedDataLimite,
-            minimumAge: parseInt(idadeMinima),
-            maximumAge: parseInt(idadeMaxima),
-            gender: genero
-        }, { where: { matchId: id } });
+        await rules.update({
+            registrationDeadline: parsedDeadline,
+            minimumAge: parseInt(minimumAge),
+            maximumAge: parseInt(maximumAge),
+            gender: gender
+        });
 
         const now = new Date();
         now.setHours(23, 59, 59, 999);
         
-        const deadline = new Date(dataLimite);
+        const deadline = new Date(registrationDeadline);
         deadline.setHours(23, 59, 59, 999);
         
         const match = await FriendlyMatchesModel.findByPk(id);
@@ -128,37 +144,37 @@ export const updateRules = async (req, res) => {
             }
         }
 
-        res.status(200).json({ message: "Regras atualizadas com sucesso!" });
-    }
-    catch (error) {
+        res.status(200).json({ 
+            message: "Regras atualizadas com sucesso!",
+            rules: rules
+        });
+    } catch (error) {
         console.error("Erro ao atualizar regras:", error);
-        res.status(500).json({ message: "Erro ao atualizar as regras", error });
+        res.status(500).json({ 
+            message: "Erro ao atualizar as regras",
+            error: error instanceof Error ? error.message : 'Erro desconhecido'
+        });
     }
 }
 
-export const getAllRules = async (req, res) => {
-    try {
-        const regras = await Rules.findAll();
-        res.status(200).json(regras);
-    } catch (error) {
-        console.error("Erro ao buscar regras:", error);
-        res.status(500).json({ message: "Erro ao buscar regras", error });
-    }
-}
+ 
 
 export const getRuleById = async (req, res) => {
     try {
         const { id } = req.params;
         
-        const regras = await Rules.findOne({ where: { matchId: id } });
-        if (!regras) {
+        const rules = await Rules.findOne({ where: { matchId: id } });
+        if (!rules) {
             return res.status(404).json({ message: "Não existem regras cadastradas" });
         }
         
-        res.status(200).json(regras);
+        res.status(200).json(rules);
     } catch (error) {
         console.error("Erro ao buscar regras:", error);
-        res.status(500).json({ message: "Erro ao buscar regras", error });
+        res.status(500).json({ 
+            message: "Erro ao buscar regras",
+            error: error instanceof Error ? error.message : 'Erro desconhecido'
+        });
     }
 }
 

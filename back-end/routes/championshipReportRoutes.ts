@@ -13,7 +13,7 @@ import {
   deleteCardEvent,
   clearGoals,
   clearCards
-} from '../controllers/FriendlyMatchesEventsController';
+} from '../controllers/ChampionshipMatchEventsController';
 
 const router = express.Router();
 
@@ -593,6 +593,19 @@ router.get('/:matchId/events', authenticateToken, listEvents);
  *               jogadorNaoEncontrado:
  *                 value:
  *                   message: Jogador não encontrado
+ *       409:
+ *         description: Conflito - Gol duplicado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               golDuplicadoJogador:
+ *                 value:
+ *                   message: Já existe um gol registrado para este jogador neste minuto
+ *               golDuplicadoUsuario:
+ *                 value:
+ *                   message: Já existe um gol registrado para este usuário neste minuto
  *       500:
  *         description: Erro ao registrar gol
  *         content:
@@ -867,6 +880,19 @@ router.delete('/:matchId/events/goals', authenticateToken, clearGoals);
  *               jogadorNaoEncontrado:
  *                 value:
  *                   message: Jogador não encontrado
+ *       409:
+ *         description: Conflito - Cartão duplicado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               cartaoDuplicadoJogador:
+ *                 value:
+ *                   message: Já existe um cartão deste tipo registrado para este jogador neste minuto
+ *               cartaoDuplicadoUsuario:
+ *                 value:
+ *                   message: Já existe um cartão deste tipo registrado para este usuário neste minuto
  *       500:
  *         description: Erro ao registrar cartão
  *         content:

@@ -29,7 +29,7 @@ const checkScheduleConflict = async (teamId: number, matchId: number): Promise<{
     where: { teamId },
     include: [{
       model: FriendlyMatchesModel,
-      as: 'match',
+      as: 'friendlyMatch',
       where: {
         id: { [Op.ne]: matchId },
         status: { [Op.in]: ['aberta', 'confirmada'] }
@@ -38,7 +38,7 @@ const checkScheduleConflict = async (teamId: number, matchId: number): Promise<{
   });
 
   for (const matchTeam of existingMatches) {
-    const existingMatch = (matchTeam as any).match;
+    const existingMatch = (matchTeam as any).friendlyMatch;
     const existingMatchDate = new Date(existingMatch.date);
     
     const sameDay = 
@@ -81,11 +81,26 @@ const checkScheduleConflict = async (teamId: number, matchId: number): Promise<{
 
 export const joinMatchByTeam = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { teamId, matchId } = req.body;
+    const { teamId } = req.body;
+    const matchId = parseInt(req.params.id, 10);
+    
+    console.log('Tentando inscrever time:', { teamId, matchId, params: req.params, body: req.body });
+    
+    if (!matchId || isNaN(matchId)) {
+      res.status(400).json({ message: 'ID da partida inválido' });
+      return;
+    }
+    
+    if (!teamId) {
+      res.status(400).json({ message: 'ID do time é obrigatório' });
+      return;
+    }
     
     const match = await FriendlyMatchesModel.findByPk(matchId, {
       attributes: ['title', 'date', 'location', 'status', 'description', 'price', 'organizerId', 'duration']
     });
+    
+    console.log('Partida encontrada:', match ? 'Sim' : 'Não', match?.toJSON());
     
     const token = req.headers.authorization?.replace('Bearer ', '');
     
@@ -120,13 +135,13 @@ export const joinMatchByTeam = async (req: AuthRequest, res: Response): Promise<
     const regras = await FriendlyMatchesRulesModel.findOne({ where: { matchId } });
     
     if (regras) {
-      const registrationDeadlineValue = regras.get('registrationDeadline');
+      const registrationDeadline = regras.get('registrationDeadline');
       
-      if (registrationDeadlineValue) {
+      if (registrationDeadline) {
         const now = new Date();
         now.setHours(23, 59, 59, 999);
         
-        const deadline = new Date(registrationDeadlineValue as string);
+        const deadline = new Date(registrationDeadline as string);
         deadline.setHours(23, 59, 59, 999);
         
         if (now > deadline) {
@@ -159,7 +174,7 @@ export const joinMatchByTeam = async (req: AuthRequest, res: Response): Promise<
     
     const teamIsAlreadyInMatch = await FriendlyMatchTeamsModel.findOne({ where: { matchId, teamId } });
     if (teamIsAlreadyInMatch) {
-      res.status(400).json({ message: 'Time já está inscrito nesta partida' });
+      res.status(409).json({ message: 'Time já está inscrito nesta partida' });
       return;
     }
     
@@ -180,10 +195,14 @@ export const joinMatchByTeam = async (req: AuthRequest, res: Response): Promise<
     }
     
     if (regras) {
-      const genderValue = regras.get('gender');
+      const gender = regras.get('gender');
       
-      if (genderValue && genderValue !== 'Ambos') {
-        const isGenderValid = await verifyTeamsGenderRules(teamId, genderValue as string);
+      console.log('Verificando regras de gênero:', { gender });
+      
+      if (gender && gender !== 'Ambos') {
+        const isGenderValid = await verifyTeamsGenderRules(teamId, gender as string);
+        
+        console.log('Validação de gênero:', { isGenderValid });
         
         if (!isGenderValid) {
           res.status(403).json({ message: 'Time não se qualifica nas regras de gênero da partida' });
@@ -192,16 +211,22 @@ export const joinMatchByTeam = async (req: AuthRequest, res: Response): Promise<
       }
     }
     
+    console.log('Verificando categoria...');
     const isCategoryValid = await isTimePossuiCategoriaValido(teamId, matchId);
+    console.log('Validação de categoria:', { isCategoryValid });
+    
     if (!isCategoryValid) {
       res.status(403).json({ message: 'Time não se qualifica nas regras de categoria da partida' });
       return;
     }
     
+    console.log('Criando vínculo time-partida...');
     await FriendlyMatchTeamsModel.create({
       matchId: matchId,
       teamId: teamId
     });
+    
+    console.log('Time inscrito com sucesso na partida');
     
     const newCount = await FriendlyMatchTeamsModel.count({ where: { matchId } });
     if (newCount >= maxTimes) {
@@ -210,34 +235,50 @@ export const joinMatchByTeam = async (req: AuthRequest, res: Response): Promise<
     
     res.status(201).json({ message: 'Time inscrito na partida com sucesso' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao inscrever time na partida' });
+    console.error('Erro ao inscrever time na partida:', error);
+    res.status(500).json({ 
+      message: 'Erro ao inscrever time na partida',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
 }; 
 const isTimePossuiCategoriaValido = async (teamId: number, matchId: number): Promise<boolean> => {
   return true;
 };
 
-export const verifyTeamsGenderRules = async (teamId: number, regraSexo: string): Promise<boolean> => {
-  const jogadoresDentroPartida = await TeamPlayer.findAll({
-    where: { teamId: teamId },
-    attributes: ['playerId'],
-  });
-  
-  const PlayerIds = jogadoresDentroPartida.map((team: any) => team.playerId);
-  
-  const playersWithDifferentGender = await Player.findAll({
-    where: {
-      id: {
-        [Op.in]: PlayerIds
+export const verifyTeamsGenderRules = async (teamId: number, requiredGender: string): Promise<boolean> => {
+  try {
+    const teamPlayers = await TeamPlayer.findAll({
+      where: { teamId: teamId },
+      attributes: ['playerId'],
+    });
+    
+    const playerIds = teamPlayers.map((team: any) => team.playerId);
+    
+    if (playerIds.length === 0) {
+      console.log('Time não possui jogadores');
+      return true;
+    }
+    
+    const playersWithDifferentGender = await Player.findAll({
+      where: {
+        id: {
+          [Op.in]: playerIds
+        },
+        gender: {
+          [Op.ne]: requiredGender
+        }
       },
-      gender: {
-        [Op.ne]: regraSexo
-      }
-    },
-    attributes: ['gender']
-  });
-  
-  return playersWithDifferentGender.length === 0;
+      attributes: ['gender']
+    });
+    
+    console.log('Jogadores com gênero diferente:', playersWithDifferentGender.length);
+    
+    return playersWithDifferentGender.length === 0;
+  } catch (error) {
+    console.error('Erro ao verificar regras de gênero:', error);
+    throw error;
+  }
 }; 
 export const getMatchTeams = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -265,7 +306,11 @@ export const getMatchTeams = async (req: AuthRequest, res: Response): Promise<vo
     
     res.status(200).json(teamDetails);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao obter times da partida' });
+    console.error('Erro ao obter times da partida:', error);
+    res.status(500).json({ 
+      message: 'Erro ao obter times da partida',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
 };
 export const getTeamsAvailable = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -291,7 +336,11 @@ export const getTeamsAvailable = async (req: AuthRequest, res: Response): Promis
     
     res.status(200).json(Avaiableteams);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao obter times disponíveis' });
+    console.error('Erro ao obter times disponíveis:', error);
+    res.status(500).json({ 
+      message: 'Erro ao obter times disponíveis',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
 };  
 export const deleteTeamMatch = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -364,7 +413,11 @@ export const deleteTeamMatch = async (req: AuthRequest, res: Response): Promise<
 
     res.status(200).json({ message: 'Time removido da partida com sucesso' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao remover time da partida' });
+    console.error('Erro ao remover time da partida:', error);
+    res.status(500).json({ 
+      message: 'Erro ao remover time da partida',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
 };
 export const checkTeamsRuleCompliance = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -372,9 +425,12 @@ export const checkTeamsRuleCompliance = async (req: AuthRequest, res: Response):
     const { id } = req.params;
     const matchId = parseInt(id, 10);
     
-    const regras = await FriendlyMatchesRulesModel.findOne({ where: { matchId } });
+    console.log('Verificando conformidade para partida:', matchId);
+    console.log('Usuário autenticado:', req.userId);
     
-    if (!regras) {
+    const rules = await FriendlyMatchesRulesModel.findOne({ where: { matchId } });
+    
+    if (!rules) {
       res.status(404).json({ message: 'Regras da partida não encontradas' });
       return;
     }
@@ -384,7 +440,9 @@ export const checkTeamsRuleCompliance = async (req: AuthRequest, res: Response):
       attributes: ['teamId']
     });
     
-    const genderValue = regras.get('gender');
+    console.log(`Times inscritos: ${matchTeams.length}`);
+    
+    const gender = rules.get('gender');
     
     for (const matchTeam of matchTeams) {
       const teamId = matchTeam.teamId;
@@ -392,11 +450,13 @@ export const checkTeamsRuleCompliance = async (req: AuthRequest, res: Response):
         attributes: ['name']
       });
       
-      const nome = team?.get('name') || 'Time desconhecido';
+      const teamName = team?.get('name') || 'Time desconhecido';
       
-      if (genderValue && genderValue !== 'Ambos') {
+      if (gender && gender !== 'Ambos') {
         const isCategoryValid = await isTimePossuiCategoriaValido(teamId, matchId);
-        const isGenderValid = await verifyTeamsGenderRules(teamId, genderValue as string);
+        const isGenderValid = await verifyTeamsGenderRules(teamId, gender as string);
+        
+        console.log(`Time ${teamName}: categoria=${isCategoryValid}, gênero=${isGenderValid}`);
         
         if (!isCategoryValid || !isGenderValid) {
           await FriendlyMatchTeamsModel.destroy({
@@ -406,7 +466,9 @@ export const checkTeamsRuleCompliance = async (req: AuthRequest, res: Response):
             }
           });
           
-          res.status(403).json({ message: `Time ${nome} não se qualifica nas regras da partida` });
+          console.log(`Time ${teamName} removido por não conformidade`);
+          
+          res.status(403).json({ message: `Time ${teamName} não se qualifica nas regras da partida` });
           return;
         }
       }
@@ -414,7 +476,11 @@ export const checkTeamsRuleCompliance = async (req: AuthRequest, res: Response):
     
     res.status(200).json({ message: 'Todos os times estão em conformidade com as regras' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao verificar conformidade das regras' });
+    console.error('Erro ao verificar conformidade das regras:', error);
+    res.status(500).json({ 
+      message: 'Erro ao verificar conformidade das regras',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
 };
 

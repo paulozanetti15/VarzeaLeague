@@ -156,7 +156,7 @@ router.get('/', authenticateToken, getOverview);
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
- *         name: q
+ *         name: search
  *         required: true
  *         schema:
  *           type: string

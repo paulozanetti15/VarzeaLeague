@@ -3,20 +3,21 @@ import sequelize from '../config/database';
 import Team from './TeamModel';
 import Championship from './ChampionshipModel';
 
+
 interface ChampionshipPenaltyAttributes {
   id: number;
-  idTime: number;
-  motivo: string;
-  idChampionship: number;
-  idMatchChampionship?: number;
+  teamId: number;
+  reason: string;
+  championshipId: number;
+  matchChampionshipId?: number;
 }
 
 class ChampionshipPenalty extends Model<ChampionshipPenaltyAttributes> {
   public id!: number;
-  public idTime!: number;
-  public motivo!: string;
-  public idChampionship!: number;
-  public idMatchChampionship?: number;
+  public teamId!: number;
+  public reason!: string;
+  public championshipId!: number;
+  public matchChampionshipId?: number;
 }
 
 ChampionshipPenalty.init(
@@ -26,25 +27,22 @@ ChampionshipPenalty.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    idTime: {
+    teamId: {
       type: DataTypes.INTEGER,
-      field: 'id_time',
       allowNull: false,
       references: { model: 'teams', key: 'id' },
     },
-    idChampionship: {
+    championshipId: {
       type: DataTypes.INTEGER,
-      field: 'id_championship',
       allowNull: false,
       references: { model: 'championships', key: 'id' },
     },
-    idMatchChampionship: {
+    matchChampionshipId: {
       type: DataTypes.INTEGER,
-      field: 'id_match_championship',
       allowNull: true,
       references: { model: 'match_championship', key: 'id' },
     },
-    motivo: {
+    reason: {
       type: DataTypes.STRING,
       allowNull: false,
     },

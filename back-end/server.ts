@@ -30,6 +30,8 @@ import { seedUserTypes } from './seeds/userTypes';
 import { associateModels } from './models/associations'; 
 import FriendlyMatchPenalty from './models/FriendlyMatchPenaltyModel';
 import ChampionshipPenalty from './models/ChampionshipPenaltyModel';
+import ChampionshipMatchGoal from './models/ChampionshipMatchGoalModel';
+import ChampionshipMatchCard from './models/ChampionshipMatchCardModel';
 import fs from 'fs';
 import championshipRoutes from './routes/championshipRoutes';
 import userTypeRoutes from './routes/userTypeRoutes';
@@ -37,6 +39,7 @@ import overviewRoutes from './routes/overviewRoutes';
 import rankingRoutes from './routes/rankingRoutes';
 import MatchChampionship from './models/MatchChampionshipModel';
 import MatchChampionshpReport from './models/MatchReportChampionshipModel';
+import MatchChampionshipTeams from './models/MatchChampionshipTeamsModel';
 dotenv.config();
 
 import {
@@ -76,7 +79,7 @@ app.use('/api/team-players', TeamPlayerRoutes);
 app.use('/api/teams',teamRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/players', playerRoutes);
-app.use('/api/rules', RulesRoutes);
+app.use('/api/match-rules', RulesRoutes);
 app.use('/api/championships', championshipRoutes);
 app.use('/api/usertypes', userTypeRoutes);
 app.use('/api/overview', overviewRoutes);
@@ -121,8 +124,8 @@ const startServer = async () => {
     await AttendanceModel.sync();
     console.log('Modelo Attendance sincronizado.');
      
-  await FriendlyMatchPenalty.sync();
-  console.log('Modelo Punicao Partida Amistosa sincronizado.');
+    await FriendlyMatchPenalty.sync();
+    console.log('Modelo Punicao Partida Amistosa sincronizado.');
 
     const { default: ChampionshipModel } = await import('./models/ChampionshipModel');
     await ChampionshipModel.sync();
@@ -165,8 +168,15 @@ const startServer = async () => {
     await ChampionshipPenalty.sync();
     console.log('Modelo ChampionshipPenalty sincronizado.');
     
+    await ChampionshipMatchGoal.sync();
+    console.log('Modelo ChampionshipMatchGoal sincronizado.');
+    
+    await ChampionshipMatchCard.sync();
+    console.log('Modelo ChampionshipMatchCard sincronizado.');
+    
     await seedUserTypes();
-
+    await MatchChampionshipTeams.sync();
+    console.log('Modelo MatchChampionshipTeams sincronizado.');
     
     const port = process.env.PORT || 3001;
     app.listen(port, () => {

@@ -33,35 +33,37 @@ const router = express.Router();
  *             type: object
  *             required:
  *               - matchId
- *               - idadeMinima
- *               - idadeMaxima
- *               - genero
+ *               - registrationDeadline
+ *               - minimumAge
+ *               - maximumAge
+ *               - gender
  *             properties:
  *               matchId:
  *                 type: integer
  *                 description: ID da partida amistosa
  *                 example: 1
- *               idadeMinima:
+ *               registrationDeadline:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Data limite para inscrições
+ *                 example: 2025-11-10T23:59:59.000Z
+ *               minimumAge:
  *                 type: integer
  *                 minimum: 0
  *                 maximum: 100
  *                 description: Idade mínima permitida
  *                 example: 18
- *               idadeMaxima:
+ *               maximumAge:
  *                 type: integer
  *                 minimum: 0
  *                 maximum: 100
  *                 description: Idade máxima permitida
  *                 example: 45
- *               genero:
+ *               gender:
  *                 type: string
  *                 enum: [Masculino, Feminino, Ambos]
  *                 description: Gênero permitido na partida
  *                 example: Masculino
- *               observacoes:
- *                 type: string
- *                 description: Observações adicionais sobre as regras
- *                 example: Partida recreativa, sem contato físico intenso
  *     responses:
  *       201:
  *         description: Regras criadas com sucesso
@@ -82,13 +84,17 @@ const router = express.Router();
  *                     matchId:
  *                       type: integer
  *                       example: 1
- *                     idadeMinima:
+ *                     registrationDeadline:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2025-11-10T23:59:59.000Z
+ *                     minimumAge:
  *                       type: integer
  *                       example: 18
- *                     idadeMaxima:
+ *                     maximumAge:
  *                       type: integer
  *                       example: 45
- *                     genero:
+ *                     gender:
  *                       type: string
  *                       example: Masculino
  *       400:
@@ -155,19 +161,20 @@ router.post('/', authenticateToken, insertRules);
  *                 matchId:
  *                   type: integer
  *                   example: 1
- *                 idadeMinima:
+ *                 registrationDeadline:
+ *                   type: string
+ *                   format: date-time
+ *                   example: 2025-11-10T23:59:59.000Z
+ *                 minimumAge:
  *                   type: integer
  *                   example: 18
- *                 idadeMaxima:
+ *                 maximumAge:
  *                   type: integer
  *                   example: 45
- *                 genero:
+ *                 gender:
  *                   type: string
  *                   enum: [Masculino, Feminino, Ambos]
  *                   example: Masculino
- *                 observacoes:
- *                   type: string
- *                   example: Partida recreativa
  *       401:
  *         description: Não autenticado
  *         content:
@@ -260,23 +267,28 @@ router.delete('/:id', authenticateToken, deleteRules);
  *           schema:
  *             type: object
  *             properties:
- *               idadeMinima:
+ *               registrationDeadline:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Data limite para inscrições
+ *                 example: 2025-11-15T23:59:59.000Z
+ *               minimumAge:
  *                 type: integer
  *                 minimum: 0
  *                 maximum: 100
+ *                 description: Idade mínima permitida
  *                 example: 20
- *               idadeMaxima:
+ *               maximumAge:
  *                 type: integer
  *                 minimum: 0
  *                 maximum: 100
+ *                 description: Idade máxima permitida
  *                 example: 50
- *               genero:
+ *               gender:
  *                 type: string
  *                 enum: [Masculino, Feminino, Ambos]
+ *                 description: Gênero permitido na partida
  *                 example: Ambos
- *               observacoes:
- *                 type: string
- *                 example: Partida mista atualizada
  *     responses:
  *       200:
  *         description: Regras atualizadas com sucesso
@@ -317,52 +329,6 @@ router.delete('/:id', authenticateToken, deleteRules);
  */
 router.put('/:id', authenticateToken, updateRules);
 
-/**
- * @swagger
- * /api/match-rules/ultimapartida:
- *   get:
- *     summary: Buscar todas as regras de partidas (última partida)
- *     tags: [Regras de Partidas Amistosas]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Lista de todas as regras
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                     example: 1
- *                   matchId:
- *                     type: integer
- *                     example: 1
- *                   idadeMinima:
- *                     type: integer
- *                     example: 18
- *                   idadeMaxima:
- *                     type: integer
- *                     example: 45
- *                   genero:
- *                     type: string
- *                     example: Masculino
- *       401:
- *         description: Não autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: Erro interno do servidor
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-router.get('/ultimapartida', authenticateToken, getAllRules);
+
 
 export default router;

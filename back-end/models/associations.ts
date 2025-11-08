@@ -19,6 +19,8 @@ import FriendlyMatchesRulesModel from './FriendlyMatchesRulesModel';
 import FriendlyMatchPenalty from './FriendlyMatchPenaltyModel';
 import ChampionshipPenalty from './ChampionshipPenaltyModel';
 import TeamChampionship from './TeamChampionshipModel';
+import ChampionshipMatchGoal from './ChampionshipMatchGoalModel';
+import ChampionshipMatchCard from './ChampionshipMatchCardModel';
 
 
 export function associateModels() {
@@ -328,22 +330,22 @@ export function associateModels() {
   });
 
   ChampionshipPenalty.belongsTo(Team, {
-    foreignKey: 'idTeam',
+    foreignKey: 'teamId',
     as: 'championshipPenaltyTeam'
   });
   
   ChampionshipPenalty.belongsTo(Championship, {
-    foreignKey: 'idChampionship',
+    foreignKey: 'championshipId',
     as: 'penaltyChampionship'
   });
   
   Team.hasMany(ChampionshipPenalty, {
-    foreignKey: 'idTeam',
+    foreignKey: 'teamId',
     as: 'championshipPenalties'
   });
   
   Championship.hasMany(ChampionshipPenalty, {
-    foreignKey: 'idChampionship',
+    foreignKey: 'championshipId',
     as: 'championshipPenaltiesRecords'
   });
 
@@ -365,5 +367,65 @@ export function associateModels() {
   Championship.hasMany(TeamChampionship, {
     foreignKey: 'championshipId',
     as: 'teamChampionships'
+  });
+
+  ChampionshipMatchGoal.belongsTo(User, { 
+    foreignKey: 'user_id', 
+    as: 'user' 
+  });
+  
+  ChampionshipMatchGoal.belongsTo(Player, { 
+    foreignKey: 'player_id', 
+    as: 'player' 
+  });
+  
+  ChampionshipMatchGoal.belongsTo(MatchChampionship, { 
+    foreignKey: 'match_id', 
+    as: 'championshipMatch' 
+  });
+  
+  User.hasMany(ChampionshipMatchGoal, { 
+    foreignKey: 'user_id', 
+    as: 'championshipGoals' 
+  });
+  
+  Player.hasMany(ChampionshipMatchGoal, { 
+    foreignKey: 'player_id', 
+    as: 'championshipGoals' 
+  });
+  
+  MatchChampionship.hasMany(ChampionshipMatchGoal, { 
+    foreignKey: 'match_id', 
+    as: 'goals' 
+  });
+
+  ChampionshipMatchCard.belongsTo(User, { 
+    foreignKey: 'user_id', 
+    as: 'user' 
+  });
+  
+  ChampionshipMatchCard.belongsTo(Player, { 
+    foreignKey: 'player_id', 
+    as: 'player' 
+  });
+  
+  ChampionshipMatchCard.belongsTo(MatchChampionship, { 
+    foreignKey: 'match_id', 
+    as: 'championshipMatch' 
+  });
+  
+  User.hasMany(ChampionshipMatchCard, { 
+    foreignKey: 'user_id', 
+    as: 'championshipCards' 
+  });
+  
+  Player.hasMany(ChampionshipMatchCard, { 
+    foreignKey: 'player_id', 
+    as: 'championshipCards' 
+  });
+  
+  MatchChampionship.hasMany(ChampionshipMatchCard, { 
+    foreignKey: 'match_id', 
+    as: 'cards' 
   });
 }

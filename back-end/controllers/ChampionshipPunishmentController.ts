@@ -4,6 +4,7 @@ import TeamModel from "../models/TeamModel";
 import UserModel from "../models/UserModel";
 import Championship from "../models/ChampionshipModel";
 import TeamChampionship from "../models/TeamChampionshipModel";
+import MatchChampionshipTeams from "../models/MatchChampionshipTeamsModel";
 import ChampionshipPenalty from "../models/ChampionshipPenaltyModel";
 import MatchChampionshpReport from "../models/MatchReportChampionshipModel";
 
@@ -16,19 +17,19 @@ export const inserirPunicaoCampeonato = async (req: AuthRequest, res: Response):
             return;
         }
         
-        const idChampionship = Number(req.params.idCampeonato);
-        const idMatchChampionship = Number(req.body.id_match_championship);
-        const idTime = Number(req.body.idtime);
-        const motivo = req.body.motivo;
+        const championshipId = Number(req.params.idCampeonato);
+        const matchChampionshipId = Number(req.body.match_championship_id);
+        const teamId = Number(req.body.team_id);
+        const reason = req.body.reason;
         const teamHomeId = Number(req.body.team_home);
         const teamAwayId = Number(req.body.team_away);
         
-        if (!idChampionship || !idMatchChampionship || !idTime || !motivo || !teamHomeId || !teamAwayId) {
-            res.status(400).json({ message: 'Dados inválidos: id do campeonato, id da partida, time punido, motivo, time da casa e visitante são obrigatórios' });
+        if (!championshipId || !matchChampionshipId || !teamId || !reason || !teamHomeId || !teamAwayId) {
+            res.status(400).json({ message: 'Dados inválidos: championshipId, matchChampionshipId, teamId, reason, team_home e team_away são obrigatórios' });
             return;
         }
 
-        const championship = await Championship.findByPk(idChampionship);
+        const championship = await Championship.findByPk(championshipId);
         
         if (!championship) {
             res.status(404).json({ message: 'Campeonato não encontrado' });
@@ -44,7 +45,7 @@ export const inserirPunicaoCampeonato = async (req: AuthRequest, res: Response):
         }
 
         const teamsCount = await TeamChampionship.count({
-            where: { championshipId: idChampionship }
+            where: { championshipId }
         });
 
         if (teamsCount < 2) {
@@ -63,8 +64,8 @@ export const inserirPunicaoCampeonato = async (req: AuthRequest, res: Response):
 
         const existing = await ChampionshipPenalty.findOne({ 
             where: { 
-                idChampionship,
-                idMatchChampionship 
+                championshipId,
+                matchChampionshipId 
             } 
         });
         
@@ -74,7 +75,7 @@ export const inserirPunicaoCampeonato = async (req: AuthRequest, res: Response):
         }
 
         const teamInChamp = await TeamChampionship.findOne({
-            where: { championshipId: idChampionship, teamId: idTime }
+            where: { championshipId, teamId }
         });
         
         if (!teamInChamp) {
@@ -83,11 +84,11 @@ export const inserirPunicaoCampeonato = async (req: AuthRequest, res: Response):
         }
 
         const homeInChamp = await TeamChampionship.findOne({
-            where: { championshipId: idChampionship, teamId: teamHomeId }
+            where: { championshipId, teamId: teamHomeId }
         });
         
         const awayInChamp = await TeamChampionship.findOne({
-            where: { championshipId: idChampionship, teamId: teamAwayId }
+            where: { championshipId, teamId: teamAwayId }
         });
         
         if (!homeInChamp || !awayInChamp) {
@@ -96,7 +97,7 @@ export const inserirPunicaoCampeonato = async (req: AuthRequest, res: Response):
         }
 
         const existingSumula = await MatchChampionshpReport.findOne({
-            where: { match_id: idMatchChampionship }
+            where: { match_id: matchChampionshipId }
         });
         
         if (existingSumula) {
@@ -105,17 +106,17 @@ export const inserirPunicaoCampeonato = async (req: AuthRequest, res: Response):
         }
 
         await ChampionshipPenalty.create({ 
-            idTime, 
-            motivo, 
-            idChampionship,
-            idMatchChampionship 
+            teamId, 
+            reason, 
+            championshipId,
+            matchChampionshipId 
         });
 
-        const homeScore = idTime === teamHomeId ? 0 : 3;
-        const awayScore = idTime === teamAwayId ? 0 : 3;
+        const homeScore = teamId === teamHomeId ? 0 : 3;
+        const awayScore = teamId === teamAwayId ? 0 : 3;
 
         await MatchChampionshpReport.create({
-            match_id: idMatchChampionship,
+            match_id: matchChampionshipId,
             team_home: teamHomeId,
             team_away: teamAwayId,
             teamHome_score: homeScore,
@@ -133,21 +134,23 @@ export const inserirPunicaoCampeonato = async (req: AuthRequest, res: Response):
 export const buscarPunicaoCampeonato = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.user?.id;
-        
         if (!userId) {
             res.status(401).json({ message: 'Usuário não autenticado' });
             return;
         }
-        
-        const idChampionship = Number(req.params.idCampeonato);
-        
+        const championshipId = Number(req.params.idCampeonato);
+        const matchChampionshipId = Number(req.params.match_championship_id);
+
+        const where: any = { championshipId, matchChampionshipId };
+
         const rows = await ChampionshipPenalty.findAll({
-            where: { idChampionship },
+            where,
             attributes: [
-                ['idTime', 'idtime'],
-                'motivo',
-                ['idChampionship', 'idchampionship'],
-                'id'
+                'id',
+                'teamId',
+                'reason',
+                'championshipId',
+                'matchChampionshipId'
             ],
             include: [{
                 model: TeamModel,
@@ -155,70 +158,67 @@ export const buscarPunicaoCampeonato = async (req: AuthRequest, res: Response): 
                 attributes: ['id', 'name']
             }]
         });
-        
+
         res.status(200).json(rows);
     } catch (error) {
-        res.status(500).json({ message: 'Erro ao buscar punição' });
+        console.error('Erro ao buscar punição de campeonato:', error);
+        res.status(500).json({ message: 'Erro ao buscar punição', error: error instanceof Error ? error.message : String(error) });
     }
 };
 
 export const alterarPunicaoCampeonato = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.user?.id;
-        
         if (!userId) {
             res.status(401).json({ message: 'Usuário não autenticado' });
             return;
         }
-        
-        const idChampionship = Number(req.params.idCampeonato);
-        const novoMotivo = req.body.motivo as string | undefined;
-        const novoIdTime = req.body.idtime ? Number(req.body.idtime) : undefined;
+        const championshipId = Number(req.params.idCampeonato);
+        const matchChampionshipId = Number(req.params.match_championship_id);
+        const newReason = req.body.reason as string | undefined;
+        const newTeamId = req.body.team_id ? Number(req.body.team_id) : undefined;
 
-        const championship = await Championship.findByPk(idChampionship);
-        
+        const championship = await Championship.findByPk(championshipId);
         if (!championship) {
             res.status(404).json({ message: 'Campeonato não encontrado' });
             return;
         }
-        
         const user = await UserModel.findByPk(userId);
         const isOrganizer = Number((championship as any).created_by) === userId;
         const isAdmin = user && (user as any).userTypeId === 1;
-        
         if (!isOrganizer && !isAdmin) {
             res.status(403).json({ message: 'Permissão negada. Apenas o criador ou admin pode alterar a punição' });
             return;
         }
 
         const registro = await ChampionshipPenalty.findOne({
-            where: { idChampionship }
+            where: { championshipId, matchChampionshipId }
         });
-        
         if (!registro) {
-            res.status(404).json({ message: 'Punição não encontrada para este campeonato' });
+            res.status(404).json({ message: 'Punição não encontrada para este campeonato/partida' });
             return;
         }
 
-        if (novoIdTime) {
+        if (newTeamId) {
+            const teamExists = await TeamModel.findByPk(newTeamId);
+            if (!teamExists || (teamExists as any).isDeleted) {
+                res.status(404).json({ message: 'Time não encontrado ou foi excluído' });
+                return;
+            }
+
             const teamInChamp = await TeamChampionship.findOne({
-                where: { championshipId: idChampionship, teamId: novoIdTime }
+                where: { championshipId, teamId: newTeamId }
             });
-            
             if (!teamInChamp) {
                 res.status(400).json({ message: 'O time selecionado não está inscrito neste campeonato' });
                 return;
             }
-            
-            (registro as any).idTime = novoIdTime;
+            (registro as any).teamId = newTeamId;
         }
-        
-        if (typeof novoMotivo === 'string') {
-            (registro as any).motivo = novoMotivo;
+        if (typeof newReason === 'string') {
+            (registro as any).reason = newReason;
         }
-        
         await registro.save();
-        
         res.status(200).json({ message: 'Punição alterada com sucesso' });
     } catch (error) {
         res.status(500).json({ message: 'Erro ao alterar punição' });
@@ -228,61 +228,78 @@ export const alterarPunicaoCampeonato = async (req: AuthRequest, res: Response):
 export const deletarPunicaoCampeonato = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const userId = req.user?.id;
-        
         if (!userId) {
             res.status(401).json({ message: 'Usuário não autenticado' });
             return;
         }
-        
-        const idChampionship = Number(req.params.idCampeonato);
-        const idMatchChampionship = Number(req.query.idMatchChampionship);
-        
-        const championship = await Championship.findByPk(idChampionship);
-        
+        const championshipId = Number(req.params.idCampeonato);
+        const matchChampionshipId = Number(req.params.match_championship_id);
+
+        const championship = await Championship.findByPk(championshipId);
         if (!championship) {
             res.status(404).json({ message: 'Campeonato não encontrado' });
             return;
         }
-        
         const user = await UserModel.findByPk(userId);
         const isOrganizer = Number((championship as any).created_by) === userId;
         const isAdmin = user && (user as any).userTypeId === 1;
-        
         if (!isOrganizer && !isAdmin) {
             res.status(403).json({ message: 'Permissão negada. Apenas o criador ou admin pode deletar a punição' });
             return;
         }
-        
-        const whereClause: any = { idChampionship };
-        
-        if (idMatchChampionship) {
-            whereClause.idMatchChampionship = idMatchChampionship;
-        }
+        const whereClause: any = { championshipId, matchChampionshipId };
 
         const penalty = await ChampionshipPenalty.findOne({ where: whereClause });
-        
         if (!penalty) {
             res.status(404).json({ message: 'Punição não encontrada' });
             return;
         }
 
-        if ((penalty as any).idMatchChampionship) {
+        console.log('Penalty found:', {
+            id: penalty.id,
+            championshipId: penalty.championshipId,
+            matchChampionshipId: penalty.matchChampionshipId,
+            teamId: penalty.teamId
+        });
+
+        if ((penalty as any).matchChampionshipId) {
+            console.log('Looking for sumula with match_id:', (penalty as any).matchChampionshipId);
             const sumula = await MatchChampionshpReport.findOne({ 
                 where: { 
-                    match_id: (penalty as any).idMatchChampionship,
+                    match_id: (penalty as any).matchChampionshipId,
                     is_penalty: true 
                 } 
             });
-
+            console.log('Sumula found:', sumula ? { id: (sumula as any).id, match_id: (sumula as any).match_id, is_penalty: (sumula as any).is_penalty } : 'null');
             if (sumula) {
-                await sumula.destroy();
+                console.log('Destroying sumula with id:', (sumula as any).id);
+                try {
+                    const destroyResult = await sumula.destroy();
+                    console.log('Sumula destroy result:', destroyResult);
+                    
+                    const checkDeleted = await MatchChampionshpReport.findByPk((sumula as any).id);
+                    console.log('Verification after destroy - sumula still exists?:', checkDeleted ? 'YES (PROBLEM!)' : 'NO (correctly deleted)');
+                } catch (destroyError) {
+                    console.error('Error destroying sumula:', destroyError);
+                    throw destroyError;
+                }
+            } else {
+                console.log('No sumula found to destroy');
             }
+        } else {
+            console.log('Penalty has no matchChampionshipId, skipping sumula deletion');
         }
 
-        await ChampionshipPenalty.destroy({ where: whereClause });
-        
+        console.log('Destroying penalty');
+        const penaltyDestroyResult = await ChampionshipPenalty.destroy({ where: whereClause });
+        console.log('Penalty destroy result (rows affected):', penaltyDestroyResult);
         res.status(200).json({ message: 'Punição e súmula deletadas com sucesso' });
     } catch (error) {
-        res.status(500).json({ message: 'Erro ao deletar punição' });
+        console.error('Error in deletarPunicaoCampeonato:', error);
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+        res.status(500).json({ 
+            message: 'Erro ao deletar punição',
+            error: error instanceof Error ? error.message : String(error)
+        });
     }
 };

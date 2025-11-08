@@ -44,7 +44,7 @@ const routerReset = Router();
  *               value:
  *                 email: admin@varzealeague.com
  *     responses:
- *       200:
+ *       201:
  *         description: Email de redefinição enviado com sucesso
  *         content:
  *           application/json:
@@ -57,12 +57,7 @@ const routerReset = Router();
  *               emailEnviado:
  *                 summary: Confirmação de envio
  *                 value:
- *                   message: Email de redefinição de senha enviado com sucesso
- *               tokenGerado:
- *                 summary: Token gerado (ambiente dev)
- *                 value:
- *                   message: Token de redefinição gerado
- *                   token: abc123def456
+ *                   message: Email de recuperação enviado com sucesso
  *       400:
  *         description: Dados inválidos ou email não fornecido
  *         content:

@@ -50,36 +50,37 @@ export const checkAndConfirmFullMatches = async (): Promise<void> => {
     const candidates = await FriendlyMatchesModel.findAll({
       where: {
         status: { [Op.notIn]: ['finalizada', 'cancelada', 'confirmada'] }
-      },
-      include: [{ 
-        model: FriendlyMatchesRulesModel, 
-        as: 'rules', 
-        required: false 
-      }]
+      }
     });
 
     for (const match of candidates) {
-      const matchWithRules = match as any;
-      const regras = matchWithRules.rules;
-      
-      if (!regras?.registrationDeadline) continue;
-
-      const deadline = new Date(regras.registrationDeadline);
-      deadline.setHours(23, 59, 59, 999);
-
-      if (now > deadline) {
-        const teamsCount = await FriendlyMatchTeamsModel.count({ 
+      try {
+        const rules = await FriendlyMatchesRulesModel.findOne({ 
           where: { matchId: match.id } 
         });
+        
+        if (!rules?.registrationDeadline) continue;
 
-        if (teamsCount >= 2 && match.status !== 'confirmada') {
-          await match.update({ status: 'confirmada' });
-        } else if (teamsCount < 2 && match.status !== 'cancelada') {
-          await match.update({ status: 'cancelada' });
+        const deadline = new Date(rules.registrationDeadline);
+        deadline.setHours(23, 59, 59, 999);
+
+        if (now > deadline) {
+          const teamsCount = await FriendlyMatchTeamsModel.count({ 
+            where: { matchId: match.id } 
+          });
+
+          if (teamsCount >= 2 && match.status !== 'confirmada') {
+            await match.update({ status: 'confirmada' });
+          } else if (teamsCount < 2 && match.status !== 'cancelada') {
+            await match.update({ status: 'cancelada' });
+          }
         }
+      } catch (matchError) {
+        console.error(`Erro ao processar partida ${match.id}:`, matchError);
       }
     }
   } catch (error) {
+    console.error('Erro ao confirmar partidas completas:', error);
     throw new Error('Erro ao confirmar partidas completas');
   }
 };
@@ -92,34 +93,35 @@ export const checkAndSetSemVagas = async (): Promise<void> => {
     const candidates = await FriendlyMatchesModel.findAll({
       where: {
         status: { [Op.notIn]: ['finalizada', 'cancelada', 'sem_vagas'] }
-      },
-      include: [{ 
-        model: FriendlyMatchesRulesModel, 
-        as: 'rules', 
-        required: false 
-      }]
+      }
     });
 
     for (const match of candidates) {
-      const matchWithRules = match as any;
-      const regras = matchWithRules.rules;
-      
-      if (!regras?.registrationDeadline) continue;
+      try {
+        const rules = await FriendlyMatchesRulesModel.findOne({ 
+          where: { matchId: match.id } 
+        });
+        
+        if (!rules?.registrationDeadline) continue;
 
-      const deadline = new Date(regras.registrationDeadline);
-      deadline.setHours(23, 59, 59, 999);
+        const deadline = new Date(rules.registrationDeadline);
+        deadline.setHours(23, 59, 59, 999);
 
-      if (now > deadline) continue;
+        if (now > deadline) continue;
 
-      const teamsCount = await FriendlyMatchTeamsModel.count({ 
-        where: { matchId: match.id } 
-      });
+        const teamsCount = await FriendlyMatchTeamsModel.count({ 
+          where: { matchId: match.id } 
+        });
 
-      if (teamsCount >= 2 && match.status !== 'sem_vagas') {
-        await match.update({ status: 'sem_vagas' });
+        if (teamsCount >= 2 && match.status !== 'sem_vagas') {
+          await match.update({ status: 'sem_vagas' });
+        }
+      } catch (matchError) {
+        console.error(`Erro ao processar partida ${match.id}:`, matchError);
       }
     }
   } catch (error) {
+    console.error('Erro ao atualizar partidas sem vagas:', error);
     throw new Error('Erro ao atualizar partidas sem vagas');
   }
 };

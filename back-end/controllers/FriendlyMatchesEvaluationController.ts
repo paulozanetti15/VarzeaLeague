@@ -24,6 +24,92 @@ export const listMatchEvaluations = async (req: Request, res: Response): Promise
   }
 };
 
+export const createMatchEvaluation = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const matchId = Number(req.params.id);
+    const { rating, comment } = req.body as { rating: number; comment?: string };
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      res.status(401).json({ message: 'Não autenticado' });
+      return;
+    }
+    
+    if (!rating || rating < 1 || rating > 5) {
+      res.status(400).json({ message: 'Rating deve ser 1-5' });
+      return;
+    }
+
+    const match = await Match.findByPk(matchId);
+    if (!match) {
+      res.status(404).json({ message: 'Partida não encontrada' });
+      return;
+    }
+    
+    let participated = match.organizerId === userId;
+    if (!participated) {
+      const matchTeams = await MatchTeams.findAll({ where: { matchId }, attributes: ['teamId'] });
+      const teamIds = matchTeams.map((t: any) => t.teamId);
+      if (teamIds.length) {
+        const membership = await TeamUser.findOne({ where: { teamId: teamIds, userId } as any });
+        if (membership) participated = true;
+      }
+    }
+    
+    if (!participated) {
+      res.status(403).json({ message: 'Apenas participantes podem avaliar' });
+      return;
+    }
+
+    const existing = await MatchEvaluation.findOne({ where: { match_id: matchId, evaluator_id: userId } });
+    if (existing) {
+      res.status(409).json({ message: 'Você já avaliou esta partida' });
+      return;
+    }
+    
+    const created = await MatchEvaluation.create({ match_id: matchId, evaluator_id: userId, rating, comment });
+    res.status(201).json(created);
+  } catch (err) {
+    res.status(500).json({ message: 'Erro ao criar avaliação' });
+  }
+};
+
+export const updateMatchEvaluation = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const matchId = Number(req.params.id);
+    const { rating, comment } = req.body as { rating: number; comment?: string };
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      res.status(401).json({ message: 'Não autenticado' });
+      return;
+    }
+    
+    if (!rating || rating < 1 || rating > 5) {
+      res.status(400).json({ message: 'Rating deve ser 1-5' });
+      return;
+    }
+
+    const match = await Match.findByPk(matchId);
+    if (!match) {
+      res.status(404).json({ message: 'Partida não encontrada' });
+      return;
+    }
+
+    const existing = await MatchEvaluation.findOne({ where: { match_id: matchId, evaluator_id: userId } });
+    if (!existing) {
+      res.status(404).json({ message: 'Avaliação não encontrada' });
+      return;
+    }
+    
+    existing.set({ rating, comment });
+    await existing.save();
+    res.status(200).json(existing);
+  } catch (err) {
+    res.status(500).json({ message: 'Erro ao atualizar avaliação' });
+  }
+};
+
 export const upsertMatchEvaluation = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const matchId = Number(req.params.id);
