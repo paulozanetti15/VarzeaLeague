@@ -237,7 +237,6 @@ const TeamList = () => {
                       <div className="team-body-section">
                         <div className="team-section-header">
                           <div className="team-section-title-group">
-                            <SportsSoccerIcon className="team-section-title-icon" />
                             <h3>Elenco</h3>
                           </div>
                           <button
