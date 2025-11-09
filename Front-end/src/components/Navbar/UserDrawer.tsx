@@ -4,6 +4,7 @@ import { Person, Logout } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
 import { getRoleName } from '../../utils/roleUtils';
 import { Chip } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 interface UserDrawerProps {
   open: boolean;
@@ -12,6 +13,7 @@ interface UserDrawerProps {
 
 const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose }) => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
 
   const handleLogout = () => {
@@ -20,8 +22,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose }) => {
   };
 
   const handleNavigation = (path: string) => {
-    // Note: navigation logic should be handled by parent or useNavigate here
-    // For now, keeping simple
+    navigate(path);
     onClose();
   };
 
