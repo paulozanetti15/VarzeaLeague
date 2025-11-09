@@ -180,7 +180,7 @@ router.get('/:id', authenticateToken, getById);
  *             properties:
  *               name:
  *                 type: string
- *                 description: Nome do usuário (será normalizado: trim + lowercase)
+ *                 description: "Nome do usuário (será normalizado: trim + lowercase)"
  *                 example: Maria Santos
  *               email:
  *                 type: string
@@ -189,7 +189,7 @@ router.get('/:id', authenticateToken, getById);
  *               password:
  *                 type: string
  *                 format: password
- *                 description: Será hasheado com bcrypt (salt 10)
+ *                 description: "Será hasheado com bcrypt (salt 10)"
  *                 example: Senha123!
  *               cpf:
  *                 type: string
@@ -335,7 +335,7 @@ router.post('/', authenticateToken, store);
  *             properties:
  *               name:
  *                 type: string
- *                 description: Nome (será normalizado: trim + lowercase)
+ *                 description: "Nome (será normalizado: trim + lowercase)"
  *                 example: João Silva Atualizado
  *               email:
  *                 type: string

@@ -546,7 +546,7 @@ router.put('/:teamId', authenticateToken, upload.single('banner'), TeamControlle
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Confirmação necessária. Para deletar o time, envie confirm: true no corpo da requisição
+ *               message: "Confirmação necessária. Para deletar o time, envie confirm: true no corpo da requisição"
  *       401:
  *         description: Não autenticado
  *         content:

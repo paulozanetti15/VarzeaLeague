@@ -510,9 +510,9 @@ router.delete('/team/:teamId/player/:playerId', PlayerController.removeFromTeam)
  *                   processados: 0
  *                   comErro: 3
  *                   erros:
- *                     - player: João
- *                       motivo: Campos obrigatórios faltando
- *                       detalhes: É necessário preencher: nome, gênero, data de nascimento e posição
+                     - player: João
+                       motivo: Campos obrigatórios faltando
+                       detalhes: "É necessário preencher: nome, gênero, data de nascimento e posição"
  *       401:
  *         description: Não autenticado
  *         content:
