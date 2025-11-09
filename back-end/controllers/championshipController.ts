@@ -6,6 +6,8 @@ import TeamPlayer from '../models/TeamPlayerModel';
 import TeamChampionship from '../models/TeamChampionshipModel'; // Added import for TeamChampionshipModel
 import jwt from 'jsonwebtoken';
 import { Op } from 'sequelize';
+import path from 'path';
+import fs from 'fs';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
 
@@ -544,5 +546,58 @@ export const publishChampionship = asyncHandler(async (req: Request, res: Respon
   } catch (error) {
     console.error('Erro ao publicar campeonato:', error);
     res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// Upload de logo do campeonato
+export const uploadChampionshipLogo = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  if (!req.file) {
+    return res.status(400).json({ message: 'Nenhum arquivo enviado' });
+  }
+
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ message: 'Token ausente' });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string | number };
+    const userId = Number(decoded.id);
+
+    const championship = await Championship.findByPk(parseInt(id));
+    if (!championship) {
+      return res.status(404).json({ message: 'Campeonato não encontrado' });
+    }
+
+    // Verificar se o usuário é o criador do campeonato
+    if (championship.created_by !== userId) {
+      return res.status(403).json({ message: 'Apenas o criador pode atualizar o logo' });
+    }
+
+    // Remover logo antigo se existir
+    if (championship.logo) {
+      const oldLogoPath = path.join(__dirname, '..', 'uploads', 'championships', championship.logo);
+      if (fs.existsSync(oldLogoPath)) {
+        try {
+          fs.unlinkSync(oldLogoPath);
+        } catch (err) {
+          console.warn('Erro ao remover logo antigo:', err);
+        }
+      }
+    }
+
+    // Atualizar logo no banco de dados
+    championship.logo = req.file.filename;
+    await championship.save();
+
+    res.json({
+      message: 'Logo atualizado com sucesso',
+      logo: `/uploads/championships/${championship.logo}`
+    });
+  } catch (error) {
+    console.error('Erro ao fazer upload do logo:', error);
+    res.status(500).json({ message: 'Erro ao fazer upload do logo' });
   }
 });

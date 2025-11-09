@@ -94,6 +94,18 @@ export async function getChampionshipTeams(champId: number) {
   return response.data;
 }
 
+export async function uploadChampionshipLogo(championshipId: number, file: File) {
+  const fd = new FormData();
+  fd.append('logo', file);
+  const response = await axios.post(`${API_BASE}/championships/${championshipId}/logo`, fd, {
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+  return response.data;
+}
+
 export default {
   getAllChampionships,
   createChampionship,
@@ -104,5 +116,6 @@ export default {
   joinChampionshipWithTeam,
   leaveChampionshipWithTeam,
   leaveChampionship,
-  getChampionshipTeams
+  getChampionshipTeams,
+  uploadChampionshipLogo
 };

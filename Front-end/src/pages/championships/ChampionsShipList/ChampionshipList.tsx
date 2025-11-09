@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './ChampionshipList.css';
 import { getAllChampionships } from '../../../services/championshipsServices';
 import trophy from "../../../assets/championship-trophy.svg";
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 interface Championship {
   id: number;
@@ -19,6 +20,7 @@ interface Championship {
   num_grupos?: number;
   times_por_grupo?: number;
   status?: string;
+  logo?: string | null;
 }
 
 export default function ChampionshipList() {
@@ -28,6 +30,14 @@ export default function ChampionshipList() {
   const [canCreateChampionship, setCanCreateChampionship] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number>(0);
   const navigate = useNavigate();
+
+  const getChampionshipLogoUrl = (logo?: string | null) => {
+    if (!logo) return null;
+    if (logo.startsWith('/uploads')) {
+      return `http://localhost:3001${logo}`;
+    }
+    return `http://localhost:3001/uploads/championships/${logo}`;
+  };
 
   useEffect(() => {
     // Verificar permissões do usuário
@@ -90,8 +100,15 @@ export default function ChampionshipList() {
           </div>
         ) : (
           <div className="championships-grid">
-            {championships.map((champ) => (
+            {championships.map((champ) => {
+              const logoUrl = getChampionshipLogoUrl(champ.logo);
+              return (
               <div key={champ.id} className="championship-card" onClick={() => navigate(`/championships/${champ.id}`)}>
+                {logoUrl && (
+                  <div className="championship-logo-container">
+                    <img src={logoUrl} alt={champ.name} className="championship-logo" />
+                  </div>
+                )}
                 <div className="championship-card-content">
                   <div className="championship-header">
                     <h2 className="championship-title">{champ.name}</h2>
@@ -104,44 +121,34 @@ export default function ChampionshipList() {
                   
                   <div className="championship-info">
                     {champ.modalidade && (
-                      <div className="info-item">
-                        <span className="info-label">Modalidade</span>
-                        <span className="info-value">{champ.modalidade}</span>
+                      <div className="info-row">
+                        <span className="info-label">Modalidade:</span>
+                        <span className="info-value-text">{champ.modalidade}</span>
                       </div>
                     )}
                     {champ.nomequadra && (
-                      <div className="info-item">
-                        <span className="info-label">Quadra</span>
-                        <span className="info-value">{champ.nomequadra}</span>
+                      <div className="info-row">
+                        <span className="info-label">Quadra:</span>
+                        <span className="info-value-text">{champ.nomequadra}</span>
                       </div>
                     )}
                     {champ.start_date && (
-                      <div className="info-item">
-                        <span className="info-label">Início</span>
-                        <span className="info-value">{new Date(champ.start_date).toLocaleDateString('pt-BR')}</span>
+                      <div className="info-row">
+                        <span className="info-label">Data Início:</span>
+                        <span className="info-value-text">{new Date(champ.start_date).toLocaleDateString('pt-BR')}</span>
                       </div>
                     )}
                     {champ.end_date && (
-                      <div className="info-item">
-                        <span className="info-label">Fim</span>
-                        <span className="info-value">{new Date(champ.end_date).toLocaleDateString('pt-BR')}</span>
+                      <div className="info-row">
+                        <span className="info-label">Data Fim:</span>
+                        <span className="info-value-text">{new Date(champ.end_date).toLocaleDateString('pt-BR')}</span>
                       </div>
                     )}
                     {champ.tipo && (
-                      <div className="info-item">
-                        <span className="info-label">Tipo</span>
+                      <div className="championship-metadata">
                         <span className={`championship-type ${champ.tipo.toLowerCase().replace(' ', '-')}`}>
-                          {champ.tipo === 'Mata-Mata' ? '🏆 Mata-Mata' : '⚽ Liga'}
-                        </span>
-                      </div>
-                    )}
-                    {champ.status && (
-                      <div className="info-item">
-                        <span className="info-label">Status</span>
-                        <span className={`championship-status ${champ.status.toLowerCase().replace(' ', '-')}`}>
-                          {champ.status === 'open' ? '🟢 Aberto' : 
-                           champ.status === 'closed' ? '🔴 Fechado' : 
-                           champ.status === 'in-progress' ? '🟡 Em Andamento' : champ.status}
+                          <EmojiEventsIcon sx={{ fontSize: '0.85rem' }} />
+                          {champ.tipo === 'mata-mata' ? 'Mata-Mata' : 'Liga'}
                         </span>
                       </div>
                     )}
@@ -185,7 +192,8 @@ export default function ChampionshipList() {
                   })()}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

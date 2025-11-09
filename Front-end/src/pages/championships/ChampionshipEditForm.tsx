@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getChampionshipById } from '../../services/championshipsServices';
+import { getChampionshipById, updateChampionship } from '../../services/championshipsServices';
 import trophy from '../../assets/championship-trophy.svg';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { format, parse, isValid } from 'date-fns';
@@ -248,7 +248,7 @@ const ChampionshipEditForm: React.FC = () => {
         end_date: formData.end_date,
       };
 
-      await api.championships.update(Number(id), payload);
+      await updateChampionship(Number(id), payload);
       setSuccess('Campeonato atualizado com sucesso!');
       
       setTimeout(() => {

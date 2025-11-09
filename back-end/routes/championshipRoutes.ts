@@ -11,10 +11,12 @@ import {
   applyToChampionship,
   getChampionshipApplications,
   updateApplicationStatus,
-  publishChampionship
+  publishChampionship,
+  uploadChampionshipLogo
 } from '../controllers/championshipController';
 import { busarPunicaoCampeonato, inserirPunicaoCampeonato, alterarPunicaoCampeonato, deletarPunicaoCampeonato } from '../controllers/PunicaoController';
 import { authenticateToken } from '../middleware/auth';
+import { uploadChampionship } from '../services/uploadService';
 
 const router = express.Router();
 
@@ -27,6 +29,7 @@ router.delete('/:id', authenticateToken, deleteChampionship);
 router.post('/:id/join-team', authenticateToken, joinTeamInChampionship);
 router.get('/:id/join-team', authenticateToken, getChampionshipTeams);
 router.delete('/:id/join-team/:teamId', authenticateToken, leaveTeamFromChampionship);
+router.post('/:id/logo', authenticateToken, uploadChampionship.single('logo'), uploadChampionshipLogo);
 
 // Aplicações de campeonatos
 router.post('/:championshipId/apply', authenticateToken, applyToChampionship);

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { createChampionship } from '../../services/championshipsServices';
+import { createChampionship, uploadChampionshipLogo } from '../../services/championshipsServices';
 import trophy from '../../assets/championship-trophy.svg';
 import './ChampionshipForm.css';
 import { format, parse, isValid } from 'date-fns';
@@ -10,6 +10,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import GroupsIcon from '@mui/icons-material/Groups';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
+import ImageIcon from '@mui/icons-material/Image';
 import { IconButton } from '@mui/material';
 
 interface ChampionshipFormData {
@@ -26,6 +27,7 @@ interface ChampionshipFormData {
   num_grupos?: number;
   times_por_grupo?: number;
   num_equipes_liga?: number;
+  logo?: File | null;
 }
 
 const ChampionshipForm: React.FC = () => {
@@ -40,6 +42,8 @@ const ChampionshipForm: React.FC = () => {
   const [currentEndMonth, setCurrentEndMonth] = useState(new Date());
   const startCalendarRef = useRef<HTMLDivElement>(null);
   const endCalendarRef = useRef<HTMLDivElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   // Fechar calendário quando clicar fora
   React.useEffect(() => {
@@ -74,7 +78,8 @@ const ChampionshipForm: React.FC = () => {
     genero: '',
     num_grupos: undefined,
     times_por_grupo: undefined,
-    num_equipes_liga: undefined
+    num_equipes_liga: undefined,
+    logo: null
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -204,6 +209,30 @@ const ChampionshipForm: React.FC = () => {
     return days;
   };
 
+  const handleLogoClick = () => {
+    if (logoInputRef.current) {
+      logoInputRef.current.click();
+    }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setFormData({
+        ...formData,
+        logo: file
+      });
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && event.target.result) {
+          setLogoPreview(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const validateForm = () => {
     const errors: {[k:string]: string} = {};
     
@@ -277,8 +306,22 @@ const ChampionshipForm: React.FC = () => {
         start_date: formData.start_date,
         end_date: formData.end_date
       };
+      // Remove logo do submitData pois será enviado separadamente
+      delete (submitData as any).logo;
 
-      await createChampionship(submitData);
+      const resposta = await createChampionship(submitData);
+      const championshipId = resposta?.id || resposta?.championship?.id;
+
+      if (!championshipId) throw new Error('ID do campeonato não encontrado na resposta');
+
+      // Upload do logo se fornecido
+      if (formData.logo) {
+        try {
+          await uploadChampionshipLogo(championshipId, formData.logo as File);
+        } catch (logoErr) {
+          console.warn('Erro ao enviar logo, mas campeonato criado:', logoErr);
+        }
+      }
       
       setSuccess('Campeonato criado com sucesso!');
       setTimeout(() => {
@@ -309,12 +352,39 @@ const ChampionshipForm: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         <div className="form-main-grid">
-          {/* Seção de Tipo de Campeonato - Lado Esquerdo */}
+          {/* Seção de Upload de Logo - Lado Esquerdo */}
           <div className="logo-section">
-            <div className="logo-preview-container">
-              <EmojiEventsIcon className="trophy-icon" />
-              <span>Tipo de Campeonato</span>
+            <div className="logo-preview-container" onClick={handleLogoClick}>
+              {logoPreview ? (
+                <img src={logoPreview} alt="Logo preview" className="logo-preview" />
+              ) : (
+                <div className="logo-placeholder">
+                  <ImageIcon />
+                  <span>Adicionar Logo</span>
+                </div>
+              )}
+              <input 
+                type="file" 
+                ref={logoInputRef}
+                className="hidden-file-input"
+                name="logo" 
+                accept="image/*"
+                onChange={handleLogoChange}
+              />
             </div>
+            {formData.logo ? (
+              <button 
+                type="button"
+                className="update-image-btn"
+                onClick={handleLogoClick}
+              >
+                Atualizar Imagem
+              </button>
+            ) : (
+              <div className="file-status">
+                Nenhum arquivo selecionado
+              </div>
+            )}
             
             {/* Campo de Descrição movido para baixo da logo */}
             <div className="form-group logo-description">

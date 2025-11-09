@@ -46,6 +46,12 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
   console.log(`Diretório criado: ${uploadDir}`);
 }
+
+const championshipUploadDir = path.join(__dirname, 'uploads/championships');
+if (!fs.existsSync(championshipUploadDir)) {
+  fs.mkdirSync(championshipUploadDir, { recursive: true });
+  console.log(`Diretório criado: ${championshipUploadDir}`);
+}
 // Middleware
 app.use(cors());
 app.use(express.json());
