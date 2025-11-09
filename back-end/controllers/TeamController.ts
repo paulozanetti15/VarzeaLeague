@@ -53,9 +53,9 @@ export default class TeamController {
           captainId: userId,
           isDeleted: false,
           updatedAt: agora,
-          state,
-          city,
-          CEP,
+          state: state,
+          city: city,
+          CEP: CEP,
           primaryColor,
           secondaryColor,
           banner: bannerFilename

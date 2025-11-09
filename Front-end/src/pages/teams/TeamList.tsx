@@ -23,7 +23,6 @@ import PlayerStatsTable from '../../components/features/Teams/PlayerStatsTable';
 import TeamActionButtons from '../../components/features/Teams/TeamActionButtons';
 
 import './TeamList.css';
-import { hi } from 'date-fns/locale';
 
 const TeamList = () => {
   const { teams, loading, error, teamPlayers, loadingPlayers, fetchTeams, fetchTeamPlayers, fetchTeamPlayerStats } = useTeams();

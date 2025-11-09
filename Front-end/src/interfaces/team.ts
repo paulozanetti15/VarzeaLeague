@@ -4,6 +4,7 @@ export interface Player {
   sexo: string;
   ano: string;
   posicao: string;
+  dateOfBirth?: string;
 }
 
 export interface Team {

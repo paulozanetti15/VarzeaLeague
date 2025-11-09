@@ -97,8 +97,12 @@ export default function EditTeam() {
           getTeamById(teamId),
           getTeamPlayers(teamId).catch(() => [])
         ]);
+
+        if (!teamData) {
+          setError('Dados do time não encontrados.');
+          return;
+        }
         
-        // Formatar os jogadores para o formato esperado pelo componente
         let formattedJogadores = [];
         if (Array.isArray(playersResponse) && playersResponse.length > 0) {
           formattedJogadores = playersResponse.map((player: any) => ({
@@ -134,7 +138,6 @@ export default function EditTeam() {
           jogadores: formattedJogadores,
         });
         
-        // Definir o CEP como válido se já estiver preenchido
         if (cepValue) {
           setCepValido(true);
         }
@@ -525,9 +528,6 @@ export default function EditTeam() {
       setToastBg('danger');
       setShowToast(true);
     }
-  };
-  const bannerStyle = {
-    background: `linear-gradient(135deg, ${formData.primaryColor} 0%, ${formData.secondaryColor} 100%)`,
   };
 
   

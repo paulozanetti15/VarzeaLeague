@@ -33,7 +33,7 @@ import { Box, CssBaseline } from '@mui/material'
 import SystemOverview from './components/dashboard/SystemOverview'
 import CalendarioPage from './pages/calendario/calendárioPage'
 import HistoricoPage from './pages/Historico/HistoricoPage'
-import { HistoricoProvider } from './context/HistoricoContext';
+import { HistoricoProvider } from './Context/HistoricoContext';
 import RankingPlayers from './pages/ranking/RankingPlayers'
 import RankingTeams from './pages/ranking/RankingTeams'
 

@@ -21,10 +21,16 @@ interface TeamAttributes {
   estado?: string;
   cidade?: string;
   cep?: string;
+  state?: string;
+  city?: string;
+  CEP?: string;
 }
 
 interface TeamCreationAttributes extends Omit<TeamAttributes, 'id'> {
   isDeleted: boolean;
+  state?: string;
+  city?: string;
+  CEP?: string;
 }
 
 class Team extends Model<TeamAttributes, TeamCreationAttributes> {
@@ -99,7 +105,7 @@ Team.init(
       allowNull: false,
       defaultValue: false
     },
-    CEP:{
+    cep:{
       type: DataTypes.STRING,
       allowNull: false,
     },
