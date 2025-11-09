@@ -2549,6 +2549,19 @@ table tbody td {
 
 .dark-theme h1 {
   color: #ffffff !important;
+  font-weight: 700;
+}
+
+.dark-theme h2,
+.dark-theme h3,
+.dark-theme h4 {
+  color: #ffffff !important;
+}
+
+/* Garantir que títulos de páginas sejam brancos */
+.dark-theme .page-title,
+.dark-theme .section-title {
+  color: #ffffff !important;
 }
 
 /* Input de busca - Modo Escuro */
