@@ -59,14 +59,16 @@ export const uploadChampionship = multer({
     fileSize: 5 * 1024 * 1024 // 5MB
   },
   fileFilter: (_req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    const allowedExtensions = /\.(jpeg|jpg|png|webp)$/i;
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    
+    const hasValidExtension = allowedExtensions.test(file.originalname);
+    const hasValidMimeType = allowedMimeTypes.includes(file.mimetype);
 
-    if (extname && mimetype) {
+    if (hasValidExtension && hasValidMimeType) {
       return cb(null, true);
     }
-    cb(new Error('Apenas imagens são permitidas!'));
+    cb(new Error('Apenas imagens são permitidas! (JPEG, JPG, PNG, WEBP)'));
   }
 });
 

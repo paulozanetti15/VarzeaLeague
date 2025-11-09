@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../../services/api';
+import { uploadChampionshipLogo } from '../../../services/championshipsServices';
 import trophy from '../../../assets/championship-trophy.svg';
 import '../ChampionshipForm.css';
 import { format, parse, isValid, isAfter } from 'date-fns';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import ImageIcon from '@mui/icons-material/Image';
 
 const initialState = {
   name: '',
@@ -26,6 +28,10 @@ const ChampionshipEdit: React.FC = () => {
   const [fieldErrors, setFieldErrors] = useState<{[k:string]: string}>({});
   const hiddenStartRef = useRef<HTMLInputElement>(null);
   const hiddenEndRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [logo, setLogo] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchChampionship = async () => {
@@ -39,6 +45,15 @@ const ChampionshipEdit: React.FC = () => {
           modalidade: data.modalidade || '',
           nomequadra: data.nomequadra || '',
         });
+        
+        // Carregar logo atual se existir
+        if (data.logo) {
+          const logoUrl = data.logo.startsWith('/uploads') 
+            ? `http://localhost:3001${data.logo}`
+            : `http://localhost:3001/uploads/championships/${data.logo}`;
+          setCurrentLogoUrl(logoUrl);
+          setLogoPreview(logoUrl);
+        }
       } catch (err: any) {
         setError(err.message || 'Erro ao carregar campeonato');
       } finally {
@@ -165,6 +180,16 @@ const ChampionshipEdit: React.FC = () => {
       };
 
       await api.championships.update(Number(id), formattedData);
+      
+      // Upload do logo se fornecido
+      if (logo) {
+        try {
+          await uploadChampionshipLogo(Number(id), logo);
+        } catch (logoErr) {
+          console.warn('Erro ao enviar logo, mas campeonato atualizado:', logoErr);
+        }
+      }
+      
       setSuccess('Campeonato atualizado com sucesso!');
       setTimeout(() => navigate(`/championships/${id}`), 1200);
     } catch (err: any) {
@@ -193,6 +218,27 @@ const ChampionshipEdit: React.FC = () => {
     setForm(prev => ({ ...prev, [which === 'start' ? 'start_date' : 'end_date']: br }));
   };
 
+  const handleLogoClick = () => {
+    if (logoInputRef.current) {
+      logoInputRef.current.click();
+    }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setLogo(file);
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && event.target.result) {
+          setLogoPreview(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   if (loadingData) {
     return (
       <div className="championship-form-bg">
@@ -217,6 +263,50 @@ const ChampionshipEdit: React.FC = () => {
         </div>
 
         <form className="championship-form" onSubmit={handleSubmit}>
+          {/* Seção de Upload de Logo */}
+          <div className="form-group" style={{ marginBottom: '2rem' }}>
+            <label style={{ marginBottom: '1rem', display: 'block', fontWeight: 600, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#2d3748' }}>
+              Logo do Campeonato
+            </label>
+            <div className="logo-section" style={{ maxWidth: '400px', margin: '0 auto' }}>
+              <div className="logo-preview-container" onClick={handleLogoClick}>
+                {logoPreview ? (
+                  <img src={logoPreview} alt="Logo preview" className="logo-preview" />
+                ) : (
+                  <div className="logo-placeholder">
+                    <ImageIcon />
+                    <span>Adicionar Logo</span>
+                  </div>
+                )}
+                <input 
+                  type="file" 
+                  ref={logoInputRef}
+                  className="hidden-file-input"
+                  name="logo" 
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                />
+              </div>
+              {logo ? (
+                <button 
+                  type="button"
+                  className="update-image-btn"
+                  onClick={handleLogoClick}
+                >
+                  Atualizar Imagem
+                </button>
+              ) : currentLogoUrl ? (
+                <div className="file-status" style={{ color: 'white' }}>
+                  Logo atual será mantida
+                </div>
+              ) : (
+                <div className="file-status" style={{ color: 'white' }}>
+                  Nenhum arquivo selecionado
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="form-group">
             <label>Nome do Campeonato <span className="required-asterisk" aria-hidden="true">*</span></label>
             <input

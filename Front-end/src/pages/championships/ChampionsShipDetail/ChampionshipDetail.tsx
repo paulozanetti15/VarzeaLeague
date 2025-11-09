@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getChampionshipTeams, getChampionshipById, deleteChampionship, leaveChampionshipWithTeam } from '../../../services/championshipsServices';
 import { getUserTeams } from '../../../services/teamsServices';
 import trophy from '../../../assets/championship-trophy.svg';
 import './ChampionshipDetail.css';
 import toast from 'react-hot-toast';
-import { Button, Modal } from 'react-bootstrap';
 import axios from 'axios';
 import PunicaoCampeonatoRegisterModal from '../../../components/Modals/Punishment/Championships/PunishmentChampionshipRegisterModal';
 import PunicaoCampeonatoModalInfo from '../../../components/Modals/Punishment/Championships/PunishmentChampionshipInfoModal';
@@ -394,23 +393,60 @@ const ChampionshipDetail: React.FC = () => {
         </motion.div>
 
         {/* Modal de Confirmação de Exclusão */}
-        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
-          <Modal.Header closeButton>
-            <Modal.Title>Confirmar Exclusão</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            Tem certeza que deseja excluir o campeonato "{championship.name}"? 
-            Esta ação não pode ser desfeita.
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-              Cancelar
-            </Button>
-            <Button variant="danger" onClick={handleDeleteChampionship}>
-              Excluir
-            </Button>
-          </Modal.Footer>
-        </Modal>
+        <AnimatePresence>
+          {showDeleteModal && (
+            <motion.div
+              className="delete-modal-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDeleteModal(false)}
+            >
+              <motion.div
+                className="delete-modal-container"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="delete-modal-header">
+                  <h3 className="delete-modal-title">Confirmar Exclusão</h3>
+                  <button 
+                    className="delete-modal-close"
+                    onClick={() => setShowDeleteModal(false)}
+                    aria-label="Fechar"
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                <div className="delete-modal-body">
+                  <p className="delete-modal-message">
+                    Tem certeza que deseja excluir o campeonato <strong>"{championship.name}"</strong>?
+                  </p>
+                  <p className="delete-modal-warning">
+                    Esta ação não pode ser desfeita.
+                  </p>
+                </div>
+                
+                <div className="delete-modal-footer">
+                  <button
+                    className="delete-modal-btn delete-modal-btn-cancel"
+                    onClick={() => setShowDeleteModal(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="delete-modal-btn delete-modal-btn-delete"
+                    onClick={handleDeleteChampionship}
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Modal de Seleção de Time */}

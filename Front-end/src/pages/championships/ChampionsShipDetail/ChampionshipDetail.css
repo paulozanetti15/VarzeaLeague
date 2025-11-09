@@ -623,6 +623,130 @@ body {
   100% { transform: rotate(360deg); }
 }
 
+/* Modal de Exclusão Customizado */
+.delete-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.delete-modal-container {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  max-width: 420px;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.delete-modal-header {
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.delete-modal-title {
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.delete-modal-close {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  font-size: 1.5rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.delete-modal-close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.delete-modal-body {
+  padding: 1.5rem;
+}
+
+.delete-modal-message {
+  color: #374151;
+  font-size: 0.95rem;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.delete-modal-message strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.delete-modal-warning {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin: 1rem 0 0;
+  font-weight: 500;
+}
+
+.delete-modal-footer {
+  padding: 1rem 1.5rem 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.delete-modal-btn {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.delete-modal-btn-cancel {
+  background: #f9fafb;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.delete-modal-btn-cancel:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.delete-modal-btn-delete {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.delete-modal-btn-delete:hover {
+  background: #b91c1c;
+}
+
 /* Responsividade */
 @media (max-width: 1024px) {
   .championship-info-hero {
@@ -702,5 +826,17 @@ body {
   
   .remove-team-btn {
     align-self: center;
+  }
+  
+  .delete-modal-container {
+    max-width: 90%;
+  }
+  
+  .delete-modal-footer {
+    flex-direction: column;
+  }
+  
+  .delete-modal-btn {
+    width: 100%;
   }
 }

@@ -1,4 +1,5 @@
 import express from 'express';
+import multer from 'multer';
 import { 
   createChampionship, 
   listChampionships, 
@@ -29,7 +30,21 @@ router.delete('/:id', authenticateToken, deleteChampionship);
 router.post('/:id/join-team', authenticateToken, joinTeamInChampionship);
 router.get('/:id/join-team', authenticateToken, getChampionshipTeams);
 router.delete('/:id/join-team/:teamId', authenticateToken, leaveTeamFromChampionship);
-router.post('/:id/logo', authenticateToken, uploadChampionship.single('logo'), uploadChampionshipLogo);
+router.post('/:id/logo', authenticateToken, (req, res, next) => {
+  uploadChampionship.single('logo')(req, res, (err: any) => {
+    if (err) {
+      console.error('Erro no multer:', err);
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ message: 'Arquivo muito grande. Tamanho máximo: 5MB' });
+        }
+        return res.status(400).json({ message: `Erro no upload: ${err.message}` });
+      }
+      return res.status(400).json({ message: err.message || 'Erro ao processar arquivo' });
+    }
+    next();
+  });
+}, uploadChampionshipLogo);
 
 // Aplicações de campeonatos
 router.post('/:championshipId/apply', authenticateToken, applyToChampionship);

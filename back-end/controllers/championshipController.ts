@@ -553,51 +553,96 @@ export const publishChampionship = asyncHandler(async (req: Request, res: Respon
 export const uploadChampionshipLogo = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
 
+  console.log('=== UPLOAD LOGO INICIADO ===');
+  console.log('ID do campeonato:', id);
+  console.log('Arquivo recebido:', req.file ? {
+    filename: req.file.filename,
+    originalname: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size
+  } : 'Nenhum arquivo');
+
   if (!req.file) {
+    console.log('Erro: Nenhum arquivo enviado');
     return res.status(400).json({ message: 'Nenhum arquivo enviado' });
   }
 
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
     if (!token) {
+      console.log('Erro: Token ausente');
       return res.status(401).json({ message: 'Token ausente' });
     }
 
+    console.log('Token recebido, verificando...');
     const decoded = jwt.verify(token, JWT_SECRET) as { id: string | number };
     const userId = Number(decoded.id);
+    console.log('User ID do token:', userId);
 
     const championship = await Championship.findByPk(parseInt(id));
     if (!championship) {
+      console.log('Erro: Campeonato não encontrado');
       return res.status(404).json({ message: 'Campeonato não encontrado' });
     }
 
+    console.log('Campeonato encontrado:', {
+      id: championship.id,
+      name: championship.name,
+      created_by: championship.created_by,
+      current_logo: championship.logo
+    });
+
     // Verificar se o usuário é o criador do campeonato
     if (championship.created_by !== userId) {
+      console.log('Erro: Usuário não é o criador', {
+        championship_created_by: championship.created_by,
+        user_id: userId
+      });
       return res.status(403).json({ message: 'Apenas o criador pode atualizar o logo' });
     }
 
     // Remover logo antigo se existir
     if (championship.logo) {
       const oldLogoPath = path.join(__dirname, '..', 'uploads', 'championships', championship.logo);
+      console.log('Tentando remover logo antigo:', oldLogoPath);
       if (fs.existsSync(oldLogoPath)) {
         try {
           fs.unlinkSync(oldLogoPath);
+          console.log('Logo antigo removido com sucesso');
         } catch (err) {
           console.warn('Erro ao remover logo antigo:', err);
         }
+      } else {
+        console.log('Logo antigo não encontrado no caminho:', oldLogoPath);
       }
     }
 
     // Atualizar logo no banco de dados
+    console.log('Atualizando logo no banco de dados:', req.file.filename);
     championship.logo = req.file.filename;
-    await championship.save();
+    
+    try {
+      await championship.save();
+      console.log('Logo salvo no banco com sucesso');
+    } catch (saveError) {
+      console.error('Erro ao salvar no banco:', saveError);
+      throw saveError;
+    }
 
+    console.log('Upload concluído com sucesso');
     res.json({
       message: 'Logo atualizado com sucesso',
       logo: `/uploads/championships/${championship.logo}`
     });
-  } catch (error) {
-    console.error('Erro ao fazer upload do logo:', error);
-    res.status(500).json({ message: 'Erro ao fazer upload do logo' });
+  } catch (error: any) {
+    console.error('=== ERRO NO UPLOAD DO LOGO ===');
+    console.error('Tipo do erro:', error?.constructor?.name);
+    console.error('Mensagem:', error?.message);
+    console.error('Stack:', error?.stack);
+    console.error('Erro completo:', error);
+    res.status(500).json({ 
+      message: 'Erro ao fazer upload do logo',
+      error: error?.message || 'Erro desconhecido'
+    });
   }
 });
