@@ -21,6 +21,7 @@ interface Championship {
   created_by: number;
   modalidade?: string;
   nomequadra?: string;
+  logo?: string | null;
 }
 
 const ChampionshipDetail: React.FC = () => {
@@ -38,6 +39,14 @@ const ChampionshipDetail: React.FC = () => {
   const [isLeavingTeamId, setIsLeavingTeamId] = useState<number | null>(null);
   const [showPunicaoRegister, setShowPunicaoRegister] = useState(false);
   const [showPunicaoInfo, setShowPunicaoInfo] = useState(false);
+
+  const getChampionshipLogoUrl = (logo?: string | null) => {
+    if (!logo) return null;
+    if (logo.startsWith('/uploads')) {
+      return `http://localhost:3001${logo}`;
+    }
+    return `http://localhost:3001/uploads/championships/${logo}`;
+  };
 
   // Times do usuário já inscritos e disponíveis para inscrição
   const enrolledTeamIds = useMemo(() => new Set((teams || []).map((t) => t.id)), [teams]);
@@ -196,47 +205,71 @@ const ChampionshipDetail: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <div className="championship-info-section">
-            <h3 className="section-title">Informações do Campeonato</h3>
-            
-            <div className="info-grid">
-              {championship.description && (
-                <div className="info-item">
-                  <span className="info-label">Descrição:</span>
-                  <span className="info-value">{championship.description}</span>
+            <div className="championship-info-hero">
+              {getChampionshipLogoUrl(championship.logo) && (
+                <div className="championship-logo-hero">
+                  <img 
+                    src={getChampionshipLogoUrl(championship.logo)!} 
+                    alt={championship.name}
+                    className="championship-hero-image"
+                  />
                 </div>
               )}
               
-              {championship.modalidade && (
-                <div className="info-item">
-                  <span className="info-label">Modalidade:</span>
-                  <span className="info-value">{championship.modalidade}</span>
+              <div className="championship-info-content">
+                <div className="info-grid-modern">
+                  {championship.modalidade && (
+                    <div className="info-card-modern">
+                      <div className="info-icon">⚽</div>
+                      <div className="info-content-modern">
+                        <span className="info-label-modern">Modalidade</span>
+                        <span className="info-value-modern">{championship.modalidade}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {championship.nomequadra && (
+                    <div className="info-card-modern">
+                      <div className="info-icon">🏟️</div>
+                      <div className="info-content-modern">
+                        <span className="info-label-modern">Quadra</span>
+                        <span className="info-value-modern">{championship.nomequadra}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {championship.start_date && (
+                    <div className="info-card-modern">
+                      <div className="info-icon">📅</div>
+                      <div className="info-content-modern">
+                        <span className="info-label-modern">Data de Início</span>
+                        <span className="info-value-modern">
+                          {new Date(championship.start_date).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {championship.end_date && (
+                    <div className="info-card-modern">
+                      <div className="info-icon">🏁</div>
+                      <div className="info-content-modern">
+                        <span className="info-label-modern">Data de Fim</span>
+                        <span className="info-value-modern">
+                          {new Date(championship.end_date).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-              
-              {championship.nomequadra && (
-                <div className="info-item">
-                  <span className="info-label">Quadra:</span>
-                  <span className="info-value">{championship.nomequadra}</span>
-                </div>
-              )}
-              
-              {championship.start_date && (
-                <div className="info-item">
-                  <span className="info-label">Data de Início:</span>
-                  <span className="info-value">
-                    {new Date(championship.start_date).toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-              )}
-              
-              {championship.end_date && (
-                <div className="info-item">
-                  <span className="info-label">Data de Fim:</span>
-                  <span className="info-value">
-                    {new Date(championship.end_date).toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-              )}
+                
+                {championship.description && (
+                  <div className="championship-description-modern">
+                    <h4 className="description-title-modern">Sobre o Campeonato</h4>
+                    <p className="description-text-modern">{championship.description}</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

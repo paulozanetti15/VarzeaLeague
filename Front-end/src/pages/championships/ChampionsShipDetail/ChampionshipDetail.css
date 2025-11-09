@@ -150,46 +150,161 @@ body {
   border-radius: 2px;
 }
 
-/* Grid de informações */
-.info-grid {
+/* Hero Section com Logo e Informações */
+.championship-info-hero {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: 320px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.championship-info-hero:has(.championship-logo-hero:empty) {
+  grid-template-columns: 1fr;
+}
+
+.championship-info-hero:not(:has(.championship-logo-hero)) {
+  grid-template-columns: 1fr;
+}
+
+.championship-logo-hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.championship-hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.championship-logo-hero:hover .championship-hero-image {
+  transform: scale(1.05);
+}
+
+.championship-info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Grid Moderno de Informações */
+.info-grid-modern {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
 
-.info-item {
+.info-card-modern {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.info-card-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(135deg, #2196F3, #3f51b5);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.info-card-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  border-color: rgba(33, 150, 243, 0.3);
+}
+
+.info-card-modern:hover::before {
+  opacity: 1;
+}
+
+.info-icon {
+  font-size: 2rem;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(63, 81, 181, 0.1) 100%);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.info-content-modern {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 1rem;
-  background: rgba(248, 249, 250, 0.8);
-  border-radius: 8px;
-  border: 1px solid rgba(226, 232, 240, 0.5);
-  transition: all 0.2s ease;
+  gap: 0.25rem;
+  flex: 1;
 }
 
-.info-item:hover {
-  background: rgba(255, 255, 255, 0.9);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.info-label {
-  font-weight: 700;
-  color: #4a5568;
-  font-size: 0.9rem;
+.info-label-modern {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.info-value {
-  font-weight: 600;
-  color: #1a202c;
+.info-value-modern {
   font-size: 1rem;
-  background: rgba(102, 126, 234, 0.1);
-  padding: 0.5rem 0.8rem;
-  border-radius: 6px;
-  border: 1px solid rgba(102, 126, 234, 0.2);
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+/* Descrição Moderna */
+.championship-description-modern {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.description-title-modern {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.description-title-modern::before {
+  content: '';
+  width: 3px;
+  height: 16px;
+  background: linear-gradient(135deg, #2196F3, #3f51b5);
+  border-radius: 2px;
+}
+
+.description-text-modern {
+  font-size: 0.95rem;
+  color: #475569;
+  line-height: 1.7;
+  margin: 0;
 }
 
 /* Grid de ações */
@@ -509,6 +624,17 @@ body {
 }
 
 /* Responsividade */
+@media (max-width: 1024px) {
+  .championship-info-hero {
+    grid-template-columns: 280px 1fr;
+    gap: 1.5rem;
+  }
+  
+  .info-grid-modern {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
   .championship-detail-bg {
     padding: 1rem;
@@ -533,9 +659,29 @@ body {
     height: 50px;
   }
   
-  .info-grid {
+  .championship-info-hero {
     grid-template-columns: 1fr;
-    gap: 0.8rem;
+    gap: 1.5rem;
+  }
+  
+  .championship-logo-hero {
+    max-width: 280px;
+    margin: 0 auto;
+  }
+  
+  .info-grid-modern {
+    grid-template-columns: 1fr;
+    gap: 0.875rem;
+  }
+  
+  .info-card-modern {
+    padding: 1rem;
+  }
+  
+  .info-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
   }
   
   .actions-grid {
