@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ChampionshipList.css';
-import { getAllChampionships } from '../../../services/championshipsServices';
+import { getAllChampionships } from '../../../services/championships.service';
 import trophy from "../../../assets/championship-trophy.svg";
 
 interface Championship {

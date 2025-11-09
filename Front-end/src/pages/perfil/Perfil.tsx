@@ -3,6 +3,7 @@ import axios from 'axios';
 import UpdatePasswordModal from '../../components/Modals/Password/UpdatePasswordModal';
 import ToastSucessComponent from '../../components/Toast/ToastComponent';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../config/api';
 import './Perfil.css';
 import { IoChevronBackOutline, IoWarningOutline } from 'react-icons/io5';
 import Modal from 'react-bootstrap/Modal';
@@ -15,7 +16,7 @@ interface User {
   email: string;
   cpf: string;
   phone: string;
-  sexo: string;
+  gender: string;
   userTypeId: number;
 }
 
@@ -27,6 +28,7 @@ interface PerfilProps {
 }
 
 const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilProps) => {
+  console.log('🟢 [Perfil] Componente renderizado', { isLoggedIn });
   const [usuario, setUsuario] = useState<User | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [showUpdatePasswordModal, setShowUpdatePasswordModal] = useState(false);
@@ -37,7 +39,7 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
   const [formEmail, setFormEmail] = useState('');
   const [formCpf, setFormCpf] = useState('');
   const [formPhone, setFormPhone] = useState('');
-  const [formSexo, setFormSexo] = useState('');
+  const [formGender, setFormGender] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const navigate = useNavigate();
 
@@ -203,12 +205,15 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
   };
 
   useEffect(() => {
+    console.log('🟢 [Perfil] useEffect executado');
     const storedUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '') : null;
     const userId = storedUser?.id || 0;
+    console.log('🟢 [Perfil] Usuario ID:', userId, 'isLoggedIn:', isLoggedIn);
     
     const fetchUserData = async (userId: number) => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/user/${userId}`, {
+        console.log('🟢 [Perfil] Buscando dados do usuário:', userId);
+        const response = await axios.get(`${API_BASE_URL}/user/${userId}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -216,15 +221,16 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
         
         if (response.status === 200) {
           const userData = response.data;
+          console.log('✅ [Perfil] Dados carregados:', userData);
           setUsuario(userData);
           setFormName(userData.name || '');
           setFormEmail(userData.email || '');
           setFormCpf(userData.cpf || '');
           setFormPhone(userData.phone || '');
-          setFormSexo(userData.sexo || '');
+          setFormGender(userData.gender || '');
         }
       } catch (error) {
-        console.error('Erro ao buscar dados do usuário:', error);
+        console.error('❌ [Perfil] Erro ao buscar dados do usuário:', error);
         showToastMessage('Erro ao carregar dados do usuário', 'danger');
       }
     };
@@ -278,7 +284,7 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
       if (trimmedName !== usuario.name) changes.name = trimmedName;
       if (trimmedEmail !== usuario.email) changes.email = trimmedEmail;
       if (trimmedPhone !== usuario.phone) changes.phone = trimmedPhone;
-      if (formSexo !== usuario.sexo) changes.sexo = formSexo;
+      if (formGender !== usuario.gender) changes.gender = formGender;
 
       // Se não houver mudanças, não faz a requisição
       if (Object.keys(changes).length === 0) {
@@ -288,7 +294,7 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
       }
 
       const response = await axios.put(
-        `http://localhost:3001/api/user/${usuario.id}`,
+        `${API_BASE_URL}/user/${usuario.id}`,
         changes,
         {
           headers: {
@@ -354,7 +360,7 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
       }
 
       const response = await axios.delete(
-        `http://localhost:3001/api/user/${usuario.id}`,
+        `${API_BASE_URL}/user/${usuario.id}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -494,8 +500,8 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
                         fontSize: '1rem',
                         backgroundColor: '#ffffff'
                       }}
-                      value={formSexo}
-                      onChange={(e) => setFormSexo(e.target.value)}
+                      value={formGender}
+                      onChange={(e) => setFormGender(e.target.value)}
                       required
                     >
                       <option value="" style={{ color: '#000000' }}>Selecione</option>
@@ -512,7 +518,7 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
                         WebkitTextFillColor: '#000000',
                         fontSize: '1rem'
                       }}
-                      value={formSexo}
+                      value={formGender}
                       disabled
                       readOnly
                     />

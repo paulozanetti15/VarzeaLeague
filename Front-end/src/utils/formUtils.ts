@@ -224,7 +224,7 @@ export const openDatePicker = (inputRef: React.RefObject<HTMLInputElement>, curr
 
   if (currentValue && currentValue.length === 10) {
     const [d, m, y] = currentValue.split('/');
-    el.value = `${y}-${m}-${d}`;
+    el.value = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   }
 
   const anyEl = el as any;
@@ -235,10 +235,16 @@ export const openDatePicker = (inputRef: React.RefObject<HTMLInputElement>, curr
   }
 };
 
-// Funções de parsing e formatação de data
 export function parseDDMMYYYY(value: string): Date | null {
-  const parsed = parse(value, 'dd/MM/yyyy', new Date());
-  return isValid(parsed) ? parsed : null;
+  if (!value) return null;
+  try {
+    const [day, month, year] = value.split('/').map(Number);
+    if (!day || !month || !year) return null;
+    const date = new Date(year, month - 1, day, 0, 0, 0, 0);
+    return isNaN(date.getTime()) ? null : date;
+  } catch {
+    return null;
+  }
 }
 
 export function toISODateTime(date: Date): string {

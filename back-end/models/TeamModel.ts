@@ -38,9 +38,9 @@ class Team extends Model<TeamAttributes, TeamCreationAttributes> {
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
-  public estado!: string | null;
-  public cidade!: string | null;
-  public cep!: string | null;
+  public state!: string | null;
+  public city!: string | null;
+  public CEP!: string | null;
 
   // Métodos de associação
   public addPlayer!: BelongsToManyAddAssociationMixin<Player, number>;
@@ -99,15 +99,15 @@ Team.init(
       allowNull: false,
       defaultValue: false
     },
-    cep:{
+    CEP:{
       type: DataTypes.STRING,
       allowNull: false,
     },
-    estado: {
+    state: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    cidade: {
+    city: {
       type: DataTypes.STRING,
       allowNull: true,
     }
@@ -118,6 +118,16 @@ Team.init(
     tableName: 'teams',
     timestamps: true,
     underscored: true,
+    defaultScope: {
+      where: {
+        isDeleted: false
+      }
+    },
+    scopes: {
+      withDeleted: {
+        where: {}
+      }
+    }
   }
 );
 

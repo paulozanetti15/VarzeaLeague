@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import './ForgotPassword.css';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config/api';
+import './ForgotPassword.css';
 
 interface ForgotPasswordProps {
   onBackToLogin?: () => void;
@@ -40,15 +41,19 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
       return;
     }
 
-    // Aqui você implementará a lógica de envio do email de recuperação
-    axios.post('http://localhost:3001/api/password-reset/request-reset', { email })
-      .then(response => {
-        setIsSubmitted(true);
-      })
-      .catch(error => {
-        console.error('Erro ao solicitar recuperação de senha:', error);
-      });
-    setIsSubmitted(true);
+    setIsLoading(true);
+    setErrorMessage('');
+
+    try {
+      await axios.post(`${API_BASE_URL}/password-reset/request-reset`, { email });
+      setIsSubmitted(true);
+    } catch (error: any) {
+      console.error('Erro ao solicitar recuperação de senha:', error);
+      const message = error.response?.data?.message || 'Erro ao solicitar recuperação de senha. Tente novamente.';
+      setErrorMessage(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSubmitted) {
@@ -67,7 +72,7 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
               <strong>{email}</strong>
             </div>
             
-            <p className="mb-4">
+            <p className="forgot-password-info mb-4">
               Se você não receber o email em alguns minutos, verifique sua pasta de spam.
             </p>
             

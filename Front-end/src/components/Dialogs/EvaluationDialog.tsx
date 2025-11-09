@@ -24,11 +24,16 @@ export const EvaluationDialog: React.FC<EvaluationDialogProps> = ({
       open={open}
       onClose={onClose}
       fullWidth
-      maxWidth="sm"
+      maxWidth="xs"
+      className="evaluation-dialog"
     >
       <DialogTitle>{title}</DialogTitle>
       <DialogContent dividers>
-        <MatchEvaluations matchId={matchId} readOnly={readOnly} />
+        <MatchEvaluations 
+          matchId={matchId} 
+          readOnly={readOnly}
+          onEvaluationSaved={onClose}
+        />
       </DialogContent>
       <DialogActions>
         <Button variant="secondary" onClick={onClose}>

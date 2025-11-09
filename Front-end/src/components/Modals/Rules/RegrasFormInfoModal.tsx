@@ -3,6 +3,7 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import axios from 'axios';
 import { useEffect } from 'react';
+import { API_BASE_URL } from '../../../config/api';
 import './RegrasFormInfoModal.css';
 
 interface AthleteFormModalProps {
@@ -16,20 +17,22 @@ export default function InfoRulesModal({ idpartida, show, onHide }: AthleteFormM
     const [idadeMaxima, setIdadeMaxima] = useState<number | null>(null);
     const [genero, setGenero] = useState<string | null>(null);
     const [dataLimite, setDataLimite] = useState<string | null>(null);
+    const [horaLimite, setHoraLimite] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchingDados = async () => {
             try {
-                const response = await axios.get(`http://localhost:3001/api/rules/${idpartida}`, {
+                const response = await axios.get(`${API_BASE_URL}/match-rules/${idpartida}`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`
                     }
                 });
                 if (response.status === 200) {
-                    setIdadeMinima(response.data.idadeMinima);
-                    setIdadeMaxima(response.data.idadeMaxima);
-                    setGenero(response.data.genero);
-                    converterDataLimite(response.data.dataLimite);
+                    setIdadeMinima(response.data.minimumAge);
+                    setIdadeMaxima(response.data.maximumAge);
+                    setGenero(response.data.gender);
+                    setHoraLimite(response.data.registrationDeadlineTime || '23:59');
+                    converterDataLimite(response.data.registrationDeadline);
                 }
             } catch (error) {
                 console.error('Erro ao buscar regras:', error);
@@ -83,6 +86,10 @@ export default function InfoRulesModal({ idpartida, show, onHide }: AthleteFormM
                         <div className="rule-info-card">
                             <div className="rule-info-label">Data Limite para Inscrição</div>
                             <div className="rule-info-value">{dataLimite}</div>
+                        </div>
+                        <div className="rule-info-card">
+                            <div className="rule-info-label">Hora Limite para Inscrição</div>
+                            <div className="rule-info-value">{horaLimite}</div>
                         </div>
                     </div>
                 </div>

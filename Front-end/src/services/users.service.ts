@@ -1,0 +1,94 @@
+import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
+
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  cpf: string;
+  phone: string;
+  gender: string;
+  userTypeId: number;
+  usertype?: {
+    name: string;
+  };
+}
+
+export interface CreateUserData {
+  name: string;
+  email: string;
+  cpf: string;
+  phone: string;
+  gender: string;
+  userTypeId: string;
+  password: string;
+}
+
+export interface UpdateUserData extends Omit<CreateUserData, 'password'> {
+  password?: string;
+}
+
+export const getUsers = async (): Promise<User[]> => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/user`, {
+      headers: getAuthHeaders()
+    });
+    return response?.data ?? [];
+  } catch (error: any) {
+    console.error('Erro ao buscar usuários:', error);
+    throw new Error(error.response?.data?.message || 'Erro ao buscar usuários');
+  }
+};
+
+export const createUser = async (userData: CreateUserData): Promise<User> => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/user`, userData, {
+      headers: {
+        ...getAuthHeaders(),
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Erro ao criar usuário:', error);
+    throw new Error(error.response?.data?.message || 'Erro ao criar usuário');
+  }
+};
+
+export const updateUser = async (userId: number, userData: UpdateUserData): Promise<User> => {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/user/${userId}`, userData, {
+      headers: {
+        ...getAuthHeaders(),
+        'Content-Type': 'application/json'
+      }
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Erro ao atualizar usuário:', error);
+    throw new Error(error.response?.data?.message || 'Erro ao atualizar usuário');
+  }
+};
+
+export const deleteUser = async (userId: number): Promise<void> => {
+  try {
+    await axios.delete(`${API_BASE_URL}/user/${userId}`, {
+      headers: getAuthHeaders()
+    });
+  } catch (error: any) {
+    console.error('Erro ao deletar usuário:', error);
+    throw new Error(error.response?.data?.message || 'Erro ao deletar usuário');
+  }
+};
+
+export default {
+  getUsers,
+  createUser,
+  updateUser,
+  deleteUser
+};

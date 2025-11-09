@@ -601,6 +601,8 @@ textarea.form-control {
 
 .player-info {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .player-name {
@@ -608,6 +610,10 @@ textarea.form-control {
   font-weight: 600;
   color: #2d3748;
   margin-bottom: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .player-details {

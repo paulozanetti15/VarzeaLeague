@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { getUserTeams, getTeamPlayers, getTeamPlayerStats } from '../services/teamsServices';
+import { useState, useCallback } from "react";
+import { getUserTeams, getTeamPlayers, getTeamPlayerStats } from "../services/teams.service";
 import type { Team, Player, PlayerStats } from '../interfaces/team';
 
 export function useTeams() {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 import axios from 'axios';
+import { API_BASE_URL } from '../../../../config/api';
 import '../PunishmentModal.css';
 
 interface Props {
@@ -24,8 +25,8 @@ const PunishmentChampionshipUpdateModal: React.FC<Props> = ({ show, onHide, onCl
         setLoading(true);
         const token = localStorage.getItem('token');
         const [teamsResp, punicaoResp] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${championshipId}/join-team`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${championshipId}/punicao`, { headers: { Authorization: `Bearer ${token}` } })
+          axios.get(`${API_BASE_URL}/championships/${championshipId}/join-team`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_BASE_URL}/punishments/championships/${championshipId}`, { headers: { Authorization: `Bearer ${token}` } })
         ]);
         setTeams(Array.isArray(teamsResp.data) ? teamsResp.data : []);
         const reg = Array.isArray(punicaoResp.data) && punicaoResp.data.length ? punicaoResp.data[0] : null;
@@ -54,7 +55,7 @@ const PunishmentChampionshipUpdateModal: React.FC<Props> = ({ show, onHide, onCl
       const body: any = {};
       if (formData.time) body.idtime = formData.time;
       if (typeof formData.motivo === 'string') body.motivo = formData.motivo;
-      const resp = await axios.put(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${championshipId}/punicao`, body, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const resp = await axios.put(`${API_BASE_URL}/punishments/championships/${championshipId}`, body, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       if (resp.status === 200) {
         setSuccess('Punição alterada com sucesso!');
         setTimeout(() => onClose(), 1200);

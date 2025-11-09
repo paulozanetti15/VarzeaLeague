@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getChampionshipTeams, getChampionshipById, deleteChampionship, leaveChampionshipWithTeam } from '../../../services/championshipsServices';
-import { getUserTeams } from '../../../services/teamsServices';
+import { getUserTeams } from '../../../services/teams.service';
+import { getChampionshipTeams, getChampionshipById, deleteChampionship, leaveChampionshipWithTeam } from '../../../services/championships.service';
 import trophy from '../../../assets/championship-trophy.svg';
 import './ChampionshipDetail.css';
 import toast from 'react-hot-toast';
@@ -131,13 +131,23 @@ const ChampionshipDetail: React.FC = () => {
   };
 
   const handleLeaveChampionship = async (teamId: number) => {
+    if (!window.confirm('Tem certeza que deseja remover este time do campeonato?')) {
+      return;
+    }
+
     try {
       setIsLeavingTeamId(teamId);
+      
       await leaveChampionshipWithTeam(Number(id), teamId);
+      
       toast.success('Time removido do campeonato com sucesso!');
+      
       await loadChampionshipTeams();
+      await loadUserTeams();
+      
+      window.location.reload();
     } catch (err: any) {
-      toast.error(err.message || 'Erro ao remover time do campeonato');
+      toast.error(err.response?.data?.message || err.message || 'Erro ao remover time do campeonato');
     } finally {
       setIsLeavingTeamId(null);
     }
@@ -313,7 +323,12 @@ const ChampionshipDetail: React.FC = () => {
               </div>
             ) : (
               <div className="teams-grid">
-                {teams.map((team) => (
+                {teams.map((team) => {
+                  const user = JSON.parse(localStorage.getItem('user') || '{}');
+                  const userId = Number(user.id);
+                  const isTeamOwner = userTeams.some(ut => ut.id === team.id);
+                  
+                  return (
                   <div key={team.id} className="team-card">
                     <div className="team-logo">
                       {team.banner ? (
@@ -353,8 +368,19 @@ const ChampionshipDetail: React.FC = () => {
                         {isLeavingTeamId === team.id ? 'Removendo...' : 'Remover'}
                       </button>
                     )}
+                    
+                    {!hasEditPermission && isTeamOwner && (
+                      <button
+                        className="leave-championship-btn"
+                        onClick={() => handleLeaveChampionship(team.id)}
+                        disabled={isLeavingTeamId === team.id}
+                      >
+                        {isLeavingTeamId === team.id ? 'Saindo...' : 'Sair do Campeonato'}
+                      </button>
+                    )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

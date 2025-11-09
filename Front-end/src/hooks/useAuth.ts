@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 
 interface User {
   id: number;
@@ -32,9 +33,10 @@ export function useAuth() {
     }
 
     try {
-      const response = await axios.get('http://localhost:3001/api/auth/verify', {
-        params: { token },
-        headers: { 'Authorization': `Bearer ${token}` }
+      const response = await axios.get(`${API_BASE_URL}/auth/verify`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.status === 200 && response.data.user) {
@@ -44,6 +46,7 @@ export function useAuth() {
         throw new Error('Invalid response');
       }
     } catch (error) {
+      console.error('Erro ao verificar token:', error);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       setIsLoggedIn(false);

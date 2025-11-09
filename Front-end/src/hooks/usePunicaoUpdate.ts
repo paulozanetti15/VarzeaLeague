@@ -62,9 +62,9 @@ export const usePunicaoUpdate = (show: boolean, idmatch: number, onClose: () => 
       if (punicaoResp.data && punicaoResp.data.length > 0) {
         const punicaoData = punicaoResp.data[0];
         const newData = {
-          idtime: punicaoData.idtime,
+          idtime: punicaoData.idTeam || punicaoData.idtime || 0,
           nomeTime: punicaoData.team?.name || '',
-          motivo: punicaoData.motivo,
+          motivo: punicaoData.reason || punicaoData.motivo || '',
           team_home: punicaoData.team_home || 0,
           team_away: punicaoData.team_away || 0
         };
@@ -73,7 +73,7 @@ export const usePunicaoUpdate = (show: boolean, idmatch: number, onClose: () => 
       }
 
       const teamsResp = await getJoinedTeams(idmatch);
-      setDataTeams(teamsResp.data || []);
+      setDataTeams(Array.isArray(teamsResp.data) ? teamsResp.data : []);
     } catch (err) {
       console.error('Error fetching punicao or teams:', err);
       setError('Erro ao carregar dados da punição');
@@ -89,8 +89,8 @@ export const usePunicaoUpdate = (show: boolean, idmatch: number, onClose: () => 
       setSuccess("");
 
       await updatePunicao(idmatch, {
-        idtime: formData.idtime,
-        motivo: formData.motivo,
+        idTeam: formData.idtime,
+        reason: formData.motivo,
         team_home: formData.team_home,
         team_away: formData.team_away
       });

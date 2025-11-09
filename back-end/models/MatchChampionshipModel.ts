@@ -46,7 +46,7 @@ MatchChampionship.init({
       len: [5, 200]
     }
   },
-  nomequadra: {
+  quadra: {
     type: DataTypes.STRING,
     allowNull: false,
     validate: {

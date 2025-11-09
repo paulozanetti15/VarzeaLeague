@@ -1,7 +1,7 @@
 import React from 'react';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-import { deletePunicao, fetchMatchById, updateMatch } from '../../../../services/matchesFriendlyServices';
+import { deletePunicao } from '../../../../services/matchesFriendlyServices';
 import toast from 'react-hot-toast';
 import './PunishmentFriendlyMatchDeleteModal.css';
 
@@ -22,21 +22,12 @@ const PunishmentFriendlyMatchDeleteModal: React.FC<PunishmentFriendlyMatchModalP
 
   const deletarPunicao = async (id: number) => {
     try {
+      const loadingToast = toast.loading('Deletando punição...');
       const resp = await deletePunicao(id);
+      toast.dismiss(loadingToast);
+      
       if (resp.status === 200) {
-        try {
-          const matchResp = await fetchMatchById(Number(id));
-          const matchData = matchResp as any;
-          const status = String(matchData?.status || '').toLowerCase();
-          const isWOFlag = !!matchData?.isWO || status === 'wo' || status === 'walkover';
-
-          if (isWOFlag) {
-            await updateMatch(String(id), { status: 'confirmada' });
-          }
-        } catch (err) {
-          console.error('Erro ao atualizar status da partida após remover punição:', err);
-        }
-
+        toast.success('Punição deletada com sucesso! Partida retornou para status confirmada.');
         onClose();
       }
     } catch (error: any) {

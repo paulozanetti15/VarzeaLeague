@@ -68,7 +68,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, currentUserId }) =>
           )}
           <div className='info-row' style={{color: '#ffffff'}}>
             <GiSoccerField fontSize={"medium"}/>
-            <strong>Quadra:</strong> {match.nomequadra}
+            <strong>Quadra:</strong> {match.square || 'Não informado'}
           </div>
           <div className="info-row" style={{color: '#ffffff'}}>
             <LocationOnIcon fontSize="small" />
@@ -76,7 +76,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, currentUserId }) =>
           </div>
           <div className="info-row" style={{color: '#ffffff'}}>
             <FaFutbol fontSize="small" />
-            <strong>Modalidade:</strong> {match.modalidade}
+            <strong>Modalidade:</strong> {match.matchType || 'Não informado'}
           </div>
         </div>
 

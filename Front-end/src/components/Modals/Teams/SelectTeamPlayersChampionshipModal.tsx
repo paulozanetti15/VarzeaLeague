@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../../hooks/useAuth';
+import { API_BASE_URL } from '../../../config/api';
 import '../../Dialogs/SelectTeamPlayersDialog.css';
 
 interface SelectTeamPlayersChampionshipModalProps {
@@ -23,8 +24,8 @@ interface Team {
 interface Player {
   id: number;
   nome: string;
-  sexo: string;
-  ano: string; // ano de nascimento
+  gender: string;
+  ano: string;
   posicao: string;
 }
 
@@ -43,18 +44,34 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
 
   const fetchAvailableTeams = async () => {
     setTeamsLoading(true);
+    console.log(`[fetchAvailableTeams] Iniciando busca de times para campeonato ${championshipId}`);
     try {
       const [myTeamsResp, registeredResp] = await Promise.all([
-        axios.get(`http://localhost:3001/api/teams`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`http://localhost:3001/api/championships/${championshipId}/join-team`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_BASE_URL}/teams`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_BASE_URL}/championships/${championshipId}/teams`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       const myTeams: Team[] = myTeamsResp.data || [];
       const alreadyRegistered: Team[] = registeredResp.data || [];
+      
+      console.log(`[fetchAvailableTeams] Meus times:`, myTeams);
+      console.log(`[fetchAvailableTeams] Times já registrados:`, alreadyRegistered);
+      console.log(`[fetchAvailableTeams] Meus times IDs:`, myTeams.map(t => t.id));
+      console.log(`[fetchAvailableTeams] Times registrados IDs:`, alreadyRegistered.map(t => t.id));
+      
       const registeredIds = new Set(alreadyRegistered.map(t => t.id));
-      const decorated = myTeams.map(t => ({ ...t, __disabled: registeredIds.has(t.id) }));
+      console.log(`[fetchAvailableTeams] IDs registrados (Set):`, Array.from(registeredIds));
+      
+      const decorated = myTeams.map(t => {
+        const isRegistered = registeredIds.has(t.id);
+        console.log(`[fetchAvailableTeams] Time ${t.name} (ID: ${t.id}): registrado = ${isRegistered}`);
+        return { ...t, __disabled: isRegistered };
+      });
+      console.log(`[fetchAvailableTeams] Times decorados:`, decorated);
+      
       setTeams(decorated as any);
     } catch (e: any) {
-      console.error('[SelectTeamPlayersChampionshipModal] Erro carregando times:', e);
+      console.error('[fetchAvailableTeams] Erro carregando times:', e);
+      console.error('[fetchAvailableTeams] Response:', e.response);
       setError(e.response?.data?.message || 'Erro ao carregar times');
     } finally {
       setTeamsLoading(false);
@@ -66,7 +83,7 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
     setPlayers([]);
     setSelectedPlayers([]);
     try {
-      const resp = await axios.get(`http://localhost:3001/api/players/team/${teamId}`, {
+      const resp = await axios.get(`${API_BASE_URL}/players/team/${teamId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPlayers(resp.data);
@@ -135,24 +152,55 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
     }
     try {
       setLoading(true);
-      const resp = await axios.post(`http://localhost:3001/api/championships/${championshipId}/join-team`, {
+      setError("");
+      const resp = await axios.post(`${API_BASE_URL}/championships/${championshipId}/teams`, {
         teamId: selectedTeamId,
         championshipId
       }, { headers: { Authorization: `Bearer ${token}` }});
-      if (resp.status === 200) {
-        toast.success('Time inscrito no campeonato!');
+      
+      if (resp.status === 200 || resp.status === 201) {
+        toast.success('Time inscrito no campeonato com sucesso!');
         onHide();
-        onSuccess && onSuccess();
-        setTimeout(() => window.location.reload(), 1200);
+        if (onSuccess) onSuccess();
+        setTimeout(() => window.location.reload(), 1000);
       }
     } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Erro ao inscrever time');
+      const errorMsg = e.response?.data?.message || 'Erro ao inscrever time no campeonato';
+      toast.error(errorMsg);
+      setError(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLeaveChampionship = async (teamId: number) => {
+    if (!window.confirm('Tem certeza que deseja remover este time do campeonato?')) {
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError("");
+      const resp = await axios.delete(`${API_BASE_URL}/championships/${championshipId}/teams/${teamId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (resp.status === 200 || resp.status === 204) {
+        toast.success('Time removido do campeonato com sucesso!');
+        fetchAvailableTeams();
+        if (onSuccess) onSuccess();
+      }
+    } catch (e: any) {
+      const errorMsg = e.response?.data?.message || 'Erro ao remover time do campeonato';
+      toast.error(errorMsg);
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
   const selectedTeam = teams.find(t => t.id === selectedTeamId);
+  const isSelectedTeamAlreadyRegistered = selectedTeam ? (selectedTeam as any).__disabled : false;
 
   return (
     <Modal
@@ -162,6 +210,7 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
       backdrop="static"
       keyboard={!loading}
       className="select-team-players-modal"
+      size="xl"
     >
       <Modal.Header closeButton={!loading}>
         <Modal.Title>Inscrever time no campeonato</Modal.Title>
@@ -178,6 +227,7 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
             <div className="stm-team-list">
               {teams.map(team => {
                 const disabled = (team as any).__disabled;
+                console.log(`[Team ${team.name}] disabled:`, disabled);
                 const rawBanner = team.banner || '';
                 const bannerUrl = rawBanner.startsWith('/uploads')
                   ? `http://localhost:3001${rawBanner}`
@@ -185,21 +235,33 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
                     ? `http://localhost:3001/uploads/teams/${rawBanner}`
                     : null;
                 return (
-                  <button
-                    key={team.id}
-                    type="button"
-                    className={`stm-team-card ${selectedTeamId === team.id ? 'active' : ''} ${disabled ? 'disabled' : ''}`}
-                    onClick={() => {
-                      if (disabled) return;
-                      setSelectedTeamId(team.id);
-                      fetchPlayers(team.id);
-                    }}
-                    disabled={disabled || (playersLoading && selectedTeamId === team.id)}
-                    title={disabled ? 'Time já inscrito neste campeonato' : ''}
-                  >
-                    {bannerUrl && <img src={bannerUrl} alt={team.name} className="stm-team-banner" />}
-                    <span>{team.name}</span>
-                  </button>
+                  <div key={team.id} className="stm-team-card-wrapper">
+                    <button
+                      type="button"
+                      className={`stm-team-card ${selectedTeamId === team.id ? 'active' : ''} ${disabled ? 'disabled' : ''}`}
+                      onClick={() => {
+                        if (disabled) return;
+                        setSelectedTeamId(team.id);
+                        fetchPlayers(team.id);
+                      }}
+                      disabled={disabled || (playersLoading && selectedTeamId === team.id)}
+                      title={disabled ? 'Time já inscrito neste campeonato' : ''}
+                    >
+                      {bannerUrl && <img src={bannerUrl} alt={team.name} className="stm-team-banner" />}
+                      <span>{team.name}</span>
+                    </button>
+                    {disabled && (
+                      <button
+                        type="button"
+                        className="stm-leave-btn"
+                        onClick={() => handleLeaveChampionship(team.id)}
+                        disabled={loading}
+                        title="Sair do campeonato"
+                      >
+                        <i className="bi bi-x-circle"></i> Sair
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -242,18 +304,31 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
             )
           )}
           {!selectedTeam && <div className="stm-hint">Selecione um time para listar jogadores.</div>}
+          {isSelectedTeamAlreadyRegistered && selectedTeam && (
+            <div className="stm-hint" style={{ background: 'rgba(76, 175, 80, 0.1)', borderLeft: '4px solid #4caf50', color: '#2e7d32' }}>
+              ✓ Este time já está inscrito no campeonato
+            </div>
+          )}
+        </div>
+        <div className="stm-bottom-actions">
+          <Button 
+            variant="secondary" 
+            onClick={onHide} 
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
+          {!isSelectedTeamAlreadyRegistered && (
+            <Button
+              variant="success"
+              onClick={handleConfirm}
+              disabled={loading || !selectedTeamId || selectedPlayers.length === 0 || !compositionMet}
+            >
+              {loading ? 'Inscrevendo...' : 'Inscrever Time'}
+            </Button>
+          )}
         </div>
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={onHide} disabled={loading}>Cancelar</Button>
-        <Button
-          variant="primary"
-          onClick={handleConfirm}
-          disabled={loading || !selectedTeamId || selectedPlayers.length === 0 || !compositionMet}
-        >
-          {loading ? 'Inscrevendo...' : 'Inscrever Time'}
-        </Button>
-      </Modal.Footer>
     </Modal>
   );
 };

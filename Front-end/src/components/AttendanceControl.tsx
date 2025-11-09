@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getAttendance, postAttendance } from '../services/matchesFriendlyServices';
+import { API_BASE_URL } from '../config/api';
 
 interface Player {
   id: number;
@@ -33,13 +34,11 @@ const AttendanceControl: React.FC<AttendanceControlProps> = ({ matchId, teamId }
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
 
-      // Buscar jogadores do time
       const playersResponse = await axios.get(
-        `http://localhost:3001/api/teams/${teamId}/players`,
+        `${API_BASE_URL}/teams/${teamId}/players`,
         { headers }
       );
 
-      // Buscar status de presença
       const attendanceResponse = await getAttendance(matchId);
 
       setPlayers(playersResponse.data);

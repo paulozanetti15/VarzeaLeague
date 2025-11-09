@@ -9,7 +9,6 @@ export interface PlayerStats {
   gols: number;
   amarelos: number;
   vermelhos: number;
-  cartoes: number;
 }
 
 export const generateTeamPlayersPDF = (teamName: string, playerStats: PlayerStats[]) => {
@@ -31,15 +30,14 @@ export const generateTeamPlayersPDF = (teamName: string, playerStats: PlayerStat
   doc.line(margin, 78, 555, 78);
 
   // Table data
-  const headers = [['Jogador', 'Posição', 'Sexo', 'Gols', 'Amarelos', 'Vermelhos', 'Cartões']];
+  const headers = [['Jogador', 'Posição', 'Sexo', 'Gols', 'Cartões Amarelo', 'Cartões Vermelho']];
   const body = playerStats.map((p) => [
     p.nome || '-',
     p.posicao || '-',
     p.sexo || '-',
     String(p.gols || 0),
     String(p.amarelos || 0),
-    String(p.vermelhos || 0),
-    String(p.cartoes || 0)
+    String(p.vermelhos || 0)
   ]);
 
   autoTable(doc, {
@@ -56,7 +54,6 @@ export const generateTeamPlayersPDF = (teamName: string, playerStats: PlayerStat
       3: { halign: 'center' },
       4: { halign: 'center' },
       5: { halign: 'center' },
-      6: { halign: 'center' },
     }
   });
 

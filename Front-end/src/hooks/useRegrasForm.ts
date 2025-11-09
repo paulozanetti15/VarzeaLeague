@@ -11,6 +11,7 @@ import {
 
 export interface RegrasFormData {
   dataLimite: string;
+  horaLimite: string;
   idadeMinima: string;
   idadeMaxima: string;
   genero: string;
@@ -18,6 +19,7 @@ export interface RegrasFormData {
 
 export interface RegrasFormErrors {
   dataLimite?: string;
+  horaLimite?: string;
   idadeMinima?: string;
   idadeMaxima?: string;
   genero?: string;
@@ -27,6 +29,7 @@ export interface RegrasFormErrors {
 export const useRegrasForm = (initialData?: Partial<RegrasFormData>) => {
   const [formData, setFormData] = useState<RegrasFormData>({
     dataLimite: initialData?.dataLimite || format(new Date(), 'dd/MM/yyyy'),
+    horaLimite: initialData?.horaLimite || '23:59',
     idadeMinima: initialData?.idadeMinima || '',
     idadeMaxima: initialData?.idadeMaxima || '',
     genero: initialData?.genero || '',
@@ -124,6 +127,7 @@ export const useRegrasForm = (initialData?: Partial<RegrasFormData>) => {
   const resetForm = () => {
     setFormData({
       dataLimite: format(new Date(), 'dd/MM/yyyy'),
+      horaLimite: '23:59',
       idadeMinima: '',
       idadeMaxima: '',
       genero: '',

@@ -19,7 +19,7 @@ interface Match {
     home: number;
     away: number;
   };
-  status: 'upcoming' | 'live' | 'finished';
+  status: 'upcoming' | 'live' | 'finished' | 'sem_vagas' | 'aberta' | 'cancelada';
   championship?: string;
   location?: string;
   round?: string;
@@ -38,13 +38,23 @@ export const useMatchesWidget = () => {
       console.debug('raw matchesData:', matchesData);
       if (matchesData && matchesData.length > 0) {
         const processedMatches = matchesData.map((match: any) => {
-          let status: 'upcoming' | 'live' | 'finished' = 'upcoming';
+          let status: 'upcoming' | 'live' | 'finished' | 'sem_vagas' | 'aberta' | 'cancelada' = 'upcoming';
           switch (match.status) {
             case 'em_andamento':
               status = 'live';
               break;
             case 'finalizada':
+            case 'finalizado':
               status = 'finished';
+              break;
+            case 'sem_vagas':
+              status = 'sem_vagas';
+              break;
+            case 'aberta':
+              status = 'aberta';
+              break;
+            case 'cancelada':
+              status = 'cancelada';
               break;
             default:
               status = 'upcoming';

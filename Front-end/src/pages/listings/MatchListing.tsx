@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { API_BASE_URL } from '../../config/api';
 import {
   Box,
   Grid,
@@ -15,8 +16,6 @@ import {
 import MatchFilters from '../../features/matches/MatchFilters/MatchFilters';
 import { getStatusLabel } from '../../utils/statusLabels';
 import { format } from 'date-fns';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 type Match = any;
 type Championship = any;
@@ -146,7 +145,7 @@ const MatchListing: React.FC = () => {
   useEffect(() => {
     const loadMeta = async () => {
       try {
-        const champsRes = await fetch(`${API_URL}/championships`);
+        const champsRes = await fetch(`${API_BASE_URL}/championships`);
         if (champsRes.ok) {
           const c = await champsRes.json();
           setChamps(Array.isArray(c) ? c : []);
@@ -185,8 +184,8 @@ const MatchListing: React.FC = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const qs = buildQuery ? `?${buildQuery}` : '';
-        const res = await fetch(`${API_URL}/matches${qs}`);
+  const qs = buildQuery ? `?${buildQuery}` : '';
+  const res = await fetch(`${API_BASE_URL}/friendly-matches${qs}`);
         let data = [] as any[];
         if (res.ok) {
           data = await res.json();

@@ -64,12 +64,12 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({
 
       if (partidaDados && partidaDados.id) {
         const rulesData = {
-          userId,
-          partidaId: partidaDados.id,
-          dataLimite: dataLimiteISO,
-          idadeMinima: parseInt(formData.idadeMinima),
-          idadeMaxima: parseInt(formData.idadeMaxima),
-          genero: formData.genero,
+          matchId: partidaDados.id,
+          registrationDeadline: dataLimiteISO,
+          registrationDeadlineTime: formData.horaLimite,
+          minimumAge: parseInt(formData.idadeMinima),
+          maximumAge: parseInt(formData.idadeMaxima),
+          gender: formData.genero,
         };
 
         const result = await matchRulesService.createRules(rulesData);
@@ -82,11 +82,11 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({
         }
       } else if (matchToCreate) {
         const rulesPayload = {
-          userId,
-          dataLimite: dataLimiteISO,
-          idadeMinima: parseInt(formData.idadeMinima),
-          idadeMaxima: parseInt(formData.idadeMaxima),
-          genero: formData.genero,
+          registrationDeadline: dataLimiteISO,
+          registrationDeadlineTime: formData.horaLimite,
+          minimumAge: parseInt(formData.idadeMinima),
+          maximumAge: parseInt(formData.idadeMaxima),
+          gender: formData.genero,
         };
 
         const result = await matchRulesService.createMatchWithRules(matchToCreate, rulesPayload);
@@ -188,6 +188,17 @@ const RegrasFormRegisterModal: React.FC<RegrasFormRegisterModalProps> = ({
                   <CalendarMonthIcon fontSize="small" />
                 </button>
               </div>
+            </div>
+
+            <div className="form-group">
+              <label>Hora Limite para Inscrição</label>
+              <input
+                type="time"
+                className={`form-control ${errors.horaLimite ? 'is-invalid' : ''}`}
+                value={formData.horaLimite}
+                onChange={(e) => updateFormData('horaLimite', e.target.value)}
+                required
+              />
             </div>
 
             <div className="form-row">

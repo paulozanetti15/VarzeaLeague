@@ -1,19 +1,19 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database';
 import Team  from './TeamModel';
-import Match from './MatchModel';
+import Match from './FriendlyMatchesModel';
 interface PunicaoAttributes {
   id: number;
-  idTime: number;
-  motivo: string;
+  idTeam: number;
+  reason: string;
   idMatch: number;
 }
 
 
 class FriendlyMatchPenalty extends Model<PunicaoAttributes> {
   public id!: number;
-  public idTime!: number;
-  public motivo!: string;
+  public idTeam!: number;
+  public reason!: string;
   public idMatch!: number;
 }
 
@@ -24,7 +24,7 @@ FriendlyMatchPenalty.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    idTime: {
+    idTeam: {
       type: DataTypes.INTEGER,
       field: 'id_time', // Especifica o nome real da coluna
       allowNull: true,
@@ -35,14 +35,14 @@ FriendlyMatchPenalty.init(
     },
     idMatch: {
       type: DataTypes.INTEGER,
-      field: 'id_match', // Especifica o nome real da coluna
+      field: 'id_match',
       allowNull: false,
       references: {
-        model: 'matches',
+        model: 'FriendlyMatches',
         key: 'id'
       },
     },
-    motivo: {
+    reason: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -55,16 +55,5 @@ FriendlyMatchPenalty.init(
     underscored: true,
   }
 );
-
-// Associações corrigidas para snake_case
-FriendlyMatchPenalty.belongsTo(Team, {
-  foreignKey: "id_time",
-  as: "team"
-});
-
-FriendlyMatchPenalty.belongsTo(Match, {
-  foreignKey: "id_match", 
-  as: "match"
-});
 
 export default FriendlyMatchPenalty;

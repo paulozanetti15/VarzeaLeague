@@ -83,115 +83,102 @@ const PunishmentFriendlyMatchViewModal: React.FC<PunishmentViewModalProps> = ({
 
   const handleDeleteSuccess = () => {
     setModalDeletePunicao(false);
-    toast.success('Punição deletada com sucesso!');
+    toast.success('Punição deletada com sucesso! Partida retornou para status confirmada.');
     onClose();
     window.location.reload(); 
   };
 
   if (loading) {
     return (
-      <Modal show={show} onHide={onHide} size="xl" centered>
-        <Modal.Header className="bg-danger text-white">
-          <Modal.Title>
+      <Modal show={show} onHide={onHide} className="punishment-modal" size="lg" centered>
+        <div className="punishment-modal-header">
+          <h2 className="modal-title">
             <i className="fas fa-gavel me-2"></i>
-            <strong>Punição por WO Aplicada</strong>
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="bg-light text-center py-5">
+            Punição por WO Aplicada
+          </h2>
+          <button type="button" className="btn-close" aria-label="Fechar" onClick={onClose} style={{position: 'absolute', top: 16, right: 20, zIndex: 2}} />
+        </div>
+        <div className="punishment-modal-body text-center">
           <div className="spinner-border text-danger mb-4" role="status" style={{width: '3rem', height: '3rem'}}>
             <span className="visually-hidden">Loading...</span>
           </div>
           <h5 className="text-muted">Carregando dados da punição...</h5>
-        </Modal.Body>
+        </div>
       </Modal>
     );
   }
-
 
   return (
     <>
       <Modal
         show={show}
         onHide={onHide}
+        className="punishment-modal"
         size="lg"
         centered
       >
-        <Modal.Header className="bg-danger text-white">
-          <Modal.Title>
+        <div className="punishment-modal-header">
+          <h2 className="modal-title">
             <i className="fas fa-gavel me-2"></i>
-            <strong>Punição por WO Aplicada</strong>
-          </Modal.Title>
-        </Modal.Header>
-        
-        <Modal.Body className="bg-light">
+            Punição por WO Aplicada
+          </h2>
+          <button type="button" className="btn-close" aria-label="Fechar" onClick={onClose} style={{position: 'absolute', top: 16, right: 20, zIndex: 2}} />
+        </div>
+        <div className="punishment-modal-body">
           {punicao ? (
-            <div className="container-fluid pfm-wrapper">
+            <>
               <div className="alert alert-warning mb-4">
-                <div className="d-flex align-items-center">
-                  <i className="fas fa-exclamation-triangle text-warning me-3 fa-lg"></i>
-                  <div>
-                    <h6 className="alert-heading mb-1 fw-bold">Partida encerrada por Walk Over (WO)</h6>
-                    <p className="mb-0">Esta partida foi finalizada automaticamente. A súmula foi gerada.</p>
+                <i className="fas fa-exclamation-triangle me-2"></i>
+                Partida encerrada por Walk Over (WO). Esta partida foi finalizada automaticamente. A súmula foi gerada.
+              </div>
+              <div className="punishment-grid">
+                <div className="punishment-card punishment-card-danger">
+                  <div className="punishment-card-header">
+                    <i className="fas fa-exclamation-triangle me-2"></i>
+                    Time Punido
+                  </div>
+                  <div className="punishment-card-body">
+                    <div className="punishment-card-icon">
+                      <i className="fas fa-users"></i>
+                    </div>
+                    <div className="punishment-card-value">{punicao.team?.name || 'Nome não disponível'}</div>
+                  </div>
+                </div>
+                <div className="punishment-card punishment-card-primary">
+                  <div className="punishment-card-header">
+                    <i className="fas fa-file-alt me-2"></i>
+                    Tipo da Punição
+                  </div>
+                  <div className="punishment-card-body">
+                    <div className="punishment-card-icon">
+                      <i className="fas fa-gavel"></i>
+                    </div>
+                    <div className="punishment-card-value">{punicao.motivo || 'Motivo não informado'}</div>
                   </div>
                 </div>
               </div>
-
-              <div className="pfm-row">
-                <div className="pfm-card card shadow-sm border-danger">
-                  <div className="card-header bg-danger text-white text-center py-3">
-                    <span className="pfm-title"><i className="fas fa-exclamation-triangle me-2"></i>Time Punido</span>
-                  </div>
-                  <div className="card-body text-center">
-                    <div className="pfm-icon text-danger">
-                      <i className="fas fa-users fa-2x"></i>
-                    </div>
-                    <p className="pfm-value mb-0">{punicao.team?.name || 'Nome não disponível'}</p>
-                  </div>
-                </div>
-
-                <div className="pfm-card card shadow-sm border-primary">
-                  <div className="card-header bg-primary text-white text-center py-3">
-                    <span className="pfm-title"><i className="fas fa-file-alt me-2"></i>Tipo da Punição</span>
-                  </div>
-                  <div className="card-body text-center">
-                    <div className="pfm-icon text-primary">
-                      <i className="fas fa-gavel fa-2x"></i>
-                    </div>
-                    <p className="pfm-value mb-0">{punicao.motivo || 'Motivo não informado'}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            </>
           ) : (
             <div className="text-center py-5">
               <i className="fas fa-exclamation-circle text-muted mb-4" style={{fontSize: '4rem'}}></i>
               <h5 className="text-muted">Nenhuma punição encontrada para esta partida</h5>
             </div>
           )}
-        </Modal.Body>
-
-        <Modal.Footer className="bg-light border-top d-flex justify-content-between">
-          <div>
-            {punicao && (
-              <>
-                <Button variant="outline-warning" className="me-2" onClick={handleUpdateClick}>
-                  <i className="fas fa-edit me-2"></i>
-                  Alterar Punição
-                </Button>
-                
-                <Button variant="outline-danger" onClick={handleDeleteClick}>
-                  <i className="fas fa-trash me-2"></i>
-                  Deletar Punição
-                </Button>
-              </>
-            )}
-          </div>
-          
-          <Button variant="outline-secondary" onClick={onClose}>
-            <i className="fas fa-times me-2"></i>
-            Fechar
-          </Button>
-        </Modal.Footer>
+        </div>
+        <div className="punishment-modal-footer">
+          {punicao && (
+            <>
+              <Button variant="outline-warning" className="me-2" onClick={handleUpdateClick}>
+                <i className="fas fa-edit me-2"></i>
+                Alterar Punição
+              </Button>
+              <Button variant="outline-danger" className="me-2" onClick={handleDeleteClick}>
+                <i className="fas fa-trash me-2"></i>
+                Deletar Punição
+              </Button>
+            </>
+          )}
+        </div>
       </Modal>
 
       {/* Modal de Deletar */}

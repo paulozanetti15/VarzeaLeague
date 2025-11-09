@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { User } from '../services/userServices';
+import { User } from '../services/users.service';
 
 export interface UseUserSearchReturn {
   searchQuery: string;

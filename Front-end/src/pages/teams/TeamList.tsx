@@ -23,6 +23,7 @@ import PlayerStatsTable from '../../components/features/Teams/PlayerStatsTable';
 import TeamActionButtons from '../../components/features/Teams/TeamActionButtons';
 
 import './TeamList.css';
+import { hi } from 'date-fns/locale';
 
 const TeamList = () => {
   const { teams, loading, error, teamPlayers, loadingPlayers, fetchTeams, fetchTeamPlayers, fetchTeamPlayerStats } = useTeams();
@@ -188,7 +189,7 @@ const TeamList = () => {
                       </div>
                       <div className="stat-inline-alt">
                         <EmojiEventsIcon className="stat-icon" sx={{ fontSize: 22 }} />
-                        <span className="stat-text">{team.matchCount || 0} Partidas</span>
+                        <span className="stat-text">{historico?.totalPartidasDisputadaEmGeral || 0} Partidas</span>
                       </div>
                     </div>
                     <button 
@@ -242,25 +243,25 @@ const TeamList = () => {
                                   }}
                                 >
                                   <div className="player-name-position">
-                                    <div className="player-name-container">
+                                    <div className="player-icon-name-row">
                                       <PersonIcon className="player-icon" />
                                       <span className="player-name" title={player.nome}>{player.nome}</span>
                                     </div>
-                                    <span
-                                      className="player-position player-position-shrink"
-                                    >
-                                      {player.posicao}
-                                    </span>
-                                  </div>
-                                  <div className="player-details">
-                                    <span className="player-year">
-                                      <CalendarTodayIcon className="player-detail-icon" />
-                                      {player.ano}
-                                    </span>
-                                    <span className="player-gender">
-                                      <WcIcon className="player-detail-icon" />
-                                      {player.sexo}
-                                    </span>
+                                    <div className="player-info-below">
+                                      <span className="player-position player-position-shrink">
+                                        {player.posicao}
+                                      </span>
+                                      <span className="player-year">
+                                        <CalendarTodayIcon className="player-detail-icon" />
+                                        {player.dateOfBirth ? 
+                                          `${new Date().getFullYear() - new Date(player.dateOfBirth).getFullYear()} anos` : 
+                                          player.ano || 'N/A'}
+                                      </span>
+                                      <span className="player-gender">
+                                        <WcIcon className="player-detail-icon" />
+                                        {player.sexo}
+                                      </span>
+                                    </div>
                                   </div>
                                 </motion.div>
                               ))}
@@ -304,4 +305,4 @@ const TeamList = () => {
   );
 };
 
-export default TeamList; 
+export default TeamList;

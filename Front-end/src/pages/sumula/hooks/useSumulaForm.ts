@@ -124,20 +124,12 @@ export const useSumulaForm = (): UseSumulaFormReturn => {
     }
 
     if (selectedCardType === 'Vermelho') {
-      const playerGoalsBefore = goals.filter(
-        g => g.playerId === player.playerId && g.minute < selectedCardMinute
-      );
-
-      if (playerGoalsBefore.length > 0) {
-        return `${player.nome} tem gol(s) registrado(s) antes do minuto ${selectedCardMinute}. Um jogador não pode receber cartão vermelho antes de ter marcado gol.`;
-      }
-
       const playerGoalsAfter = goals.filter(
         g => g.playerId === player.playerId && g.minute > selectedCardMinute
       );
 
       if (playerGoalsAfter.length > 0) {
-        return `${player.nome} tem gol(s) registrado(s) após o minuto ${selectedCardMinute}. Remova os gols antes de adicionar o cartão vermelho.`;
+        return `${player.nome} tem gol(s) registrado(s) após o minuto ${selectedCardMinute}. Um jogador expulso não pode marcar gol. Remova os gols antes de adicionar o cartão vermelho.`;
       }
     }
 

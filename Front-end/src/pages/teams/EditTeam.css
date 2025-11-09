@@ -697,36 +697,48 @@ input[type="email"].form-control {
   display: flex;
   gap: 1rem;
   justify-content: center;
+  margin-top: 2rem;
 }
 
 .confirm-delete-btn,
 .cancel-delete-btn {
-  padding: 0.75rem 1.5rem;
+  padding: 14px 32px;
   border: none;
-  border-radius: 4px;
+  border-radius: 50px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 1rem;
   transition: all 0.3s ease;
+  min-width: 160px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .confirm-delete-btn {
-  background-color: #dc3545;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
   color: white;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
 }
 
 .confirm-delete-btn:hover {
-  background-color: #c82333;
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
 }
 
 .cancel-delete-btn {
-  background-color: #6c757d;
-  color: white;
+  background: #e9ecef;
+  color: #495057;
+  border: 2px solid #dee2e6;
 }
 
 .cancel-delete-btn:hover {
-  background-color: #5a6268;
+  background: #f8f9fa;
+  border-color: #adb5bd;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .delete-modal {
@@ -735,8 +747,8 @@ input[type="email"].form-control {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -751,14 +763,14 @@ input[type="email"].form-control {
 }
 
 .delete-modal-content {
-  background: linear-gradient(135deg, #1a1a2e 0%, #0d1b2a 100%);
-  border-radius: 20px;
-  padding: 2.5rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 24px;
+  padding: 3rem;
   width: 90%;
-  max-width: 500px;
+  max-width: 550px;
   text-align: center;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(220, 53, 69, 0.3);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(220, 53, 69, 0.2);
   overflow: hidden;
   position: relative;
   margin: 0 auto;
@@ -776,8 +788,8 @@ input[type="email"].form-control {
   top: 0;
   left: 0;
   right: 0;
-  height: 5px;
-  background: linear-gradient(90deg, #c82333, #dc3545);
+  height: 6px;
+  background: linear-gradient(90deg, #dc3545, #c82333);
 }
 
 .warning-icon-container {
@@ -787,25 +799,25 @@ input[type="email"].form-control {
   align-items: center;
   width: 100px;
   height: 100px;
-  background: rgba(220, 53, 69, 0.1);
+  background: rgba(220, 53, 69, 0.08);
   border-radius: 50%;
   margin-left: auto;
   margin-right: auto;
-  border: 2px solid rgba(220, 53, 69, 0.3);
+  border: 3px solid rgba(220, 53, 69, 0.2);
 }
 
 .delete-modal-content h2 {
-  color: #fff;
-  margin-bottom: 1.5rem;
-  font-size: 2rem;
+  color: #2d3748;
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .delete-modal-content p {
-  color: rgba(255, 255, 255, 0.9);
+  color: #4a5568;
   margin-bottom: 1rem;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   line-height: 1.6;
 }
 
@@ -1083,6 +1095,8 @@ input[type="email"].form-control {
 
 .player-info {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .player-name {
@@ -1091,6 +1105,10 @@ input[type="email"].form-control {
   font-weight: 600;
   font-size: 1.1rem;
   margin-bottom: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .player-details {

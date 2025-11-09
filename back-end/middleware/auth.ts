@@ -6,6 +6,7 @@ export interface AuthRequest extends Request {
     id: number;
     [key: string]: any;
   };
+  userId?: number;
 }
 
 export const authenticateToken = async (
@@ -52,6 +53,7 @@ export const authenticateToken = async (
 
     console.log(`Middleware de autenticação: Token verificado para usuário ${userId}`);
     (req as AuthRequest).user = { id: userId };
+    (req as AuthRequest).userId = userId;
     next();
   } catch (error) {
     console.error('Erro ao verificar token:', error);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getChampionshipById } from '../../services/championshipsServices';
+import { getChampionshipById } from '../../services/championships.service';
 import trophy from '../../assets/championship-trophy.svg';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { format, parse, isValid } from 'date-fns';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getUsers, deleteUser, User } from '../services/userServices';
+import { getUsers, deleteUser, User } from '../services/users.service';
 
 export const useUserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);

@@ -7,18 +7,9 @@ import {
 
 export const teamPlayerRoutes = express.Router();
 
-// Buscar todos os jogadores de um time
-teamPlayerRoutes.get('/:id', getTeamsPlayers);
-
-
-
-// Remover todos os jogadores de um time
+teamPlayerRoutes.get('/:teamId', getTeamsPlayers);
 teamPlayerRoutes.delete('/:teamId', deleteTeamPlayer);
-
-// Remover um jogador específico de um time
 teamPlayerRoutes.delete('/:teamId/player/:playerId', deleteTeamPlayer);
-
-// Adicionar jogadores a um time
-teamPlayerRoutes.post('/:id', createTeamPlayer);
+teamPlayerRoutes.post('/:teamId', createTeamPlayer);
 
 export default teamPlayerRoutes;

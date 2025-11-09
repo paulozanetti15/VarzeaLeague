@@ -1,18 +1,19 @@
-import MatchTeams from "../models/MatchTeamsModel";
-import Match from "../models/MatchModel";
-import Team from "../models/TeamModel";
-import Sequelize from "sequelize";
-import RulesModel from "../models/RulesModel";
+import { Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
+import FriendlyMatchTeamsModel from '../models/FriendlyMatchTeamsModel';
+import FriendlyMatchesModel from '../models/FriendlyMatchesModel';
+import Team from '../models/TeamModel';
+import FriendlyMatchesRulesModel from '../models/FriendlyMatchesRulesModel';
 import jwt from 'jsonwebtoken';
-import Playermodel from "../models/PlayerModel";
-import TeamPlayer from "../models/TeamPlayerModel";
-import User from "../models/UserModel";
+import Player from '../models/PlayerModel';
+import TeamPlayer from '../models/TeamPlayerModel';
+import User from '../models/UserModel';
 import { Op } from 'sequelize';
 require('dotenv').config(); 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
 
 const checkScheduleConflict = async (teamId: number, matchId: number): Promise<{ hasConflict: boolean; conflictDetails?: string }> => {
-  const newMatch = await Match.findByPk(matchId);
+  const newMatch = await FriendlyMatchesModel.findByPk(matchId);
   if (!newMatch) {
     return { hasConflict: false };
   }
@@ -24,11 +25,11 @@ const checkScheduleConflict = async (teamId: number, matchId: number): Promise<{
   
   const newMatchEnd = new Date(newMatchDate.getTime() + (durationInMinutes * 60000));
 
-  const existingMatches = await MatchTeams.findAll({
+  const existingMatches = await FriendlyMatchTeamsModel.findAll({
     where: { teamId },
     include: [{
-      model: Match,
-      as: 'match',
+      model: FriendlyMatchesModel,
+      as: 'friendlyMatch',
       where: {
         id: { [Op.ne]: matchId },
         status: { [Op.in]: ['aberta', 'confirmada'] }
@@ -37,7 +38,7 @@ const checkScheduleConflict = async (teamId: number, matchId: number): Promise<{
   });
 
   for (const matchTeam of existingMatches) {
-    const existingMatch = (matchTeam as any).match;
+    const existingMatch = (matchTeam as any).friendlyMatch;
     const existingMatchDate = new Date(existingMatch.date);
     
     const sameDay = 
@@ -78,14 +79,31 @@ const checkScheduleConflict = async (teamId: number, matchId: number): Promise<{
   return { hasConflict: false };
 };
 
-export const joinMatchByTeam = async (req: any, res: any) => {
-
+export const joinMatchByTeam = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { teamId,matchId } = req.body; 
-    const match = await Match.findByPk(matchId, {
-      attributes: [ 'title', 'date', 'location', 'status', 'description', 'price', 'organizerId', 'duration']
-    })
+    const { teamId } = req.body;
+    const matchId = parseInt(req.params.id, 10);
+    
+    console.log('Tentando inscrever time:', { teamId, matchId, params: req.params, body: req.body });
+    
+    if (!matchId || isNaN(matchId)) {
+      res.status(400).json({ message: 'ID da partida inválido' });
+      return;
+    }
+    
+    if (!teamId) {
+      res.status(400).json({ message: 'ID do time é obrigatório' });
+      return;
+    }
+    
+    const match = await FriendlyMatchesModel.findByPk(matchId, {
+      attributes: ['title', 'date', 'location', 'status', 'description', 'price', 'organizerId', 'duration']
+    });
+    
+    console.log('Partida encontrada:', match ? 'Sim' : 'Não', match?.toJSON());
+    
     const token = req.headers.authorization?.replace('Bearer ', '');
+    
     if (!match) {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
@@ -96,8 +114,14 @@ export const joinMatchByTeam = async (req: any, res: any) => {
       return;
     }
     
+    if (!token) {
+      res.status(401).json({ message: 'Usuário não autenticado' });
+      return;
+    }
+    
     const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-    const userId = decoded.id
+    const userId = Number(decoded.id);
+    
     if (!userId) {
       res.status(401).json({ message: 'Usuário não autenticado' });
       return;
@@ -108,18 +132,22 @@ export const joinMatchByTeam = async (req: any, res: any) => {
       return;
     }
     
-    const regras = await RulesModel.findOne({where : { partidaId: matchId }});
+    const regras = await FriendlyMatchesRulesModel.findOne({ where: { matchId } });
     
-    if (regras?.dataValues?.dataLimite) {
-      const now = new Date();
-      now.setHours(23, 59, 59, 999);
+    if (regras) {
+      const registrationDeadline = regras.get('registrationDeadline');
       
-      const deadline = new Date(regras.dataValues.dataLimite);
-      deadline.setHours(23, 59, 59, 999);
-      
-      if (now > deadline) {
-        res.status(400).json({ message: 'O prazo de inscrição para esta partida já encerrou' });
-        return;
+      if (registrationDeadline) {
+        const now = new Date();
+        now.setHours(23, 59, 59, 999);
+        
+        const deadline = new Date(registrationDeadline as string);
+        deadline.setHours(23, 59, 59, 999);
+        
+        if (now > deadline) {
+          res.status(400).json({ message: 'O prazo de inscrição para esta partida já encerrou' });
+          return;
+        }
       }
     }
 
@@ -136,239 +164,333 @@ export const joinMatchByTeam = async (req: any, res: any) => {
         id: teamId,
         isDeleted: false
       },
-      attributes: [
-        'id', 
-        'name',
-        'captainId'
-      ]
+      attributes: ['id', 'name', 'captainId']
     });
     
     if (!team) {
       res.status(404).json({ message: 'Time não encontrado ou foi removido' });
       return;
     }
-    const teamIsAlreadyInMatch = await MatchTeams.findOne({ where: { matchId, teamId } });
-    if(teamIsAlreadyInMatch){
-      return res.status(400).json({ message: 'Time já está inscrito nesta partida' });
+    
+    const teamIsAlreadyInMatch = await FriendlyMatchTeamsModel.findOne({ where: { matchId, teamId } });
+    if (teamIsAlreadyInMatch) {
+      res.status(409).json({ message: 'Time já está inscrito nesta partida' });
+      return;
     }
-    // Apenas o criador do time (captainId) pode inscrever seu time; admin pode tudo
+    
     const requester = await User.findByPk(userId).catch(() => null) as any;
     const isAdmin = requester && Number(requester.userTypeId) === 1;
+    
     if (!isAdmin && Number((team as any).captainId) !== Number(userId)) {
-      return res.status(403).json({ message: 'Apenas o criador do time pode inscrever este time na partida' });
+      res.status(403).json({ message: 'Apenas o criador do time pode inscrever este time na partida' });
+      return;
     }
-    // Limite de times por partida: usar regras.quantidade_times ou padrão 2
-    const currentTeamsCount = await MatchTeams.count({ where: { matchId } });
-    const maxTimes = (regras && Number((regras as any).quantidade_times)) ? Number((regras as any).quantidade_times) : 2;
+    
+    const currentTeamsCount = await FriendlyMatchTeamsModel.count({ where: { matchId } });
+    const maxTimes = 2;
+    
     if (currentTeamsCount >= maxTimes) {
-      return res.status(400).json({ message: 'Partida já está completa' });
+      res.status(400).json({ message: 'Partida já está completa' });
+      return;
     }
-    if(regras && regras.dataValues.sexo!=="Ambos"){
-      if(await verifyTeamsGenderRules(req, res,teamId,regras.dataValues.sexo)=== false){
-        return res.status(403).json({ message: `Time não se qualifica nas regras de gênero da partida` });
-      };
-      if (!await isTimePossuiCategoriaValido(teamId,matchId)) {
-        return res.status(403).json({ message: `Time não se qualifica nas regras de categoria da partida` });
-      }
-      else{
-        await MatchTeams.create({
-          matchId: matchId,
-          teamId: teamId
-        });
-        // After creating, check if match is full and update status
-        const newCount = await MatchTeams.count({ where: { matchId } });
-        if (newCount >= maxTimes) {
-          await Match.update({ status: 'sem_vagas' }, { where: { id: matchId } as any });
+    
+    if (regras) {
+      const gender = regras.get('gender');
+      
+      console.log('Verificando regras de gênero:', { gender });
+      
+      if (gender && gender !== 'Ambos') {
+        const isGenderValid = await verifyTeamsGenderRules(teamId, gender as string);
+        
+        console.log('Validação de gênero:', { isGenderValid });
+        
+        if (!isGenderValid) {
+          res.status(403).json({ message: 'Time não se qualifica nas regras de gênero da partida' });
+          return;
         }
-        res.status(201).json({ message: 'Time inscrito na partida com sucesso' });
       }
     }
-    else{
-      if (await isTimePossuiCategoriaValido(teamId,matchId)=== false) {
-        return res.status(403).json({ message: `Time não se qualifica nas regras de categoria da partida` });
-      }
-      else{
-        await MatchTeams.create({
-          matchId: matchId,
-          teamId: teamId
-        });
-        const newCount = await MatchTeams.count({ where: { matchId } });
-        if (newCount >= maxTimes) {
-          await Match.update({ status: 'sem_vagas' }, { where: { id: matchId } as any });
-        }
-        res.status(201).json({ message: 'Time inscrito na partida com sucesso' });
-      }  
+    
+    console.log('Verificando categoria...');
+    const isCategoryValid = await isTimePossuiCategoriaValido(teamId, matchId);
+    console.log('Validação de categoria:', { isCategoryValid });
+    
+    if (!isCategoryValid) {
+      res.status(403).json({ message: 'Time não se qualifica nas regras de categoria da partida' });
+      return;
     }
+    
+    console.log('Criando vínculo time-partida...');
+    await FriendlyMatchTeamsModel.create({
+      matchId: matchId,
+      teamId: teamId
+    });
+    
+    console.log('Time inscrito com sucesso na partida');
+    
+    const newCount = await FriendlyMatchTeamsModel.count({ where: { matchId } });
+    if (newCount >= maxTimes) {
+      await FriendlyMatchesModel.update({ status: 'sem_vagas' }, { where: { id: matchId } as any });
+    }
+    
+    res.status(201).json({ message: 'Time inscrito na partida com sucesso' });
+  } catch (error) {
+    console.error('Erro ao inscrever time na partida:', error);
+    res.status(500).json({ 
+      message: 'Erro ao inscrever time na partida',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
-  catch (error) {
-    console.error('Erro ao inscrever time na partida:', error); 
-    res.status(500).json({ message: 'Erro ao inscrever time na partida' });
-  }
-} 
-// Placeholder: categoria não está definida em RulesModel; sempre retorna true.
-const isTimePossuiCategoriaValido=async(teamId:number,matchId:number)=>{
+}; 
+const isTimePossuiCategoriaValido = async (teamId: number, matchId: number): Promise<boolean> => {
   return true;
-}
-export const verifyTeamsGenderRules = async (req: any, res: any,teamId:number,regraSexo:string) : Promise<boolean> => {
-  let isValid=true
-  const jogadoresDentroPartida = await TeamPlayer.findAll({
-    where: { teamId: teamId },
-    attributes: ['playerId'],
-  })
-  const PlayerIds = jogadoresDentroPartida.map((team: any) => team.playerId);
-  const playersWithDifferentGender = await Playermodel.findAll({
-    where: {
-      id: {
-        [Sequelize.Op.in]: PlayerIds
+};
+
+export const verifyTeamsGenderRules = async (teamId: number, requiredGender: string): Promise<boolean> => {
+  try {
+    const teamPlayers = await TeamPlayer.findAll({
+      where: { teamId: teamId },
+      attributes: ['playerId'],
+    });
+    
+    const playerIds = teamPlayers.map((team: any) => team.playerId);
+    
+    if (playerIds.length === 0) {
+      console.log('Time não possui jogadores');
+      return true;
+    }
+    
+    const playersWithDifferentGender = await Player.findAll({
+      where: {
+        id: {
+          [Op.in]: playerIds
+        },
+        gender: {
+          [Op.ne]: requiredGender
+        }
       },
-      sexo: {
-        [Sequelize.Op.ne]: regraSexo
-      }
-    },
-    attributes: ['sexo']
-  });
-  if (playersWithDifferentGender.length > 0) {
-    return isValid=false;
-  }  
-  return isValid;
-} 
-export const getMatchTeams = async (req: any, res: any) => {
+      attributes: ['gender']
+    });
+    
+    console.log('Jogadores com gênero diferente:', playersWithDifferentGender.length);
+    
+    return playersWithDifferentGender.length === 0;
+  } catch (error) {
+    console.error('Erro ao verificar regras de gênero:', error);
+    throw error;
+  }
+}; 
+export const getMatchTeams = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const matchId = parseInt(req.params.id, 10);
-    const match = await Match.findByPk(matchId, {
-      attributes: [ 'title', 'date', 'location', 'status', 'description', 'price', 'organizerId']
-    })
-    if (!match) {
-      res.status(404).json({ message: 'Partida não encontrada' });
-      return;
-    }
-    const teams=await MatchTeams.findAll({
+    
+    const matchTeams = await FriendlyMatchTeamsModel.findAll({
       where: { matchId },
-    });
-    const teamIds = teams.map((team: any) =>team.teamId);
-    const teamDetails = await Team.findAll({
-      where: { id: teamIds },
-      attributes: ['id', 'name', 'captainId','banner'],
-    });
-    if (!match) {
-      res.status(404).json({ message: 'Partida não encontrada' });
-      return;
-    }
-    res.json(teamDetails);  
+      include: [{
+        model: Team,
+        as: 'matchTeam',
+        attributes: ['id', 'name', 'captainId', 'banner', 'primaryColor', 'secondaryColor'],
+        where: { isDeleted: false },
+        required: false
+      }]
+    }) as any[];
+    
+    const formattedTeams = matchTeams
+      .filter(mt => mt.matchTeam) // Remove times deletados
+      .map(mt => ({
+        id: mt.matchTeam.id,
+        name: mt.matchTeam.name,
+        captainId: mt.matchTeam.captainId,
+        banner: mt.matchTeam.banner,
+        primaryColor: mt.matchTeam.primaryColor,
+        secondaryColor: mt.matchTeam.secondaryColor
+      }));
+    
+    res.status(200).json(formattedTeams);
   } catch (error) {
     console.error('Erro ao obter times da partida:', error);
-    res.status(500).json({ message: 'Erro ao obter times da partida' });
+    res.status(500).json({ 
+      message: 'Erro ao obter times da partida',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
-}
-export const getTeamsAvailable = async (req: any, res: any) => {
+};
+export const getTeamsAvailable = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const Teams = await MatchTeams.findAll({
-      attributes:['teamId'],
+    const Teams = await FriendlyMatchTeamsModel.findAll({
+      attributes: ['teamId'],
       where: {
         matchId: req.params.id
       },
       raw: true,
     });
+    
     const teamIds = Teams.map((team: any) => team.teamId);
+    
     const Avaiableteams = await Team.findAll({
       where: {
         id: {
-          [Sequelize.Op.notIn]: teamIds
+          [Op.notIn]: teamIds
         },
         isDeleted: false
       }
     });
-    res.status(200).json(Avaiableteams);   
-  }
-  catch (error) {
+    
+    res.status(200).json(Avaiableteams);
+  } catch (error) {
     console.error('Erro ao obter times disponíveis:', error);
-    res.status(500).json({ message: 'Erro ao obter times disponíveis' });
+    res.status(500).json({ 
+      message: 'Erro ao obter times disponíveis',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
-}  
-export const deleteTeamMatch= async (req: any, res: any) => {
+};  
+export const deleteTeamMatch = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { id,teamId } = req.params;
-    const match = await Match.findByPk(id);
+    const { id, teamId } = req.params;
+    const matchIdNum = parseInt(String(id), 10);
+    const teamIdNum = parseInt(String(teamId), 10);
+    
+    if (isNaN(matchIdNum) || isNaN(teamIdNum)) {
+      res.status(400).json({ message: 'IDs inválidos para partida ou time' });
+      return;
+    }
+
+    const match = await FriendlyMatchesModel.findByPk(matchIdNum);
     if (!match) {
-      return res.status(404).json({ message: 'Partida não encontrada' });
+      res.status(404).json({ message: 'Partida não encontrada' });
+      return;
     }
-    const team = await Team.findByPk(teamId);
+    
+    const team = await Team.findByPk(teamIdNum);
     if (!team) {
-      return res.status(404).json({ message: 'Time não encontrado' });
+      res.status(404).json({ message: 'Time não encontrado' });
+      return;
     }
-    // Somente o capitão do próprio time pode removê-lo; organizador/admin também podem
+    
     try {
       const authHeader = req.headers.authorization as string | undefined;
       const token = authHeader?.startsWith('Bearer ') ? authHeader.replace('Bearer ', '') : undefined;
-      if (!token) { return res.status(401).json({ message: 'Não autenticado' }); }
+      
+      if (!token) {
+        res.status(401).json({ message: 'Não autenticado' });
+        return;
+      }
+      
       const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
       const requesterId = decoded.id;
   const isOrganizer = Number((match as any).organizerId) === requesterId;
+      
       let requesterIsAdmin = false;
       const requester = await User.findByPk(requesterId).catch(() => null) as any;
       if (requester && Number(requester.userTypeId) === 1) requesterIsAdmin = true;
+      
   const isTeamCaptain = Number((team as any).captainId) === requesterId;
       const matchStatus = String((match as any).status || '').toLowerCase();
+      
       if (matchStatus === 'finalizada' && isTeamCaptain && !isOrganizer && !requesterIsAdmin) {
-        return res.status(403).json({ message: 'Não é permitido desvincular o time de uma partida finalizada' });
+        res.status(403).json({ message: 'Não é permitido desvincular o time de uma partida finalizada' });
+        return;
       }
+      
       if (!isTeamCaptain && !isOrganizer && !requesterIsAdmin) {
-        return res.status(403).json({ message: 'Sem permissão para remover este time da partida' });
+        res.status(403).json({ message: 'Sem permissão para remover este time da partida' });
+        return;
       }
     } catch (e) {
-      return res.status(401).json({ message: 'Token inválido' });
+      res.status(401).json({ message: 'Token inválido' });
+      return;
     }
-    await MatchTeams.destroy({
-      where: {
-        matchId:id,
-        teamId,
-      }
-    });
-    // Recount teams and reopen match if it was 'sem_vagas' and now has vacancies
+    
+    const existing = await FriendlyMatchTeamsModel.findOne({ where: { matchId: matchIdNum, teamId: teamIdNum } });
+    if (!existing) {
+      res.status(404).json({ message: 'Time não está inscrito nesta partida' });
+      return;
+    }
+
+    await FriendlyMatchTeamsModel.destroy({ where: { matchId: matchIdNum, teamId: teamIdNum } });
+    
     try {
-      const remainingCount = await MatchTeams.count({ where: { matchId: id } });
-      const regras = await RulesModel.findOne({ where: { partidaId: id } });
-      const maxTimes = (regras && Number((regras as any).quantidade_times)) ? Number((regras as any).quantidade_times) : 2;
+  const remainingCount = await FriendlyMatchTeamsModel.count({ where: { matchId: matchIdNum } });
+      const maxTimes = 2;
+      
       if (String((match as any).status) === 'sem_vagas' && remainingCount < maxTimes) {
         await match.update({ status: 'aberta' });
       }
     } catch (e) {
-      // don't block the successful removal if status update fails
-      console.error('Erro ao atualizar status da partida após remoção de time:', e);
+      // Não bloqueia a remoção bem-sucedida se a atualização de status falhar
     }
 
     res.status(200).json({ message: 'Time removido da partida com sucesso' });
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Erro ao remover time da partida:', error);
-    res.status(500).json({ message: 'Erro ao remover time da partida' });
+    res.status(500).json({ 
+      message: 'Erro ao remover time da partida',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
-}
-export const checkTeamsRuleCompliance  = async (req:any,res:any) => {
-  const { id } = req.params;
-  const matchId = parseInt(id, 10);
-  const regras = await RulesModel.findOne({ where: { partidaId: id } });
-  const matchTeams = await MatchTeams.findAll({
-    where: { matchId: matchId },
-    attributes: ['teamId']
-  }); 
-  if (!regras) return;
-  for (const matchTeam of matchTeams) {
-    const teamId = matchTeam.teamId;
-    const team= await Team.findByPk(teamId, {
-      attributes: ['name']})
-    const nome= team.dataValues.name;  
-    if (regras.dataValues.sexo !== "Ambos") {
-      if (await isTimePossuiCategoriaValido(teamId, id) === false || await verifyTeamsGenderRules(req, res, teamId, regras.dataValues.sexo) === false) {
-        await MatchTeams.destroy({
-          where: {
-            matchId: matchId,
-            teamId: teamId
-          }
-        });
-        res.status(403).json({message: `Time ${nome} não se qualifica nas regras de categoria da partida`});
+};
+export const checkTeamsRuleCompliance = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const matchId = parseInt(id, 10);
+    
+    console.log('Verificando conformidade para partida:', matchId);
+    console.log('Usuário autenticado:', req.userId);
+    
+    const rules = await FriendlyMatchesRulesModel.findOne({ where: { matchId } });
+    
+    if (!rules) {
+      res.status(404).json({ message: 'Regras da partida não encontradas' });
+      return;
+    }
+    
+    const matchTeams = await FriendlyMatchTeamsModel.findAll({
+      where: { matchId: matchId },
+      attributes: ['teamId']
+    });
+    
+    console.log(`Times inscritos: ${matchTeams.length}`);
+    
+    const gender = rules.get('gender');
+    
+    for (const matchTeam of matchTeams) {
+      const teamId = matchTeam.teamId;
+      const team = await Team.findByPk(teamId, {
+        attributes: ['name']
+      });
+      
+      const teamName = team?.get('name') || 'Time desconhecido';
+      
+      if (gender && gender !== 'Ambos') {
+        const isCategoryValid = await isTimePossuiCategoriaValido(teamId, matchId);
+        const isGenderValid = await verifyTeamsGenderRules(teamId, gender as string);
+        
+        console.log(`Time ${teamName}: categoria=${isCategoryValid}, gênero=${isGenderValid}`);
+        
+        if (!isCategoryValid || !isGenderValid) {
+          await FriendlyMatchTeamsModel.destroy({
+            where: {
+              matchId: matchId,
+              teamId: teamId
+            }
+          });
+          
+          console.log(`Time ${teamName} removido por não conformidade`);
+          
+          res.status(403).json({ message: `Time ${teamName} não se qualifica nas regras da partida` });
+          return;
+        }
       }
     }
+    
+    res.status(200).json({ message: 'Todos os times estão em conformidade com as regras' });
+  } catch (error) {
+    console.error('Erro ao verificar conformidade das regras:', error);
+    res.status(500).json({ 
+      message: 'Erro ao verificar conformidade das regras',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
 };
 

@@ -28,8 +28,8 @@ interface MatchFormData {
   city: string;
   category: string;
   number: string;
-  quadra: string;
-  modalidade: string;
+  square: string;
+  matchType: string;
 }
 
 const CreateMatch: React.FC = () => {
@@ -60,8 +60,8 @@ const CreateMatch: React.FC = () => {
     cep: '',
     category: '',
     UF: '',
-    modalidade: '',
-    quadra: ''
+    matchType: '',
+    square: ''
   });
   
   const [loading, setLoading] = useState(false);
@@ -82,7 +82,7 @@ const CreateMatch: React.FC = () => {
     const { value } = event.target;
     setFormData(prev => ({
       ...prev,
-      modalidade: value
+      matchType: value
     }));
   };
 
@@ -141,8 +141,8 @@ const CreateMatch: React.FC = () => {
     if (!formData.date.trim()) errors.date = 'Data é obrigatória';
     if (!formData.time.trim()) errors.time = 'Horário é obrigatório';
     if (!formData.duration.trim()) errors.duration = 'Duração é obrigatória';
-    if (!formData.modalidade.trim()) errors.modalidade = 'Modalidade é obrigatória';
-    if (!formData.quadra.trim()) errors.quadra = 'Nome da quadra é obrigatório';
+    if (!formData.matchType.trim()) errors.matchType = 'Modalidade é obrigatória';
+    if (!formData.square.trim()) errors.square = 'Nome da quadra é obrigatório';
     if (!formData.cep.trim()) errors.cep = 'CEP é obrigatório';
 
     setFieldErrors(errors);
@@ -167,13 +167,17 @@ const CreateMatch: React.FC = () => {
       const matchDataToCreate = {
         title: formData.title,
         description: formData.description,
-        location: formData.location || formData.location,
+        location: formData.location,
+        number: formData.number,
+        complement: formData.complement,
         date: formatBRToISO(formData.date),
         time: formData.time || '00:00',
         duration: durationInMinutes,
         price: formData.price || '0',
-        modalidade: formData.modalidade,
-        quadraNome: formData.quadra,
+        matchType: formData.matchType,
+        square: formData.square,
+        Cep: formData.cep,
+        Uf: formData.UF,
         userId: usuario?.id
       };
 
@@ -186,7 +190,8 @@ const CreateMatch: React.FC = () => {
 
   const formatDateISOToBR = (isoDate: string): string => {
     try {
-      const date = new Date(isoDate);
+      const [year, month, day] = isoDate.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
       return format(date, 'dd/MM/yyyy');
     } catch {
       return isoDate;
@@ -195,8 +200,8 @@ const CreateMatch: React.FC = () => {
 
   const formatBRToISO = (brDate: string): string => {
     try {
-      const parsed = parse(brDate, 'dd/MM/yyyy', new Date());
-      return format(parsed, 'yyyy-MM-dd');
+      const [day, month, year] = brDate.split('/').map(Number);
+      return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     } catch {
       return brDate;
     }
@@ -295,7 +300,7 @@ const CreateMatch: React.FC = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label" htmlFor="modalidade">
+                  <label className="form-label" htmlFor="matchType">
                     Modalidade
                     <span style={{
                       color: '#dc3545',
@@ -305,10 +310,10 @@ const CreateMatch: React.FC = () => {
                     }}>*</span>
                   </label>
                   <select
-                    id="modalidade"
-                    name="modalidade"
+                    id="matchType"
+                    name="matchType"
                     className="form-control modalidade-select"
-                    value={formData.modalidade}
+                    value={formData.matchType}
                     onChange={handleSelect}
                     required
                     style={{
@@ -331,7 +336,7 @@ const CreateMatch: React.FC = () => {
                       WebkitAppearance: 'none',
                       MozAppearance: 'none',
                       appearance: 'none',
-                      ...(fieldErrors.modalidade ? { borderColor: '#e53935' } : {})
+                      ...(fieldErrors.matchType ? { borderColor: '#e53935' } : {})
                     }}
                   >
                     <option value="">Selecione a modalidade</option>
@@ -339,7 +344,7 @@ const CreateMatch: React.FC = () => {
                     <option value="Futsal">Futsal</option>
                     <option value="Futebol campo">Futebol campo</option>
                   </select>
-                  {fieldErrors.modalidade && <span className="field-error">{fieldErrors.modalidade}</span>}
+                  {fieldErrors.matchType && <span className="field-error">{fieldErrors.matchType}</span>}
                 </div>
               </div>
 
@@ -439,7 +444,7 @@ const CreateMatch: React.FC = () => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label" htmlFor="quadra">
+                  <label className="form-label" htmlFor="square">
                     Nome da Quadra
                     <span style={{
                       color: '#dc3545',
@@ -450,16 +455,16 @@ const CreateMatch: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    id="quadra"
-                    name="quadra"
+                    id="square"
+                    name="square"
                     className="form-control"
-                    value={formData.quadra}
+                    value={formData.square}
                     onChange={handleInputChange}
                     placeholder="Nome da quadra/campo"
                     required
-                    style={fieldErrors.quadra ? { borderColor: '#e53935' } : undefined}
+                    style={fieldErrors.square ? { borderColor: '#e53935' } : undefined}
                   />
-                  {fieldErrors.quadra && <span className="field-error">{fieldErrors.quadra}</span>}
+                  {fieldErrors.square && <span className="field-error">{fieldErrors.square}</span>}
                 </div>
               </div>
 

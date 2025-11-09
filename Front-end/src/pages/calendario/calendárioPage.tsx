@@ -4,6 +4,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid'; 
 import ptBr from '@fullcalendar/core/locales/pt-br';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config/api';
 import './calendarioPage.css'
 
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -41,7 +42,7 @@ function CalendarioPage() {
         let idUser=parseInt(user.id)
         let token = localStorage.getItem('token')
         if (!user.id || !token) return;
-        const responseGetTeam = await axios.get(`http://localhost:3001/api/teams/${idUser}/teamCaptain`,{ 
+        const responseGetTeam = await axios.get(`${API_BASE_URL}/teams/${idUser}/teamCaptain`,{ 
           headers:{ Authorization : `Bearer ${token}`}}
         )  
         setTeam({id:responseGetTeam.data.id,name:responseGetTeam.data.name})
@@ -56,7 +57,7 @@ function CalendarioPage() {
   useEffect(()=>{
     const fetchJogos = async()=>{
       let token = localStorage.getItem('token')
-      const responseGetJogos=await axios.get(`http://localhost:3001/api/matches/teams/${team.id}`,{ 
+      const responseGetJogos=await axios.get(`${API_BASE_URL}/friendly-matches/teams/${team.id}`,{ 
         headers:{ 
           Authorization : `Bearer ${token}`
         }
@@ -83,7 +84,7 @@ function CalendarioPage() {
         const token = localStorage.getItem('token');
         if (!token || !team.id) return;
         // Buscar todos os campeonatos
-        const champsResp = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships`, {
+        const champsResp = await axios.get(`${API_BASE_URL}/championships`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const champs = Array.isArray(champsResp.data) ? champsResp.data : [];
@@ -91,7 +92,7 @@ function CalendarioPage() {
         const enrolled: ChampionshipEvent[] = [];
         for (const ch of champs) {
           try {
-            const teamsResp = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/championships/${ch.id}/join-team`, {
+            const teamsResp = await axios.get(`${API_BASE_URL}/championships/${ch.id}/join-team`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             const teamsData = Array.isArray(teamsResp.data) ? teamsResp.data : [];

@@ -54,9 +54,14 @@
 
 .punishment-modal-header .btn-close {
   filter: brightness(0) invert(1);
-  opacity: 0.9;
+  opacity: 1;
   padding: 0.75rem;
   margin: -0.5rem -0.75rem -0.5rem auto;
+  color: #fff;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  z-index: 10;
 }
 
 .punishment-modal-header .btn-close:hover {
@@ -68,9 +73,9 @@
    BODY
    ============================================ */
 .punishment-modal-body {
-  padding: 2rem;
+  padding: 1.25rem 1.25rem 1rem 1.25rem;
   background: #f5f7fa;
-  min-height: 340px;
+  min-height: 180px;
 }
 
 /* Alert Warning */
@@ -109,9 +114,9 @@
    ============================================ */
 .punishment-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-top: 0.5rem;
 }
 
 /* Card Base */
@@ -170,14 +175,14 @@
 
 /* Card Body */
 .punishment-card-body {
-  padding: 2.5rem 1.5rem;
+  padding: 1.25rem 1rem;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.25rem;
-  min-height: 180px;
+  gap: 0.75rem;
+  min-height: 90px;
   background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
 }
 
@@ -232,20 +237,20 @@
 .punishment-modal-footer {
   background: #ffffff;
   border-top: 2px solid #e9ecef;
-  padding: 1.25rem 2rem;
+  padding: 1rem 1.5rem;
   display: flex;
-  justify-content: space-between;
+  flex-direction: row;
+  justify-content: flex-end;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 /* Buttons */
 .punishment-modal-footer .btn {
-  padding: 0.625rem 1.25rem;
+  padding: 0.5rem 1rem;
   border-radius: 8px;
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   border-width: 2px;
   text-transform: uppercase;
@@ -253,6 +258,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 120px;
 }
 
 .punishment-modal-footer .btn i {
@@ -265,17 +271,18 @@
 
 /* Warning Button */
 .punishment-modal-footer .btn-outline-warning {
-  color: #f39c12;
-  border-color: #f39c12;
+  color: #ffc107;
+  border-color: #ffc107;
   background: transparent;
+  font-weight: 800;
 }
 
 .punishment-modal-footer .btn-outline-warning:hover {
-  background: #f39c12;
-  border-color: #f39c12;
-  color: #ffffff;
+  background: #ffc107;
+  border-color: #ffc107;
+  color: #212529;
   transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(243, 156, 18, 0.35);
+  box-shadow: 0 6px 16px rgba(255, 193, 7, 0.45);
 }
 
 /* Danger Button */
@@ -311,9 +318,8 @@
    STATES
    ============================================ */
 
-/* Empty State */
 .punishment-modal-body .text-center {
-  padding: 3rem 1rem;
+  padding: 1.5rem 0.5rem;
 }
 
 .punishment-modal-body .text-center i {
@@ -368,48 +374,40 @@
   }
 
   .punishment-grid {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
   }
 
   .punishment-card-body {
-    padding: 2rem 1.25rem;
-    min-height: 160px;
+    padding: 1.25rem 0.75rem;
+    min-height: 100px;
   }
 
   .punishment-card-icon {
-    width: 64px;
-    height: 64px;
+    width: 56px;
+    height: 56px;
   }
 
   .punishment-card-icon i {
-    font-size: 1.75rem;
+    font-size: 1.25rem;
   }
 
   .punishment-card-value {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
   }
 
   .punishment-modal-footer {
     padding: 1rem 1.5rem;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
-  }
-
-  .punishment-modal-footer > div {
-    width: 100%;
-    display: flex;
-    gap: 0.75rem;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: flex-end;
   }
 
   .punishment-modal-footer .btn {
-    flex: 1;
+    min-width: 100px;
+    flex: unset;
     justify-content: center;
-  }
-
-  .punishment-modal-footer .btn-secondary {
-    width: 100%;
   }
 }
 
@@ -444,36 +442,40 @@
     font-size: 0.825rem;
   }
 
-  .punishment-card-body {
-    padding: 1.75rem 1rem;
-    min-height: 150px;
-  }
-
-  .punishment-card-icon {
-    width: 56px;
-    height: 56px;
-  }
-
-  .punishment-card-icon i {
-    font-size: 1.5rem;
-  }
-
-  .punishment-card-value {
-    font-size: 1rem;
-  }
-
-  .punishment-modal-footer {
-    padding: 1rem 1.25rem;
-  }
-
-  .punishment-modal-footer > div {
-    flex-direction: column;
+  .punishment-grid {
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
 
-  .punishment-modal-footer .btn {
-    width: 100%;
+  .punishment-card-body {
+    padding: 1rem 0.5rem;
+    min-height: 80px;
+  }
+
+  .punishment-card-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .punishment-card-icon i {
+    font-size: 1.1rem;
+  }
+
+  .punishment-card-value {
+    font-size: 0.9rem;
+  }
+
+  .punishment-modal-footer {
     padding: 0.75rem 1rem;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  .punishment-modal-footer .btn {
+    min-width: 80px;
+    padding: 0.5rem 0.5rem;
   }
 }
 

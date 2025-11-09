@@ -6,6 +6,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import './UpdatePasswordModal.css';
+import { API_BASE_URL } from '../../../config/api';
 
 interface UpdatePasswordModalProps {
     userId: number;
@@ -48,7 +49,7 @@ export default function UpdatePasswordModal({userId, show, onHide}: UpdatePasswo
         if (senha && senha === confirmarSenha) {
             setIsLoading(true);
             try {
-                const response = await axios.put(`http://localhost:3001/api/password-reset/${userId}/update`,
+                const response = await axios.put(`${API_BASE_URL}/password-reset/${userId}/update`,
                     {
                         currentPassword: senhaAtual,
                         password: senha,

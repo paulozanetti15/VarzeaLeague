@@ -1,0 +1,122 @@
+/* Escopo exclusivo para este modal evitando conflito com outros gradientes globais */
+.evaluation-view-modal .modal-content, .evaluation-view-modal-content {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #e0e0e0 !important;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.15) !important;
+}
+
+.evaluation-view-modal .modal-header, .view-eval-header {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-bottom: 1px solid #e5e5e5 !important;
+  padding: 1.25rem 1.5rem !important;
+}
+
+.evaluation-view-modal .modal-header .modal-title, .view-eval-header .modal-title {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #000000 !important;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.evaluation-view-modal .modal-header .btn-close, .view-eval-header .btn-close {
+  filter: none !important;
+  opacity: .8;
+}
+
+.evaluation-view-modal .modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.evaluation-view-modal .modal-body, .view-eval-body {
+  padding: 2rem !important;
+  background: #ffffff !important;
+  min-height: 300px;
+}
+
+.evaluation-view-modal .modal-footer, .view-eval-footer {
+  background: #ffffff !important;
+  border-top: 1px solid #e5e5e5 !important;
+  padding: 1rem 1.5rem !important;
+}
+
+/* Labels */
+.eval-label-view {
+  color: #212529 !important;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  display: block;
+  font-weight: 600;
+}
+
+/* Wrapper das estrelas - Fundo branco */
+.star-rating-wrapper-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  background: #ffffff !important;
+  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+}
+
+/* Comentário - Fundo branco com borda */
+.comment-display {
+  padding: 1.25rem;
+  background: #ffffff !important;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+  color: #212529 !important;
+  line-height: 1.8;
+  min-height: 100px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-size: 1rem;
+}
+
+/* Modal Footer - Fundo branco */
+.view-eval-footer {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.evaluation-view-modal .modal-footer .btn, .view-eval-footer .btn {
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  border-radius: 8px;
+  min-width: 160px;
+}
+.evaluation-view-modal .modal-footer .btn-primary, .view-eval-footer .btn-primary {
+  background: #2196f3 !important;
+  border: none !important;
+  color: #ffffff !important;
+}
+
+.evaluation-view-modal .modal-footer .btn-primary:hover:not(:disabled) {
+  background: #d9dfe5 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(33,150,243,.3);
+}
+
+.evaluation-view-modal .modal-footer .btn-danger, .view-eval-footer .btn-danger {
+  background: #f44336 !important;
+  border: none !important;
+  color: #ffffff !important;
+}
+
+.evaluation-view-modal .modal-footer .btn-danger:hover:not(:disabled) {
+  background: #d32f2f !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(244,67,54,.3);
+}
+
+.evaluation-view-modal .modal-footer .btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}

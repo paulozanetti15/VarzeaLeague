@@ -7,8 +7,8 @@ import CloseIcon from '@mui/icons-material/Close';
 interface PlayerData {
   id?: number;
   nome: string;
-  sexo: string;
-  ano: string;
+  gender: string;
+  dateOfBirth: string;
   posicao: string;
 }
 
@@ -22,8 +22,8 @@ interface PlayerModalProps {
 const PlayerModal: React.FC<PlayerModalProps> = ({ isOpen, onClose, onSave, editingPlayer }) => {
   const [player, setPlayer] = useState<PlayerData>({
     nome: '',
-    sexo: '',
-    ano: '',
+    gender: '',
+    dateOfBirth: '',
     posicao: ''
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -35,8 +35,8 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ isOpen, onClose, onSave, edit
     } else {
       setPlayer({
         nome: '',
-        sexo: '',
-        ano: '',
+        gender: '',
+        dateOfBirth: '',
         posicao: ''
       });
     }
@@ -46,19 +46,7 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ isOpen, onClose, onSave, edit
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    
-    if (name === 'ano') {
-      // Remove qualquer caractere não numérico
-      const numericValue = value.replace(/\D/g, '');
-
-      if (numericValue.length === 4) {
-        const ano = parseInt(numericValue);
-      }
-      
-      setPlayer({ ...player, [name]: numericValue });
-    } else {
-      setPlayer({ ...player, [name]: value });
-    }
+    setPlayer({ ...player, [name]: value });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -70,18 +58,26 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ isOpen, onClose, onSave, edit
       alert('Nome do jogador é obrigatório.');
       return;
     }
-    if (!player.sexo) {
+    if (!player.gender) {
       alert('Sexo do jogador é obrigatório.');
       return;
     }
-    if (!player.ano) {
-      alert('Ano de nascimento do jogador é obrigatório.');
+    if (!player.dateOfBirth) {
+      alert('Data de nascimento do jogador é obrigatória.');
       return;
     }
     
-    const anoNascimento = parseInt(player.ano);
-    if (isNaN(anoNascimento) || anoNascimento < 1925 || anoNascimento > 2019) {
-      alert(`Ano de nascimento inválido. Deve ser entre 1925 e ${2019}.`);
+    const birthDate = new Date(player.dateOfBirth);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    
+    if (isNaN(birthDate.getTime())) {
+      alert('Data de nascimento inválida.');
+      return;
+    }
+    
+    if (age < 6 || age > 100) {
+      alert('Idade do jogador deve estar entre 6 e 100 anos.');
       return;
     }
     
@@ -131,11 +127,11 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ isOpen, onClose, onSave, edit
               </div>
               
               <div className={`player-form-group ${isSubmitted ? 'submitted' : ''}`}>
-                <label htmlFor="sexo">Sexo</label>
+                <label htmlFor="gender">Sexo</label>
                 <select
-                  id="sexo"
-                  name="sexo"
-                  value={player.sexo}
+                  id="gender"
+                  name="gender"
+                  value={player.gender}
                   onChange={handleChange}
                   required
                 >
@@ -146,15 +142,14 @@ const PlayerModal: React.FC<PlayerModalProps> = ({ isOpen, onClose, onSave, edit
               </div>
               
               <div className={`player-form-group ${isSubmitted ? 'submitted' : ''}`}>
-                <label htmlFor="ano">Ano de Nascimento</label>
+                <label htmlFor="dateOfBirth">Data de Nascimento</label>
                 <input
-                  type="text"
-                  id="ano"
-                  name="ano"
-                  value={player.ano}
+                  type="date"
+                  id="dateOfBirth"
+                  name="dateOfBirth"
+                  value={player.dateOfBirth}
                   onChange={handleChange}
-                  placeholder="Ex: 1990"
-                  maxLength={4}
+                  max={new Date().toISOString().split('T')[0]}
                   required
                 />
               </div>

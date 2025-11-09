@@ -38,6 +38,7 @@ export interface SumulaData {
   cards: Card[];
   matchDate?: string;
   matchLocation?: string;
+  isPenalty?: boolean;
 }
 
 export interface MatchReport {

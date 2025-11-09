@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE = 'http://localhost:3001/api';
+import { API_BASE_URL } from '../config/api';
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
@@ -9,24 +8,27 @@ function getAuthHeaders() {
 
 // Auth services
 export async function register(userData: any) {
-  const response = await axios.post(`${API_BASE}/auth/register`, userData, {
-    headers: { 'Content-Type': 'application/json' }
-  });
+  try {
+    const response = await axios.post(`${API_BASE_URL}/auth/register`, userData, {
+      headers: { 'Content-Type': 'application/json' }
+    });
 
-  if (response.status !== 200 && response.status !== 201) {
-    throw new Error(response.data.message || 'Erro ao registrar usuário');
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error('Erro ao registrar usuário');
   }
-
-  return response.data;
 }
 
 export async function checkCPF(cpf: string) {
-  const response = await axios.get(`${API_BASE}/auth/check-cpf/${cpf.replace(/\D/g, '')}`);
+  const response = await axios.get(`${API_BASE_URL}/auth/check-cpf/${cpf.replace(/\D/g, '')}`);
   return response.data;
 }
 
 export async function login(credentials: { email: string; password: string }) {
-  const response = await axios.post(`${API_BASE}/auth/login`, credentials, {
+  const response = await axios.post(`${API_BASE_URL}/auth/login`, credentials, {
     headers: { 'Content-Type': 'application/json' }
   });
 

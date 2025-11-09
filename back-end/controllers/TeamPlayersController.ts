@@ -20,13 +20,13 @@ export const createTeamPlayer = async (req: Request, res: Response): Promise<voi
                 });
 
                 if (!existingPlayer) {
-                    const created = await TeamPlayer.create({
+                    await TeamPlayer.create({
                         teamId: teamId,
                         playerId: jogador.playerId
                     });
                     return { success: true, player };
                 }
-                return { success: false, player, message: `${player?.nome || 'Jogador'} já está vinculado ao time` };
+                return { success: false, player, message: `${player?.name || 'Jogador'} já está vinculado ao time` };
             })
         );
         
@@ -57,10 +57,10 @@ export const createTeamPlayer = async (req: Request, res: Response): Promise<voi
 
 export const getTeamsPlayers = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { id } = req.params;
+        const { teamId } = req.params;
         
         const teamPlayers = await TeamPlayer.findAll({ 
-            where: { teamId: id },
+            where: { teamId: teamId },
             include: [{ 
                 model: Player,
                 as: 'player',
@@ -68,7 +68,19 @@ export const getTeamsPlayers = async (req: Request, res: Response): Promise<void
             }]
         });
         
-        const players = teamPlayers.map(tp => tp.get('player'));
+        const players = teamPlayers.map((tp: any) => {
+            const player = tp.player;
+            return {
+                id: player.id,
+                nome: player.name,
+                name: player.name,
+                gender: player.gender,
+                sexo: player.gender,
+                dateOfBirth: player.dateOfBirth,
+                posicao: player.position,
+                position: player.position
+            };
+        });
         
         res.status(200).json(players);
     } catch (error) {

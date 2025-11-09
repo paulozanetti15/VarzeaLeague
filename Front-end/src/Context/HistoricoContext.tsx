@@ -1,60 +1,84 @@
-import React, { createContext, useState, ReactNode } from "react";
-import axios from "axios";
+import { createContext, useState, ReactNode } from "react";
+import { getTeamFriendlyMatchesHistory, getTeamChampionshipMatchesHistory } from "../services/history.service";
 
 interface HistoricoContextProps {
   amistosos: number;
-  campeonatos: number;
+  quantidadeCampeonatos: number;
+  campeonatosEmDisputa: number;
+  campeonatosParticipados: number;
   vitoriasGeral: number;
   derrotasGeral: number;
   empatesGeral: number;
+  totalPartidasAmistosas: number;
+  totalPartidasCampeonatos: number;
   aproveitamentoCampeonatos: number;
   aproveitamentoAmistosos: number;
-  fetchHistorico: (idTeam: number) => Promise<void>;
-
+  fetchHistorico: (idTeam: number, championshipId?: number) => Promise<void>;
   PartidasAmistosas: PartidaAmistosa[];
-  PartidasCampeonato: PartidasCampeonato[];
-
-  setPartidasAmistosas: React.Dispatch<React.SetStateAction<PartidaAmistosa[]>>;
-  setPartidasCampeonato: React.Dispatch<React.SetStateAction<PartidasCampeonato[]>>;
+  todasPartidasCampeonatos: PartidasCampeonato[];
+  partidasFiltradasCampeonato: PartidasCampeonato[];
+  vitoriasAmistosos: number;
+  derrotasAmistosas: number;
+  empatesAmistosos: number;
+  vitoriasCampeonato: number;
+  derrotasCampeonato: number;
+  empatesCampeonato: number;
+  nomesCampeonatos: { id: number; name: string }[];
+  partidasFiltradasCampeonatoDisputadas: number;
+  totalPartidasDisputadaEmGeral: number;
 }
+interface MatchLocationInfo {
+  nomequadra?: string;
+  square?: string;
+  quadra?: string;
+  location?: string;
+  date?: Date | string;
+  championship?: {
+    id: number;
+    name: string;
+    end_date: Date | string;
+  };
+  matchChampionship?: {
+    id: number;
+    name: string;
+    end_date: Date | string;
+  };
+}
+
 interface PartidaAmistosa {
   id: number;
-  Match: {
-    nomequadra: string;
-    date: Date;
-    location: string;
-  };
+  Match?: MatchLocationInfo;
+  friendlyMatch?: MatchLocationInfo;
+  reportFriendlyMatch?: MatchLocationInfo;
   team_home: number;
   team_away: number;
-  teamHome: {
+  teamHome?: {
     name: string;
   };
-  teamAway: {
+  teamAway?: {
     name: string;
   };
-  date: Date;
   teamAway_score: number;
   teamHome_score: number;
 }
 interface PartidasCampeonato {
   id: number;
-  match: {
-    nomequadra: string;
-    date: Date;
-    location: string;
-    championship: {
-      name: string;
-    };
-  };
+  match?: MatchLocationInfo;
+  championshipMatch?: MatchLocationInfo;
   team_home: number;
   team_away: number;
-  teamHome: {
+  teamHome?: {
     name: string;
   };
-  teamAway: {
+  teamAway?: {
     name: string;
   };
-  
+  reportTeamHome?: {
+    name: string;
+  };
+  reportTeamAway?: {
+    name: string;
+  };
   teamAway_score: number;
   teamHome_score: number;
 }
@@ -63,12 +87,14 @@ export const HistoricoContext = createContext<HistoricoContextProps | null>(null
 
 export const HistoricoProvider = ({ children }: { children: ReactNode }) => {
   const [amistosos, setAmistosos] = useState<number>(0);
-  const [campeonatos, setCampeonatos] = useState<number>(0);
+  const [quantidadeCampeonatos, setQuantidadeCampeonatos] = useState<number>(0);
   const [vitoriasGeral, setVitoriasGeral] = useState<number>(0);
   const [derrotasGeral, setDerrotasGeral] = useState<number>(0);
   const [empatesGeral, setEmpatesGeral] = useState<number>(0);
   const [aproveitamentoAmistosos, setAproveitamentoAmistosos] = useState<number>(0);
   const [aproveitamentoCampeonatos, setAproveitamentoCampeonatos] = useState<number>(0);
+  const [totalPartidasAmistosas, setTotalPartidasAmistosas] = useState<number>(0);
+  const [totalPartidasCampeonatos, setTotalPartidasCampeonatos] = useState<number>(0);
   const [vitoriasAmistosos, setVitoriasAmistosos] = useState<number>(0);
   const [empatesAmistosos, setEmpatesAmistosos] = useState<number>(0);
   const [derrotasAmistosas, setDerrotasAmistosas] = useState<number>(0);
@@ -76,38 +102,43 @@ export const HistoricoProvider = ({ children }: { children: ReactNode }) => {
   const [empatesCampeonato, setEmpatesCampeonato] = useState<number>(0);
   const [derrotasCampeonato, setDerrotasCampeonato] = useState<number>(0);
   const [PartidasAmistosas, setPartidasAmistosas] = useState<PartidaAmistosa[]>([])
-  const [PartidasCampeonato, setPartidasCampeonato] = useState<PartidasCampeonato[]>([])
- 
+  const [todasPartidasCampeonatos, setTodasPartidasCampeonatos] = useState<PartidasCampeonato[]>([])
+  const [partidasFiltradasCampeonato, setPartidasFiltradasCampeonato] = useState<PartidasCampeonato[]>([])
+  const [campeonatosEmDisputa, setCampeonatosEmDisputa] = useState<number>(0);
+  const [campeonatosParticipados, setCampeonatosParticipados] = useState<number>(0);
+  const [nomesCampeonatos , setNomesCampeonato] = useState<{ id: number; name: string }[]>([]);
+  const [partidasFiltradasCampeonatoDisputadas, setPartidasFiltradasCampeonatoDisputadas] = useState<number>(0);
+  const [totalPartidasDisputadaEmGeral, setTotalPartidasDisputadaEmGeral] = useState<number>(0);
 
-  const StatusResultado = (idTeamHome: number, idTeamAway: number, teamHomeGoals: number, teamAwayGoals: number, meuId: number) => {
-    let resultado;
+  const StatusResultado = (
+    idTeamHome: number,
+    idTeamAway: number,
+    teamHomeGoals: number | null,
+    teamAwayGoals: number | null,
+    meuId: number
+  ): 'Vitória' | 'Derrota' | 'Empate' | null => {
+    // se não houver placar definido, não consideramos resultado
+    if (teamHomeGoals == null || teamAwayGoals == null) return null;
     if (meuId === idTeamHome) {
-      if (teamHomeGoals > teamAwayGoals) {
-        resultado = 'Vitória';
-      } else if (teamHomeGoals < teamAwayGoals) {
-        resultado = 'Derrota';
-      } else {
-        resultado = 'Empate';
-      }
-    } else if (meuId === idTeamAway) {
-      if (teamAwayGoals > teamHomeGoals) {
-        resultado = 'Vitória';
-      } else if (teamAwayGoals < teamHomeGoals) {
-        resultado = 'Derrota';
-      } else {
-        resultado = 'Empate';
-      }
+      if (teamHomeGoals > teamAwayGoals) return 'Vitória';
+      if (teamHomeGoals < teamAwayGoals) return 'Derrota';
+      return 'Empate';
     }
-    return resultado;
+    if (meuId === idTeamAway) {
+      if (teamAwayGoals > teamHomeGoals) return 'Vitória';
+      if (teamAwayGoals < teamHomeGoals) return 'Derrota';
+      return 'Empate';
+    }
+    return null;
   };
 
 
-  const fetchHistorico = async (idTeam: number) => {
+  const fetchHistorico = async (idTeam: number, championshipId?: number) => {
     try {
       const token = localStorage.getItem('token');
       if (!token || !idTeam) {
         setAmistosos(0);
-        setCampeonatos(0);
+        setQuantidadeCampeonatos(0);
         setVitoriasGeral(0);
         setDerrotasGeral(0);
         setEmpatesGeral(0);
@@ -116,66 +147,137 @@ export const HistoricoProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // Requisição de amistosos
-      const responseAmistosos = await axios.get(`http://localhost:3001/api/historico/${idTeam}/buscarpartidaamistosa`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      console.log('Fetching history for team:', idTeam, 'championship:', championshipId);
 
-      // Requisição de campeonatos
-      const responseCampeonato = await axios.get(`http://localhost:3001/api/historico/${idTeam}/buscarpartidacampeonato`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      let allFriendlyMatchesData: PartidaAmistosa[] = [];
+      let allChampionshipMatchesData: PartidasCampeonato[] = [];
+      let filteredChampionshipMatchesData: PartidasCampeonato[] = [];
 
-      const amistososData: PartidaAmistosa[] = responseAmistosos.data;
-      const campeonatosData: PartidasCampeonato[] = responseCampeonato.data;
-      
-      // Contagem para amistosos
-      let vitoriasA = 0;
-      let derrotasA = 0;
-      let empatesA = 0;
-      amistososData.forEach(partida => {
-        const resultado = StatusResultado(partida.team_home, partida.team_away, partida.teamHome_score, partida.teamAway_score, idTeam);
-        if (resultado === 'Vitória') vitoriasA++;
-        else if (resultado === 'Derrota') derrotasA++;
-        else empatesA++;
-      });
-      setVitoriasAmistosos(vitoriasA);
-      setDerrotasAmistosas(derrotasA);
-      setEmpatesAmistosos(empatesA);
-      setPartidasAmistosas(amistososData)
-      // Contagem para campeonatos
-      let vitoriasC = 0;
-      let derrotasC = 0;
-      let empatesC = 0;
-      campeonatosData.forEach(partida => {
-        const resultado = StatusResultado(partida.team_home, partida.team_away, partida.teamHome_score, partida.teamAway_score, idTeam);
-        if (resultado === 'Vitória') vitoriasC++;
-        else if (resultado === 'Derrota') derrotasC++;
-        else empatesC++;
-      });
-      setVitoriasCampeonato(vitoriasC);
-      setDerrotasCampeonato(derrotasC);
-      setEmpatesCampeonato(empatesC);
-      setPartidasCampeonato(campeonatosData)
-      // Cálculos e atualizações de estado
-      setAmistosos(amistososData.length);
-      
-      const campeonatosUnicos = new Set(campeonatosData.map(p => p.match.championship.name));
-      setCampeonatos(campeonatosUnicos.size);
+      try {
+        console.log('Fetching friendly matches...');
+        allFriendlyMatchesData = await getTeamFriendlyMatchesHistory(idTeam);
+        console.log('Friendly matches fetched:', allFriendlyMatchesData.length);
+      } catch (error) {
+        console.error('Error fetching friendly matches:', error);
+        allFriendlyMatchesData = [];
+      }
 
-      setVitoriasGeral(vitoriasA + vitoriasC);
-      setDerrotasGeral(derrotasA + derrotasC);
-      setEmpatesGeral(empatesA + empatesC);
+      try {
+        console.log('Fetching championship matches...');
+        allChampionshipMatchesData = await getTeamChampionshipMatchesHistory(idTeam);
+        console.log('Championship matches fetched:', allChampionshipMatchesData.length);
+        
+        filteredChampionshipMatchesData = championshipId 
+          ? await getTeamChampionshipMatchesHistory(idTeam, championshipId)
+          : allChampionshipMatchesData;
+        console.log('Filtered championship matches:', filteredChampionshipMatchesData.length);
+      } catch (error) {
+        console.error('Error fetching championship matches:', error);
+        allChampionshipMatchesData = [];
+        filteredChampionshipMatchesData = [];
+      }
 
-      const pontuacaoJogosCampeonatos = vitoriasC * 3 + empatesC;
-      const jogosCampeonatos = vitoriasC + empatesC + derrotasC;
-      const aproveitamentoCamp = jogosCampeonatos > 0 ? parseFloat(((pontuacaoJogosCampeonatos / (jogosCampeonatos * 3)) * 100).toFixed(2)) : 0;
+      let vitoriasPartidasAmistosas = 0;
+      let derrotasPartidasAmistosas = 0;
+      let empatesPartidasAmistosas = 0;
+      allFriendlyMatchesData.forEach(partida => {
+        const resultado = StatusResultado(
+          partida.team_home,
+          partida.team_away,
+          partida.teamHome_score ?? null,
+          partida.teamAway_score ?? null,
+          idTeam
+        );
+        if (resultado === 'Vitória') vitoriasPartidasAmistosas++;
+        else if (resultado === 'Derrota') derrotasPartidasAmistosas++;
+        else if (resultado === 'Empate') empatesPartidasAmistosas++;
+        // se resultado === null, ignoramos (placar não definido)
+      });
+      setVitoriasAmistosos(vitoriasPartidasAmistosas);
+      setDerrotasAmistosas(derrotasPartidasAmistosas);
+      setEmpatesAmistosos(empatesPartidasAmistosas);
+      setPartidasAmistosas(allFriendlyMatchesData)
+      setTotalPartidasAmistosas(vitoriasPartidasAmistosas + derrotasPartidasAmistosas + empatesPartidasAmistosas);
+      let vitoriasPartidasCampeonatos = 0;
+      let derrotasPartidasCampeonatos = 0;
+      let empatesPartidasCampeonatos = 0;
+      let vitoriasPartidasCampeonatoFiltrado = 0;
+      let derrotasPartidasCampeonatoFiltrado = 0;
+      let empatesPartidasCampeonatoFiltrado = 0;
+      allChampionshipMatchesData.forEach(partida => {
+        const resultado = StatusResultado(
+          partida.team_home,
+          partida.team_away,
+          partida.teamHome_score ?? null,
+          partida.teamAway_score ?? null,
+          idTeam
+        );
+        if (resultado === 'Vitória') vitoriasPartidasCampeonatos++;
+        else if (resultado === 'Derrota') derrotasPartidasCampeonatos++;
+        else if (resultado === 'Empate') empatesPartidasCampeonatos++;
+      });
+      filteredChampionshipMatchesData.forEach(partida => {
+        const resultado = StatusResultado(
+          partida.team_home,
+          partida.team_away,
+          partida.teamHome_score ?? null,
+          partida.teamAway_score ?? null,
+          idTeam
+        );
+        if (resultado === 'Vitória') vitoriasPartidasCampeonatoFiltrado++;
+        else if (resultado === 'Derrota') derrotasPartidasCampeonatoFiltrado++;
+        else if (resultado === 'Empate') empatesPartidasCampeonatoFiltrado++;
+      });
+      setVitoriasCampeonato(vitoriasPartidasCampeonatoFiltrado);
+      setDerrotasCampeonato(derrotasPartidasCampeonatoFiltrado);
+      setEmpatesCampeonato(empatesPartidasCampeonatoFiltrado);
+      setTodasPartidasCampeonatos(allChampionshipMatchesData)
+      setTotalPartidasCampeonatos(vitoriasPartidasCampeonatos + derrotasPartidasCampeonatos + empatesPartidasCampeonatos);
+      setPartidasFiltradasCampeonato(filteredChampionshipMatchesData)
+      setAmistosos(allFriendlyMatchesData.length);
+
+      const uniqueChampionships = new Map<number, { name: string; end_date: Date }>();
+      allChampionshipMatchesData.forEach(p => {
+        const championshipData = p.match?.championship ?? p.championshipMatch?.matchChampionship;
+        if (!championshipData) {
+          return;
+        }
+        const champId = championshipData.id;
+        const champName = championshipData.name;
+        const endDate = new Date(championshipData.end_date);
+        if (!uniqueChampionships.has(champId)) {
+          uniqueChampionships.set(champId, { name: champName, end_date: endDate });
+        }
+      });
+      const championshipList = Array.from(uniqueChampionships, ([id, { name }]) => ({ id, name }));
+      setNomesCampeonato(championshipList);
+      setQuantidadeCampeonatos(uniqueChampionships.size);
+
+      let campeonatosEmDisputa = 0;
+      let campeonatosParticipados = 0;
+      uniqueChampionships.forEach(({ end_date }) => {
+        if (end_date > new Date()) {
+          campeonatosEmDisputa++;
+        } else if( end_date <= new Date()) {
+          campeonatosParticipados++;
+        }
+      });
+      setCampeonatosEmDisputa(campeonatosEmDisputa);
+      setCampeonatosParticipados(campeonatosParticipados);
+      setVitoriasGeral(vitoriasPartidasAmistosas + vitoriasPartidasCampeonatos);
+      setDerrotasGeral(derrotasPartidasAmistosas + derrotasPartidasCampeonatos);
+      setEmpatesGeral(empatesPartidasAmistosas + empatesPartidasCampeonatos);
+
+      const pontuacaoJogosCampeonatos = vitoriasPartidasCampeonatoFiltrado * 3 + empatesPartidasCampeonatoFiltrado;
+      const PartidasCampeonatoDisputadas = vitoriasPartidasCampeonatoFiltrado + empatesPartidasCampeonatoFiltrado + derrotasPartidasCampeonatoFiltrado;
+      setPartidasFiltradasCampeonatoDisputadas(PartidasCampeonatoDisputadas)
+      const aproveitamentoCamp = PartidasCampeonatoDisputadas > 0 ? parseFloat(((pontuacaoJogosCampeonatos / (PartidasCampeonatoDisputadas * 3)) * 100).toFixed(2)) : 0;
       setAproveitamentoCampeonatos(aproveitamentoCamp);
 
-      const jogosAmistosos = vitoriasA + empatesA + derrotasA;
-      const desempenhoAmistosos = jogosAmistosos > 0 ? parseFloat(((vitoriasA / jogosAmistosos) * 100).toFixed(2)) : 0;
+      const jogosAmistosos = vitoriasPartidasAmistosas + empatesPartidasAmistosas + derrotasPartidasAmistosas;
+      const desempenhoAmistosos = jogosAmistosos > 0 ? parseFloat(((vitoriasPartidasAmistosas / jogosAmistosos) * 100).toFixed(2)) : 0;
       setAproveitamentoAmistosos(desempenhoAmistosos);
-
+      setTotalPartidasDisputadaEmGeral(jogosAmistosos + PartidasCampeonatoDisputadas);
     } catch (error) {
       console.error("Erro ao buscar histórico:", error);
     }
@@ -185,17 +287,29 @@ export const HistoricoProvider = ({ children }: { children: ReactNode }) => {
     <HistoricoContext.Provider
       value={{
         amistosos,
-        campeonatos,
+        quantidadeCampeonatos,
+        campeonatosEmDisputa,
+        campeonatosParticipados,
         vitoriasGeral,
         derrotasGeral,
         empatesGeral,
+        totalPartidasAmistosas,
+        totalPartidasCampeonatos,
         aproveitamentoCampeonatos,
         aproveitamentoAmistosos,
         fetchHistorico,
-        setPartidasAmistosas,
-        setPartidasCampeonato,
         PartidasAmistosas,
-        PartidasCampeonato
+        todasPartidasCampeonatos,
+        partidasFiltradasCampeonato,
+        vitoriasAmistosos,
+        derrotasAmistosas,
+        empatesAmistosos,
+        vitoriasCampeonato,
+        derrotasCampeonato,
+        empatesCampeonato,
+        nomesCampeonatos,
+        partidasFiltradasCampeonatoDisputadas,
+        totalPartidasDisputadaEmGeral
       }}
     >
       {children}

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { motion } from 'framer-motion'; 
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
 import './ManageTeams.css';
 
@@ -69,6 +70,7 @@ export function ManageTeams() {
       <div className="teams-header">
         <h1>Gerenciar Times</h1>
         <button className="create-team-btn" onClick={handleCreateTeam}>
+          <AddIcon sx={{ fontSize: 20 }} />
           Criar Novo Time
         </button>
       </div>
