@@ -17,6 +17,7 @@ interface SumulaViewProps {
   show: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
+  showDeleteConfirm?: () => void;
 }
 
 export const SumulaView: React.FC<SumulaViewProps> = ({ 
@@ -26,7 +27,8 @@ export const SumulaView: React.FC<SumulaViewProps> = ({
   onEdit,
   show,
   canEdit,
-  canDelete
+  canDelete,
+  showDeleteConfirm
 }) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [matchDate, setMatchDate] = useState('');

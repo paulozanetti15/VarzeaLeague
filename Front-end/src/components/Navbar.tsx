@@ -43,7 +43,7 @@ import { History } from '@mui/icons-material';
 import { api } from '../services/api';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { SplitButton } from 'react-bootstrap';
-import { useTheme as useThemeContext } from '../context/ThemeContext';
+import { useTheme as useThemeContext } from '../Context/ThemeContext';
 import './Navbar.css';
 
 

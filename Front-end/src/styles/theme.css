@@ -2679,6 +2679,423 @@ table tbody td {
   color: #b0b0b0;
 }
 
+/* ===== PÁGINA DE CRIAR PARTIDA - MODO ESCURO ===== */
+
+/* Container principal */
+.dark-theme .create-match-container,
+.dark-theme .match-form-container {
+  background: #1a1a1a !important;
+  min-height: 100vh;
+}
+
+/* Remover bordas e backgrounds brancos */
+.dark-theme .create-match-container *,
+.dark-theme .match-form-container * {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .create-match-container > div,
+.dark-theme .match-form-container > div,
+.dark-theme .container,
+.dark-theme .row,
+.dark-theme .col {
+  background: transparent !important;
+}
+
+/* Container de conteúdo principal */
+.dark-theme .main-content,
+.dark-theme .content-wrapper {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Card lateral de informações */
+.dark-theme .info-card,
+.dark-theme .match-info-sidebar {
+  background: linear-gradient(135deg, #424242 0%, #303030 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark-theme .info-card h3,
+.dark-theme .info-card h4,
+.dark-theme .match-info-sidebar h3,
+.dark-theme .match-info-sidebar h4 {
+  color: #ffffff !important;
+}
+
+.dark-theme .info-card p,
+.dark-theme .match-info-sidebar p {
+  color: #e0e0e0 !important;
+}
+
+/* Ícone de futebol */
+.dark-theme .soccer-icon,
+.dark-theme .match-icon {
+  background: rgba(77, 148, 255, 0.2) !important;
+  border: 2px solid #4d94ff !important;
+}
+
+/* Labels dos campos */
+.dark-theme .form-label,
+.dark-theme label {
+  color: #e0e0e0 !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+/* Inputs de texto */
+.dark-theme .form-control,
+.dark-theme input[type="text"],
+.dark-theme input[type="number"],
+.dark-theme input[type="date"],
+.dark-theme input[type="time"],
+.dark-theme textarea,
+.dark-theme select {
+  background: rgba(55, 55, 55, 0.95) !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  border-radius: 10px;
+  padding: 0.875rem 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.dark-theme .form-control:focus,
+.dark-theme input:focus,
+.dark-theme textarea:focus,
+.dark-theme select:focus {
+  border-color: #4d94ff !important;
+  background: rgba(65, 65, 65, 0.95) !important;
+  box-shadow: 0 0 0 4px rgba(77, 148, 255, 0.25) !important;
+  outline: none;
+}
+
+.dark-theme .form-control::placeholder,
+.dark-theme input::placeholder,
+.dark-theme textarea::placeholder {
+  color: #888 !important;
+}
+
+/* Select options */
+.dark-theme select option {
+  background: #2d2d2d !important;
+  color: #ffffff !important;
+}
+
+/* Input de data com ícone de calendário */
+.dark-theme .date-input-wrapper {
+  position: relative;
+}
+
+.dark-theme .date-icon,
+.dark-theme .calendar-icon {
+  color: #b0b0b0 !important;
+  cursor: pointer;
+}
+
+.dark-theme .date-icon:hover,
+.dark-theme .calendar-icon:hover {
+  color: #4d94ff !important;
+}
+
+/* Input de horário */
+.dark-theme input[type="time"] {
+  color-scheme: dark;
+}
+
+/* Textarea (descrição) */
+.dark-theme textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Botões de ação */
+.dark-theme .btn-primary,
+.dark-theme .submit-btn,
+.dark-theme button[type="submit"] {
+  background: linear-gradient(135deg, #4d94ff 0%, #2979ff 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  padding: 0.9rem 2rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(77, 148, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.dark-theme .btn-primary:hover,
+.dark-theme .submit-btn:hover,
+.dark-theme button[type="submit"]:hover {
+  background: linear-gradient(135deg, #2979ff 0%, #1565c0 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(77, 148, 255, 0.5);
+}
+
+.dark-theme .btn-secondary,
+.dark-theme .cancel-btn {
+  background: rgba(70, 70, 70, 0.95) !important;
+  border: 2px solid rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+  padding: 0.9rem 2rem;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.dark-theme .btn-secondary:hover,
+.dark-theme .cancel-btn:hover {
+  background: rgba(100, 100, 100, 0.95) !important;
+  border-color: #4d94ff !important;
+  color: #4d94ff !important;
+  transform: translateY(-2px);
+}
+
+/* Grupos de formulário */
+.dark-theme .form-group {
+  margin-bottom: 1.5rem;
+}
+
+/* Títulos de seções */
+.dark-theme .section-title {
+  color: #ffffff !important;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 2px solid rgba(77, 148, 255, 0.3);
+}
+
+/* Cards de formulário */
+.dark-theme .form-card {
+  background: rgba(45, 45, 45, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Mensagem de ajuda */
+.dark-theme .help-text,
+.dark-theme .form-text {
+  color: #b0b0b0 !important;
+  font-size: 0.85rem;
+  margin-top: 0.3rem;
+}
+
+/* Validação de erro */
+.dark-theme .error-message,
+.dark-theme .invalid-feedback {
+  color: #ff6b6b !important;
+  font-size: 0.85rem;
+  margin-top: 0.3rem;
+}
+
+.dark-theme .form-control.is-invalid,
+.dark-theme input.is-invalid {
+  border-color: #f44336 !important;
+}
+
+/* Estado de loading */
+.dark-theme .loading-spinner {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  border-top-color: #4d94ff !important;
+}
+
+/* Dividers */
+.dark-theme .form-divider {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  margin: 2rem 0;
+}
+
+/* ===== PÁGINA HOME/INICIAL - MODO ESCURO ===== */
+
+/* Container principal da home */
+.dark-theme .home-container,
+.dark-theme .landing-page {
+  background: #1a1a1a !important;
+  min-height: 100vh;
+}
+
+/* Seção de hero/banner */
+.dark-theme .hero-section,
+.dark-theme .banner-section {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%) !important;
+}
+
+.dark-theme .hero-section h1,
+.dark-theme .banner-section h1 {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .hero-section p,
+.dark-theme .banner-section p {
+  color: #e0e0e0 !important;
+}
+
+/* Seção "Jogos em Destaque" */
+.dark-theme .featured-section,
+.dark-theme .games-section {
+  background: transparent !important;
+}
+
+.dark-theme .featured-section h2,
+.dark-theme .games-section h2 {
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.dark-theme .featured-section p,
+.dark-theme .games-section p {
+  color: #b0b0b0 !important;
+}
+
+/* Título com background azul */
+.dark-theme .section-title-highlight {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%) !important;
+  color: #ffffff !important;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+/* Calendário */
+.dark-theme .calendar-container {
+  background: rgba(45, 45, 45, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.dark-theme .calendar-header {
+  background: rgba(55, 55, 55, 0.9) !important;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.dark-theme .calendar-header select {
+  background: rgba(65, 65, 65, 0.95) !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+}
+
+/* Dias da semana */
+.dark-theme .calendar-weekdays {
+  color: #b0b0b0 !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+/* Dias do calendário */
+.dark-theme .calendar-day {
+  background: rgba(55, 55, 55, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #e0e0e0 !important;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.dark-theme .calendar-day:hover {
+  background: rgba(65, 65, 65, 0.9) !important;
+  border-color: #4d94ff !important;
+  color: #ffffff !important;
+  transform: scale(1.05);
+}
+
+.dark-theme .calendar-day.selected,
+.dark-theme .calendar-day.active {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%) !important;
+  border-color: #2196f3 !important;
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.dark-theme .calendar-day.today {
+  border: 2px solid #4d94ff !important;
+  font-weight: 700;
+}
+
+.dark-theme .calendar-day.disabled {
+  background: rgba(40, 40, 40, 0.5) !important;
+  color: #555 !important;
+  cursor: not-allowed;
+}
+
+/* Slider de timeline */
+.dark-theme .timeline-slider {
+  background: rgba(55, 55, 55, 0.8) !important;
+}
+
+.dark-theme .timeline-slider input[type="range"] {
+  accent-color: #4d94ff;
+}
+
+/* Botões de navegação (setas) */
+.dark-theme .nav-button,
+.dark-theme .carousel-button {
+  background: rgba(70, 70, 70, 0.95) !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
+  color: #e0e0e0 !important;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  transition: all 0.3s ease;
+}
+
+.dark-theme .nav-button:hover,
+.dark-theme .carousel-button:hover {
+  background: rgba(77, 148, 255, 0.9) !important;
+  border-color: #4d94ff !important;
+  color: #ffffff !important;
+  transform: scale(1.1);
+}
+
+/* Cards de partidas em destaque */
+.dark-theme .match-highlight-card {
+  background: rgba(45, 45, 45, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.dark-theme .match-highlight-card:hover {
+  border-color: #4d94ff !important;
+  box-shadow: 0 6px 20px rgba(77, 148, 255, 0.25);
+  transform: translateY(-4px);
+}
+
+/* Remover backgrounds brancos */
+.dark-theme .home-container *,
+.dark-theme .landing-page * {
+  background-color: transparent;
+}
+
+.dark-theme .home-container div,
+.dark-theme .landing-page div,
+.dark-theme .container,
+.dark-theme .row,
+.dark-theme .col {
+  background: transparent !important;
+}
+
+/* Garantir que seções específicas tenham o fundo correto */
+.dark-theme section {
+  background: transparent !important;
+}
+
+
+
 
 
 
@@ -2828,6 +3245,483 @@ table tbody td {
   margin: 1.5rem 0;
 }
 
+/* ================================================
+   TESTIMONIALS (DEPOIMENTOS) - DARK THEME
+   ================================================ */
+
+.dark-theme .testimonials-section {
+  background: linear-gradient(120deg, #1a1a1a 0%, #2d2d2d 60%, #0d47a1 100%) !important;
+  background-image: repeating-linear-gradient(135deg, rgba(77, 148, 255, 0.05) 0 16px, transparent 16px 56px) !important;
+}
+
+.dark-theme .testimonials-title,
+.dark-theme .section-title {
+  color: #e9ecef !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark-theme .testimonials-subtitle,
+.dark-theme .section-subtitle {
+  color: #adb5bd !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark-theme .testimonial-card {
+  background: #2d2d2d !important;
+  border: 1.5px solid #495057 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+.dark-theme .testimonial-card:hover {
+  box-shadow: 0 16px 40px rgba(77, 148, 255, 0.2) !important;
+  border-color: #4d94ff !important;
+  background: #3a3a3a !important;
+}
+
+.dark-theme .testimonial-quote {
+  color: rgba(77, 148, 255, 0.15) !important;
+}
+
+.dark-theme .testimonial-content,
+.dark-theme .testimonial-text {
+  color: #e9ecef !important;
+}
+
+.dark-theme .testimonial-author {
+  border-top: 1px solid rgba(77, 148, 255, 0.2) !important;
+}
+
+.dark-theme .testimonial-photo {
+  border: 3px solid #4d94ff !important;
+  box-shadow: 0 4px 12px rgba(77, 148, 255, 0.3) !important;
+}
+
+.dark-theme .testimonial-name {
+  color: #4d94ff !important;
+}
+
+.dark-theme .testimonial-role {
+  color: #adb5bd !important;
+}
+
+.dark-theme .testimonial-nav-btn {
+  background: #3a3a3a !important;
+  color: #4d94ff !important;
+  border: 1px solid #495057 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark-theme .testimonial-nav-btn:hover {
+  background-color: #4d94ff !important;
+  color: #fff !important;
+  box-shadow: 0 6px 15px rgba(77, 148, 255, 0.4) !important;
+}
+
+/* ================================================
+   FOOTER - DARK THEME
+   ================================================ */
+
+.dark-theme .footer {
+  background: linear-gradient(to bottom, #1a1a1a, #0d0d0d) !important;
+  border-top: 1px solid rgba(77, 148, 255, 0.2) !important;
+}
+
+.dark-theme .footer::after {
+  background: linear-gradient(90deg, #4d94ff, #2196f3, #1976d2) !important;
+  box-shadow: 0 0 20px rgba(77, 148, 255, 0.6) !important;
+}
+
+.dark-theme .footer::before {
+  background: radial-gradient(circle, rgba(77, 148, 255, 0.15) 0%, rgba(33, 150, 243, 0) 70%) !important;
+  opacity: 0.8 !important;
+}
+
+.dark-theme .footer h3,
+.dark-theme .footer h4 {
+  color: #e9ecef !important;
+}
+
+.dark-theme .footer h3::after,
+.dark-theme .footer h4::after {
+  background: linear-gradient(to right, #4d94ff, transparent) !important;
+}
+
+.dark-theme .footer p {
+  color: rgba(233, 236, 239, 0.8) !important;
+}
+
+.dark-theme .location {
+  color: rgba(233, 236, 239, 0.9) !important;
+}
+
+.dark-theme .location i {
+  color: #4d94ff !important;
+  filter: drop-shadow(0 0 6px rgba(77, 148, 255, 0.5)) !important;
+}
+
+.dark-theme .contact-link {
+  color: rgba(233, 236, 239, 0.8) !important;
+}
+
+.dark-theme .contact-link:hover {
+  color: #fff !important;
+}
+
+.dark-theme .contact-link i {
+  color: #4d94ff !important;
+  filter: drop-shadow(0 0 6px rgba(77, 148, 255, 0.5)) !important;
+}
+
+.dark-theme .social-link {
+  background-color: rgba(77, 148, 255, 0.1) !important;
+  border: 1px solid rgba(77, 148, 255, 0.3) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+  color: rgba(233, 236, 239, 0.9) !important;
+}
+
+.dark-theme .social-link::before {
+  background: linear-gradient(135deg, #4d94ff, #2196f3) !important;
+}
+
+.dark-theme .social-link:hover {
+  box-shadow: 0 10px 20px rgba(77, 148, 255, 0.4) !important;
+}
+
+.dark-theme .social-link i {
+  filter: drop-shadow(0 0 6px rgba(77, 148, 255, 0.5)) !important;
+}
+
+.dark-theme .footer-divider {
+  border-color: rgba(77, 148, 255, 0.2) !important;
+  opacity: 0.5 !important;
+  box-shadow: 0 0 10px rgba(77, 148, 255, 0.2) !important;
+}
+
+.dark-theme .copyright {
+  color: rgba(233, 236, 239, 0.7) !important;
+}
+
+/* ================================================
+   CHAMPIONSHIP FORM - DARK THEME
+   ================================================ */
+
+.dark-theme .create-team-container,
+.dark-theme .championship-form-bg {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%) !important;
+}
+
+.dark-theme .create-team-container::before,
+.dark-theme .championship-form-bg::before {
+  background: radial-gradient(circle, rgba(77, 148, 255, 0.08) 0%, transparent 70%) !important;
+}
+
+.dark-theme .teams-title,
+.dark-theme .championship-form-title {
+  color: #e9ecef !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark-theme .teams-title::after,
+.dark-theme .championship-form-title::after {
+  background: linear-gradient(90deg, #4d94ff, #2196f3) !important;
+  box-shadow: 0 1px 8px rgba(77, 148, 255, 0.4) !important;
+}
+
+.dark-theme .teams-subtitle,
+.dark-theme .championship-form-subtitle {
+  color: #adb5bd !important;
+}
+
+.dark-theme .create-team-container .form-container,
+.dark-theme .championship-form-container,
+.dark-theme div.form-container,
+.dark-theme .form-container {
+  background: linear-gradient(135deg, #2d2d2d 0%, #3a3a3a 100%) !important;
+  border: 1px solid rgba(77, 148, 255, 0.2) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark-theme .form-container::before {
+  background: radial-gradient(circle, rgba(77, 148, 255, 0.05) 0%, transparent 70%) !important;
+}
+
+.dark-theme .logo-section {
+  background: linear-gradient(135deg, #1565c0, #0d47a1) !important;
+  box-shadow: 0 12px 35px rgba(13, 71, 161, 0.6) !important;
+}
+
+.dark-theme .logo-section::before {
+  background: radial-gradient(circle at top right, rgba(77, 148, 255, 0.2), transparent 50%) !important;
+}
+
+.dark-theme .logo-section h3,
+.dark-theme .logo-section h2 {
+  color: #fff !important;
+}
+
+.dark-theme .logo-section p {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.dark-theme .championship-type-badge,
+.dark-theme .type-badge {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  color: #fff !important;
+}
+
+.dark-theme .championship-type-badge svg,
+.dark-theme .type-badge svg {
+  color: #fff !important;
+}
+
+.dark-theme .fields-section,
+.dark-theme .form-fields {
+  background: transparent !important;
+}
+
+.dark-theme .form-row {
+  background: transparent !important;
+}
+
+.dark-theme .form-group label {
+  color: #adb5bd !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.dark-theme .form-group label::after {
+  background: linear-gradient(90deg, #4d94ff, transparent) !important;
+}
+
+.dark-theme .form-group input,
+.dark-theme .form-group select,
+.dark-theme .form-group textarea {
+  background-color: #3a3a3a !important;
+  border: 1px solid #495057 !important;
+  color: #e9ecef !important;
+}
+
+.dark-theme .form-group input:focus,
+.dark-theme .form-group select:focus,
+.dark-theme .form-group textarea:focus {
+  background-color: #404040 !important;
+  border-color: #4d94ff !important;
+  box-shadow: 0 0 0 3px rgba(77, 148, 255, 0.1) !important;
+  color: #e9ecef !important;
+}
+
+.dark-theme .form-group input::placeholder,
+.dark-theme .form-group textarea::placeholder {
+  color: #6c757d !important;
+}
+
+.dark-theme .form-group select option {
+  background-color: #3a3a3a !important;
+  color: #e9ecef !important;
+}
+
+.dark-theme .date-input-wrapper {
+  background-color: #3a3a3a !important;
+  border: 1px solid #495057 !important;
+}
+
+.dark-theme .date-input-wrapper input {
+  background-color: transparent !important;
+  border: none !important;
+  color: #e9ecef !important;
+}
+
+.dark-theme .date-input-wrapper .calendar-icon {
+  color: #4d94ff !important;
+}
+
+.dark-theme .calendar-popup {
+  background: #2d2d2d !important;
+  border: 1px solid #495057 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark-theme .calendar-header {
+  background: linear-gradient(135deg, #1565c0, #0d47a1) !important;
+  color: #fff !important;
+}
+
+.dark-theme .calendar-header button {
+  color: #fff !important;
+}
+
+.dark-theme .calendar-header button:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark-theme .calendar-weekdays {
+  background: #3a3a3a !important;
+  color: #adb5bd !important;
+}
+
+.dark-theme .calendar-days {
+  background: #2d2d2d !important;
+}
+
+.dark-theme .calendar-day {
+  color: #e9ecef !important;
+  background: transparent !important;
+}
+
+.dark-theme .calendar-day:hover:not(.disabled):not(.selected) {
+  background-color: rgba(77, 148, 255, 0.1) !important;
+  color: #4d94ff !important;
+}
+
+.dark-theme .calendar-day.selected {
+  background: linear-gradient(135deg, #4d94ff, #2196f3) !important;
+  color: #fff !important;
+}
+
+.dark-theme .calendar-day.today {
+  border: 2px solid #4d94ff !important;
+  color: #4d94ff !important;
+  font-weight: 700 !important;
+}
+
+.dark-theme .calendar-day.disabled {
+  color: #495057 !important;
+  background: transparent !important;
+}
+
+.dark-theme .form-actions,
+.dark-theme .button-group {
+  background: transparent !important;
+}
+
+.dark-theme .submit-btn,
+.dark-theme .btn-primary {
+  background: linear-gradient(135deg, #4d94ff, #2196f3) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 4px 15px rgba(77, 148, 255, 0.3) !important;
+}
+
+.dark-theme .submit-btn:hover,
+.dark-theme .btn-primary:hover {
+  background: linear-gradient(135deg, #6ba4ff, #42a5f5) !important;
+  box-shadow: 0 6px 20px rgba(77, 148, 255, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+.dark-theme .cancel-btn,
+.dark-theme .btn-secondary {
+  background-color: #495057 !important;
+  color: #e9ecef !important;
+  border: 1px solid #6c757d !important;
+}
+
+.dark-theme .cancel-btn:hover,
+.dark-theme .btn-secondary:hover {
+  background-color: #5a6268 !important;
+  border-color: #7a8288 !important;
+}
+
+.dark-theme .alert-success {
+  background-color: rgba(40, 167, 69, 0.2) !important;
+  border-color: #28a745 !important;
+  color: #4ade80 !important;
+}
+
+.dark-theme .alert-danger,
+.dark-theme .alert-error {
+  background-color: rgba(220, 53, 69, 0.2) !important;
+  border-color: #dc3545 !important;
+  color: #f87171 !important;
+}
+
+.dark-theme .field-error {
+  color: #f87171 !important;
+}
+
+.dark-theme .helper-text {
+  color: #adb5bd !important;
+}
+
+.dark-theme .checkbox-label {
+  color: #e9ecef !important;
+}
+
+.dark-theme input[type="checkbox"] {
+  border-color: #495057 !important;
+}
+
+.dark-theme input[type="checkbox"]:checked {
+  background-color: #4d94ff !important;
+  border-color: #4d94ff !important;
+}
+
+.dark-theme .section-divider {
+  border-color: rgba(77, 148, 255, 0.2) !important;
+}
+
+.dark-theme .info-text,
+.dark-theme .description-text {
+  color: #adb5bd !important;
+}
+
+.dark-theme .form-section-title {
+  color: #e9ecef !important;
+}
+
+.dark-theme .checkbox-container,
+.dark-theme .checkbox-wrapper {
+  background-color: rgba(77, 148, 255, 0.05) !important;
+  border: 1px solid rgba(77, 148, 255, 0.2) !important;
+  border-radius: 8px !important;
+}
+
+.dark-theme .checkbox-container label,
+.dark-theme .checkbox-wrapper label,
+.dark-theme .checkbox-label span {
+  color: #e9ecef !important;
+  font-weight: 600 !important;
+}
+
+.dark-theme .checkbox-container p,
+.dark-theme .checkbox-wrapper p,
+.dark-theme .checkbox-description {
+  color: #adb5bd !important;
+}
+
+.dark-theme .groups-config,
+.dark-theme .group-settings,
+.dark-theme .phase-settings {
+  background-color: rgba(77, 148, 255, 0.05) !important;
+  border: 1px solid rgba(77, 148, 255, 0.2) !important;
+  border-radius: 8px !important;
+  padding: 1.5rem !important;
+}
+
+.dark-theme .groups-config h4,
+.dark-theme .group-settings h4,
+.dark-theme .phase-settings h4 {
+  color: #4d94ff !important;
+}
+
+.dark-theme .groups-config label,
+.dark-theme .group-settings label,
+.dark-theme .phase-settings label {
+  color: #adb5bd !important;
+}
+
+.dark-theme .config-icon,
+.dark-theme .settings-icon {
+  color: #4d94ff !important;
+}
+
+.dark-theme input[type="number"]::-webkit-inner-spin-button,
+.dark-theme input[type="number"]::-webkit-outer-spin-button {
+  filter: invert(1) !important;
+}
 
 
 
