@@ -44,12 +44,15 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
   const fetchAvailableTeams = async () => {
     setTeamsLoading(true);
     try {
+      console.log('[SelectTeamPlayersChampionshipModal] Buscando times...');
       const [myTeamsResp, registeredResp] = await Promise.all([
         axios.get(`http://localhost:3001/api/teams`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`http://localhost:3001/api/championships/${championshipId}/join-team`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       const myTeams: Team[] = myTeamsResp.data || [];
       const alreadyRegistered: Team[] = registeredResp.data || [];
+      console.log('[SelectTeamPlayersChampionshipModal] Times encontrados:', myTeams.length);
+      console.log('[SelectTeamPlayersChampionshipModal] Times já inscritos:', alreadyRegistered.length);
       const registeredIds = new Set(alreadyRegistered.map(t => t.id));
       const decorated = myTeams.map(t => ({ ...t, __disabled: registeredIds.has(t.id) }));
       setTeams(decorated as any);
@@ -79,6 +82,7 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
 
   useEffect(() => {
     if (show) {
+      console.log('[SelectTeamPlayersChampionshipModal] Modal aberto, championshipId:', championshipId);
       setError('');
       setSelectedTeamId(null);
       setPlayers([]);
