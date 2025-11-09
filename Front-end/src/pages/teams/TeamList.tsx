@@ -253,7 +253,9 @@ const TeamList = () => {
                                       </span>
                                       <span className="player-year">
                                         <CalendarTodayIcon className="player-detail-icon" />
-                                        {player.ano}
+                                        {player.dateOfBirth ? 
+                                          `${new Date().getFullYear() - new Date(player.dateOfBirth).getFullYear()} anos` : 
+                                          player.ano || 'N/A'}
                                       </span>
                                       <span className="player-gender">
                                         <WcIcon className="player-detail-icon" />

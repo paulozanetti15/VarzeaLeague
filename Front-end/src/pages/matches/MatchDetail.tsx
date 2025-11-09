@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './MatchDetail.css';
 import toast from 'react-hot-toast';
+import { API_BASE_URL } from '../../config/api';
 import {
   fetchMatchById,
   getMatchEvents,
@@ -29,6 +30,8 @@ import {
 import { MatchActions } from '../../features/matches/MatchActions/MatchActions';
 import { DeleteConfirmDialog } from '../../components/Dialogs/DeleteConfirmDialog';
 import { EvaluationDialog } from '../../components/Dialogs/EvaluationDialog';
+import { EditEvaluationModal } from '../../components/Modals/Evaluation/EditEvaluationModal';
+import { ViewEvaluationModal } from '../../components/Modals/Evaluation/ViewEvaluationModal';
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -42,6 +45,8 @@ const MatchDetail: React.FC = () => {
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showSelectTeamPlayers, setShowSelectTeamPlayers] = useState(false);
   const [showEvalModal, setShowEvalModal] = useState(false);
+  const [showEditEvalModal, setShowEditEvalModal] = useState(false);
+  const [showViewEvalModal, setShowViewEvalModal] = useState(false);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [showEventsModal, setShowEventsModal] = useState(false);
   const [showPunicaoRegister, setShowPunicaoRegister] = useState(false);
@@ -53,7 +58,57 @@ const MatchDetail: React.FC = () => {
   const [isWo, setIsWo] = useState(false);
   const [isEditingSumula, setIsEditingSumula] = useState(false);
   const [punishment, setPunishment] = useState<any>(null);
-  
+  const [hasUserEvaluation, setHasUserEvaluation] = useState(false);
+
+  const fetchMatchDetails = async () => {
+    if (!id) return;
+    try {
+      setLoading(true);
+      const resp = await fetchMatchById(Number(id));
+      setMatch(resp);
+      checkIfWo(resp);
+      await fetchPunishment(id!);
+      await getTimeInscrito(id!);
+      await checkSumulaExists();
+      await checkUserEvaluation();
+    } catch (err: any) {
+      console.error('Erro ao carregar detalhes:', err);
+      if (err.response?.status === 401) {
+        navigate('/login');
+        return;
+      }
+      setError('Não foi possível carregar os detalhes da partida. Tente novamente mais tarde.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkUserEvaluation = async () => {
+    if (!id || !user?.id) {
+      setHasUserEvaluation(false);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`${API_BASE_URL}/friendly-matches/${id}/evaluations`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const evaluations = await response.json();
+        const userEval = evaluations.find((e: any) => e.evaluator_id === user.id);
+        setHasUserEvaluation(!!userEval);
+      } else {
+        setHasUserEvaluation(false);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar avaliação do usuário:', error);
+      setHasUserEvaluation(false);
+    }
+  };
 
 
 
@@ -98,7 +153,7 @@ const MatchDetail: React.FC = () => {
   const getTimeInscrito = async (matchId: string) => {
     try {
       const resp = await getJoinedTeams(matchId);
-      setTimeCadastrados(resp.data);
+      setTimeCadastrados(Array.isArray(resp.data) ? resp.data : []);
     } catch (error) {
       console.error('Erro ao buscar times cadastrados:', error);
     }
@@ -131,7 +186,7 @@ const MatchDetail: React.FC = () => {
       return;
     }
 
-    const fetchMatchDetails = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         const resp = await fetchMatchById(Number(id));
@@ -140,21 +195,7 @@ const MatchDetail: React.FC = () => {
         await fetchPunishment(id!);
         await getTimeInscrito(id!);
         await checkSumulaExists();
-        
-        // Verificar e atualizar status da partida
-        if (id) {
-          try {
-            const statusResp = await getMatchStatus(id);
-            if (statusResp.status !== resp.status) {
-              // Status foi atualizado, recarregar dados
-              const updatedResp = await fetchMatchById(Number(id));
-              setMatch(updatedResp);
-              checkIfWo(updatedResp);
-            }
-          } catch (statusErr) {
-            console.error('Erro ao verificar status da partida:', statusErr);
-          }
-        }
+        await checkUserEvaluation();
       } catch (err: any) {
         console.error('Erro ao carregar detalhes:', err);
         if (err.response?.status === 401) {
@@ -167,7 +208,7 @@ const MatchDetail: React.FC = () => {
       }
     };
 
-    fetchMatchDetails();
+    fetchData();
   }, [id, navigate]);
 
   const handleViewEvents = async () => {
@@ -213,10 +254,8 @@ const MatchDetail: React.FC = () => {
     try {
       const resp = await leaveTeam(numericMatchId, teamId);
       if (resp.status === 200) {
-        toast.success(`Time "${teamName}" removido da partida com sucesso! A página será atualizada.`);
-        setTimeout(() => {
-          window.location.reload();
-        }, 800);
+        toast.success(`Time "${teamName}" removido da partida com sucesso!`);
+        getTimeInscrito(matchId);
       }
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Erro ao sair da partida. Tente novamente.';
@@ -261,19 +300,6 @@ const MatchDetail: React.FC = () => {
 
   const handleCloseDeleteConfirm = () => {
     setOpenDeleteConfirm(false);
-  };
-
-  const handleCancelMatch = async () => {
-    if (!id) return;
-    try {
-      await updateMatch(String(id), { status: 'cancelada' });
-      toast.success('Partida cancelada com sucesso!');
-      // Recarregar a página para atualizar o status
-      window.location.reload();
-    } catch (error) {
-      console.error('Erro ao cancelar partida:', error);
-      toast.error('Erro ao cancelar partida. Tente novamente.');
-    }
   };
 
   const handleOpenPunicao = async () => {
@@ -347,10 +373,19 @@ const MatchDetail: React.FC = () => {
   const isEventAdmin = Boolean(user && Number(user.userTypeId) === 2);
   const isTeamAdmin = Boolean(user && Number(user.userTypeId) === 3);
   const isOrganizer = Boolean(user && Number(match?.organizerId) === Number(user.id));
-  // compute statusLower and completion
+  
+  console.log('Permissões do usuário:', {
+    userTypeId: user?.userTypeId,
+    isAdmin,
+    isEventAdmin,
+    isTeamAdmin,
+    isOrganizer,
+    matchOrganizerId: match?.organizerId,
+    userId: user?.id
+  });
+  
   const statusLower = String(match?.status || '').toLowerCase();
   const isCompleted = statusLower === 'finalizada';
-  // Só admin do time pode criar sumula, e apenas após finalização
   const canDeleteMatch = isOrganizer || isAdmin;
   const effectiveMaxTeams = typeof (match?.maxTeams) === 'number' ? Number(match.maxTeams) : 2;
 
@@ -401,14 +436,19 @@ const MatchDetail: React.FC = () => {
           teamsCount={timeCadastrados.length}
           registrationDeadline={match.registrationDeadline}
           matchStatus={match?.status}
+          hasUserEvaluation={hasUserEvaluation}
           onDelete={handleOpenDeleteConfirm}
           onEdit={() => navigate(`/matches/edit/${id}`)}
           onEditRules={() => setEditRules(true)}
           onPunishment={handleOpenPunicao}
           hasSumula={hasSumula}
-          onEvaluate={() => {
-            console.log('Abrindo modal de avaliação');
-            setShowEvalModal(true);
+          onEvaluate={async () => {
+            await checkUserEvaluation();
+            if (hasUserEvaluation) {
+              setShowViewEvalModal(true);
+            } else {
+              setShowEvalModal(true);
+            }
           }}
           onViewComments={() => {
             console.log('Abrindo modal de comentários');
@@ -416,7 +456,6 @@ const MatchDetail: React.FC = () => {
           }}
           onCreateSumula = {()=>setShowEventsModal(true)}
           onViewEvents={handleViewEvents}
-          onCancel={handleCancelMatch}
         />
       </div>
 
@@ -426,6 +465,9 @@ const MatchDetail: React.FC = () => {
           show={modal}
           onHide={handleModalClose}
           matchid={id ? Number(id) : 0}
+          onSuccess={() => {
+            getTimeInscrito(id!);
+          }}
         />
       )}
 
@@ -447,6 +489,14 @@ const MatchDetail: React.FC = () => {
           onClose={() => setEditRules(false)}
           userId={Number(user?.id)}
           partidaDados={match}
+          onSuccess={async () => {
+            if (id) {
+              const updatedMatch = await fetchMatchById(Number(id));
+              setMatch(updatedMatch);
+              await getTimeInscrito(id);
+              toast.success('Regras atualizadas com sucesso!');
+            }
+          }}
         />
       )}
 
@@ -526,6 +576,30 @@ const MatchDetail: React.FC = () => {
             onClose={() => setShowEvalModal(false)}
             matchId={Number(match.id)}
             readOnly={false}
+          />
+
+          <ViewEvaluationModal
+            show={showViewEvalModal}
+            onClose={() => setShowViewEvalModal(false)}
+            matchId={Number(match.id)}
+            onEdit={() => {
+              setShowViewEvalModal(false);
+              setShowEditEvalModal(true);
+            }}
+            onSuccess={async () => {
+              setShowViewEvalModal(false);
+              await fetchMatchDetails();
+            }}
+          />
+
+          <EditEvaluationModal
+            show={showEditEvalModal}
+            onClose={() => setShowEditEvalModal(false)}
+            matchId={Number(match.id)}
+            onSuccess={async () => {
+              setShowEditEvalModal(false);
+              await fetchMatchDetails();
+            }}
           />
           
           <EvaluationDialog

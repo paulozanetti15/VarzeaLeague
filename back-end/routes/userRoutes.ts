@@ -16,6 +16,13 @@ const router = express.Router();
  * /api/user:
  *   get:
  *     summary: Listar todos os usuários
+ *     description: |
+ *       Retorna todos os usuários do sistema.
+ *       
+ *       **Include:**
+ *       - usertype (association, apenas attribute 'name')
+ *       
+ *       **Sem filtros:** Retorna TODOS os usuários (não filtra por isDeleted ou qualquer condição)
  *     tags: [Usuários]
  *     security:
  *       - bearerAuth: []
@@ -33,9 +40,11 @@ const router = express.Router();
  *                     properties:
  *                       usertype:
  *                         type: object
+ *                         description: Tipo de usuário associado
  *                         properties:
  *                           name:
  *                             type: string
+ *                             description: Nome do tipo de usuário
  *                             example: usuario_comum
  *       401:
  *         description: Não autenticado
@@ -44,9 +53,9 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Token não fornecido ou inválido
+ *               message: Usuário não autenticado
  *       500:
- *         description: Erro interno do servidor
+ *         description: Erro ao buscar usuários
  *         content:
  *           application/json:
  *             schema:
@@ -61,6 +70,14 @@ router.get('/', authenticateToken, index);
  * /api/user/{id}:
  *   get:
  *     summary: Buscar usuário por ID
+ *     description: |
+ *       Retorna dados de um usuário específico.
+ *       
+ *       **Include:**
+ *       - usertype (association, apenas attribute 'name')
+ *       
+ *       **Validação:**
+ *       - 404 se usuário não encontrado
  *     tags: [Usuários]
  *     security:
  *       - bearerAuth: []
@@ -88,6 +105,14 @@ router.get('/', authenticateToken, index);
  *                         name:
  *                           type: string
  *                           example: usuario_comum
+ *       401:
+ *         description: Não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Usuário não autenticado
  *       404:
  *         description: Usuário não encontrado
  *         content:
@@ -96,16 +121,8 @@ router.get('/', authenticateToken, index);
  *               $ref: '#/components/schemas/Error'
  *             example:
  *               message: Usuário não encontrado
- *       401:
- *         description: Não autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Token não fornecido ou inválido
  *       500:
- *         description: Erro interno do servidor
+ *         description: Erro ao buscar usuário
  *         content:
  *           application/json:
  *             schema:
@@ -119,7 +136,31 @@ router.get('/:id', authenticateToken, getById);
  * @swagger
  * /api/user:
  *   post:
- *     summary: Criar novo usuário (requer permissão admin)
+ *     summary: Criar novo usuário
+ *     description: |
+ *       Cria um novo usuário no sistema (não requer permissão admin específica, apenas autenticação).
+ *       
+ *       **Validações (mesmas do /auth/register):**
+ *       - Todos os campos obrigatórios: name, email, cpf, phone, gender, password
+ *       - CPF: Validação matemática
+ *       - Gender: 'Masculino' ou 'Feminino'
+ *       - Phone: 10 ou 11 dígitos
+ *       - Password: Mín 6 chars + maiúscula + minúscula + número + especial
+ *       - UserType: 1, 2, 3 ou 4 (default: 4)
+ *       
+ *       **Normalização:**
+ *       - Nome: `name.trim().toLowerCase()`
+ *       
+ *       **Verificações de duplicidade (409):**
+ *       1. Nome (normalizado)
+ *       2. Email
+ *       3. CPF
+ *       
+ *       **Password:**
+ *       - Hasheia com bcrypt.hash(password, 10)
+ *       
+ *       **Retorno:**
+ *       - User completo (incluindo password hasheado)
  *     tags: [Usuários]
  *     security:
  *       - bearerAuth: []
@@ -136,10 +177,10 @@ router.get('/:id', authenticateToken, getById);
  *               - cpf
  *               - phone
  *               - gender
- *               - userTypeId
  *             properties:
  *               name:
  *                 type: string
+ *                 description: Nome do usuário (será normalizado: trim + lowercase)
  *                 example: Maria Santos
  *               email:
  *                 type: string
@@ -148,23 +189,28 @@ router.get('/:id', authenticateToken, getById);
  *               password:
  *                 type: string
  *                 format: password
+ *                 description: Será hasheado com bcrypt (salt 10)
  *                 example: Senha123!
  *               cpf:
  *                 type: string
- *                 pattern: '^\d{3}\.\d{3}\.\d{3}-\d{2}$'
+ *                 description: CPF com validação matemática (aceita formatação)
+ *                 pattern: '^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$'
  *                 example: 987.654.321-00
  *               phone:
  *                 type: string
+ *                 description: Telefone obrigatório (10 ou 11 dígitos)
  *                 pattern: '^\(\d{2}\) \d{4,5}-\d{4}$'
  *                 example: (41) 98888-8888
  *               gender:
  *                 type: string
  *                 enum: [Masculino, Feminino]
+ *                 description: Gênero obrigatório
  *                 example: Feminino
  *               userTypeId:
  *                 type: integer
  *                 enum: [1, 2, 3, 4]
- *                 description: 'Tipo de usuário: 1=Admin Master, 2=Admin Eventos, 3=Admin Times, 4=Usuário Comum'
+ *                 description: 'Tipo de usuário (default: 4 se não fornecido)'
+ *                 default: 4
  *                 example: 3
  *     responses:
  *       201:
@@ -174,15 +220,16 @@ router.get('/:id', authenticateToken, getById);
  *             schema:
  *               $ref: '#/components/schemas/User'
  *       400:
- *         description: Dados inválidos
+ *         description: Validações falharam (múltiplos erros separados por vírgula)
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             examples:
  *               camposFaltando:
+ *                 summary: Campos obrigatórios ausentes
  *                 value:
- *                   message: Todos os campos obrigatórios devem ser preenchidos
+ *                   message: Nome é obrigatório, Email é obrigatório, CPF é obrigatório, Telefone é obrigatório, Gênero é obrigatório, Senha é obrigatória
  *               cpfInvalido:
  *                 value:
  *                   message: CPF inválido (use formato XXX.XXX.XXX-XX ou 11 dígitos)
@@ -208,15 +255,7 @@ router.get('/:id', authenticateToken, getById);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Token não fornecido ou inválido
- *       403:
- *         description: Sem permissão
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Sem permissão para criar usuários
+ *               message: Usuário não autenticado
  *       409:
  *         description: Conflito - Nome, Email ou CPF já cadastrado
  *         content:
@@ -225,16 +264,19 @@ router.get('/:id', authenticateToken, getById);
  *               $ref: '#/components/schemas/Error'
  *             examples:
  *               nomeExiste:
+ *                 summary: Nome normalizado já existe
  *                 value:
  *                   message: Nome já cadastrado
  *               emailExiste:
+ *                 summary: Email já cadastrado
  *                 value:
  *                   message: Email já cadastrado
  *               cpfExiste:
+ *                 summary: CPF já cadastrado
  *                 value:
  *                   message: CPF já cadastrado
  *       500:
- *         description: Erro interno do servidor
+ *         description: Erro ao criar usuário
  *         content:
  *           application/json:
  *             schema:
@@ -249,6 +291,31 @@ router.post('/', authenticateToken, store);
  * /api/user/{id}:
  *   put:
  *     summary: Atualizar dados do usuário
+ *     description: |
+ *       Atualiza campos do usuário. Todos os campos são opcionais.
+ *       
+ *       **Validações:**
+ *       - 404: Se usuário não encontrado
+ *       - Valida apenas campos presentes em req.body
+ *       - CPF, gender, phone, userTypeId, password: mesmas validações do POST
+ *       
+ *       **Normalização:**
+ *       - Se `name` fornecido: normaliza com trim().toLowerCase()
+ *       
+ *       **Verificações de duplicidade (409):**
+ *       - Nome: Se diferente do atual e já existe
+ *       - Email: Se diferente do atual e já existe
+ *       - CPF: Se diferente do atual e já existe
+ *       
+ *       **Campo CPF:**
+ *       - **REMOVIDO do updateData:** `delete updateData.cpf` (não é atualizado!)
+ *       - Ainda valida formato, mas NÃO salva alteração
+ *       
+ *       **Password:**
+ *       - Se fornecido: hasheia com bcrypt.hash(password, 10)
+ *       
+ *       **Retorno:**
+ *       - User atualizado completo
  *     tags: [Usuários]
  *     security:
  *       - bearerAuth: []
@@ -268,12 +335,14 @@ router.post('/', authenticateToken, store);
  *             properties:
  *               name:
  *                 type: string
+ *                 description: Nome (será normalizado: trim + lowercase)
  *                 example: João Silva Atualizado
  *               email:
  *                 type: string
  *                 example: joao.novo@example.com
  *               phone:
  *                 type: string
+ *                 description: 10 ou 11 dígitos
  *                 pattern: '^\(\d{2}\) \d{4,5}-\d{4}$'
  *                 example: (41) 97777-7777
  *               gender:
@@ -283,14 +352,18 @@ router.post('/', authenticateToken, store);
  *               password:
  *                 type: string
  *                 format: password
+ *                 description: Nova senha (será hasheada com bcrypt)
  *                 minLength: 6
- *                 description: Nova senha (opcional, será criptografada automaticamente)
  *                 example: NovaSenha@123
  *               userTypeId:
  *                 type: integer
  *                 enum: [1, 2, 3, 4]
- *                 description: 'Tipo de usuário: 1=Admin Master, 2=Admin Eventos, 3=Admin Times, 4=Usuário Comum'
  *                 example: 3
+ *               cpf:
+ *                 type: string
+ *                 description: ⚠️ CPF é VALIDADO mas NÃO é ATUALIZADO (delete updateData.cpf)
+ *                 pattern: '^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$'
+ *                 example: 123.456.789-00
  *     responses:
  *       200:
  *         description: Usuário atualizado com sucesso
@@ -299,7 +372,7 @@ router.post('/', authenticateToken, store);
  *             schema:
  *               $ref: '#/components/schemas/User'
  *       400:
- *         description: Dados inválidos
+ *         description: Validações falharam
  *         content:
  *           application/json:
  *             schema:
@@ -320,6 +393,14 @@ router.post('/', authenticateToken, store);
  *               senhaInvalida:
  *                 value:
  *                   message: Senha inválida (mínimo 6 caracteres com maiúsculas, minúsculas, números e caracteres especiais)
+ *       401:
+ *         description: Não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Usuário não autenticado
  *       404:
  *         description: Usuário não encontrado
  *         content:
@@ -336,24 +417,19 @@ router.post('/', authenticateToken, store);
  *               $ref: '#/components/schemas/Error'
  *             examples:
  *               nomeExiste:
+ *                 summary: Nome normalizado já existe
  *                 value:
  *                   message: Nome já cadastrado
  *               emailExiste:
+ *                 summary: Email já cadastrado
  *                 value:
  *                   message: Email já cadastrado
  *               cpfExiste:
+ *                 summary: CPF já cadastrado (valida mas não atualiza)
  *                 value:
  *                   message: CPF já cadastrado
- *       401:
- *         description: Não autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Token não fornecido ou inválido
  *       500:
- *         description: Erro interno do servidor
+ *         description: Erro ao atualizar usuário
  *         content:
  *           application/json:
  *             schema:
@@ -367,7 +443,40 @@ router.put('/:id', authenticateToken, update);
  * @swagger
  * /api/user/{id}:
  *   delete:
- *     summary: Remover usuário (soft delete)
+ *     summary: Remover usuário (hard delete + cascade)
+ *     description: |
+ *       Remove permanentemente o usuário e todos os recursos relacionados.
+ *       
+ *       **⚠️ NÃO É SOFT DELETE - É HARD DELETE!**
+ *       
+ *       **Validações:**
+ *       - 404: Se usuário não encontrado
+ *       - 400: Se usuário é capitão de times (bloqueia exclusão)
+ *       
+ *       **Cascade de exclusão (em ordem):**
+ *       
+ *       1. **Partidas organizadas:** FriendlyMatchesModel WHERE organizerId
+ *          - FriendlyMatchEvaluation (match_id IN matchIds)
+ *          - FriendlyMatchGoal (match_id IN matchIds)
+ *          - FriendlyMatchCard (match_id IN matchIds)
+ *          - FriendlyMatchReport (match_id IN matchIds)
+ *          - FriendlyMatchesRulesModel (matchId IN matchIds)
+ *          - FriendlyMatchTeamsModel (matchId IN matchIds)
+ *          - FriendlyMatchesModel (id IN matchIds)
+ *       
+ *       2. **Campeonatos criados:** Championship WHERE created_by
+ *          - Championship (id IN champIds)
+ *       
+ *       3. **Vínculos de times:** TeamUser WHERE userId
+ *       
+ *       4. **Usuário:** user.destroy()
+ *       
+ *       **Bloqueio:**
+ *       - Se `captainedTeams > 0`: Retorna 400 com mensagem de quantos times
+ *       
+ *       **Retorno:**
+ *       - message: "Usuário excluído com sucesso"
+ *       - deletedResources: {partidas: N, campeonatos: M}
  *     tags: [Usuários]
  *     security:
  *       - bearerAuth: []
@@ -380,7 +489,7 @@ router.put('/:id', authenticateToken, update);
  *         description: ID do usuário
  *     responses:
  *       200:
- *         description: Usuário excluído com sucesso
+ *         description: Usuário e recursos relacionados excluídos com sucesso
  *         content:
  *           application/json:
  *             schema:
@@ -389,6 +498,34 @@ router.put('/:id', authenticateToken, update);
  *                 message:
  *                   type: string
  *                   example: Usuário excluído com sucesso
+ *                 deletedResources:
+ *                   type: object
+ *                   description: Contadores de recursos deletados em cascade
+ *                   properties:
+ *                     partidas:
+ *                       type: integer
+ *                       description: Número de partidas amistosas organizadas que foram deletadas
+ *                       example: 5
+ *                     campeonatos:
+ *                       type: integer
+ *                       description: Número de campeonatos criados que foram deletados
+ *                       example: 2
+ *       400:
+ *         description: Usuário é capitão de times (bloqueio de exclusão)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Impossível excluir usuário. Existem 3 time(s) como capitão. Transfira a capitania antes de excluir.
+ *       401:
+ *         description: Não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Usuário não autenticado
  *       404:
  *         description: Usuário não encontrado
  *         content:
@@ -397,22 +534,14 @@ router.put('/:id', authenticateToken, update);
  *               $ref: '#/components/schemas/Error'
  *             example:
  *               message: Usuário não encontrado
- *       401:
- *         description: Não autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Token não fornecido ou inválido
  *       500:
- *         description: Erro interno do servidor
+ *         description: Erro ao deletar usuário
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Erro ao excluir usuário
+ *               message: Erro ao deletar usuário
  */
 router.delete('/:id', authenticateToken, remove);
 

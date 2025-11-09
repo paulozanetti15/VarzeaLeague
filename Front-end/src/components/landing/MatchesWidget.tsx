@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchMatches } from '../../services/matchesFriendlyServices';
-import {getAllChampionships} from '../../services/championshipsServices';
+import {getAllChampionships} from '../../services/championships.service';
 import { useNavigate } from 'react-router-dom';
 import './MatchesWidget.css';
 

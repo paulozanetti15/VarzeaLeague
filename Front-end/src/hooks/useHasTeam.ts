@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { getAllTeams } from '../services/teamsServices';
+import { getAllTeams } from '../services/teams.service';
 
 export const useHasTeam = () => {
   const { user } = useAuth();

@@ -41,14 +41,19 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
       return;
     }
 
-    axios.post(`${API_BASE_URL}/password-reset/request-reset`, { email })
-      .then(response => {
-        setIsSubmitted(true);
-      })
-      .catch(error => {
-        console.error('Erro ao solicitar recuperação de senha:', error);
-      });
-    setIsSubmitted(true);
+    setIsLoading(true);
+    setErrorMessage('');
+
+    try {
+      await axios.post(`${API_BASE_URL}/password-reset/request-reset`, { email });
+      setIsSubmitted(true);
+    } catch (error: any) {
+      console.error('Erro ao solicitar recuperação de senha:', error);
+      const message = error.response?.data?.message || 'Erro ao solicitar recuperação de senha. Tente novamente.';
+      setErrorMessage(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isSubmitted) {
@@ -67,7 +72,7 @@ export function ForgotPassword({ onBackToLogin }: ForgotPasswordProps) {
               <strong>{email}</strong>
             </div>
             
-            <p className="mb-4">
+            <p className="forgot-password-info mb-4">
               Se você não receber o email em alguns minutos, verifique sua pasta de spam.
             </p>
             

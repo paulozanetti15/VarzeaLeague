@@ -16,7 +16,7 @@ interface User {
   email: string;
   cpf: string;
   phone: string;
-  sexo: string;
+  gender: string;
   userTypeId: number;
 }
 
@@ -39,7 +39,7 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
   const [formEmail, setFormEmail] = useState('');
   const [formCpf, setFormCpf] = useState('');
   const [formPhone, setFormPhone] = useState('');
-  const [formSexo, setFormSexo] = useState('');
+  const [formGender, setFormGender] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const navigate = useNavigate();
 
@@ -227,7 +227,7 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
           setFormEmail(userData.email || '');
           setFormCpf(userData.cpf || '');
           setFormPhone(userData.phone || '');
-          setFormSexo(userData.sexo || '');
+          setFormGender(userData.gender || '');
         }
       } catch (error) {
         console.error('❌ [Perfil] Erro ao buscar dados do usuário:', error);
@@ -284,7 +284,7 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
       if (trimmedName !== usuario.name) changes.name = trimmedName;
       if (trimmedEmail !== usuario.email) changes.email = trimmedEmail;
       if (trimmedPhone !== usuario.phone) changes.phone = trimmedPhone;
-      if (formSexo !== usuario.sexo) changes.sexo = formSexo;
+      if (formGender !== usuario.gender) changes.gender = formGender;
 
       // Se não houver mudanças, não faz a requisição
       if (Object.keys(changes).length === 0) {
@@ -500,8 +500,8 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
                         fontSize: '1rem',
                         backgroundColor: '#ffffff'
                       }}
-                      value={formSexo}
-                      onChange={(e) => setFormSexo(e.target.value)}
+                      value={formGender}
+                      onChange={(e) => setFormGender(e.target.value)}
                       required
                     >
                       <option value="" style={{ color: '#000000' }}>Selecione</option>
@@ -518,7 +518,7 @@ const Perfil = ({ isLoggedIn, onLoginClick, onRegisterClick, onLogout }: PerfilP
                         WebkitTextFillColor: '#000000',
                         fontSize: '1rem'
                       }}
-                      value={formSexo}
+                      value={formGender}
                       disabled
                       readOnly
                     />

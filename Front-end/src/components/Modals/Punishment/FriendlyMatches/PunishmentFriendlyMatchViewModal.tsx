@@ -83,7 +83,7 @@ const PunishmentFriendlyMatchViewModal: React.FC<PunishmentViewModalProps> = ({
 
   const handleDeleteSuccess = () => {
     setModalDeletePunicao(false);
-    toast.success('Punição deletada com sucesso!');
+    toast.success('Punição deletada com sucesso! Partida retornou para status confirmada.');
     onClose();
     window.location.reload(); 
   };

@@ -16,10 +16,8 @@ const routerReset = Router();
  * /api/password-reset/request-reset:
  *   post:
  *     summary: Solicitar redefinição de senha
- *     description: Envia email com token para redefinição de senha. Requer autenticação
+ *     description: Envia email com token para redefinição de senha. NÃO requer autenticação
  *     tags: [Redefinição de Senha]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -73,21 +71,6 @@ const routerReset = Router();
  *                 summary: Formato de email inválido
  *                 value:
  *                   message: Formato de email inválido
- *       401:
- *         description: Token de autenticação ausente ou inválido
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             examples:
- *               tokenAusente:
- *                 summary: Token não fornecido
- *                 value:
- *                   message: Token não fornecido ou inválido
- *               tokenExpirado:
- *                 summary: Token expirado
- *                 value:
- *                   message: Token expirado. Faça login novamente
  *       404:
  *         description: Usuário não encontrado no sistema
  *         content:
@@ -119,17 +102,15 @@ const routerReset = Router();
  *                 value:
  *                   message: Erro ao processar solicitação de redefinição de senha
  */
-routerReset.post('/request-reset', authenticateToken, requestPasswordReset);
+routerReset.post('/request-reset', requestPasswordReset);
 
 /**
  * @swagger
  * /api/password-reset/reset:
  *   put:
  *     summary: Redefinir senha com token
- *     description: Redefine a senha do usuário usando o token recebido por email
+ *     description: Redefine a senha do usuário usando o token recebido por email. NÃO requer autenticação
  *     tags: [Redefinição de Senha]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -196,14 +177,6 @@ routerReset.post('/request-reset', authenticateToken, requestPasswordReset);
  *                 summary: Token inválido ou já utilizado
  *                 value:
  *                   message: Token de redefinição inválido
- *       401:
- *         description: Não autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Token de autenticação não fornecido ou inválido
  *       404:
  *         description: Usuário não encontrado
  *         content:
@@ -228,7 +201,7 @@ routerReset.post('/request-reset', authenticateToken, requestPasswordReset);
  *                 value:
  *                   message: Erro ao redefinir senha
  */
-routerReset.put('/reset', authenticateToken, resetPassword);
+routerReset.put('/reset', resetPassword);
 
 /**
  * @swagger

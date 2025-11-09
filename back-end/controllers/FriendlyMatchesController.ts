@@ -6,6 +6,11 @@ import FriendlyMatchTeamsModel from '../models/FriendlyMatchTeamsModel';
 import TeamModel from '../models/TeamModel';
 import FriendlyMatchesRulesModel from '../models/FriendlyMatchesRulesModel';
 import { Op } from 'sequelize';
+import MatchEvaluation from '../models/FriendlyMatchEvaluationModel';
+import FriendlyMatchCard from '../models/FriendlyMatchCardModel';
+import FriendlyMatchGoal from '../models/FriendlyMatchGoalModel';
+import FriendlyMatchPenalty from '../models/FriendlyMatchPenaltyModel';
+import MatchReport from '../models/FriendlyMatchReportModel';
 import { 
   updateAllMatchStatuses,
   checkAndSetMatchesInProgress,
@@ -89,44 +94,40 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
       title, 
       description, 
       date, 
+      time,
+      duration, 
       location, 
       price, 
-      UF, 
-      Cep, 
-      duration, 
-      square,
       matchType, 
-      cep, 
-      number,
-      complement 
+      square,
+      Cep,
+      Uf
     } = req.body;
 
-    if (!title || !date || !location) {
+    if (!title?.trim() || !date || !location?.trim() || !matchType?.trim() || !square?.trim()) {
       res.status(400).json({ 
-        message: 'Campos obrigatórios faltando: título, data e localização são obrigatórios' 
+        message: 'Campos obrigatórios: título, data, localização, modalidade e nome da quadra' 
       });
       return;
     }
 
     let matchDate: Date;
     try {
-      if (date.includes('-')) {
-        matchDate = new Date(date);
-      } else {
-        const [day, month, year] = date.split('/').map(Number);
-        matchDate = new Date(year, month - 1, day);
+      matchDate = new Date(date);
+      
+      if (time) {
+        const [hours, minutes] = time.split(':').map(Number);
+        if (!isNaN(hours) && !isNaN(minutes)) {
+          matchDate.setHours(hours, minutes, 0, 0);
+        }
       }
       
       if (isNaN(matchDate.getTime())) {
-        res.status(400).json({ 
-          message: 'Formato de data inválido. Use DD/MM/YYYY ou YYYY-MM-DD' 
-        });
+        res.status(400).json({ message: 'Formato de data inválido' });
         return;
       }
     } catch (error) {
-      res.status(400).json({ 
-        message: 'Formato de data inválido. Use DD/MM/YYYY ou YYYY-MM-DD' 
-        });
+      res.status(400).json({ message: 'Formato de data inválido' });
       return;
     }
 
@@ -158,11 +159,6 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    if (!matchType?.trim()) {
-      res.status(400).json({ message: 'Modalidade é obrigatória' });
-      return;
-    }
-
     const existingMatch = await FriendlyMatchesModel.findOne({
       where: {
         title: title.trim()
@@ -177,29 +173,30 @@ export const createMatch = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    const fullLocation = complement ? `${location} - ${complement}` : location;
-    const safeSquare = (square || 'Não informado').toString();
-    const safeCep = (Cep || cep || '00000-000').toString();
-    const safeUf = (UF || 'XX').toString();
-    const safeNumber = (number || '').toString();
-    console.log(req.body)
+    const safeCep = Cep?.replace(/\D/g, '') || '';
+    const safeUf = Uf?.trim()?.toUpperCase() || '';
+    const safeSquare = square?.trim() || '';
+    const safePrice = price ? parseFloat(price) : 0;
+    const safeDuration = duration ? parseInt(duration) : 90;
+
     const match = await FriendlyMatchesModel.create({
       title: title.trim(),
       description: description?.trim(),
       date: matchDate,
-      duration: duration ? String(duration) : null,
-      location: fullLocation,
-      number: safeNumber,
-      complement: complement?.trim() || '',
-      price: price || null,
+      duration: String(safeDuration),
+      location: location.trim(),
+      price: safePrice,
       organizerId: Number(userId),
       status: 'aberta',
       Uf: safeUf,
       square: safeSquare,
       matchType: matchType.trim(),
       Cep: safeCep
-    });    res.status(201).json(match);
+    });
+
+    res.status(201).json(match);
   } catch (error) {
+    console.error('Erro ao criar partida:', error);
     res.status(500).json({ message: 'Erro ao criar partida amistosa' });
   }
 };
@@ -213,7 +210,8 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
         {
           model: User,
           as: 'organizer',
-          attributes: ['id', 'name', 'email']
+          attributes: ['id', 'name', 'email'],
+          required: false
         },
         {
           model: FriendlyMatchesRulesModel,
@@ -224,11 +222,13 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
         {
           model: FriendlyMatchTeamsModel,
           as: 'matchTeams',
+          required: false,
           include: [
             {
               model: TeamModel,
               as: 'matchTeam',
-              attributes: ['id', 'name']
+              attributes: ['id', 'name'],
+              required: false
             }
           ]
         }
@@ -238,7 +238,6 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
         'title',
         'date',
         'location',
-        'number',
         'status',
         'description',
         'price',
@@ -255,17 +254,34 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
     const payload = matches.map((match) => {
       const plainMatch = match.toJSON();
       return {
-        ...plainMatch,
+        id: plainMatch.id,
+        title: plainMatch.title,
+        date: plainMatch.date,
+        location: plainMatch.location,
+        status: plainMatch.status,
+        description: plainMatch.description || '',
+        price: plainMatch.price || 0,
+        duration: plainMatch.duration || '90',
+        square: plainMatch.square || '',
+        matchType: plainMatch.matchType || '',
+        Uf: plainMatch.Uf || '',
+        Cep: plainMatch.Cep || '',
+        organizerId: plainMatch.organizerId,
+        organizer: plainMatch.organizer || null,
         registrationDeadline: plainMatch.rules?.registrationDeadline || null,
         countTeams: plainMatch.matchTeams?.length || 0,
-        maxTeams: 2
+        maxTeams: 2,
+        matchTeams: plainMatch.matchTeams || []
       };
     });
 
     res.status(200).json(payload);
   } catch (error) {
     console.error('Erro ao listar partidas amistosas:', error);
-    res.status(500).json({ message: 'Erro ao listar partidas amistosas' });
+    res.status(500).json({ 
+      message: 'Não foi possível carregar as partidas. Tente novamente mais tarde.',
+      error: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Erro desconhecido') : undefined
+    });
   }
 };
   
@@ -281,7 +297,14 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
         {
           model: User,
           as: 'organizer',
-          attributes: ['id', 'name']
+          attributes: ['id', 'name'],
+          required: false
+        },
+        {
+          model: FriendlyMatchesRulesModel,
+          as: 'rules',
+          attributes: ['id', 'registrationDeadline', 'minimumAge', 'maximumAge', 'gender'],
+          required: false
         }
       ],
       attributes: [
@@ -289,7 +312,6 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
         'title',
         'date',
         'location',
-        'number',
         'status',
         'description',
         'price',
@@ -307,6 +329,14 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    const countTeams = await FriendlyMatchTeamsModel.count({
+      where: { matchId: req.params.id }
+    });
+
+    const registrationDeadlineValue = match.rules?.registrationDeadline 
+      ? new Date(match.rules.registrationDeadline)
+      : null;
+
     if (match.date) {
       const start = new Date(match.date);
       const end = computeMatchEnd(start, match.duration || undefined);
@@ -317,38 +347,36 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
         await match.reload();
       }
     }
-    
-    const countTeams = await FriendlyMatchTeamsModel.count({
-      where: { matchId: req.params.id }
-    });
-    
-    const rules = await FriendlyMatchesRulesModel.findOne({
-      where: { matchId: req.params.id }
-    });
 
+    const matchDate = match.date ? new Date(match.date) : null;
     const now = new Date();
-    now.setHours(23, 59, 59, 999);
-    
-    const registrationDeadlineValue = rules?.get('registrationDeadline');
-    const deadline = registrationDeadlineValue 
-      ? new Date(registrationDeadlineValue as string)
-      : null;
-    
-    if (deadline) {
-      deadline.setHours(23, 59, 59, 999);
-    }
-    
-    const isPastDeadline = deadline ? now > deadline : false;
-    const matchDate = new Date(match.date);
+    const isPastDeadline = registrationDeadlineValue 
+      ? now >= registrationDeadlineValue 
+      : false;
 
-    if ((isPastDeadline && countTeams < 2 && (match.status === 'aberta' || match.status === 'sem_vagas')) ||
+    if (matchDate && 
+        match.status !== 'cancelada' && 
+        match.status !== 'finalizada' &&
         (now >= matchDate && isPastDeadline && countTeams < 2)) {
       await match.update({ status: 'cancelada' });
       await match.reload();
     }
     
     const dados = {
-      ...match.toJSON(),
+      id: match.id,
+      title: match.title,
+      date: match.date,
+      location: match.location,
+      status: match.status,
+      description: match.description || '',
+      price: match.price || 0,
+      duration: match.duration || '90',
+      square: match.square || '',
+      matchType: match.matchType || '',
+      Uf: match.Uf || '',
+      Cep: match.Cep || '',
+      organizerId: match.organizerId,
+      organizer: match.organizer || null,
       countTeams,
       maxTeams: 2,
       registrationDeadline: registrationDeadlineValue || null
@@ -356,7 +384,11 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
     
     res.status(200).json(dados);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar detalhes da partida' });
+    console.error('Erro ao buscar detalhes da partida:', error);
+    res.status(500).json({ 
+      message: 'Não foi possível carregar os detalhes da partida. Tente novamente mais tarde.',
+      error: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Erro desconhecido') : undefined
+    });
   }
 };
 
@@ -452,9 +484,12 @@ export const cancelMatch = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-export const deleteMatch = async (req: Request, res: Response): Promise<void> => {
+export const deleteMatch = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const matchId = req.params.id;
+    const userId = req.user?.id;
+    const userTypeId = req.user?.userTypeId;
+
     const match = await FriendlyMatchesModel.findByPk(matchId);
 
     if (!match) {
@@ -462,25 +497,42 @@ export const deleteMatch = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    const MatchEvaluation = require('../models/MatchEvaluationModel').default;
-    
-    await MatchEvaluation.destroy({
-      where: { match_id: matchId }
-    });
+    // Verifica se o usuário é o organizador ou admin
+    if (match.organizerId !== userId && userTypeId !== 1) {
+      res.status(403).json({ message: 'Sem permissão para excluir esta partida' });
+      return;
+    }
 
-    await FriendlyMatchesRulesModel.destroy({
-      where: { matchId: matchId }
-    });
+    // Usar transaction para garantir consistência
+    const transaction = await match.sequelize.transaction();
 
-    await FriendlyMatchTeamsModel.destroy({
-      where: { matchId: matchId }
-    });
+    try {
+      // Remover todas as relações em ordem
+      await MatchEvaluation.destroy({ where: { match_id: matchId }, transaction });
+      await FriendlyMatchesRulesModel.destroy({ where: { matchId }, transaction });
+      await FriendlyMatchTeamsModel.destroy({ where: { matchId }, transaction });
+      await FriendlyMatchCard.destroy({ where: { match_id: matchId }, transaction });
+      await FriendlyMatchGoal.destroy({ where: { match_id: matchId }, transaction });
+      await FriendlyMatchPenalty.destroy({ where: { id_match: matchId }, transaction });
+      await MatchReport.destroy({ where: { match_id: matchId }, transaction });
 
-    await match.destroy();
-
-    res.status(200).json({ message: 'Partida excluída com sucesso' });
+      // Finalmente, excluir a partida
+      await match.destroy({ transaction });
+      
+      // Commit da transaction
+      await transaction.commit();
+      res.status(200).json({ message: 'Partida excluída com sucesso' });
+    } catch (error) {
+      // Rollback em caso de erro
+      await transaction.rollback();
+      throw error;
+    }
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao excluir partida' });
+    console.error('Erro ao excluir partida:', error);
+    res.status(500).json({ 
+      message: 'Erro ao excluir partida',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
+    });
   }
 };
 
@@ -501,7 +553,8 @@ export const getMatchesByOrganizer = async (req: AuthRequest, res: Response): Pr
         {
           model: User,
           as: 'organizer',
-          attributes: ['id', 'name', 'email']
+          attributes: ['id', 'name', 'email'],
+          required: false
         },
         {
           model: FriendlyMatchesRulesModel,
@@ -512,11 +565,13 @@ export const getMatchesByOrganizer = async (req: AuthRequest, res: Response): Pr
         {
           model: FriendlyMatchTeamsModel,
           as: 'matchTeams',
+          required: false,
           include: [
             {
               model: TeamModel,
               as: 'matchTeam',
-              attributes: ['id', 'name', 'primaryColor', 'secondaryColor']
+              attributes: ['id', 'name', 'primaryColor', 'secondaryColor'],
+              required: false
             }
           ]
         }
@@ -526,7 +581,6 @@ export const getMatchesByOrganizer = async (req: AuthRequest, res: Response): Pr
         'title',
         'date',
         'location',
-        'number',
         'status',
         'description',
         'price',
@@ -543,18 +597,38 @@ export const getMatchesByOrganizer = async (req: AuthRequest, res: Response): Pr
     const payload = matches.map((match) => {
       const plainMatch = match.toJSON();
       return {
-        ...plainMatch,
-        registrationDeadline: plainMatch.rules?.registrationDeadline || null
+        id: plainMatch.id,
+        title: plainMatch.title,
+        date: plainMatch.date,
+        location: plainMatch.location,
+        status: plainMatch.status,
+        description: plainMatch.description || '',
+        price: plainMatch.price || 0,
+        duration: plainMatch.duration || '90',
+        square: plainMatch.square || '',
+        matchType: plainMatch.matchType || '',
+        Uf: plainMatch.Uf || '',
+        Cep: plainMatch.Cep || '',
+        organizerId: plainMatch.organizerId,
+        organizer: plainMatch.organizer || null,
+        registrationDeadline: plainMatch.rules?.registrationDeadline || null,
+        countTeams: plainMatch.matchTeams?.length || 0,
+        maxTeams: 2,
+        matchTeams: plainMatch.matchTeams || []
       };
     });
 
     res.status(200).json(payload);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar partidas do organizador' });
+    console.error('Erro ao buscar partidas do organizador:', error);
+    res.status(500).json({ 
+      message: 'Não foi possível carregar suas partidas. Tente novamente mais tarde.',
+      error: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Erro desconhecido') : undefined
+    });
   }
 };
 
-export const getFilteredMatches = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getFilteredMatches = async (req: Request, res: Response): Promise<void> => {
   try {
     await updateAllMatchStatuses();
 
@@ -575,8 +649,8 @@ export const getFilteredMatches = async (req: AuthRequest, res: Response): Promi
       whereClause.status = { [Op.in]: statusArray };
     }
 
-    if (myMatches === 'true' && req.user?.id) {
-      whereClause.organizerId = req.user.id;
+    if (myMatches === 'true' && (req as AuthRequest).user?.id) {
+      whereClause.organizerId = (req as AuthRequest).user.id;
     }
 
     if (matchDateFrom) {
@@ -625,7 +699,8 @@ export const getFilteredMatches = async (req: AuthRequest, res: Response): Promi
         {
           model: User,
           as: 'organizer',
-          attributes: ['id', 'name', 'email']
+          attributes: ['id', 'name', 'email'],
+          required: false
         },
         {
           model: FriendlyMatchesRulesModel,
@@ -637,11 +712,13 @@ export const getFilteredMatches = async (req: AuthRequest, res: Response): Promi
         {
           model: FriendlyMatchTeamsModel,
           as: 'matchTeams',
+          required: false,
           include: [
             {
               model: TeamModel,
               as: 'matchTeam',
-              attributes: ['id', 'name']
+              attributes: ['id', 'name'],
+              required: false
             }
           ]
         }
@@ -651,7 +728,6 @@ export const getFilteredMatches = async (req: AuthRequest, res: Response): Promi
         'title',
         'date',
         'location',
-        'number',
         'status',
         'description',
         'price',
@@ -668,13 +744,33 @@ export const getFilteredMatches = async (req: AuthRequest, res: Response): Promi
     const payload = matches.map((match) => {
       const plainMatch = match.toJSON();
       return {
-        ...plainMatch,
-        registrationDeadline: plainMatch.rules?.registrationDeadline || null
+        id: plainMatch.id,
+        title: plainMatch.title,
+        date: plainMatch.date,
+        location: plainMatch.location,
+        status: plainMatch.status,
+        description: plainMatch.description || '',
+        price: plainMatch.price || 0,
+        duration: plainMatch.duration || '90',
+        square: plainMatch.square || '',
+        matchType: plainMatch.matchType || '',
+        Uf: plainMatch.Uf || '',
+        Cep: plainMatch.Cep || '',
+        organizerId: plainMatch.organizerId,
+        organizer: plainMatch.organizer || null,
+        registrationDeadline: plainMatch.rules?.registrationDeadline || null,
+        countTeams: plainMatch.matchTeams?.length || 0,
+        maxTeams: 2,
+        matchTeams: plainMatch.matchTeams || []
       };
     });
 
     res.status(200).json(payload);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar partidas filtradas' });
+    console.error('Erro ao buscar partidas filtradas:', error);
+    res.status(500).json({ 
+      message: 'Não foi possível carregar as partidas. Tente novamente mais tarde.',
+      error: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Erro desconhecido') : undefined
+    });
   }
 };

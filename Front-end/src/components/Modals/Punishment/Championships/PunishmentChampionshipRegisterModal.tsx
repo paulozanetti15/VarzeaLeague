@@ -144,7 +144,9 @@ const PunicaoCampeonatoRegisterModal: React.FC<Props> = ({ show, onHide, onClose
                   disabled={loading}
                 >
                   <option value={0}>Selecione a partida</option>
-                  {matches.map((match: any) => (
+                  {matches
+                    .filter((match: any) => match.status === 'confirmada')
+                    .map((match: any) => (
                     <option key={match.id} value={match.id}>
                       Partida #{match.id} - {match.title || `Rodada ${match.round || ''}`}
                     </option>

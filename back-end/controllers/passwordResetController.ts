@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import UserModel from '../models/UserModel';
 import { sendPasswordResetEmail } from '../services/emailService';
 import crypto from 'crypto';
@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 import { Op } from 'sequelize';
 import { AuthRequest } from 'middleware/auth';
 
-export const requestPasswordReset = async (req: AuthRequest, res: Response): Promise<void> => {
+export const requestPasswordReset = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email } = req.body;
     
@@ -39,7 +39,7 @@ export const requestPasswordReset = async (req: AuthRequest, res: Response): Pro
   }
 };
 
-export const resetPassword = async (req: AuthRequest, res: Response): Promise<void> => {
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
   try {
     const { token, newPassword } = req.body;
     

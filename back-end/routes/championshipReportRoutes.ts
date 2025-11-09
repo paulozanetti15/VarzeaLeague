@@ -173,7 +173,7 @@ router.get('/:matchId', authenticateToken, buscarSumulaPartidaCampeonato);
  * /api/championship-reports/{matchId}:
  *   put:
  *     summary: Atualizar súmula de partida de campeonato
- *     description: Atualiza o placar e observações da súmula. Apenas administradores de eventos podem atualizar
+ *     description: Atualiza o placar da súmula. Aceita tanto teamHome_score/teamAway_score quanto team_home_score/team_away_score. Remove todos os eventos (gols e cartões) existentes.
  *     tags: [Súmulas - Campeonatos]
  *     security:
  *       - bearerAuth: []
@@ -192,33 +192,49 @@ router.get('/:matchId', authenticateToken, buscarSumulaPartidaCampeonato);
  *           schema:
  *             type: object
  *             properties:
+ *               team_home:
+ *                 type: integer
+ *                 description: ID do time mandante
+ *                 example: 1
+ *               team_away:
+ *                 type: integer
+ *                 description: ID do time visitante
+ *                 example: 2
+ *               teamHome_score:
+ *                 type: integer
+ *                 minimum: 0
+ *                 description: Placar do time mandante (aceita também team_home_score)
+ *                 example: 3
+ *               teamAway_score:
+ *                 type: integer
+ *                 minimum: 0
+ *                 description: Placar do time visitante (aceita também team_away_score)
+ *                 example: 1
  *               team_home_score:
  *                 type: integer
  *                 minimum: 0
- *                 description: Placar atualizado do time mandante
+ *                 description: Placar do time mandante (alternativa)
  *                 example: 3
  *               team_away_score:
  *                 type: integer
  *                 minimum: 0
- *                 description: Placar atualizado do time visitante
+ *                 description: Placar do time visitante (alternativa)
  *                 example: 1
- *               observations:
- *                 type: string
- *                 nullable: true
- *                 description: Observações atualizadas
- *                 example: Partida com virada no segundo tempo
  *           examples:
- *             atualizarPlacar:
- *               summary: Atualizar apenas placar
+ *             atualizarPlacarCamelCase:
+ *               summary: Atualizar usando teamHome_score/teamAway_score
  *               value:
- *                 team_home_score: 3
- *                 team_away_score: 1
- *             atualizarCompleto:
- *               summary: Atualizar placar e observações
+ *                 team_home: 1
+ *                 team_away: 2
+ *                 teamHome_score: 3
+ *                 teamAway_score: 1
+ *             atualizarPlacarSnakeCase:
+ *               summary: Atualizar usando team_home_score/team_away_score
  *               value:
+ *                 team_home: 1
+ *                 team_away: 2
  *                 team_home_score: 4
  *                 team_away_score: 2
- *                 observations: Partida emocionante com muitos gols
  *     responses:
  *       200:
  *         description: Súmula atualizada com sucesso
@@ -230,23 +246,6 @@ router.get('/:matchId', authenticateToken, buscarSumulaPartidaCampeonato);
  *                 message:
  *                   type: string
  *                   example: Súmula atualizada com sucesso
- *                 report:
- *                   type: object
- *       400:
- *         description: Dados inválidos fornecidos
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             examples:
- *               placarNegativo:
- *                 summary: Placar com valores negativos
- *                 value:
- *                   message: O placar não pode conter valores negativos
- *               dadosIncompletos:
- *                 summary: Dados obrigatórios faltando
- *                 value:
- *                   message: Informe o placar de ambos os times
  *       401:
  *         description: Não autenticado
  *         content:
@@ -254,22 +253,7 @@ router.get('/:matchId', authenticateToken, buscarSumulaPartidaCampeonato);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Token não fornecido ou inválido
- *       403:
- *         description: Sem permissão para atualizar súmula de campeonato
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             examples:
- *               permissaoNegada:
- *                 summary: Usuário sem permissão
- *                 value:
- *                   message: Apenas administradores podem atualizar súmulas de campeonato
- *               campeonatoFinalizado:
- *                 summary: Campeonato já encerrado
- *                 value:
- *                   message: Não é possível atualizar súmula de campeonato finalizado
+ *               message: Usuário não autenticado
  *       404:
  *         description: Súmula não encontrada
  *         content:
@@ -277,20 +261,15 @@ router.get('/:matchId', authenticateToken, buscarSumulaPartidaCampeonato);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Súmula não encontrada para esta partida
+ *               message: Súmula não encontrada
  *       500:
  *         description: Erro interno ao atualizar súmula
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *             examples:
- *               erroGenerico:
- *                 value:
- *                   message: Erro ao atualizar súmula
- *               erroBanco:
- *                 value:
- *                   message: Falha ao salvar alterações no banco de dados
+ *             example:
+ *               message: Erro ao atualizar súmula do campeonato
  */
 router.put('/:matchId', authenticateToken, atualizarSumulaPartidaCampeonato);
 
@@ -299,7 +278,7 @@ router.put('/:matchId', authenticateToken, atualizarSumulaPartidaCampeonato);
  * /api/championship-reports/{matchId}:
  *   delete:
  *     summary: Deletar súmula de partida de campeonato
- *     description: Remove completamente a súmula e todos os eventos associados. Apenas administradores de eventos podem deletar
+ *     description: Remove completamente a súmula e todos os eventos associados (gols e cartões). Reverte status da partida de 'finalizada' para 'confirmada' se aplicável
  *     tags: [Súmulas - Campeonatos]
  *     security:
  *       - bearerAuth: []
@@ -321,7 +300,7 @@ router.put('/:matchId', authenticateToken, atualizarSumulaPartidaCampeonato);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Súmula deletada com sucesso
+ *                   example: Súmula deletada com sucesso e partida retornou para status confirmada
  *       401:
  *         description: Não autenticado
  *         content:
@@ -329,20 +308,7 @@ router.put('/:matchId', authenticateToken, atualizarSumulaPartidaCampeonato);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Token não fornecido ou inválido
- *       403:
- *         description: Sem permissão para deletar
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             examples:
- *               permissaoNegada:
- *                 value:
- *                   message: Apenas administradores podem deletar súmulas de campeonato
- *               campeonatoAtivo:
- *                 value:
- *                   message: Não é possível deletar súmula de campeonato em andamento
+ *               message: Usuário não autenticado
  *       404:
  *         description: Súmula não encontrada
  *         content:
@@ -357,13 +323,8 @@ router.put('/:matchId', authenticateToken, atualizarSumulaPartidaCampeonato);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *             examples:
- *               erroGenerico:
- *                 value:
- *                   message: Erro ao deletar súmula
- *               erroEventos:
- *                 value:
- *                   message: Erro ao remover eventos associados à súmula
+ *             example:
+ *               message: Erro ao deletar súmula do campeonato
  */
 router.delete('/:matchId', authenticateToken, deletarSumulaPartidaCampeonato);
 
@@ -489,7 +450,7 @@ router.get('/:matchId/events', authenticateToken, listEvents);
  * /api/championship-reports/{matchId}/events/goals:
  *   post:
  *     summary: Adicionar gol à partida de campeonato
- *     description: Registra um novo gol marcado. Apenas administradores de eventos podem adicionar
+ *     description: Registra um novo gol marcado. Aceita playerId (jogador cadastrado), userId ou email para identificar quem marcou
  *     tags: [Súmulas - Campeonatos]
  *     security:
  *       - bearerAuth: []
@@ -507,29 +468,41 @@ router.get('/:matchId/events', authenticateToken, listEvents);
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - playerId
  *             properties:
  *               playerId:
  *                 type: integer
- *                 description: ID do jogador que marcou o gol
+ *                 description: ID do jogador cadastrado que marcou o gol
  *                 example: 5
+ *               userId:
+ *                 type: integer
+ *                 description: ID do usuário que marcou o gol (alternativa ao playerId)
+ *                 example: 10
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: E-mail do usuário que marcou o gol (alternativa)
+ *                 example: jogador@email.com
  *               minute:
  *                 type: integer
  *                 minimum: 0
- *                 description: Minuto do gol
+ *                 description: Minuto do gol (padrão 0)
  *                 example: 30
  *           examples:
- *             golPrimeiroTempo:
- *               summary: Gol no primeiro tempo
+ *             golJogadorCadastrado:
+ *               summary: Gol com jogador cadastrado
  *               value:
  *                 playerId: 5
  *                 minute: 23
- *             golSegundoTempo:
- *               summary: Gol no segundo tempo
+ *             golUsuario:
+ *               summary: Gol com userId
  *               value:
- *                 playerId: 8
+ *                 userId: 10
  *                 minute: 67
+ *             golEmail:
+ *               summary: Gol identificado por e-mail
+ *               value:
+ *                 email: jogador@email.com
+ *                 minute: 45
  *     responses:
  *       201:
  *         description: Gol registrado com sucesso
@@ -544,12 +517,17 @@ router.get('/:matchId/events', authenticateToken, listEvents);
  *                   type: integer
  *                 player_id:
  *                   type: integer
+ *                   nullable: true
+ *                 user_id:
+ *                   type: integer
+ *                   nullable: true
  *                 minute:
  *                   type: integer
  *             example:
  *               id: 1
  *               match_id: 1
  *               player_id: 5
+ *               user_id: null
  *               minute: 30
  *       400:
  *         description: Dados inválidos
@@ -557,13 +535,8 @@ router.get('/:matchId/events', authenticateToken, listEvents);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *             examples:
- *               jogadorFaltando:
- *                 value:
- *                   message: ID do jogador é obrigatório
- *               minutoInvalido:
- *                 value:
- *                   message: Minuto não pode ser negativo
+ *             example:
+ *               message: ID da partida inválido
  *       401:
  *         description: Não autenticado
  *         content:
@@ -571,15 +544,7 @@ router.get('/:matchId/events', authenticateToken, listEvents);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Token não fornecido ou inválido
- *       403:
- *         description: Sem permissão
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Apenas administradores podem adicionar gols
+ *               message: Usuário não autenticado
  *       404:
  *         description: Recurso não encontrado
  *         content:
@@ -587,12 +552,12 @@ router.get('/:matchId/events', authenticateToken, listEvents);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             examples:
- *               partidaNaoEncontrada:
- *                 value:
- *                   message: Partida não encontrada
  *               jogadorNaoEncontrado:
  *                 value:
  *                   message: Jogador não encontrado
+ *               usuarioNaoEncontrado:
+ *                 value:
+ *                   message: Usuário com este e-mail não encontrado
  *       409:
  *         description: Conflito - Gol duplicado
  *         content:
@@ -622,7 +587,7 @@ router.post('/:matchId/events/goals', authenticateToken, addGoal);
  * /api/championship-reports/{matchId}/events/goals/{goalId}:
  *   delete:
  *     summary: Remover gol específico da partida de campeonato
- *     description: Remove um gol registrado. Apenas administradores podem remover
+ *     description: Remove um gol registrado. Apenas o criador do campeonato ou administradores podem remover
  *     tags: [Súmulas - Campeonatos]
  *     security:
  *       - bearerAuth: []
@@ -660,7 +625,7 @@ router.post('/:matchId/events/goals', authenticateToken, addGoal);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Token não fornecido ou inválido
+ *               message: Usuário não autenticado
  *       403:
  *         description: Sem permissão
  *         content:
@@ -668,7 +633,7 @@ router.post('/:matchId/events/goals', authenticateToken, addGoal);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Apenas administradores podem remover gols
+ *               message: Você não tem permissão para remover eventos desta partida
  *       404:
  *         description: Gol ou partida não encontrados
  *         content:
@@ -681,7 +646,10 @@ router.post('/:matchId/events/goals', authenticateToken, addGoal);
  *                   message: Gol não encontrado
  *               partidaNaoEncontrada:
  *                 value:
- *                   message: Partida não encontrada
+ *                   message: Partida de campeonato não encontrada
+ *               campeonatoNaoEncontrado:
+ *                 value:
+ *                   message: Campeonato não encontrado
  *       500:
  *         description: Erro ao remover gol
  *         content:
@@ -698,7 +666,7 @@ router.delete('/:matchId/events/goals/:goalId', authenticateToken, deleteGoalEve
  * /api/championship-reports/{matchId}/events/goals:
  *   delete:
  *     summary: Limpar todos os gols da partida de campeonato
- *     description: Remove todos os gols registrados. Apenas administradores podem executar
+ *     description: Remove todos os gols registrados. Apenas o criador do campeonato ou administradores podem executar
  *     tags: [Súmulas - Campeonatos]
  *     security:
  *       - bearerAuth: []
@@ -720,11 +688,8 @@ router.delete('/:matchId/events/goals/:goalId', authenticateToken, deleteGoalEve
  *               properties:
  *                 message:
  *                   type: string
- *                 removedCount:
- *                   type: integer
  *             example:
- *               message: Gols removidos
- *               removedCount: 4
+ *               message: Todos os gols foram removidos com sucesso
  *       401:
  *         description: Não autenticado
  *         content:
@@ -732,7 +697,7 @@ router.delete('/:matchId/events/goals/:goalId', authenticateToken, deleteGoalEve
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Não autenticado
+ *               message: Usuário não autenticado
  *       403:
  *         description: Sem permissão
  *         content:
@@ -740,15 +705,20 @@ router.delete('/:matchId/events/goals/:goalId', authenticateToken, deleteGoalEve
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Apenas administradores podem limpar gols
+ *               message: Você não tem permissão para limpar eventos desta partida
  *       404:
  *         description: Partida não encontrada
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Partida não encontrada
+ *             examples:
+ *               partidaNaoEncontrada:
+ *                 value:
+ *                   message: Partida de campeonato não encontrada
+ *               campeonatoNaoEncontrado:
+ *                 value:
+ *                   message: Campeonato não encontrado
  *       500:
  *         description: Erro ao limpar gols
  *         content:
@@ -765,7 +735,7 @@ router.delete('/:matchId/events/goals', authenticateToken, clearGoals);
  * /api/championship-reports/{matchId}/events/cards:
  *   post:
  *     summary: Adicionar cartão à partida de campeonato
- *     description: Registra cartão amarelo ou vermelho. Apenas administradores podem adicionar
+ *     description: Registra cartão amarelo ou vermelho. Aceita playerId (jogador cadastrado), userId ou email para identificar quem recebeu
  *     tags: [Súmulas - Campeonatos]
  *     security:
  *       - bearerAuth: []
@@ -784,36 +754,50 @@ router.delete('/:matchId/events/goals', authenticateToken, clearGoals);
  *           schema:
  *             type: object
  *             required:
- *               - playerId
  *               - cardType
  *             properties:
  *               playerId:
  *                 type: integer
- *                 description: ID do jogador que recebeu o cartão
+ *                 description: ID do jogador cadastrado que recebeu o cartão
  *                 example: 3
+ *               userId:
+ *                 type: integer
+ *                 description: ID do usuário que recebeu o cartão (alternativa ao playerId)
+ *                 example: 15
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: E-mail do usuário que recebeu o cartão (alternativa)
+ *                 example: jogador@email.com
  *               cardType:
  *                 type: string
  *                 enum: [yellow, red]
- *                 description: Tipo do cartão
+ *                 description: Tipo do cartão (obrigatório)
  *                 example: yellow
  *               minute:
  *                 type: integer
  *                 minimum: 0
- *                 description: Minuto da aplicação
+ *                 description: Minuto da aplicação (padrão 0)
  *                 example: 42
  *           examples:
- *             cartaoAmarelo:
- *               summary: Cartão amarelo
+ *             cartaoAmareloJogador:
+ *               summary: Cartão amarelo para jogador cadastrado
  *               value:
  *                 playerId: 3
  *                 cardType: yellow
  *                 minute: 42
- *             cartaoVermelho:
- *               summary: Cartão vermelho
+ *             cartaoVermelhoUsuario:
+ *               summary: Cartão vermelho para usuário
  *               value:
- *                 playerId: 7
+ *                 userId: 15
  *                 cardType: red
  *                 minute: 85
+ *             cartaoEmail:
+ *               summary: Cartão identificado por e-mail
+ *               value:
+ *                 email: jogador@email.com
+ *                 cardType: yellow
+ *                 minute: 30
  *     responses:
  *       201:
  *         description: Cartão registrado com sucesso
@@ -828,6 +812,10 @@ router.delete('/:matchId/events/goals', authenticateToken, clearGoals);
  *                   type: integer
  *                 player_id:
  *                   type: integer
+ *                   nullable: true
+ *                 user_id:
+ *                   type: integer
+ *                   nullable: true
  *                 card_type:
  *                   type: string
  *                 minute:
@@ -836,6 +824,7 @@ router.delete('/:matchId/events/goals', authenticateToken, clearGoals);
  *               id: 1
  *               match_id: 1
  *               player_id: 3
+ *               user_id: null
  *               card_type: yellow
  *               minute: 42
  *       400:
@@ -847,10 +836,10 @@ router.delete('/:matchId/events/goals', authenticateToken, clearGoals);
  *             examples:
  *               tipoInvalido:
  *                 value:
- *                   message: Tipo de cartão deve ser yellow ou red
- *               jogadorFaltando:
+ *                   message: Tipo de cartão inválido. Use "yellow" ou "red"
+ *               partidaInvalida:
  *                 value:
- *                   message: ID do jogador é obrigatório
+ *                   message: ID da partida inválido
  *       401:
  *         description: Não autenticado
  *         content:
@@ -858,15 +847,7 @@ router.delete('/:matchId/events/goals', authenticateToken, clearGoals);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Token não fornecido ou inválido
- *       403:
- *         description: Sem permissão
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Apenas administradores podem adicionar cartões
+ *               message: Usuário não autenticado
  *       404:
  *         description: Recurso não encontrado
  *         content:
@@ -874,12 +855,12 @@ router.delete('/:matchId/events/goals', authenticateToken, clearGoals);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             examples:
- *               partidaNaoEncontrada:
- *                 value:
- *                   message: Partida não encontrada
  *               jogadorNaoEncontrado:
  *                 value:
  *                   message: Jogador não encontrado
+ *               usuarioNaoEncontrado:
+ *                 value:
+ *                   message: Usuário com este e-mail não encontrado
  *       409:
  *         description: Conflito - Cartão duplicado
  *         content:
@@ -909,7 +890,7 @@ router.post('/:matchId/events/cards', authenticateToken, addCard);
  * /api/championship-reports/{matchId}/events/cards/{cardId}:
  *   delete:
  *     summary: Remover cartão específico da partida de campeonato
- *     description: Remove um cartão aplicado. Apenas administradores podem remover
+ *     description: Remove um cartão aplicado. Apenas o criador do campeonato ou administradores podem remover
  *     tags: [Súmulas - Campeonatos]
  *     security:
  *       - bearerAuth: []
@@ -947,7 +928,7 @@ router.post('/:matchId/events/cards', authenticateToken, addCard);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Token não fornecido ou inválido
+ *               message: Usuário não autenticado
  *       403:
  *         description: Sem permissão
  *         content:
@@ -955,7 +936,7 @@ router.post('/:matchId/events/cards', authenticateToken, addCard);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Apenas administradores podem remover cartões
+ *               message: Você não tem permissão para remover eventos desta partida
  *       404:
  *         description: Cartão ou partida não encontrados
  *         content:
@@ -968,7 +949,10 @@ router.post('/:matchId/events/cards', authenticateToken, addCard);
  *                   message: Cartão não encontrado
  *               partidaNaoEncontrada:
  *                 value:
- *                   message: Partida não encontrada
+ *                   message: Partida de campeonato não encontrada
+ *               campeonatoNaoEncontrado:
+ *                 value:
+ *                   message: Campeonato não encontrado
  *       500:
  *         description: Erro ao remover cartão
  *         content:
@@ -985,7 +969,7 @@ router.delete('/:matchId/events/cards/:cardId', authenticateToken, deleteCardEve
  * /api/championship-reports/{matchId}/events/cards:
  *   delete:
  *     summary: Limpar todos os cartões da partida de campeonato
- *     description: Remove todos os cartões registrados. Apenas administradores podem executar
+ *     description: Remove todos os cartões registrados. Apenas o criador do campeonato ou administradores podem executar
  *     tags: [Súmulas - Campeonatos]
  *     security:
  *       - bearerAuth: []
@@ -1007,11 +991,8 @@ router.delete('/:matchId/events/cards/:cardId', authenticateToken, deleteCardEve
  *               properties:
  *                 message:
  *                   type: string
- *                 removedCount:
- *                   type: integer
  *             example:
- *               message: Cartões removidos
- *               removedCount: 2
+ *               message: Todos os cartões foram removidos com sucesso
  *       401:
  *         description: Não autenticado
  *         content:
@@ -1019,7 +1000,7 @@ router.delete('/:matchId/events/cards/:cardId', authenticateToken, deleteCardEve
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Não autenticado
+ *               message: Usuário não autenticado
  *       403:
  *         description: Sem permissão
  *         content:
@@ -1027,15 +1008,20 @@ router.delete('/:matchId/events/cards/:cardId', authenticateToken, deleteCardEve
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: Apenas administradores podem limpar cartões
+ *               message: Você não tem permissão para limpar eventos desta partida
  *       404:
  *         description: Partida não encontrada
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: Partida não encontrada
+ *             examples:
+ *               partidaNaoEncontrada:
+ *                 value:
+ *                   message: Partida de campeonato não encontrada
+ *               campeonatoNaoEncontrado:
+ *                 value:
+ *                   message: Campeonato não encontrado
  *       500:
  *         description: Erro ao limpar cartões
  *         content:

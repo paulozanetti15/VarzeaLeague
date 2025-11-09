@@ -300,8 +300,8 @@ export const useMatchForm = (matchId?: string) => {
             time: match.date ? format(new Date(match.date), 'HH:mm') : '',
             duration: match.duration ? convertMinutesToHHMM(match.duration) : '',
             price: match.price ? String(match.price) : '',
-            modalidade: match.modalidade || '',
-            nomequadra: match.nomequadra || ''
+            modalidade: match.matchType || '',
+            nomequadra: match.square || ''
           };
           console.log('Initial formatted data:', formatted);
           setFormData(formatted);
@@ -364,8 +364,8 @@ export const useMatchForm = (matchId?: string) => {
       description: formData.description?.trim(),
       duration: formData.duration ? convertHHMMToMinutes(formData.duration) : null,
       price: formData.price ? parseFloat(formData.price) : 0,
-      nomequadra: formData.nomequadra.trim(),
-      modalidade: formData.modalidade.trim()
+      square: formData.nomequadra.trim(),
+      matchType: formData.modalidade.trim()
     };
 
     return { ok: true, payload };
@@ -402,8 +402,8 @@ export const useMatchForm = (matchId?: string) => {
           time: updated.date ? format(new Date(updated.date), 'HH:mm') : '',
           duration: updated.duration ? convertMinutesToHHMM(updated.duration) : '',
           price: updated.price ? String(updated.price) : '',
-          modalidade: updated.modalidade || '',
-          nomequadra: updated.nomequadra || ''
+          modalidade: updated.matchType || '',
+          nomequadra: updated.square || ''
         };
         console.log('Formatted data:', formatted);
         setFormData(formatted);

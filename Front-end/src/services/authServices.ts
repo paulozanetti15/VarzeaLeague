@@ -8,15 +8,18 @@ function getAuthHeaders() {
 
 // Auth services
 export async function register(userData: any) {
-  const response = await axios.post(`${API_BASE_URL}/auth/register`, userData, {
-    headers: { 'Content-Type': 'application/json' }
-  });
+  try {
+    const response = await axios.post(`${API_BASE_URL}/auth/register`, userData, {
+      headers: { 'Content-Type': 'application/json' }
+    });
 
-  if (response.status !== 200 && response.status !== 201) {
-    throw new Error(response.data.message || 'Erro ao registrar usuário');
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error('Erro ao registrar usuário');
   }
-
-  return response.data;
 }
 
 export async function checkCPF(cpf: string) {

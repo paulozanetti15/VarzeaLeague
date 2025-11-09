@@ -151,69 +151,68 @@ form {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
-  margin-top: 28px;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 8px;
 }
 
 .cancel-button,
 .save-button {
-  padding: 8px 16px;
-  border-radius: 15px !important;
+  padding: 14px 32px;
+  border-radius: 50px !important;
   cursor: pointer;
   transition: all 0.3s ease;
   letter-spacing: 0.5px;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  font-weight: 600;
   margin: 0;
-  min-width: 120px;
-  width: 120px;
-  height: 38px;
+  min-width: 160px;
+  height: 50px;
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   vertical-align: middle;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   border: none;
 }
 
 .cancel-button {
-  background-color: #f8f9fa;
-  color: #6c757d;
-  font-weight: 500;
-  border: 2px solid #dee2e6;
+  background: rgba(108, 117, 125, 0.1);
+  color: #495057;
+  border: 2px solid rgba(108, 117, 125, 0.2);
 }
 
 .cancel-button:hover {
-  background-color: #e9ecef;
-  color: #495057;
-  border-color: #adb5bd;
+  background: rgba(108, 117, 125, 0.15);
+  color: #343a40;
+  border-color: rgba(108, 117, 125, 0.3);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(108, 117, 125, 0.15);
+  box-shadow: 0 6px 20px rgba(108, 117, 125, 0.2);
 }
 
 .save-button {
-  background: linear-gradient(135deg, #2196F3, #3f51b5);
+  background: linear-gradient(135deg, #2196F3 0%, #1976d2 100%);
   color: white;
-  font-weight: 600;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   border: none;
 }
 
 .save-button:hover {
-  background: linear-gradient(135deg, #3f51b5, #2196F3);
-  transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(33, 150, 243, 0.4);
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
 }
 
 .save-button:active,
 .cancel-button:active {
-  transform: translateY(1px);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .save-button:active {
-  background: linear-gradient(135deg, #1565c0, #283593);
+  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
 }
 
 /* Remover todas as bordas vermelhas por padrão - somente no modal */

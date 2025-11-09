@@ -115,11 +115,24 @@ export async function joinTeam(matchId: string | number, payload: any) {
 }
 
 export async function leaveTeam(matchId: string | number, teamId: number) {
-  return axios.delete(`${API_BASE_URL}/friendly-matches/${matchId}/teams/${teamId}`, { headers: getAuthHeaders() });
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/friendly-matches/${matchId}/teams/${teamId}`, {
+      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
+    });
+    return response;
+  } catch (error: any) {
+    if (error.response?.status === 403) {
+      throw new Error('Sem permissão para remover este time. Apenas o capitão do time, organizador da partida ou administrador podem fazer isso.');
+    }
+    if (error.response?.status === 404) {
+      throw new Error('Time não está inscrito nesta partida ou a partida não foi encontrada.');
+    }
+    throw error;
+  }
 }
 
 export async function getAvailableForMatch(matchId: string | number) {
-  return axios.get(`${API_BASE_URL}/friendly-matches/${matchId}/available`, { headers: getAuthHeaders() });
+  return axios.get(`${API_BASE_URL}/friendly-matches/${matchId}/teams/available`, { headers: getAuthHeaders() });
 }
 
 // -- Punicao (penalty) endpoints
@@ -140,7 +153,7 @@ export async function deletePunicao(matchId: string | number) {
 }
 
 export async function getMatchEvents(matchId: string | number) {
-  return axios.get(`${API_BASE_URL}/friendly-matches/${matchId}/events`, { headers: getAuthHeaders() });
+  return axios.get(`${API_BASE_URL}/friendly-match-reports/${matchId}/events`, { headers: getAuthHeaders() });
 }
 
 export async function finalizeMatch(matchId: string | number) {

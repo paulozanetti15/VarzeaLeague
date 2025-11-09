@@ -14,15 +14,17 @@ interface RegrasFormEditModalProps {
   onClose: () => void;
   userId: number;
   partidaDados: any;
+  onSuccess?: () => void;
 }
 interface RulesData {
   dataLimite: string;
+  horaLimite: string;
   idadeMinima: number;
   idadeMaxima: number;
   genero: string;
 }
 
-const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide, userId, partidaDados,onClose }) => {
+const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide, userId, partidaDados,onClose,onSuccess }) => {
   const [dataLimite, setDataLimite] = useState<string>(format(new Date(), 'dd/MM/yyyy'));
   const hiddenDateInputRef = useRef<HTMLInputElement>(null);
   // genero control is handled inside formData; separate state removed
@@ -30,12 +32,14 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
   const [sucess, setSucess] = useState<string>("");
   const [formData, setFormData] = useState<RulesData>({
     dataLimite: format(new Date(), 'dd/MM/yyyy'),
+    horaLimite: '23:59',
     idadeMinima: 0,
     idadeMaxima: 0,
     genero: ''
   });
   const [initialData, setInitialData] = useState<RulesData>({
     dataLimite: format(new Date(), 'dd/MM/yyyy'),
+    horaLimite: '23:59',
     idadeMinima: 0,
     idadeMaxima: 0,
     genero: ''
@@ -78,6 +82,12 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
       }));
     }
     if (name === 'genero') {
+        setFormData((prevData) => ({
+          ...prevData,
+          [name]  : value
+        }));
+    }
+    if (name === 'horaLimite') {
         setFormData((prevData) => ({
           ...prevData,
           [name]  : value
@@ -167,14 +177,13 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
 
     try {
         const response=await axios.put(
-          `${API_BASE_URL}/rules/${partidaDados.id}`,
+          `${API_BASE_URL}/match-rules/${partidaDados.id}`,
           {
-            userId: userId,
-            partidaId:partidaDados.id,
-            dataLimite: format(parse(dataLimite, 'dd/MM/yyyy', new Date()), 'yyyy-MM-dd'),
-            idadeMinima: formData.idadeMinima,
-            idadeMaxima: formData.idadeMaxima,
-            genero: formData.genero
+            registrationDeadline: format(parse(dataLimite, 'dd/MM/yyyy', new Date()), 'yyyy-MM-dd'),
+            registrationDeadlineTime: formData.horaLimite,
+            minimumAge: formData.idadeMinima,
+            maximumAge: formData.idadeMaxima,
+            gender: formData.genero
           },
           {
             headers: {
@@ -184,11 +193,8 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
         );
 
         if (response.status === 200) {
-          setSucess('Regras atualizadas com sucesso!');
-          setTimeout(() => {
-           window.location.reload();
-          }, 500);
-          
+          onClose();
+          onSuccess && onSuccess();
         }
          
       
@@ -198,23 +204,25 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
   };
   const carregarRegras = async (partidaDados:any) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/rules/${partidaDados.id}`, {
+      const response = await axios.get(`${API_BASE_URL}/match-rules/${partidaDados.id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
       if (response.status === 200) {
         setFormData({
-          dataLimite:  format(new Date(response.data.dataLimite), 'dd/MM/yyyy'),
-          idadeMinima: response.data.idadeMinima.toString(),
-          idadeMaxima: response.data.idadeMaxima.toString(),
-          genero: response.data.genero
+          dataLimite:  format(new Date(response.data.registrationDeadline), 'dd/MM/yyyy'),
+          horaLimite: response.data.registrationDeadlineTime || '23:59',
+          idadeMinima: response.data.minimumAge.toString(),
+          idadeMaxima: response.data.maximumAge.toString(),
+          genero: response.data.gender
         });
         setInitialData({
-          dataLimite:  format(new Date(response.data.dataLimite), 'dd/MM/yyyy'),
-          idadeMinima: response.data.idadeMinima.toString(),
-          idadeMaxima: response.data.idadeMaxima.toString(),
-          genero: response.data.genero
+          dataLimite:  format(new Date(response.data.registrationDeadline), 'dd/MM/yyyy'),
+          horaLimite: response.data.registrationDeadlineTime || '23:59',
+          idadeMinima: response.data.minimumAge.toString(),
+          idadeMaxima: response.data.maximumAge.toString(),
+          genero: response.data.gender
         });
       }
     } catch (error) {
@@ -297,6 +305,18 @@ const RegrasFormEditModal: React.FC<RegrasFormEditModalProps> = ({ show, onHide,
                   <CalendarMonthIcon className="date-icon" fontSize="small" />
                 </button>
               </div>
+            </div>
+            <div className="form-group">
+              <label>Hora Limite para Inscrição</label>
+              <input
+                type="time"
+                name="horaLimite"
+                className="form-control"
+                value={formData.horaLimite}
+                onChange={handleInputChange}
+                required
+                style={{ height: '38px' }}
+              />
             </div>
             <div className="form-row">
               <div className="form-group">

@@ -12,7 +12,7 @@ interface FormData {
   cpf: string;
   email: string;
   phone: string;
-  sexo: string;
+  gender: string;
   password: string;
   confirmPassword: string;
   userTypeId: number;
@@ -23,7 +23,7 @@ interface FormErrors {
   cpf?: string;
   email?: string;
   phone?: string;
-  sexo?: string;
+  gender?: string;
   password?: string;
   confirmPassword?: string;
   userTypeId?: string;
@@ -42,10 +42,10 @@ const Register: React.FC<RegisterProps> = () => {
     cpf: '',
     email: '',
     phone: '',
-    sexo: '',
+    gender: '',
     password: '',
     confirmPassword: '',
-    userTypeId: 0 // Valor padrão vazio para forçar seleção
+    userTypeId: 0
   });
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -137,7 +137,7 @@ const Register: React.FC<RegisterProps> = () => {
         if (validateCPF(newValue)) {
           const cpfExists = await checkCPFExists(newValue);
           if (cpfExists) {
-            setErrors(prev => ({ ...prev, cpf: 'CPF já cadastrado no sistema' }));
+            setErrors(prev => ({ ...prev, cpf: 'Este CPF já está cadastrado no sistema.' }));
           }
         }
       }
@@ -196,7 +196,7 @@ const Register: React.FC<RegisterProps> = () => {
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email inválido';
     if (!formData.phone.trim()) newErrors.phone = 'Telefone é obrigatório';
     else if (!/^\d{10,11}$/.test(formData.phone.replace(/\D/g, ''))) newErrors.phone = 'Telefone inválido';
-    if (!formData.sexo) newErrors.sexo = 'Selecione o sexo';
+    if (!formData.gender) newErrors.gender = 'Selecione o sexo';
     if (!formData.userTypeId || formData.userTypeId === 0) newErrors.userTypeId = 'Selecione o tipo de perfil';
     
     // Validação de CPF
@@ -210,7 +210,7 @@ const Register: React.FC<RegisterProps> = () => {
         // Verifica CPF duplicado
         const cpfExists = await checkCPFExists(cpfLimpo);
         if (cpfExists) {
-          newErrors.cpf = 'CPF já cadastrado no sistema';
+          newErrors.cpf = 'Este CPF já está cadastrado no sistema.';
         }
       }
     }
@@ -293,10 +293,10 @@ const Register: React.FC<RegisterProps> = () => {
               <div className="register-form-group">
                 <label className="register-label">Sexo</label>
                 <select
-                  name="sexo"
-                  value={formData.sexo}
+                  name="gender"
+                  value={formData.gender}
                   onChange={handleChange}
-                  className={`register-input${errors.sexo ? ' register-input-error' : ''}`}
+                  className={`register-input${errors.gender ? ' register-input-error' : ''}`}
                   disabled={isLoading}
                 >
                   <option value="">Selecione</option>
@@ -304,7 +304,7 @@ const Register: React.FC<RegisterProps> = () => {
                   <option value="Feminino">Feminino</option>
                   <option value="Prefiro não informar">Prefiro não informar</option>
                 </select>
-                {errors.sexo && <span className="register-error-message">{errors.sexo}</span>}
+                {errors.gender && <span className="register-error-message">{errors.gender}</span>}
               </div>
             </div>
             <div className="register-row">

@@ -5,7 +5,7 @@ import { Op } from "sequelize";
 
 export const insertRules = async (req, res) => {
     try {
-        const { registrationDeadline, minimumAge, maximumAge, gender, matchId } = req.body;
+        const { registrationDeadline, registrationDeadlineTime, minimumAge, maximumAge, gender, matchId } = req.body;
         
         if (!registrationDeadline || !minimumAge || !maximumAge || !gender || !matchId) {
             return res.status(400).json({ message: "Todos os campos são obrigatórios" });
@@ -30,12 +30,13 @@ export const insertRules = async (req, res) => {
 
         const existingRules = await Rules.findOne({ where: { matchId } });
         if (existingRules) {
-            return res.status(409).json({ message: "Regras já existem para esta partida" });
+            return res.status(409).json({ message: "Você já criou regras para esta partida. Para modificá-las, use a opção de editar." });
         }
 
         const newRules = await Rules.create({
             matchId: matchId,
             registrationDeadline: registrationDeadline,
+            registrationDeadlineTime: registrationDeadlineTime || '23:59:59',
             minimumAge: parseInt(minimumAge),
             maximumAge: parseInt(maximumAge),
             gender: gender
@@ -77,7 +78,7 @@ export const deleteRules = async (req, res) => {
 export const updateRules = async (req, res) => {
     try {
         const { id } = req.params;
-        const { minimumAge, maximumAge, gender, registrationDeadline } = req.body;
+        const { minimumAge, maximumAge, gender, registrationDeadline, registrationDeadlineTime } = req.body;
 
         if (!registrationDeadline || !minimumAge || !maximumAge || !gender) {
             return res.status(400).json({ message: "Todos os campos são obrigatórios" });
@@ -107,17 +108,12 @@ export const updateRules = async (req, res) => {
        
         await rules.update({
             registrationDeadline: parsedDeadline,
+            registrationDeadlineTime: registrationDeadlineTime || '23:59:59',
             minimumAge: parseInt(minimumAge),
             maximumAge: parseInt(maximumAge),
             gender: gender
         });
 
-        const now = new Date();
-        now.setHours(23, 59, 59, 999);
-        
-        const deadline = new Date(registrationDeadline);
-        deadline.setHours(23, 59, 59, 999);
-        
         const match = await FriendlyMatchesModel.findByPk(id);
         
         if (match) {
@@ -125,7 +121,14 @@ export const updateRules = async (req, res) => {
                 where: { matchId: id }
             });
 
-            if (now > deadline) {
+            const now = new Date();
+            const deadline = new Date(registrationDeadline);
+            const [hours, minutes, seconds] = (registrationDeadlineTime || '23:59:59').split(':').map(Number);
+            deadline.setHours(hours, minutes, seconds || 0, 0);
+
+            const deadlinePassed = now > deadline;
+
+            if (deadlinePassed) {
                 if (teamsCount < 2 && (match.status === 'aberta' || match.status === 'sem_vagas')) {
                     await match.update({ 
                         status: 'cancelada'
@@ -136,10 +139,26 @@ export const updateRules = async (req, res) => {
                     });
                 }
             } else {
-                if (match.status === 'cancelada') {
-                    await match.update({ 
-                        status: 'aberta'
-                    });
+                if (match.status === 'confirmada') {
+                    if (teamsCount >= 2) {
+                        await match.update({ 
+                            status: 'sem_vagas'
+                        });
+                    } else {
+                        await match.update({ 
+                            status: 'aberta'
+                        });
+                    }
+                } else if (match.status === 'cancelada') {
+                    if (teamsCount >= 2) {
+                        await match.update({ 
+                            status: 'sem_vagas'
+                        });
+                    } else {
+                        await match.update({ 
+                            status: 'aberta'
+                        });
+                    }
                 }
             }
         }

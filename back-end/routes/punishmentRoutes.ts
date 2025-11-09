@@ -27,7 +27,19 @@ export const punishmentRoutes = express.Router();
  * /api/punishments/friendly-matches/{idAmistosaPartida}:
  *   post:
  *     summary: Aplicar punição WO em partida amistosa
- *     description: Cria uma punição WO para um time em partida amistosa, gerando automaticamente uma súmula 3x0 e finalizando a partida
+ *     description: |
+ *       Cria uma punição WO para um time em partida amistosa, gerando automaticamente uma súmula 3x0 e finalizando a partida.
+ *       
+ *       **Validações:**
+ *       - Partida deve existir e não estar deletada
+ *       - Partida deve ter regras configuradas
+ *       - Data atual deve ser após a data limite de inscrição
+ *       - Partida deve ter pelo menos 2 times inscritos
+ *       - Não pode existir punição ou súmula prévia
+ *       - Time punido deve estar na partida
+ *       - Times mandante e visitante devem ser diferentes
+ *       
+ *       **Permissão:** Organizador da partida (match.userId) OU admin (userTypeId === 1)
  *     tags: [Punições]
  *     security:
  *       - bearerAuth: []
@@ -98,6 +110,18 @@ export const punishmentRoutes = express.Router();
  *               antesDataLimite:
  *                 value:
  *                   message: "Não é possível aplicar punição antes da data limite de inscrição"
+ *               semRegras:
+ *                 value:
+ *                   message: "Partida não possui regras configuradas"
+ *               poucosTimes:
+ *                 value:
+ *                   message: "A partida deve ter pelo menos 2 times inscritos"
+ *               timesIguais:
+ *                 value:
+ *                   message: "Time mandante e visitante devem ser diferentes"
+ *               timeNaoParticipa:
+ *                 value:
+ *                   message: "O time punido não está inscrito nesta partida"
  *       401:
  *         description: Não autenticado
  *         content:
@@ -114,7 +138,7 @@ export const punishmentRoutes = express.Router();
  *                 value:
  *                   message: Token expirado. Faça login novamente
  *       403:
- *         description: Sem permissão
+ *         description: Sem permissão (não é organizador nem admin)
  *         content:
  *           application/json:
  *             schema:
@@ -122,7 +146,7 @@ export const punishmentRoutes = express.Router();
  *             example:
  *               message: "Sem permissão para aplicar punição"
  *       404:
- *         description: Partida não encontrada
+ *         description: Recurso não encontrado
  *         content:
  *           application/json:
  *             schema:
@@ -136,6 +160,14 @@ export const punishmentRoutes = express.Router();
  *                 summary: Partida foi removida
  *                 value:
  *                   message: Partida inativa ou deletada
+ *               timeNaoEncontrado:
+ *                 summary: Time não existe
+ *                 value:
+ *                   message: Time não encontrado
+ *               timeDeletado:
+ *                 summary: Time foi removido
+ *                 value:
+ *                   message: Time está deletado
  *       409:
  *         description: Conflito (já existe punição ou súmula)
  *         content:
@@ -180,7 +212,10 @@ punishmentRoutes.post('/friendly-matches/:idAmistosaPartida', authenticateToken,
  * /api/punishments/friendly-matches/{idAmistosaPartida}:
  *   get:
  *     summary: Buscar punição de partida amistosa
- *     description: Retorna informações da punição aplicada à partida amistosa
+ *     description: |
+ *       Retorna informações da punição aplicada à partida amistosa, incluindo dados do time punido e times da súmula.
+ *       
+ *       **Nota:** Retorna a punição com o alias `penaltyTeam` para o time punido e adiciona `team_home`/`team_away` da súmula gerada.
  *     tags: [Punições]
  *     security:
  *       - bearerAuth: []
@@ -197,39 +232,39 @@ punishmentRoutes.post('/friendly-matches/:idAmistosaPartida', authenticateToken,
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   idTeam:
- *                     type: integer
- *                   reason:
- *                     type: string
- *                   idMatch:
- *                     type: integer
- *                   team:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                       name:
- *                         type: string
- *                   team_home:
- *                     type: integer
- *                   team_away:
- *                     type: integer
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 idTeam:
+ *                   type: integer
+ *                 reason:
+ *                   type: string
+ *                 idMatch:
+ *                   type: integer
+ *                 penaltyTeam:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     name:
+ *                       type: string
+ *                 team_home:
+ *                   type: integer
+ *                   description: ID do time mandante na súmula
+ *                 team_away:
+ *                   type: integer
+ *                   description: ID do time visitante na súmula
  *             example:
- *               - id: 1
- *                 idTeam: 1
- *                 reason: "Time não compareceu"
- *                 idMatch: 1
- *                 team:
- *                   id: 1
- *                   name: "FC Exemplo"
- *                 team_home: 1
- *                 team_away: 2
+ *               id: 1
+ *               idTeam: 1
+ *               reason: "Time não compareceu"
+ *               idMatch: 1
+ *               penaltyTeam:
+ *                 id: 1
+ *                 name: "FC Exemplo"
+ *               team_home: 1
+ *               team_away: 2
  *       401:
  *         description: Não autenticado
  *         content:
@@ -283,7 +318,15 @@ punishmentRoutes.get('/friendly-matches/:idAmistosaPartida', authenticateToken, 
  * /api/punishments/friendly-matches/{idAmistosaPartida}:
  *   put:
  *     summary: Atualizar punição de partida amistosa
- *     description: Atualiza o time punido e/ou motivo da punição, recalculando a súmula se necessário
+ *     description: |
+ *       Atualiza o time punido e/ou motivo da punição. Se `team_home` E `team_away` forem fornecidos juntos, recalcula a súmula 3x0.
+ *       
+ *       **Validações (quando altera times):**
+ *       - Times devem existir e não estarem deletados
+ *       - Times devem participar da partida
+ *       - Times mandante e visitante devem ser diferentes
+ *       
+ *       **Nota:** Todos os campos são opcionais. A súmula só é recalculada se ambos `team_home` E `team_away` forem enviados.
  *     tags: [Punições]
  *     security:
  *       - bearerAuth: []
@@ -303,14 +346,16 @@ punishmentRoutes.get('/friendly-matches/:idAmistosaPartida', authenticateToken, 
  *             properties:
  *               idTeam:
  *                 type: integer
- *                 description: Novo ID do time punido
+ *                 description: Novo ID do time punido (opcional)
  *               reason:
  *                 type: string
- *                 description: Novo motivo
+ *                 description: Novo motivo (opcional)
  *               team_home:
  *                 type: integer
+ *                 description: Novo ID do time mandante (opcional, deve ser enviado com team_away)
  *               team_away:
  *                 type: integer
+ *                 description: Novo ID do time visitante (opcional, deve ser enviado com team_home)
  *     responses:
  *       200:
  *         description: Punição atualizada com sucesso
@@ -322,7 +367,7 @@ punishmentRoutes.get('/friendly-matches/:idAmistosaPartida', authenticateToken, 
  *                 message:
  *                   type: string
  *             example:
- *               message: Punição atualizada com sucesso. Súmula recalculada
+ *               message: "Punição alterada com sucesso"
  *       400:
  *         description: Dados inválidos
  *         content:
@@ -338,6 +383,10 @@ punishmentRoutes.get('/friendly-matches/:idAmistosaPartida', authenticateToken, 
  *                 summary: Times mandante e visitante iguais
  *                 value:
  *                   message: Time mandante e visitante devem ser diferentes
+ *               timeNaoParticipa:
+ *                 summary: Time não está na partida
+ *                 value:
+ *                   message: Time não participa desta partida
  *       401:
  *         description: Não autenticado
  *         content:
@@ -362,7 +411,7 @@ punishmentRoutes.get('/friendly-matches/:idAmistosaPartida', authenticateToken, 
  *                 value:
  *                   message: Permissão de administrador necessária
  *       404:
- *         description: Punição não encontrada
+ *         description: Recurso não encontrado
  *         content:
  *           application/json:
  *             schema:
@@ -376,6 +425,14 @@ punishmentRoutes.get('/friendly-matches/:idAmistosaPartida', authenticateToken, 
  *                 summary: Partida inexistente
  *                 value:
  *                   message: Partida não encontrada
+ *               timeNaoEncontrado:
+ *                 summary: Time não existe
+ *                 value:
+ *                   message: Time não encontrado
+ *               timeDeletado:
+ *                 summary: Time foi removido
+ *                 value:
+ *                   message: Time está deletado
  *       500:
  *         description: Erro ao atualizar punição
  *         content:
@@ -507,7 +564,19 @@ punishmentRoutes.delete('/friendly-matches/:idAmistosaPartida', authenticateToke
  * /api/punishments/championships/{idCampeonato}:
  *   post:
  *     summary: Aplicar punição WO em partida de campeonato
- *     description: Cria uma punição WO para um time em partida de campeonato, gerando automaticamente uma súmula 3x0
+ *     description: |
+ *       Cria uma punição WO para um time em partida de campeonato, gerando automaticamente uma súmula 3x0.
+ *       
+ *       **Validações:**
+ *       - Campeonato deve ter iniciado (data atual >= start_date)
+ *       - Campeonato deve ter pelo menos 2 times inscritos
+ *       - Não pode existir punição ou súmula prévia
+ *       - Time punido deve estar inscrito no campeonato
+ *       - Times mandante e visitante devem ser diferentes
+ *       
+ *       **Permissão:** Criador do campeonato (championship.userId) OU admin (userTypeId === 1)
+ *       
+ *       **Nota:** Ao contrário das partidas amistosas, NÃO atualiza automaticamente o status da partida.
  *     tags: [Punições]
  *     security:
  *       - bearerAuth: []
@@ -574,6 +643,14 @@ punishmentRoutes.delete('/friendly-matches/:idAmistosaPartida', authenticateToke
  *                 summary: Campos obrigatórios faltando
  *                 value:
  *                   message: Dados inválidos. ID da partida, time punido, motivo e times são obrigatórios
+ *               campeonatoNaoIniciado:
+ *                 summary: Campeonato ainda não começou
+ *                 value:
+ *                   message: Campeonato ainda não iniciado. Aguarde a data de início
+ *               poucosTimes:
+ *                 summary: Times insuficientes
+ *                 value:
+ *                   message: O campeonato deve ter pelo menos 2 times inscritos
  *               timesIguais:
  *                 summary: Times mandante e visitante iguais
  *                 value:
@@ -596,7 +673,7 @@ punishmentRoutes.delete('/friendly-matches/:idAmistosaPartida', authenticateToke
  *                 value:
  *                   message: Token expirado. Faça login novamente
  *       403:
- *         description: Sem permissão para aplicar punição
+ *         description: Sem permissão para aplicar punição (não é criador nem admin)
  *         content:
  *           application/json:
  *             schema:
@@ -671,7 +748,10 @@ punishmentRoutes.post('/championships/:idCampeonato', authenticateToken, inserir
  * /api/punishments/championships/{idCampeonato}/match/{match_championship_id}:
  *   get:
  *     summary: Buscar punição de campeonato por partida
- *     description: Retorna a punição aplicada a uma partida específica do campeonato
+ *     description: |
+ *       Retorna a punição aplicada a uma partida específica do campeonato.
+ *       
+ *       **Nota:** Retorna array vazio se não houver punição (não retorna 404). O alias do time é `championshipPenaltyTeam`.
  *     tags: [Punições]
  *     security:
  *       - bearerAuth: []
@@ -690,7 +770,7 @@ punishmentRoutes.post('/championships/:idCampeonato', authenticateToken, inserir
  *         example: 5
  *     responses:
  *       200:
- *         description: Punição encontrada
+ *         description: Punição encontrada (ou array vazio)
  *         content:
  *           application/json:
  *             schema:
@@ -700,13 +780,13 @@ punishmentRoutes.post('/championships/:idCampeonato', authenticateToken, inserir
  *                 properties:
  *                   id:
  *                     type: integer
- *                   team_id:
+ *                   teamId:
  *                     type: integer
  *                   reason:
  *                     type: string
- *                   championship_id:
+ *                   championshipId:
  *                     type: integer
- *                   match_championship_id:
+ *                   matchChampionshipId:
  *                     type: integer
  *                   championshipPenaltyTeam:
  *                     type: object
@@ -715,6 +795,21 @@ punishmentRoutes.post('/championships/:idCampeonato', authenticateToken, inserir
  *                         type: integer
  *                       name:
  *                         type: string
+ *             examples:
+ *               comPunicao:
+ *                 summary: Punição encontrada
+ *                 value:
+ *                   - id: 1
+ *                     teamId: 2
+ *                     reason: "Acúmulo de cartões vermelhos"
+ *                     championshipId: 1
+ *                     matchChampionshipId: 5
+ *                     championshipPenaltyTeam:
+ *                       id: 2
+ *                       name: "FC Exemplo"
+ *               semPunicao:
+ *                 summary: Sem punição
+ *                 value: []
  *       401:
  *         description: Não autenticado
  *         content:
@@ -728,21 +823,6 @@ punishmentRoutes.post('/championships/:idCampeonato', authenticateToken, inserir
  *               tokenExpirado:
  *                 value:
  *                   message: Sessão expirada
- *       404:
- *         description: Campeonato ou punição não encontrada
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             examples:
- *               campeonatoNaoEncontrado:
- *                 summary: ID inexistente
- *                 value:
- *                   message: Campeonato não encontrado
- *               punicaoNaoEncontrada:
- *                 summary: Punição não encontrada
- *                 value:
- *                   message: Punição não encontrada para esta partida
  *       500:
  *         description: Erro ao buscar punição
  *         content:
@@ -766,7 +846,13 @@ punishmentRoutes.get('/championships/:idCampeonato/match/:match_championship_id'
  * /api/punishments/championships/{idCampeonato}/match/{match_championship_id}:
  *   put:
  *     summary: Atualizar punição de campeonato por partida
- *     description: Atualiza o time punido e/ou motivo da punição em uma partida específica do campeonato
+ *     description: |
+ *       Atualiza o time punido e/ou motivo da punição em uma partida específica do campeonato.
+ *       
+ *       **Validações:**
+ *       - Time deve estar inscrito no campeonato
+ *       
+ *       **Nota:** Ao contrário das partidas amistosas, NÃO recalcula a súmula automaticamente.
  *     tags: [Punições]
  *     security:
  *       - bearerAuth: []
@@ -792,8 +878,10 @@ punishmentRoutes.get('/championships/:idCampeonato/match/:match_championship_id'
  *             properties:
  *               team_id:
  *                 type: integer
+ *                 description: Novo ID do time punido (opcional)
  *               reason:
  *                 type: string
+ *                 description: Novo motivo (opcional)
  *     responses:
  *       200:
  *         description: Punição atualizada com sucesso
@@ -805,7 +893,7 @@ punishmentRoutes.get('/championships/:idCampeonato/match/:match_championship_id'
  *                 message:
  *                   type: string
  *             example:
- *               message: Punição atualizada com sucesso
+ *               message: "Punição alterada com sucesso"
  *       400:
  *         description: Dados inválidos
  *         content:
@@ -870,10 +958,6 @@ punishmentRoutes.get('/championships/:idCampeonato/match/:match_championship_id'
  *                 summary: Erro ao salvar
  *                 value:
  *                   message: Erro ao atualizar punição no banco de dados
- *               erroRecalcularSumula:
- *                 summary: Erro ao recalcular súmula
- *                 value:
- *                   message: Erro ao recalcular súmula após atualização
  *               erroServidor:
  *                 summary: Erro genérico
  *                 value:
@@ -887,7 +971,10 @@ punishmentRoutes.put('/championships/:idCampeonato/match/:match_championship_id'
  * /api/punishments/championships/{idCampeonato}/match/{match_championship_id}:
  *   delete:
  *     summary: Deletar punição de campeonato por partida
- *     description: Remove a punição e a súmula gerada automaticamente para uma partida específica do campeonato
+ *     description: |
+ *       Remove a punição e a súmula gerada automaticamente para uma partida específica do campeonato.
+ *       
+ *       **Comportamento:** Se a partida estava com status 'finalizada', volta para 'confirmada'. Caso contrário, mantém o status atual.
  *     tags: [Punições]
  *     security:
  *       - bearerAuth: []
@@ -914,18 +1001,23 @@ punishmentRoutes.put('/championships/:idCampeonato/match/:match_championship_id'
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Punição e súmula deletadas com sucesso"
+ *             examples:
+ *               partidaFinalizada:
+ *                 summary: Partida estava finalizada
+ *                 value:
+ *                   message: "Punição e súmula deletadas com sucesso. Partida voltou ao status confirmada"
+ *               partidaNaoFinalizada:
+ *                 summary: Partida não estava finalizada
+ *                 value:
+ *                   message: "Punição e súmula deletadas com sucesso"
  *       400:
  *         description: Operação inválida
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *             examples:
- *               partidaIniciada:
- *                 summary: Partida já começou
- *                 value:
- *                   message: Não é possível deletar punição de partida já iniciada
+ *             example:
+ *               message: Não é possível deletar punição de partida já iniciada
  *       401:
  *         description: Não autenticado
  *         content:

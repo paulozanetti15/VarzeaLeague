@@ -1,5 +1,5 @@
 import { createContext, useState, ReactNode } from "react";
-import { getTeamFriendlyMatchesHistory, getTeamChampionshipMatchesHistory } from "../services/historyServices";
+import { getTeamFriendlyMatchesHistory, getTeamChampionshipMatchesHistory } from "../services/history.service";
 
 interface HistoricoContextProps {
   amistosos: number;
@@ -27,46 +27,58 @@ interface HistoricoContextProps {
   partidasFiltradasCampeonatoDisputadas: number;
   totalPartidasDisputadaEmGeral: number;
 }
+interface MatchLocationInfo {
+  nomequadra?: string;
+  square?: string;
+  quadra?: string;
+  location?: string;
+  date?: Date | string;
+  championship?: {
+    id: number;
+    name: string;
+    end_date: Date | string;
+  };
+  matchChampionship?: {
+    id: number;
+    name: string;
+    end_date: Date | string;
+  };
+}
+
 interface PartidaAmistosa {
   id: number;
-  Match: {
-    nomequadra: string;
-    date: Date;
-    location: string;
-  };
+  Match?: MatchLocationInfo;
+  friendlyMatch?: MatchLocationInfo;
+  reportFriendlyMatch?: MatchLocationInfo;
   team_home: number;
   team_away: number;
-  teamHome: {
+  teamHome?: {
     name: string;
   };
-  teamAway: {
+  teamAway?: {
     name: string;
   };
-  date: Date;
   teamAway_score: number;
   teamHome_score: number;
 }
 interface PartidasCampeonato {
   id: number;
-  match: {
-    nomequadra: string;
-    date: Date;
-    location: string;
-    championship: {
-      id: number;
-      name: string;
-      end_date: Date;
-    };
-  };
+  match?: MatchLocationInfo;
+  championshipMatch?: MatchLocationInfo;
   team_home: number;
   team_away: number;
-  teamHome: {
+  teamHome?: {
     name: string;
   };
-  teamAway: {
+  teamAway?: {
     name: string;
   };
-  
+  reportTeamHome?: {
+    name: string;
+  };
+  reportTeamAway?: {
+    name: string;
+  };
   teamAway_score: number;
   teamHome_score: number;
 }
@@ -135,11 +147,36 @@ export const HistoricoProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      const allFriendlyMatchesData: PartidaAmistosa[] = await getTeamFriendlyMatchesHistory(idTeam);
-      const allChampionshipMatchesData: PartidasCampeonato[] = await getTeamChampionshipMatchesHistory(idTeam);
-      const filteredChampionshipMatchesData: PartidasCampeonato[] = championshipId 
-        ? await getTeamChampionshipMatchesHistory(idTeam, championshipId)
-        : allChampionshipMatchesData;
+      console.log('Fetching history for team:', idTeam, 'championship:', championshipId);
+
+      let allFriendlyMatchesData: PartidaAmistosa[] = [];
+      let allChampionshipMatchesData: PartidasCampeonato[] = [];
+      let filteredChampionshipMatchesData: PartidasCampeonato[] = [];
+
+      try {
+        console.log('Fetching friendly matches...');
+        allFriendlyMatchesData = await getTeamFriendlyMatchesHistory(idTeam);
+        console.log('Friendly matches fetched:', allFriendlyMatchesData.length);
+      } catch (error) {
+        console.error('Error fetching friendly matches:', error);
+        allFriendlyMatchesData = [];
+      }
+
+      try {
+        console.log('Fetching championship matches...');
+        allChampionshipMatchesData = await getTeamChampionshipMatchesHistory(idTeam);
+        console.log('Championship matches fetched:', allChampionshipMatchesData.length);
+        
+        filteredChampionshipMatchesData = championshipId 
+          ? await getTeamChampionshipMatchesHistory(idTeam, championshipId)
+          : allChampionshipMatchesData;
+        console.log('Filtered championship matches:', filteredChampionshipMatchesData.length);
+      } catch (error) {
+        console.error('Error fetching championship matches:', error);
+        allChampionshipMatchesData = [];
+        filteredChampionshipMatchesData = [];
+      }
+
       let vitoriasPartidasAmistosas = 0;
       let derrotasPartidasAmistosas = 0;
       let empatesPartidasAmistosas = 0;
@@ -201,9 +238,13 @@ export const HistoricoProvider = ({ children }: { children: ReactNode }) => {
 
       const uniqueChampionships = new Map<number, { name: string; end_date: Date }>();
       allChampionshipMatchesData.forEach(p => {
-        const champId = p.match.championship.id;
-        const champName = p.match.championship.name;
-        const endDate = new Date(p.match.championship.end_date);
+        const championshipData = p.match?.championship ?? p.championshipMatch?.matchChampionship;
+        if (!championshipData) {
+          return;
+        }
+        const champId = championshipData.id;
+        const champName = championshipData.name;
+        const endDate = new Date(championshipData.end_date);
         if (!uniqueChampionships.has(champId)) {
           uniqueChampionships.set(champId, { name: champName, end_date: endDate });
         }

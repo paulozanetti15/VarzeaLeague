@@ -100,11 +100,6 @@ export function associateModels() {
     as: 'creator' 
   });
   
-  FriendlyMatchReport.belongsTo(FriendlyMatchesModel, { 
-    foreignKey: 'match_id', 
-    as: 'friendlyMatch' 
-  });
-  
   User.hasMany(FriendlyMatchReport, { 
     foreignKey: 'created_by', 
     as: 'friendlyMatchReports' 
@@ -356,12 +351,12 @@ export function associateModels() {
 
   TeamChampionship.belongsTo(Team, {
     foreignKey: 'teamId',
-    as: 'championshipTeam'
+    as: 'team'
   });
 
   TeamChampionship.belongsTo(Championship, {
     foreignKey: 'championshipId',
-    as: 'teamChampionship'
+    as: 'championship'
   });
 
   Championship.hasMany(TeamChampionship, {

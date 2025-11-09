@@ -118,6 +118,16 @@ Team.init(
     tableName: 'teams',
     timestamps: true,
     underscored: true,
+    defaultScope: {
+      where: {
+        isDeleted: false
+      }
+    },
+    scopes: {
+      withDeleted: {
+        where: {}
+      }
+    }
   }
 );
 

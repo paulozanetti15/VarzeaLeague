@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import {getUserTeams} from '../services/teamsServices';
+import {getUserTeams} from '../services/teams.service';
 
 interface TeamRequiredRouteProps {
   children: React.ReactNode;

@@ -10,16 +10,15 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import EditIcon from '@mui/icons-material/Edit';
 import ToastComponent from '../../components/Toast/ToastComponent';
 import PlayerModal from '../../components/Modals/Players/ManageTeamPlayersModal'
-import { createTeam, uploadTeamLogo } from '../../services/teamsServices';
-import { createPlayer, linkPlayerToTeam } from '../../services/playersServices';
+import { createTeam } from '../../services/teams.service';
+import { createPlayer } from '../../services/playersService';
 
 interface PlayerData {
   id?: number;
   nome: string;
-  sexo: string;
-  ano: string;
+  gender: string;
+  dateOfBirth: string;
   posicao: string;
-  datanascimento?: string;
 }
 
 interface TeamFormData {
@@ -268,21 +267,14 @@ export default function CreateTeam() {
         secondaryColor: formData.secondaryColor,
         estado: formData.estado,
         cidade: formData.cidade,
-        cep: formData.cep,
+        cep: formData.cep.replace(/\D/g, ''),
+        logo: formData.logo ?? undefined,
       };
 
       const resposta = await createTeam(payload);
       const teamId = resposta?.id || resposta?.plainTeam?.id || resposta?.team?.id;
 
       if (!teamId) throw new Error('ID do time não encontrado na resposta');
-
-      if (formData.logo) {
-        try {
-          await uploadTeamLogo(teamId, formData.logo as File);
-        } catch (logoErr) {
-          console.warn('Erro ao enviar logo, mas time criado:', logoErr);
-        }
-      }
 
       try {
         await handleSubmitPlayer(teamId);
@@ -320,7 +312,13 @@ export default function CreateTeam() {
   const handleSubmitPlayer = async (id: number): Promise<void> => {
     const promises = formData.jogadores.map(async (jogador) => {
       try {
-        const created = await createPlayer({ nome: jogador.nome, sexo: jogador.sexo, ano: jogador.ano, posicao: jogador.posicao, teamId: id });
+        const created = await createPlayer({ 
+          name: jogador.nome, 
+          gender: jogador.gender, 
+          dateOfBirth: jogador.dateOfBirth, 
+          position: jogador.posicao, 
+          teamId: id 
+        });
         setToastMessage(`Jogador ${jogador.nome} adicionado com sucesso!`);
         setToastBg('success');
         setShowToast(true);
@@ -619,8 +617,10 @@ export default function CreateTeam() {
                         <div className="player-name">{jogador.nome}</div>
                         <div className="player-details">
                           <span className="player-position">{jogador.posicao}</span>
-                          <span className="player-year">Ano: {jogador.ano}</span>
-                          <span className="player-gender">{jogador.sexo}</span>
+                          <span className="player-year">
+                            {new Date().getFullYear() - new Date(jogador.dateOfBirth).getFullYear()} anos
+                          </span>
+                          <span className="player-gender">{jogador.gender}</span>
                         </div>
                       </div>
                       <div className="player-actions">

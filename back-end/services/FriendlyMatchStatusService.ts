@@ -45,11 +45,10 @@ export const checkAndSetMatchesInProgress = async (): Promise<void> => {
 export const checkAndConfirmFullMatches = async (): Promise<void> => {
   try {
     const now = new Date();
-    now.setHours(23, 59, 59, 999);
 
     const candidates = await FriendlyMatchesModel.findAll({
       where: {
-        status: { [Op.notIn]: ['finalizada', 'cancelada', 'confirmada'] }
+        status: { [Op.notIn]: ['finalizada'] }
       }
     });
 
@@ -62,17 +61,51 @@ export const checkAndConfirmFullMatches = async (): Promise<void> => {
         if (!rules?.registrationDeadline) continue;
 
         const deadline = new Date(rules.registrationDeadline);
-        deadline.setHours(23, 59, 59, 999);
+        const timeString = (rules as any).registrationDeadlineTime || '23:59:59';
+        const [hours, minutes, seconds] = timeString.split(':').map(Number);
+        deadline.setHours(hours, minutes, seconds || 0, 0);
 
-        if (now > deadline) {
-          const teamsCount = await FriendlyMatchTeamsModel.count({ 
-            where: { matchId: match.id } 
-          });
+        const deadlinePassed = now > deadline;
 
+        console.log(`[checkAndConfirmFullMatches] Partida ${match.id}:`, {
+          now: now.toISOString(),
+          deadline: deadline.toISOString(),
+          deadlineTime: timeString,
+          isPast: deadlinePassed,
+          currentStatus: match.status
+        });
+
+        const teamsCount = await FriendlyMatchTeamsModel.count({ 
+          where: { matchId: match.id } 
+        });
+
+        console.log(`[checkAndConfirmFullMatches] Partida ${match.id} - Times inscritos: ${teamsCount}`);
+
+        if (deadlinePassed) {
           if (teamsCount >= 2 && match.status !== 'confirmada') {
             await match.update({ status: 'confirmada' });
-          } else if (teamsCount < 2 && match.status !== 'cancelada') {
+            console.log(`[checkAndConfirmFullMatches] ✅ Partida ${match.id} confirmada`);
+          } else if (teamsCount < 2 && (match.status === 'aberta' || match.status === 'sem_vagas')) {
             await match.update({ status: 'cancelada' });
+            console.log(`[checkAndConfirmFullMatches] ❌ Partida ${match.id} cancelada (times insuficientes)`);
+          }
+        } else {
+          if (match.status === 'confirmada') {
+            if (teamsCount >= 2) {
+              await match.update({ status: 'sem_vagas' });
+              console.log(`[checkAndConfirmFullMatches] 🔄 Partida ${match.id} voltou para sem_vagas (deadline estendido)`);
+            } else {
+              await match.update({ status: 'aberta' });
+              console.log(`[checkAndConfirmFullMatches] 🔄 Partida ${match.id} voltou para aberta (deadline estendido)`);
+            }
+          } else if (match.status === 'cancelada') {
+            if (teamsCount >= 2) {
+              await match.update({ status: 'sem_vagas' });
+              console.log(`[checkAndConfirmFullMatches] 🔄 Partida ${match.id} voltou para sem_vagas (deadline estendido)`);
+            } else {
+              await match.update({ status: 'aberta' });
+              console.log(`[checkAndConfirmFullMatches] 🔄 Partida ${match.id} voltou para aberta (deadline estendido)`);
+            }
           }
         }
       } catch (matchError) {
@@ -88,7 +121,6 @@ export const checkAndConfirmFullMatches = async (): Promise<void> => {
 export const checkAndSetSemVagas = async (): Promise<void> => {
   try {
     const now = new Date();
-    now.setHours(23, 59, 59, 999);
 
     const candidates = await FriendlyMatchesModel.findAll({
       where: {
@@ -105,7 +137,9 @@ export const checkAndSetSemVagas = async (): Promise<void> => {
         if (!rules?.registrationDeadline) continue;
 
         const deadline = new Date(rules.registrationDeadline);
-        deadline.setHours(23, 59, 59, 999);
+        const timeString = (rules as any).registrationDeadlineTime || '23:59:59';
+        const [hours, minutes, seconds] = timeString.split(':').map(Number);
+        deadline.setHours(hours, minutes, seconds || 0, 0);
 
         if (now > deadline) continue;
 

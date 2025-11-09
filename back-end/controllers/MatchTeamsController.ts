@@ -284,27 +284,29 @@ export const getMatchTeams = async (req: AuthRequest, res: Response): Promise<vo
   try {
     const matchId = parseInt(req.params.id, 10);
     
-    const match = await FriendlyMatchesModel.findByPk(matchId, {
-      attributes: ['title', 'date', 'location', 'status', 'description', 'price', 'organizerId']
-    });
-    
-    if (!match) {
-      res.status(404).json({ message: 'Partida não encontrada' });
-      return;
-    }
-    
-    const teams = await FriendlyMatchTeamsModel.findAll({
+    const matchTeams = await FriendlyMatchTeamsModel.findAll({
       where: { matchId },
-    });
+      include: [{
+        model: Team,
+        as: 'matchTeam',
+        attributes: ['id', 'name', 'captainId', 'banner', 'primaryColor', 'secondaryColor'],
+        where: { isDeleted: false },
+        required: false
+      }]
+    }) as any[];
     
-    const teamIds = teams.map((team: any) => team.teamId);
+    const formattedTeams = matchTeams
+      .filter(mt => mt.matchTeam) // Remove times deletados
+      .map(mt => ({
+        id: mt.matchTeam.id,
+        name: mt.matchTeam.name,
+        captainId: mt.matchTeam.captainId,
+        banner: mt.matchTeam.banner,
+        primaryColor: mt.matchTeam.primaryColor,
+        secondaryColor: mt.matchTeam.secondaryColor
+      }));
     
-    const teamDetails = await Team.findAll({
-      where: { id: teamIds },
-      attributes: ['id', 'name', 'captainId', 'banner'],
-    });
-    
-    res.status(200).json(teamDetails);
+    res.status(200).json(formattedTeams);
   } catch (error) {
     console.error('Erro ao obter times da partida:', error);
     res.status(500).json({ 
@@ -346,14 +348,21 @@ export const getTeamsAvailable = async (req: AuthRequest, res: Response): Promis
 export const deleteTeamMatch = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id, teamId } = req.params;
+    const matchIdNum = parseInt(String(id), 10);
+    const teamIdNum = parseInt(String(teamId), 10);
     
-    const match = await FriendlyMatchesModel.findByPk(id);
+    if (isNaN(matchIdNum) || isNaN(teamIdNum)) {
+      res.status(400).json({ message: 'IDs inválidos para partida ou time' });
+      return;
+    }
+
+    const match = await FriendlyMatchesModel.findByPk(matchIdNum);
     if (!match) {
       res.status(404).json({ message: 'Partida não encontrada' });
       return;
     }
     
-    const team = await Team.findByPk(teamId);
+    const team = await Team.findByPk(teamIdNum);
     if (!team) {
       res.status(404).json({ message: 'Time não encontrado' });
       return;
@@ -370,13 +379,13 @@ export const deleteTeamMatch = async (req: AuthRequest, res: Response): Promise<
       
       const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
       const requesterId = decoded.id;
-      const isOrganizer = Number((match as any).organizerId) === requesterId;
+  const isOrganizer = Number((match as any).organizerId) === requesterId;
       
       let requesterIsAdmin = false;
       const requester = await User.findByPk(requesterId).catch(() => null) as any;
       if (requester && Number(requester.userTypeId) === 1) requesterIsAdmin = true;
       
-      const isTeamCaptain = Number((team as any).captainId) === requesterId;
+  const isTeamCaptain = Number((team as any).captainId) === requesterId;
       const matchStatus = String((match as any).status || '').toLowerCase();
       
       if (matchStatus === 'finalizada' && isTeamCaptain && !isOrganizer && !requesterIsAdmin) {
@@ -393,15 +402,16 @@ export const deleteTeamMatch = async (req: AuthRequest, res: Response): Promise<
       return;
     }
     
-    await FriendlyMatchTeamsModel.destroy({
-      where: {
-        matchId: id,
-        teamId,
-      }
-    });
+    const existing = await FriendlyMatchTeamsModel.findOne({ where: { matchId: matchIdNum, teamId: teamIdNum } });
+    if (!existing) {
+      res.status(404).json({ message: 'Time não está inscrito nesta partida' });
+      return;
+    }
+
+    await FriendlyMatchTeamsModel.destroy({ where: { matchId: matchIdNum, teamId: teamIdNum } });
     
     try {
-      const remainingCount = await FriendlyMatchTeamsModel.count({ where: { matchId: id } });
+  const remainingCount = await FriendlyMatchTeamsModel.count({ where: { matchId: matchIdNum } });
       const maxTimes = 2;
       
       if (String((match as any).status) === 'sem_vagas' && remainingCount < maxTimes) {

@@ -4,27 +4,83 @@ import sequelize from '../config/database';
 import FriendlyMatchesModel from '../models/FriendlyMatchesModel';
 import TeamModel from '../models/TeamModel';
 import PlayerModel from '../models/PlayerModel';
-import FriendlyMatchGoalModel from '../models/FriendlyMatchGoalModel';
-import FriendlyMatchCardModel from '../models/FriendlyMatchCardModel';
 import FriendlyMatchTeamsModel from '../models/FriendlyMatchTeamsModel';
+import Championship from '../models/ChampionshipModel';
+import TeamChampionship from '../models/TeamChampionshipModel';
+import User from '../models/UserModel';
 
 export const getOverview = async (req: Request, res: Response): Promise<void> => {
   try {
     const now = new Date();
-    const since = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+    
+    const { period = '30d', startDate: startDateParam, endDate: endDateParam } = req.query;
+    
+    let startDate: Date;
+    let endDate: Date;
+    
+    if (startDateParam && endDateParam) {
+      startDate = new Date(startDateParam as string);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(endDateParam as string);
+      endDate.setHours(23, 59, 59, 999);
+    } else {
+      endDate = new Date(now);
+      endDate.setHours(23, 59, 59, 999);
+      
+      switch(period) {
+        case '7d':
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case '30d':
+          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case '90d':
+          startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+          break;
+        case 'all':
+          startDate = new Date('2000-01-01');
+          break;
+        default:
+          startDate = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+      }
+      startDate.setHours(0, 0, 0, 0);
+    }
 
-    // Optional filters
     const matchId = req.query.matchId ? Number(req.query.matchId) : undefined;
     const teamId = req.query.teamId ? Number(req.query.teamId) : undefined;
+
+    console.log('overview:getOverview params', {
+      period,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      matchId,
+      teamId
+    });
 
     let matchIdsFilter: number[] | undefined;
     if (teamId) {
       const teamMatches = await FriendlyMatchTeamsModel.findAll({ where: { teamId }, attributes: ['matchId'], raw: true });
       matchIdsFilter = teamMatches.map((tm: any) => Number(tm.matchId)).filter(Boolean);
+      console.log('overview:getOverview team filter', { teamId, matchesVinculadas: matchIdsFilter.length, exemplos: matchIdsFilter.slice(0, 5) });
       if (matchIdsFilter.length === 0) {
+        console.log('overview:getOverview retorno vazio por não haver partidas vinculadas ao time');
         res.status(200).json({
-          kpis: { totalMatches: 0, upcomingMatches: 0, pastMatches: 0, totalTeams: 0, totalPlayers: 0, totalGoals: 0, totalCards: 0 },
-          matchesByMonth: [], goalsByMonth: [], cardsByMonth: [], statusBreakdown: [], nextMatches: [], recentMatches: []
+          kpis: {
+            amistososPeriodo: 0,
+            campeonatosPeriodo: 0,
+            inscricoesAmistososPeriodo: 0,
+            inscricoesCampeonatosPeriodo: 0,
+            timesPeriodo: 0,
+            totalTeams: 0,
+            totalPlayers: 0
+          },
+          matchesByMonth: [],
+          applicationsByMonth: [],
+          teamsByMonth: [],
+          championshipsByMonth: [],
+          matchRegistrationsByMonth: [],
+          statusBreakdown: [],
+          championshipStatusBreakdown: []
         });
         return;
       }
@@ -34,20 +90,9 @@ export const getOverview = async (req: Request, res: Response): Promise<void> =>
     if (matchId) matchWhere.id = matchId;
     if (matchIdsFilter) matchWhere.id = { [Op.in]: matchIdsFilter };
 
-    const totalGoalsWhere: any = {};
-    const totalCardsWhere: any = {};
-    if (matchId) { totalGoalsWhere.match_id = matchId; totalCardsWhere.match_id = matchId; }
-    if (matchIdsFilter) { totalGoalsWhere.match_id = { [Op.in]: matchIdsFilter }; totalCardsWhere.match_id = { [Op.in]: matchIdsFilter }; }
+    // Removed goals and cards metrics
 
-    const goalsWhere: any = { created_at: { [Op.gte]: since as any } };
-    if (matchId) goalsWhere.match_id = matchId;
-    if (matchIdsFilter) goalsWhere.match_id = { [Op.in]: matchIdsFilter };
-
-    const cardsWhere: any = { created_at: { [Op.gte]: since as any } };
-    if (matchId) cardsWhere.match_id = matchId;
-    if (matchIdsFilter) cardsWhere.match_id = { [Op.in]: matchIdsFilter };
-
-    const matchesSinceWhere: any = { date: { [Op.gte]: since } };
+    const matchesSinceWhere: any = { date: { [Op.gte]: startDate, [Op.lte]: endDate } };
     if (matchId) matchesSinceWhere.id = matchId;
     if (matchIdsFilter) matchesSinceWhere.id = { [Op.in]: matchIdsFilter };
 
@@ -59,85 +104,193 @@ export const getOverview = async (req: Request, res: Response): Promise<void> =>
     if (matchId) pastWhere.id = matchId;
     if (matchIdsFilter) pastWhere.id = { [Op.in]: matchIdsFilter };
 
+  const cancelledWhere: any = { status: 'cancelada', date: { [Op.gte]: startDate, [Op.lte]: endDate } };
+    if (matchId) cancelledWhere.id = matchId;
+    if (matchIdsFilter) cancelledWhere.id = { [Op.in]: matchIdsFilter };
+
+  const completedWhere: any = { status: 'finalizada', date: { [Op.gte]: startDate, [Op.lte]: endDate } };
+    if (matchId) completedWhere.id = matchId;
+    if (matchIdsFilter) completedWhere.id = { [Op.in]: matchIdsFilter };
+
+    console.time('overview:getOverview:queries');
     const [
-      totalMatches,
+      matchesPeriodRaw,
       totalTeams,
       totalPlayers,
-      totalGoals,
-      totalCards,
-      upcomingCount,
-      pastCount,
-      matches,
-      goals,
-      cards,
-      nextMatches,
-      recentMatches,
-      statusRaw
+      totalUsers,
+      statusRawPeriod,
+      cancelledMatches,
+      completedMatches,
+      championshipApplications,
+      championshipsCreatedRaw,
+      matchRegistrationsRaw,
+      newUsers,
+      teamsCreatedRaw
     ] = await Promise.all([
-      FriendlyMatchesModel.count({ where: matchWhere }),
+      FriendlyMatchesModel.findAll({ where: matchesSinceWhere, attributes: ['id','date','status'], raw: true }).catch(()=>[] as any[]),
       TeamModel.count(),
       PlayerModel.count(),
-      FriendlyMatchGoalModel.count({ where: Object.keys(totalGoalsWhere).length ? totalGoalsWhere : undefined }).catch(()=>0),
-      FriendlyMatchCardModel.count({ where: Object.keys(totalCardsWhere).length ? totalCardsWhere : undefined }).catch(()=>0),
-      FriendlyMatchesModel.count({ where: upcomingWhere }),
-      FriendlyMatchesModel.count({ where: pastWhere }),
-      FriendlyMatchesModel.findAll({ where: matchesSinceWhere, attributes: ['id','date'], raw: true }).catch(()=>[] as any[]),
-      FriendlyMatchGoalModel.findAll({ where: goalsWhere, attributes: ['id','created_at'], raw: true }).catch(()=>[] as any[]),
-      FriendlyMatchCardModel.findAll({ where: cardsWhere, attributes: ['id','created_at','card_type'], raw: true }).catch(()=>[] as any[]),
-      FriendlyMatchesModel.findAll({ where: upcomingWhere, order: [['date', 'ASC']], limit: 5, attributes: ['id','title','date','location','status'], raw: true }).catch(()=>[] as any[]),
-      FriendlyMatchesModel.findAll({ where: pastWhere, order: [['date', 'DESC']], limit: 5, attributes: ['id','title','date','location','status'], raw: true }).catch(()=>[] as any[]),
-      FriendlyMatchesModel.findAll({ attributes: ['status', [sequelize.fn('COUNT', sequelize.col('status')), 'count']], where: matchWhere, group: ['status'], raw: true }).catch(()=>[] as any[])
+      User.count(),
+      FriendlyMatchesModel.findAll({ attributes: ['status', [sequelize.fn('COUNT', sequelize.col('status')), 'count']], where: matchesSinceWhere, group: ['status'], raw: true }).catch(()=>[] as any[]),
+      FriendlyMatchesModel.findAll({ where: cancelledWhere, attributes: ['id','date'], raw: true }).catch(()=>[] as any[]),
+      FriendlyMatchesModel.findAll({ where: completedWhere, attributes: ['id','date'], raw: true }).catch(()=>[] as any[]),
+      TeamChampionship.findAll({ 
+        where: { 
+          createdAt: { [Op.gte]: startDate, [Op.lte]: endDate } 
+        }, 
+        attributes: ['id','createdAt','teamId','championshipId'], 
+        raw: true 
+      }).catch(()=>[] as any[]),
+      Championship.findAll({ where: { created_at: { [Op.gte]: startDate, [Op.lte]: endDate } }, attributes: ['id','created_at','status'], raw: true }).catch(()=>[] as any[]),
+      FriendlyMatchTeamsModel.findAll({ where: matchIdsFilter ? { matchId: { [Op.in]: matchIdsFilter } } : {}, attributes: ['matchId'], raw: true }).catch(()=>[] as any[]),
+      User.findAll({ where: { createdAt: { [Op.gte]: startDate, [Op.lte]: endDate } }, attributes: ['id','createdAt'], raw: true }).catch(()=>[] as any[]),
+      TeamModel.findAll({ where: { created_at: { [Op.gte]: startDate, [Op.lte]: endDate } }, attributes: ['id','created_at'], raw: true }).catch(()=>[] as any[])
     ]);
+    console.timeEnd('overview:getOverview:queries');
+
+    console.log('overview:getOverview resultados', {
+      totais: { amistososPeriodo: (matchesPeriodRaw as any[]).length, totalTeams, totalPlayers, totalUsers },
+      listas: {
+        cancelledMatches: (cancelledMatches as any[]).length,
+        completedMatches: (completedMatches as any[]).length,
+        championshipApplications: (championshipApplications as any[]).length,
+        championshipsCriados: (championshipsCreatedRaw as any[]).length,
+        inscricoesAmistososRegistros: (matchRegistrationsRaw as any[]).length,
+        newUsers: (newUsers as any[]).length,
+        teamsCreated: (teamsCreatedRaw as any[]).length
+      },
+      primeirosRegistros: {
+        championship: (championshipsCreatedRaw as any[])[0],
+        application: (championshipApplications as any[])[0]
+      }
+    });
 
     const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const months = (() => { const arr: string[] = []; const base = new Date(); base.setDate(1); for (let i = 11; i >= 0; i--) { const d = new Date(base.getFullYear(), base.getMonth() - i, 1); arr.push(monthKey(d)); } return arr; })();
+    const months = (() => {
+      const arr: string[] = [];
+      const cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+      const limit = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+      while (cursor <= limit) {
+        arr.push(monthKey(cursor));
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+      return arr.length ? arr : [monthKey(new Date())];
+    })();
+    console.log('overview:getOverview meses agregados', { inicio: months[0], fim: months[months.length - 1], totalMeses: months.length });
 
     const matchesByMonth = months.map(m => ({ month: m, count: 0 }));
-    for (const r of matches as any[]) {
+    for (const r of matchesPeriodRaw as any[]) {
       const d = new Date((r as any).date);
       const k = monthKey(d);
       const idx = months.indexOf(k);
       if (idx >= 0) matchesByMonth[idx].count += 1;
     }
 
-    const goalsByMonth = months.map(m => ({ month: m, count: 0 }));
-    for (const g of goals as any[]) {
-      const d = new Date((g as any).created_at);
+    // Removed goalsByMonth and cardsByMonth
+
+    const cancelledByMonth = months.map(m => ({ month: m, count: 0 }));
+    for (const r of cancelledMatches as any[]) {
+      const d = new Date((r as any).date);
       const k = monthKey(d);
       const idx = months.indexOf(k);
-      if (idx >= 0) goalsByMonth[idx].count += 1;
+      if (idx >= 0) cancelledByMonth[idx].count += 1;
     }
 
-    const cardsByMonth = months.map(m => ({ month: m, yellow: 0, red: 0 }));
-    for (const c of cards as any[]) {
+    const completedByMonth = months.map(m => ({ month: m, count: 0 }));
+    for (const r of completedMatches as any[]) {
+      const d = new Date((r as any).date);
+      const k = monthKey(d);
+      const idx = months.indexOf(k);
+      if (idx >= 0) completedByMonth[idx].count += 1;
+    }
+
+    const applicationsByMonth = months.map(m => ({ month: m, count: 0 }));
+    for (const a of championshipApplications as any[]) {
+      const d = new Date((a as any).createdAt);
+      const k = monthKey(d);
+      const idx = months.indexOf(k);
+      if (idx >= 0) applicationsByMonth[idx].count += 1;
+    }
+
+    const championshipsByMonth = months.map(m => ({ month: m, count: 0 }));
+    for (const c of championshipsCreatedRaw as any[]) {
       const d = new Date((c as any).created_at);
       const k = monthKey(d);
       const idx = months.indexOf(k);
-      if (idx >= 0) {
-        if ((c as any).card_type === 'red') cardsByMonth[idx].red += 1; else cardsByMonth[idx].yellow += 1;
-      }
+      if (idx >= 0) championshipsByMonth[idx].count += 1;
     }
 
-    const statusBreakdown = (statusRaw as any[]).map((s) => ({ status: (s as any).status || 'unknown', count: Number((s as any).count || 0) }));
+    const teamsByMonth = months.map(m => ({ month: m, count: 0 }));
+    for (const t of teamsCreatedRaw as any[]) {
+      const d = new Date((t as any).created_at);
+      const k = monthKey(d);
+      const idx = months.indexOf(k);
+      if (idx >= 0) teamsByMonth[idx].count += 1;
+    }
 
-    res.json({
+    const matchIdToDate: Record<string,string> = {};
+    for (const r of matchesPeriodRaw as any[]) matchIdToDate[String((r as any).id)] = (r as any).date;
+    const matchRegistrationsByMonth = months.map(m => ({ month: m, count: 0 }));
+    for (const reg of matchRegistrationsRaw as any[]) {
+      const dStr = matchIdToDate[String((reg as any).matchId)];
+      if (!dStr) continue;
+      const d = new Date(dStr);
+      const k = monthKey(d);
+      const idx = months.indexOf(k);
+      if (idx >= 0) matchRegistrationsByMonth[idx].count += 1;
+    }
+
+    const championshipStatusBreakdown = (() => {
+      const map: Record<string, number> = {};
+      for (const c of championshipsCreatedRaw as any[]) {
+        const st = (c as any).status || 'unknown';
+        map[st] = (map[st] || 0) + 1;
+      }
+      return Object.entries(map).map(([status,count]) => ({ status, count }));
+    })();
+
+    const championshipsInProgress = (championshipsCreatedRaw as any[]).filter(
+      (c: any) => c.status === 'em_andamento' || c.status === 'inscricoes_abertas'
+    ).length;
+
+    const statusBreakdown = (statusRawPeriod as any[]).map((s) => ({ status: (s as any).status || 'unknown', count: Number((s as any).count || 0) }));
+    const payload = {
       kpis: {
-        totalMatches,
-        upcomingMatches: upcomingCount,
-        pastMatches: pastCount,
+        amistososPeriodo: (matchesPeriodRaw as any[]).length,
+        campeonatosPeriodo: (championshipsCreatedRaw as any[]).length,
+        inscricoesAmistososPeriodo: matchRegistrationsByMonth.reduce((s, m) => s + m.count, 0),
+        inscricoesCampeonatosPeriodo: (championshipApplications as any[]).length,
+        cancelledMatches: (cancelledMatches as any[]).length,
+        completedMatches: (completedMatches as any[]).length,
+        championshipsInProgress,
+        newUsers: (newUsers as any[]).length,
+        totalUsers,
         totalTeams,
-        totalPlayers,
-        totalGoals,
-        totalCards,
+        totalPlayers
       },
       matchesByMonth,
-      goalsByMonth,
-      cardsByMonth,
+      applicationsByMonth,
+      teamsByMonth,
+      championshipsByMonth,
+      matchRegistrationsByMonth,
       statusBreakdown,
-      nextMatches,
-      recentMatches
+      championshipStatusBreakdown
+    };
+    console.log('overview:getOverview resposta', {
+      kpis: payload.kpis,
+      series: {
+        matchesByMonth: payload.matchesByMonth.length,
+        applicationsByMonth: payload.applicationsByMonth.length,
+        teamsByMonth: payload.teamsByMonth.length,
+        championshipsByMonth: payload.championshipsByMonth.length,
+        matchRegistrationsByMonth: payload.matchRegistrationsByMonth.length,
+        statusBreakdown: payload.statusBreakdown.length,
+        championshipStatusBreakdown: payload.championshipStatusBreakdown.length
+      }
     });
+    res.json(payload);
   } catch (error) {
+    console.error('overview:getOverview erro', error);
     res.status(500).json({ message: 'Erro ao obter overview' });
   }
 };

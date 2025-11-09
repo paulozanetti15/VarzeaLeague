@@ -109,19 +109,19 @@ export const register: RequestHandler = async (req, res) => {
     const normalizedName = name.trim().toLowerCase();
     const nameExists = await UserModel.findOne({ where: { name: normalizedName } });
     if (nameExists) {
-      res.status(409).json({ message: 'Nome já cadastrado' });
+      res.status(409).json({ message: 'Este nome de usuário já está em uso. Por favor, escolha outro nome.' });
       return;
     }
 
     const existingUser = await UserModel.findOne({ where: { email } });
     if (existingUser) {
-      res.status(409).json({ message: 'E-mail já cadastrado' });
+      res.status(409).json({ message: 'Este e-mail já está cadastrado. Use outro e-mail ou faça login.' });
       return;
     }
 
     const existingCpf = await UserModel.findOne({ where: { cpf } });
     if (existingCpf) {
-      res.status(409).json({ message: 'CPF já cadastrado' });
+      res.status(409).json({ message: 'Este CPF já está cadastrado no sistema.' });
       return;
     }
 

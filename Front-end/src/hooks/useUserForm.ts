@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { formatCPF, formatPhone, validateCPF, checkPasswordStrength } from '../utils/formUtils';
-import { getUsers, createUser, updateUser, User, CreateUserData, UpdateUserData } from '../services/userServices';
+import { getUsers, createUser, updateUser, User, CreateUserData, UpdateUserData } from '../services/users.service';
 
 export interface UserFormData {
   name: string;
   email: string;
   cpf: string;
   phone: string;
-  sexo: string;
+  gender: string;
   userTypeId: string;
   password: string;
   confirmPassword: string;
@@ -18,7 +18,7 @@ export interface UserFormErrors {
   email?: string;
   cpf?: string;
   phone?: string;
-  sexo?: string;
+  gender?: string;
   userTypeId?: string;
   password?: string;
   confirmPassword?: string;
@@ -44,7 +44,7 @@ const initialFormData: UserFormData = {
   email: '',
   cpf: '',
   phone: '',
-  sexo: '',
+  gender: '',
   userTypeId: '',
   password: '',
   confirmPassword: '',
@@ -133,8 +133,8 @@ export const useUserForm = (): UseUserFormReturn => {
     }
 
     // Validação do gênero
-    if (!formData.sexo) {
-      tempErrors.sexo = "Gênero é obrigatório";
+    if (!formData.gender) {
+      tempErrors.gender = "Gênero é obrigatório";
     }
 
     // Validação do tipo de usuário
@@ -178,7 +178,7 @@ export const useUserForm = (): UseUserFormReturn => {
         email: formData.email.trim(),
         cpf: formData.cpf,
         phone: formData.phone,
-        sexo: formData.sexo,
+        gender: formData.gender,
         userTypeId: formData.userTypeId,
         password: formData.password,
       };

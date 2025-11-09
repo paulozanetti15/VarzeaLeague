@@ -95,13 +95,13 @@ const UserForm: React.FC<UserFormProps> = ({
       />
     </Grid>
     <Grid item xs={12} md={6}>
-      <FormControl fullWidth margin="dense" error={!!formErrors.sexo} className="user-management-fancy-form-control">
-        <InputLabel id="sexo-label" shrink>Gênero *</InputLabel>
+      <FormControl fullWidth margin="dense" error={!!formErrors.gender} className="user-management-fancy-form-control">
+        <InputLabel id="gender-label" shrink>Gênero *</InputLabel>
         <Select
-          labelId="sexo-label"
-          id="sexo"
-          name="sexo"
-          value={formData.sexo}
+          labelId="gender-label"
+          id="gender"
+          name="gender"
+          value={formData.gender}
           label="Gênero *"
           onChange={handleInputChange}
           MenuProps={selectMenuProps}
@@ -113,7 +113,7 @@ const UserForm: React.FC<UserFormProps> = ({
             </MenuItem>
           ))}
         </Select>
-        {formErrors.sexo && <Typography color="error" fontSize={13}>{formErrors.sexo}</Typography>}
+        {formErrors.gender && <Typography color="error" fontSize={13}>{formErrors.gender}</Typography>}
       </FormControl>
     </Grid>
     <Grid item xs={12} md={6}>

@@ -156,3 +156,26 @@ export const getMatchEvaluationSummary = async (req: Request, res: Response): Pr
     res.status(500).json({ message: 'Erro ao obter resumo' });
   }
 };
+
+export const deleteMatchEvaluation = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const matchId = Number(req.params.id);
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      res.status(401).json({ message: 'Não autenticado' });
+      return;
+    }
+
+    const existing = await MatchEvaluation.findOne({ where: { match_id: matchId, evaluator_id: userId } });
+    if (!existing) {
+      res.status(404).json({ message: 'Avaliação não encontrada' });
+      return;
+    }
+    
+    await existing.destroy();
+    res.status(200).json({ message: 'Avaliação deletada com sucesso' });
+  } catch (err) {
+    res.status(500).json({ message: 'Erro ao deletar avaliação' });
+  }
+};

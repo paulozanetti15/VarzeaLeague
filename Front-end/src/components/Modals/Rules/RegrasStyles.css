@@ -4,13 +4,13 @@
   margin: 1rem auto !important;
 }
 
-.modal-dialog {
+.regras-modal .modal-dialog {
   width: 100% !important;
   max-width: 550px !important;
   margin: 1rem auto !important;
 }
 
-.modal-content {
+.regras-modal .modal-content {
   background: linear-gradient(90deg, #0d47a1 0%, #1976d2 100%) !important;
   border: none !important;
   border-radius: 16px !important;
@@ -27,7 +27,7 @@
   margin: 0 auto;
 }
 
-.modal-header {
+.regras-modal .modal-header {
   background: rgba(255, 255, 255, 0.1) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
   padding: 1.25rem 1.5rem !important;
@@ -84,7 +84,7 @@
   transform: rotate(90deg) !important;
 }
 
-.modal-body {
+.regras-modal .modal-body {
   padding: 1.5rem !important;
   background: transparent !important;
 }
@@ -232,7 +232,7 @@
   line-height: 1.5 !important;
 }
 
-.modal-footer {
+.regras-modal .modal-footer {
   background: rgba(255, 255, 255, 0.08) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
   padding: 1rem !important;
@@ -241,7 +241,7 @@
   gap: 1rem !important;
 }
 
-.modal-footer .btn-primary {
+.regras-modal .modal-footer .btn-primary {
   padding: 0.75rem 2rem !important;
   border-radius: 10px !important;
   font-size: 0.95rem !important;
@@ -254,8 +254,8 @@
   min-width: 140px !important;
 }
 
-.modal-footer .btn-primary:hover {
-  background: rgba(33, 150, 243, 0.4) !important;
+.regras-modal .modal-footer .btn-primary:hover {
+  background: rgba(187, 188, 189, 0.4) !important;
   transform: translateY(-2px) !important;
   box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4) !important;
   border-color: rgba(33, 150, 243, 0.7) !important;
@@ -268,7 +268,7 @@
     margin: 0.5rem auto !important;
   }
 
-  .modal-header {
+  .regras-modal .modal-header {
     padding: 1rem 1.25rem !important;
   }
 
@@ -277,7 +277,7 @@
     padding-bottom: 0.4rem !important;
   }
 
-  .modal-body {
+  .regras-modal .modal-body {
     padding: 1rem !important;
   }
 
@@ -304,11 +304,11 @@
     font-size: 0.95rem !important;
   }
 
-  .modal-footer {
+  .regras-modal .modal-footer {
     padding: 0.875rem !important;
   }
 
-  .modal-footer .btn-primary {
+  .regras-modal .modal-footer .btn-primary {
     width: 100% !important;
     min-width: auto !important;
   }
@@ -321,7 +321,7 @@
     width: 88% !important;
   }
 
-  .modal-header .modal-title {
+  .regras-modal .modal-header .modal-title {
     font-size: 1.4rem !important;
   }
 
@@ -356,6 +356,6 @@
   }
 }
 
-.modal-content {
+.regras-modal .modal-content {
   animation: modalFadeIn 0.3s ease-out;
 } 

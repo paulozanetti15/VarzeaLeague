@@ -68,7 +68,9 @@ export default class TeamController {
             {
               model: Player,
               as: 'players',
-              through: { attributes: [] }
+              through: { attributes: [] },
+              where: { isDeleted: false },
+              required: false
             }
           ]
         });
@@ -103,7 +105,9 @@ export default class TeamController {
           {
             model: Player,
             as: 'players',
-            through: { attributes: [] }
+            through: { attributes: [] },
+            where: { isDeleted: false },
+            required: false
           }
         ]
       });
@@ -363,7 +367,9 @@ export default class TeamController {
           {
             model: Player,
             as: 'players',
-            through: { attributes: [] }
+            through: { attributes: [] },
+            where: { isDeleted: false },
+            required: false
           }
         ]
       });
@@ -390,7 +396,7 @@ export default class TeamController {
       const { teamId } = req.params;
       const { confirm } = req.body;
       const userId = req.user?.id;
-
+      console.log(teamId)
       if (!confirm) {
         res.status(400).json({ 
           message: 'Confirmação necessária. Para deletar o time, envie confirm: true no corpo da requisição'
@@ -421,8 +427,8 @@ export default class TeamController {
         }
       });
       
-      await team.destroy();
-      
+      await team.update({ isDeleted: true });
+      console.log("Removendo time")
       res.status(200).json({ 
         message: 'Time deletado com sucesso',
         team: {
@@ -431,6 +437,7 @@ export default class TeamController {
         }
       });
     } catch (error) {
+      console.error('Erro ao deletar time:', error);
       res.status(500).json({ message: 'Erro ao deletar time' });
     }
   }
@@ -445,7 +452,12 @@ export default class TeamController {
         return;
       }
       
-      const team = await Team.findByPk(teamId);
+      const team = await Team.findOne({
+        where: {
+          id: teamId,
+          isDeleted: false
+        }
+      });
       if (!team) {
         res.status(404).json({ message: 'Time não encontrado' });
         return;
@@ -486,7 +498,10 @@ export default class TeamController {
       }
 
       const team = await Team.findOne({
-        where: { captainId: idteamCaptain }
+        where: { 
+          captainId: idteamCaptain,
+          isDeleted: false
+        }
       });
 
       res.status(200).json(team);
@@ -497,10 +512,12 @@ export default class TeamController {
 
   static async getTeamRanking(req: AuthRequest, res: Response): Promise<void> {
     try {
+      console.log('[getTeamRanking] Iniciando...');
       const teamsRanking = [];
-      let nameTeam = "";
       const userId = req.user?.id;
       const { championshipId } = req.params;
+
+      console.log('[getTeamRanking] championshipId:', championshipId, 'userId:', userId);
 
       if (!userId) {
         res.status(401).json({ message: 'Usuário não autenticado' });
@@ -513,7 +530,10 @@ export default class TeamController {
         }
       });
 
-      const uniqueTeamIds = [...new Set(teams.map(team => team.dataValues.teamId))];
+      console.log('[getTeamRanking] Times encontrados:', teams.length);
+
+      const uniqueTeamIds = [...new Set(teams.map(team => team.teamId))];
+      console.log('[getTeamRanking] IDs únicos de times:', uniqueTeamIds);
 
       for (const teamId of uniqueTeamIds) {
         let totalGoalsScore = 0;
@@ -523,6 +543,14 @@ export default class TeamController {
         let countVitoria = 0;
         let countDerrota = 0;
         let countEmpate = 0;
+
+        const team = await Team.findByPk(teamId, {
+          attributes: ['name']
+        });
+
+        if (!team) continue;
+
+        const nameTeam = team.name;
 
         const partidas = await MatchChampionshipReport.findAll({
           where: {
@@ -534,12 +562,12 @@ export default class TeamController {
           include: [
             {
               model: Team,
-              as: 'teamHome',
+              as: 'reportTeamHome',
               attributes: ['name']
             },
             {
               model: Team,
-              as: 'teamAway',
+              as: 'reportTeamAway',
               attributes: ['name']
             }
           ]
@@ -551,7 +579,6 @@ export default class TeamController {
             const goalsSofridos = partida.dataValues.teamAway_score || 0;
             totalGoalsScore += goalsFeitos;
             totalGoalsAgainst += goalsSofridos;
-            nameTeam = partida.dataValues.teamHome.name;
 
             if (goalsFeitos > goalsSofridos) {
               pontuacaoTeam += 3;
@@ -578,7 +605,6 @@ export default class TeamController {
 
             totalGoalsScore += goalsFeitos;
             totalGoalsAgainst += goalsSofridos;
-            nameTeam = partida.dataValues.teamAway.name;
           }
           saldoGoals = totalGoalsScore - totalGoalsAgainst;
         });
@@ -605,7 +631,12 @@ export default class TeamController {
 
       res.status(200).json(sortedteamsRanking);
     } catch (error) {
-      res.status(500).json({ message: 'Erro ao buscar dados do time' });
+      console.error('[getTeamRanking] ERRO:', error);
+      console.error('[getTeamRanking] Stack:', (error as Error).stack);
+      res.status(500).json({ 
+        message: 'Erro ao buscar ranking do campeonato',
+        error: (error as Error).message 
+      });
     }
   }
 
@@ -719,6 +750,7 @@ export default class TeamController {
 
   private static async handlePlayersAssociations(teamId: number, jogadoresUpdate: any[]): Promise<void> {
     const currentPlayers = await Player.findAll({
+      where: { isDeleted: false },
       include: [
         {
           model: Team,

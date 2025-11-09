@@ -9,10 +9,18 @@ function getAuthHeaders() {
 export interface Championship {
   id: number;
   name: string;
-  // outros campos conforme necessário
+  description?: string;
+  start_date?: string;
+  end_date?: string;
+  modalidade?: string;
+  nomequadra?: string;
+  tipo?: string;
+  genero?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// Championships services
 export async function getAllChampionships() {
   const response = await axios.get(`${API_BASE_URL}/championships`, {
     headers: getAuthHeaders()
@@ -62,7 +70,7 @@ export async function joinChampionship(champId: number) {
 }
 
 export async function joinChampionshipWithTeam(champId: number, teamId: number) {
-  const response = await axios.post(`${API_BASE_URL}/championships/${champId}/join-team`, { teamId }, {
+  const response = await axios.post(`${API_BASE_URL}/championships/${champId}/teams`, { teamId }, {
     headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
   });
 
@@ -70,7 +78,7 @@ export async function joinChampionshipWithTeam(champId: number, teamId: number) 
 }
 
 export async function leaveChampionshipWithTeam(champId: number, teamId: number) {
-  const response = await axios.delete(`${API_BASE_URL}/championships/${champId}/join-team/${teamId}`, {
+  const response = await axios.delete(`${API_BASE_URL}/championships/${champId}/teams/${teamId}`, {
     headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' }
   });
 
@@ -86,7 +94,7 @@ export async function leaveChampionship(champId: number) {
 }
 
 export async function getChampionshipTeams(champId: number) {
-  const response = await axios.get(`${API_BASE_URL}/championships/${champId}/join-team`, {
+  const response = await axios.get(`${API_BASE_URL}/championships/${champId}/teams`, {
     headers: getAuthHeaders()
   });
 

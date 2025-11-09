@@ -14,14 +14,14 @@ import EditIcon from '@mui/icons-material/Edit';
 import './EditTeam.css';
 import PlayerModal from '../../components/Modals/Players/ManageTeamPlayersModal';
 import ToastComponent from '../../components/Toast/ToastComponent';
+import { getTeamById, getTeamPlayers, deleteTeam } from '../../services/teams.service';
 
 interface PlayerData {
   id?: number;
   nome: string;
-  sexo: string;
-  ano: string;
+  gender: string;
+  dateOfBirth: string;
   posicao: string;
-  datanascimento?: string;
 }
 
 // ...existing types...
@@ -75,88 +75,85 @@ export default function EditTeam() {
   const [buscandoCep, setBuscandoCep] = useState(false);
   const [cepErrorMessage, setCepErrorMessage] = useState<string | null>(null);
 
+  const formatarCep = (cep: string): string => {
+    const numericCep = cep.replace(/\D/g, '');
+    if (numericCep.length > 5) {
+      return `${numericCep.substring(0, 5)}-${numericCep.substring(5, 8)}`;
+    }
+    return numericCep;
+  };
+
   useEffect(() => {
     if (!id) return;
     const fetchTeam = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          navigate('/login');
+        const teamId = Number(id);
+        if (Number.isNaN(teamId)) {
+          setError('Identificador de time inválido.');
           return;
         }
-        const response = await axios.get(`${API_BASE_URL}/teams/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
-        const responsePlayer = await axios.get(`${API_BASE_URL}/team-players/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        
-  // logs removidos
-        
-  const teamData = response.data;
+
+        const [teamData, playersResponse] = await Promise.all([
+          getTeamById(teamId),
+          getTeamPlayers(teamId).catch(() => [])
+        ]);
         
         // Formatar os jogadores para o formato esperado pelo componente
         let formattedJogadores = [];
-        if (responsePlayer.data && responsePlayer.data.length > 0) {
-          formattedJogadores = responsePlayer.data.map((player: any) => ({
+        if (Array.isArray(playersResponse) && playersResponse.length > 0) {
+          formattedJogadores = playersResponse.map((player: any) => ({
             id: player.id,
-            nome: player.nome,
-            sexo: player.sexo,
-            ano: player.ano,
-            posicao: player.posicao
+            nome: player.name,
+            gender: player.gender,
+            dateOfBirth: player.dateOfBirth,
+            posicao: player.position
           }));
         } else if (teamData.players && teamData.players.length > 0) {
-          // Fallback para usar jogadores da resposta do time se existirem
           formattedJogadores = teamData.players.map((player: any) => ({
             id: player.id,
-            nome: player.nome,
-            sexo: player.sexo,
-            ano: player.ano,
-            posicao: player.posicao
+            nome: player.name,
+            gender: player.gender,
+            dateOfBirth: player.dateOfBirth,
+            posicao: player.position
           }));
         }
         
+        const estado = teamData.estado ?? teamData.state ?? '';
+        const cidade = teamData.cidade ?? teamData.city ?? '';
+        const cepValue = (teamData.cep ?? teamData.CEP ?? '') as string;
+
         setFormData({
           name: teamData.name || '',
           description: teamData.description || '',
           primaryColor: teamData.primaryColor || '#1a237e',
           secondaryColor: teamData.secondaryColor || '#0d47a1',
-          estado: teamData.estado || '',
-          cidade: teamData.cidade || '',
-          cep: teamData.cep || '',
+          estado,
+          cidade,
+          cep: cepValue ? formatarCep(cepValue) : '',
           logo: null,
           jogadores: formattedJogadores,
         });
         
         // Definir o CEP como válido se já estiver preenchido
-        if (teamData.cep) {
+        if (cepValue) {
           setCepValido(true);
         }
         
         if (teamData.banner) {
-          setLogoPreview(`http://localhost:3001${teamData.banner}`);
+          const baseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
+          setLogoPreview(`${baseUrl}${teamData.banner}`);
         }
       } catch (err: any) {
         console.error('Erro ao carregar o time:', err);
+        if (axios.isAxiosError(err) && err.response?.status === 401) {
+          navigate('/login');
+          return;
+        }
         setError('Erro ao carregar o time.');
       }
     };
     fetchTeam();
-  }, [id]);
-
-  // Função para aplicar máscara ao CEP
-  const formatarCep = (cep: string): string => {
-    // Remove qualquer caractere não numérico
-    cep = cep.replace(/\D/g, '');
-    
-    // Aplica a máscara 00000-000
-    if (cep.length > 5) {
-      return `${cep.substring(0, 5)}-${cep.substring(5, 8)}`;
-    }
-    
-    return cep;
-  };
+  }, [id, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -360,10 +357,10 @@ export default function EditTeam() {
   const formatJogadoresForSubmit = (jogadores: PlayerData[]) => {
     return jogadores.map(jogador => ({
       id: jogador.id,
-      nome: jogador.nome,
-      sexo: jogador.sexo,
-      ano: jogador.ano,
-      posicao: jogador.posicao
+      name: jogador.nome,
+      gender: jogador.gender,
+      dateOfBirth: jogador.dateOfBirth,
+      position: jogador.posicao
     }));
   };
 
@@ -412,26 +409,54 @@ export default function EditTeam() {
 
       if (formattedJogadores && formattedJogadores.length > 0) {
         const responsePlayers = await axios.put(
-          `${API_BASE_URL}/players/${id}`,
-          { jogadores: formattedJogadores },
+          `${API_BASE_URL}/players/team/${id}/update-all`,
+          { players: formattedJogadores },
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
               'Content-Type': 'application/json'
+            },
+            validateStatus: (status) => {
+              return (status >= 200 && status < 300) || status === 207;
             }
           }
         );
-        if (responsePlayers.data && responsePlayers.data.players) {
+        
+        if (responsePlayers.data && responsePlayers.data.jogadoresProcessados) {
+          setFormData({
+            ...formData,
+            jogadores: responsePlayers.data.jogadoresProcessados.map((player: any) => ({
+              id: player.id,
+              nome: player.nome,
+              gender: player.sexo,
+              dateOfBirth: player.dateOfBirth,
+              posicao: player.posicao
+            }))
+          });
+        } else if (responsePlayers.data && responsePlayers.data.players) {
           setFormData({
             ...formData,
             jogadores: responsePlayers.data.players.map((player: any) => ({
               id: player.id,
               nome: player.nome,
-              sexo: player.sexo,
-              ano: player.ano,
+              gender: player.sexo,
+              dateOfBirth: player.dateOfBirth,
               posicao: player.posicao
             }))
           });
+        }
+
+        if (responsePlayers.status === 207 && responsePlayers.data.erros) {
+          const warnings = responsePlayers.data.erros
+            .map((e: any) => `• ${e.player}: ${e.detalhes}`)
+            .join('\n');
+          
+          setToastMessage(
+            `Time atualizado! ${responsePlayers.data.processados} jogador(es) processado(s).\n\n` +
+            `⚠️ Avisos (${responsePlayers.data.comErro}):\n${warnings}`
+          );
+          setToastBg('warning');
+          setShowToast(true);
         }
       } else {
         if (responseTeam.data.players) {
@@ -439,20 +464,22 @@ export default function EditTeam() {
             ...formData,
             jogadores: responseTeam.data.players.map((player: any) => ({
               id: player.id,
-              nome: player.nome,
-              sexo: player.sexo,
-              ano: player.ano,
-              posicao: player.posicao
+              nome: player.name,
+              gender: player.gender,
+              dateOfBirth: player.dateOfBirth,
+              posicao: player.position
             }))
           });
         }
       }
       
       setLoading(false);
-      // Exibir mensagem de sucesso
-      setToastMessage('Time atualizado com sucesso!');
-      setToastBg('success');
-      setShowToast(true);
+      
+      if (!showToast) {
+        setToastMessage('Time atualizado com sucesso!');
+        setToastBg('success');
+        setShowToast(true);
+      }
       
       setTimeout(() => {
         navigate('/teams');
@@ -465,11 +492,27 @@ export default function EditTeam() {
       
       if (err.response && err.response.data) {
         if (err.response.status === 409) {
-          errorMsg = '⚠️ Jogador duplicado: ' + (err.response.data.error || 'Um ou mais jogadores já estão cadastrados em outro time');
-        } else if (err.response.status === 400 && err.response.data.errors) {
-          const errors = err.response.data.errors;
-          errorMsg = '⚠️ Alguns jogadores não puderam ser processados:\n' + 
-                     errors.map((e: any) => `• ${e.jogador?.nome || 'Desconhecido'}: ${e.erro}`).join('\n');
+          errorMsg = '⚠️ Jogador duplicado: ' + (err.response.data.detalhes || err.response.data.message || 'Um ou mais jogadores já estão cadastrados em outro time');
+        } else if (err.response.status === 400) {
+          if (err.response.data.erros && Array.isArray(err.response.data.erros)) {
+            const errors = err.response.data.erros;
+            errorMsg = '⚠️ Atenção! Alguns jogadores não foram processados:\n\n' + 
+                       errors.map((e: any) => {
+                         const playerName = e.player || 'Jogador desconhecido';
+                         const reason = e.detalhes || e.motivo || 'Erro não especificado';
+                         return `• ${playerName}\n  Motivo: ${reason}`;
+                       }).join('\n\n');
+          } else if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
+            const errors = err.response.data.errors;
+            errorMsg = '⚠️ Atenção! Alguns jogadores não foram processados:\n\n' + 
+                       errors.map((e: any) => {
+                         const playerName = e.jogador?.nome || e.player || 'Jogador desconhecido';
+                         const reason = e.detalhes || e.erro || 'Erro não especificado';
+                         return `• ${playerName}\n  Motivo: ${reason}`;
+                       }).join('\n\n');
+          } else if (err.response.data.message) {
+            errorMsg = err.response.data.message;
+          }
         } else if (typeof err.response.data.error === 'string') {
           errorMsg = err.response.data.error;
         } else if (typeof err.response.data.message === 'string') {
@@ -508,7 +551,7 @@ export default function EditTeam() {
         return;
       }
       
-      await axios.delete(`${API_BASE_URL}/team-players/${id}/player/${playerId}`, {
+      await axios.delete(`${API_BASE_URL}/players/team/${id}/player/${playerId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       // Atualizar também a lista no formData
@@ -824,8 +867,10 @@ export default function EditTeam() {
                         <div className="player-name">{jogador.nome}</div>
                         <div className="player-details">
                           <span className="player-position">{jogador.posicao}</span>
-                          <span className="player-year">Ano: {jogador.ano}</span>
-                          <span className="player-gender">{jogador.sexo}</span>
+                          <span className="player-year">
+                            {new Date().getFullYear() - new Date(jogador.dateOfBirth).getFullYear()} anos
+                          </span>
+                          <span className="player-gender">{jogador.gender}</span>
                         </div>
                       </div>
                       <div className="player-actions">
@@ -921,36 +966,22 @@ export default function EditTeam() {
                   onClick={async () => {
                     setLoading(true);
                     try {
-                      const token = localStorage.getItem('token');
-                      if (!token) {
-                        navigate('/login');
-                        return;
-                      }
-                      
-                      await axios({
-                        method: 'delete',
-                        url: `${API_BASE_URL}/teams/${id}`,
-                        headers: {
-                          'Authorization': `Bearer ${token}`,
-                          'Content-Type': 'application/json'
-                        },
-                        data: { confirm: true }
-                      });
-                      
+                      await deleteTeam(Number(id));
                       
                       setShowDeleteConfirm(false);
                       setToastMessage('Time excluído com sucesso!');
                       setToastBg('success');
                       setShowToast(true);
                       
-                      // Aguardar um pouco antes de redirecionar para a lista de times
                       setTimeout(() => {
                         navigate('/teams');
                       }, 1500);
-                    } catch (err) {
+                    } catch (err: any) {
                       console.error('Erro ao deletar time:', err);
                       setShowDeleteConfirm(false);
-                      setToastMessage('Erro ao deletar time. Tente novamente.');
+                      
+                      const errorMsg = err?.response?.data?.message || 'Erro ao deletar time. Tente novamente.';
+                      setToastMessage(errorMsg);
                       setToastBg('danger');
                       setShowToast(true);
                     } finally {

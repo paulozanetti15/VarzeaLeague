@@ -7,8 +7,9 @@ interface ModelTeamsProps {
     matchid: number;
     onHide: () => void;
     show: boolean;
+    onSuccess?: () => void;
 }
-const modelTeams = ({ matchid,onHide,show }: ModelTeamsProps) => {
+const modelTeams = ({ matchid,onHide,show,onSuccess }: ModelTeamsProps) => {
     const [teams, setTeams] = useState<any[]>([]);
  
     const handleJoinWithTeam = async (teamId: number) => {
@@ -16,9 +17,8 @@ const modelTeams = ({ matchid,onHide,show }: ModelTeamsProps) => {
             const resp = await joinTeam(matchid, { teamId, matchId: matchid });
             if (resp.status === 200) {
                 toast.success('Time inscrito na partida com sucesso!');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
+                onHide();
+                onSuccess && onSuccess();
             } else {
                 toast.error('Erro ao inscrever time na partida. Tente novamente.');
             }

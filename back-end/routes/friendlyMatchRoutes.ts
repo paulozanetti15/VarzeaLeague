@@ -14,13 +14,15 @@ import {
   deleteMatch,
   updateMatch,
   getMatchesByOrganizer,
-  checkAndCancelMatchesWithInsufficientTeams
+  checkAndCancelMatchesWithInsufficientTeams,
+  getFilteredMatches
 } from '../controllers/FriendlyMatchesController';
 import {
   listMatchEvaluations,
   createMatchEvaluation,
   updateMatchEvaluation,
-  getMatchEvaluationSummary
+  getMatchEvaluationSummary,
+  deleteMatchEvaluation
 } from '../controllers/FriendlyMatchesEvaluationController';
 import {
   finalizeMatch
@@ -42,6 +44,7 @@ const router = express.Router();
  * /api/friendly-matches:
  *   post:
  *     summary: Criar nova partida amistosa
+ *     description: Cria partida com status 'aberta'. Valida título único, data futura, duration positivo. Aceita campo time (HH:MM) para definir hora específica da partida. Requer usuário autenticado. CEP é sanitizado (remove não-dígitos), UF normalizado para uppercase.
  *     tags: [Partidas Amistosas]
  *     security:
  *       - bearerAuth: []
@@ -60,30 +63,50 @@ const router = express.Router();
  *             properties:
  *               title:
  *                 type: string
+ *                 description: Título da partida (único, será trimmed)
  *                 example: Rachão de Sábado
  *               description:
  *                 type: string
+ *                 description: Descrição opcional da partida
  *                 example: Partida amistosa entre amigos, venha participar!
  *               date:
  *                 type: string
  *                 format: date-time
+ *                 description: Data da partida (deve ser futura). Se 'time' for enviado, hora é sobrescrita.
  *                 example: 2025-02-15T15:00:00.000Z
+ *               time:
+ *                 type: string
+ *                 description: Hora da partida no formato HH:MM (opcional, sobrescreve hora do campo date)
+ *                 example: "15:30"
  *               location:
  *                 type: string
+ *                 description: Endereço/localização da partida
  *                 example: Campo do Bairro - Rua Principal, 123
  *               duration:
  *                 type: string
+ *                 description: Duração em minutos (deve ser número positivo, padrão 90)
  *                 example: "90"
  *               price:
  *                 type: number
+ *                 description: Preço da partida (padrão 0)
  *                 example: 30.00
  *               matchType:
  *                 type: string
  *                 enum: [Futebol de Campo, Futebol Society, Futsal]
+ *                 description: Modalidade da partida
  *                 example: Futebol Society
  *               square:
  *                 type: string
+ *                 description: Nome da quadra
  *                 example: Arena Sports Center
+ *               Cep:
+ *                 type: string
+ *                 description: CEP do local (será sanitizado removendo não-dígitos)
+ *                 example: "12345-678"
+ *               Uf:
+ *                 type: string
+ *                 description: UF do local (normalizado para uppercase)
+ *                 example: SP
  *     responses:
  *       201:
  *         description: Partida criada com sucesso
@@ -92,21 +115,44 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/FriendlyMatch'
  *       400:
- *         description: Dados inválidos
+ *         description: Dados inválidos ou validação falhou
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               camposObrigatorios:
+ *                 value:
+ *                   message: Campos obrigatórios - título, data, localização, modalidade e nome da quadra
+ *               formatoDataInvalido:
+ *                 value:
+ *                   message: Formato de data inválido
+ *               dataPassado:
+ *                 value:
+ *                   message: A data da partida deve ser futura
+ *               duracaoInvalida:
+ *                 value:
+ *                   message: Duração deve ser um número positivo de minutos
+ *       401:
+ *         description: Usuário não autenticado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               naoAutenticado:
+ *                 value:
+ *                   message: Usuário não autenticado
+ *       404:
+ *         description: Usuário não encontrado
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
- *               message: A data da partida deve ser futura
- *       401:
- *         description: Não autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               message: Usuário não encontrado
  *       409:
- *         description: Partida duplicada
+ *         description: Título de partida duplicado
  *         content:
  *           application/json:
  *             schema:
@@ -125,6 +171,8 @@ const router = express.Router();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Erro ao criar partida amistosa
  */
 router.post('/', authenticateToken, createMatch);
 
@@ -133,6 +181,7 @@ router.post('/', authenticateToken, createMatch);
  * /api/friendly-matches:
  *   get:
  *     summary: Listar partidas amistosas
+ *     description: Lista todas as partidas amistosas com organizer, rules e matchTeams incluídos. Atualiza status de todas as partidas antes de listar. Ordena por data ASC. Não aceita filtros (use /search para filtros).
  *     tags: [Partidas Amistosas]
  *     security:
  *       - bearerAuth: []
@@ -142,10 +191,10 @@ router.post('/', authenticateToken, createMatch);
  *         schema:
  *           type: string
  *           enum: [aberta, sem_vagas, confirmada, em_andamento, finalizada, cancelada]
- *         description: Filtrar por status da partida
+ *         description: Parâmetro ignorado pelo controller (use /search para filtrar)
  *     responses:
  *       200:
- *         description: Lista de partidas amistosas
+ *         description: Array de partidas com campos calculados (countTeams, maxTeams=2, registrationDeadline)
  *         content:
  *           application/json:
  *             schema:
@@ -154,7 +203,87 @@ router.post('/', authenticateToken, createMatch);
  *                 $ref: '#/components/schemas/FriendlyMatch'
  *       500:
  *         description: Erro ao buscar partidas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Não foi possível carregar as partidas. Tente novamente mais tarde.
  */
+
+/**
+ * @swagger
+ * /api/friendly-matches/search:
+ *   get:
+ *     summary: Buscar partidas amistosas (pública)
+ *     description: Endpoint público para buscar partidas amistosas com filtros. Não requer autenticação. Atualiza status de todas as partidas antes de buscar. Aceita múltiplos status separados por vírgula. Busca por termo em title/description/location (LIKE). Ordena por data (padrão ASC).
+ *     tags: [Partidas Amistosas]
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filtrar por status (separar múltiplos valores por vírgula)
+ *         example: aberta,confirmada
+ *       - in: query
+ *         name: matchDateFrom
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filtrar por data da partida >= esta data
+ *         example: 2025-01-01
+ *       - in: query
+ *         name: registrationDateFrom
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filtrar por data de inscrição (registrationDeadline) >= esta data (força include de rules)
+ *         example: 2025-01-01
+ *       - in: query
+ *         name: searchMatches
+ *         schema:
+ *           type: string
+ *         description: Buscar por termo em título, descrição ou localização (LIKE %termo%)
+ *         example: rachão
+ *       - in: query
+ *         name: myMatches
+ *         schema:
+ *           type: string
+ *           enum: ['true', 'false']
+ *         description: Se 'true', filtra por partidas organizadas pelo usuário autenticado (requer auth)
+ *         example: 'true'
+ *       - in: query
+ *         name: friendlyOnly
+ *         schema:
+ *           type: string
+ *         description: Parâmetro legado, não utilizado pelo controller
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [date_asc, date_desc]
+ *         description: Ordenação por data da partida (padrão date_asc)
+ *         example: date_desc
+ *     responses:
+ *       200:
+ *         description: Array de partidas encontradas com organizer, rules, matchTeams incluídos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 description: Partida com campos calculados (countTeams, maxTeams=2, registrationDeadline)
+ *       500:
+ *         description: Erro ao buscar partidas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Não foi possível carregar as partidas. Tente novamente mais tarde.
+ */
+router.get('/search', getFilteredMatches);
 router.get('/', authenticateToken, listMatches);
 
 /**
@@ -194,35 +323,7 @@ router.get('/organizer', authenticateToken, getMatchesByOrganizer);
  * /api/friendly-matches/{id}:
  *   get:
  *     summary: Buscar partida amistosa por ID
- *     tags: [Partidas Amistosas]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID da partida
- *     responses:
- *       200:
- *         description: Dados da partida
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/FriendlyMatch'
- *       404:
- *         description: Partida não encontrada
- *       500:
- *         description: Erro ao buscar partida
- */
-router.get('/:id',authenticateToken, getMatch);
-
-/**
- * @swagger
- * /api/friendly-matches/{id}:
- *   put:
- *     summary: Atualizar partida amistosa
+ *     description: Retorna detalhes da partida com organizer e rules incluídos. Atualiza status antes de buscar (finaliza se passou do horário fim, cancela se passou deadline com <2 times). Calcula countTeams e retorna registrationDeadline.
  *     tags: [Partidas Amistosas]
  *     security:
  *       - bearerAuth: []
@@ -234,15 +335,60 @@ router.get('/:id',authenticateToken, getMatch);
  *           type: integer
  *         description: ID da partida
  *         example: 1
+ *     responses:
+ *       200:
+ *         description: Dados da partida com campos calculados (countTeams, maxTeams=2)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/FriendlyMatch'
+ *       404:
+ *         description: Partida não encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Partida não encontrada
+ *       500:
+ *         description: Erro ao buscar partida
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Não foi possível carregar os detalhes da partida. Tente novamente mais tarde.
+ */
+router.get('/:id',authenticateToken, getMatch);
+
+/**
+ * @swagger
+ * /api/friendly-matches/{id}:
+ *   put:
+ *     summary: Atualizar partida amistosa
+ *     description: Atualiza partida existente. Valida unicidade de título (excluindo próprio ID), data futura (se alterada). Após update, verifica status baseado em rules e countTeams (cancela se passou deadline com <2 times, confirma se passou deadline com >=2 times). Aceita campos parciais (apenas enviados são atualizados). Não verifica permissões (TODO - deveria verificar organizerId).
+ *     tags: [Partidas Amistosas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID da partida a ser atualizada
+ *         example: 1
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             description: Todos os campos são opcionais. Apenas campos enviados serão atualizados.
  *             properties:
  *               title:
  *                 type: string
+ *                 description: Título da partida (validado unicidade excluindo próprio ID)
  *                 example: Rachão de Domingo Atualizado
  *               description:
  *                 type: string
@@ -250,12 +396,18 @@ router.get('/:id',authenticateToken, getMatch);
  *               date:
  *                 type: string
  *                 format: date-time
+ *                 description: Nova data (validação - deve ser futura)
  *                 example: 2025-02-16T16:00:00.000Z
+ *               time:
+ *                 type: string
+ *                 description: Nova hora no formato HH:MM
+ *                 example: "16:30"
  *               location:
  *                 type: string
  *                 example: Novo local - Arena Sports Center
  *               duration:
  *                 type: string
+ *                 description: Duração em minutos
  *                 example: "120"
  *               price:
  *                 type: number
@@ -267,41 +419,37 @@ router.get('/:id',authenticateToken, getMatch);
  *               square:
  *                 type: string
  *                 example: Arena Sports Center
+ *               Cep:
+ *                 type: string
+ *                 example: "98765-432"
+ *               Uf:
+ *                 type: string
+ *                 example: RJ
  *     responses:
  *       200:
- *         description: Partida atualizada com sucesso
+ *         description: Partida atualizada com sucesso (retorna objeto FriendlyMatch completo)
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/FriendlyMatch'
  *       400:
- *         description: Dados inválidos
+ *         description: Data futura inválida
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
  *               message: A data da partida deve ser futura
- *       401:
- *         description: Não autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       403:
- *         description: Sem permissão para editar esta partida
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  *       404:
  *         description: Partida não encontrada
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Partida não encontrada
  *       409:
- *         description: Partida duplicada
+ *         description: Título duplicado
  *         content:
  *           application/json:
  *             schema:
@@ -320,6 +468,8 @@ router.get('/:id',authenticateToken, getMatch);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Erro ao atualizar partida
  */
 router.put('/:id', authenticateToken, updateMatch);
 
@@ -328,6 +478,7 @@ router.put('/:id', authenticateToken, updateMatch);
  * /api/friendly-matches/{id}:
  *   delete:
  *     summary: Deletar partida amistosa
+ *     description: Deleta partida e todas as relações (MatchEvaluation, Rules, MatchTeams, Cards, Goals, Penalties, Reports) usando transaction. Valida permissão - apenas organizador ou admin (userTypeId=1) podem deletar.
  *     tags: [Partidas Amistosas]
  *     security:
  *       - bearerAuth: []
@@ -337,7 +488,7 @@ router.put('/:id', authenticateToken, updateMatch);
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID da partida
+ *         description: ID da partida a ser deletada
  *         example: 1
  *     responses:
  *       200:
@@ -349,31 +500,31 @@ router.put('/:id', authenticateToken, updateMatch);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Partida deletada com sucesso
- *       401:
- *         description: Não autenticado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                   example: Partida excluída com sucesso
  *       403:
- *         description: Sem permissão para deletar esta partida
+ *         description: Sem permissão - apenas organizador ou admin
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Sem permissão para excluir esta partida
  *       404:
  *         description: Partida não encontrada
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Partida não encontrada
  *       500:
  *         description: Erro interno do servidor
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               message: Erro ao excluir partida
  */
 router.delete('/:id', authenticateToken, deleteMatch);
 
@@ -1086,6 +1237,42 @@ router.post('/:id/evaluations', authenticateToken, createMatchEvaluation);
  *               $ref: '#/components/schemas/Error'
  */
 router.put('/:id/evaluations', authenticateToken, updateMatchEvaluation);
+
+/**
+ * @swagger
+ * /api/friendly-matches/{id}/evaluations:
+ *   delete:
+ *     summary: Deletar avaliação da partida
+ *     tags: [Partidas Amistosas]
+ *     description: Remove a avaliação do usuário autenticado para a partida
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID da partida
+ *     responses:
+ *       200:
+ *         description: Avaliação deletada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Avaliação deletada com sucesso
+ *       401:
+ *         description: Não autenticado
+ *       404:
+ *         description: Avaliação não encontrada
+ *       500:
+ *         description: Erro ao deletar avaliação
+ */
+router.delete('/:id/evaluations', authenticateToken, deleteMatchEvaluation);
 
 /**
  * @swagger

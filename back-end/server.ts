@@ -24,7 +24,6 @@ import RulesRoutes from './routes/matchRulesRoutes';
 import TeamPlayerRoutes from './routes/teamPlayerRoutes';
 import friendlyMatchReportRoutes from './routes/friendlyMatchReportRoutes';
 import championshipReportRoutes from './routes/championshipReportRoutes';
-import teamHistoryRoutes from './routes/teamHistoryRoutes';
 import punishmentRoutes from './routes/punishmentRoutes';
 import { seedUserTypes } from './seeds/userTypes';
 import { associateModels } from './models/associations'; 
@@ -86,7 +85,6 @@ app.use('/api/overview', overviewRoutes);
 app.use('/api/ranking', rankingRoutes);
 app.use('/api/friendly-match-reports', friendlyMatchReportRoutes);
 app.use('/api/championship-reports', championshipReportRoutes);
-app.use('/api/team-history', teamHistoryRoutes);
 app.use('/api/punishments', punishmentRoutes);
 
 const startServer = async () => {

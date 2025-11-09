@@ -57,18 +57,53 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      const endpoint = isChampionship
-        ? `${API_BASE_URL}/championships/${matchId}/roster`
-        : `${API_BASE_URL}/friendly-matches/${matchId}/roster`;
+      const teamsEndpoint = isChampionship
+        ? `${API_BASE_URL}/championships/${matchId}/teams`
+        : `${API_BASE_URL}/friendly-matches/${matchId}/teams`;
 
-      const response = await axios.get(endpoint, {
+      const teamsResponse = await axios.get(teamsEndpoint, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (response.status === 200) {
-        setPlayers(response.data.players || []);
+      if (teamsResponse.status !== 200) {
+        setPlayers([]);
+        return;
       }
+
+      const teams = Array.isArray(teamsResponse.data) ? teamsResponse.data : [];
+      
+      if (teams.length === 0) {
+        setPlayers([]);
+        return;
+      }
+
+      const allPlayers: any[] = [];
+
+      for (const team of teams) {
+        try {
+          const playersResponse = await axios.get(`${API_BASE_URL}/players/team/${team.id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          if (playersResponse.status === 200 && Array.isArray(playersResponse.data)) {
+            const teamPlayers = playersResponse.data.map((player: any) => ({
+              playerId: player.id,
+              nome: player.name || player.nome,
+              teamId: team.id,
+              posicao: player.position || player.posicao,
+              sexo: player.gender || player.sexo
+            }));
+            allPlayers.push(...teamPlayers);
+          }
+        } catch (err) {
+          console.error(`Erro ao buscar jogadores do time ${team.id}:`, err);
+        }
+      }
+
+      console.log('Jogadores carregados:', allPlayers);
+      setPlayers(allPlayers);
     } catch (err) {
+      console.error('Erro ao buscar jogadores:', err);
       setPlayers([]);
     }
   }, []);
@@ -175,8 +210,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
         match_id: data.matchId,
         team_home: data.homeTeam,
         team_away: data.awayTeam,
-        team_home_score: data.homeScore,
-        team_away_score: data.awayScore,
+        teamHome_score: data.homeScore ?? 0,
+        teamAway_score: data.awayScore ?? 0,
       };
 
       const endpoint = isChampionship
@@ -192,12 +227,12 @@ export const useSumulaData = (): UseSumulaDataReturn => {
 
       if (response.status === 201) {
         const goalsEndpoint = isChampionship
-          ? `${API_BASE_URL}/championships/${data.matchId}/events/goals`
-          : `${API_BASE_URL}/friendly-matches/${data.matchId}/events/goals`;
+          ? `${API_BASE_URL}/championship-reports/${data.matchId}/events/goals`
+          : `${API_BASE_URL}/friendly-match-reports/${data.matchId}/events/goals`;
 
         const cardsEndpoint = isChampionship
-          ? `${API_BASE_URL}/championships/${data.matchId}/events/cards`
-          : `${API_BASE_URL}/friendly-matches/${data.matchId}/events/cards`;
+          ? `${API_BASE_URL}/championship-reports/${data.matchId}/events/cards`
+          : `${API_BASE_URL}/friendly-match-reports/${data.matchId}/events/cards`;
 
         // Remover todos os goals existentes
         try {
@@ -235,6 +270,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
       }
       return false;
     } catch (err: any) {
+      console.error('Erro ao salvar súmula:', err);
+      console.error('Resposta de erro:', err.response?.data);
       setError(err.response?.data?.message || 'Erro ao salvar súmula.');
       return false;
     } finally {
@@ -255,8 +292,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
         match_id: data.matchId,
         team_home: data.homeTeam,
         team_away: data.awayTeam,
-        team_home_score: data.homeScore,
-        team_away_score: data.awayScore,
+        teamHome_score: data.homeScore ?? 0,
+        teamAway_score: data.awayScore ?? 0,
       };
 
       const endpoint = isChampionship
@@ -272,8 +309,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
 
       if (response.status === 200) {
         const goalsEndpoint = isChampionship
-          ? `${API_BASE_URL}/championships/${data.matchId}/events/goals`
-          : `${API_BASE_URL}/friendly-matches/${data.matchId}/events/goals`;
+          ? `${API_BASE_URL}/championship-reports/${data.matchId}/events/goals`
+          : `${API_BASE_URL}/friendly-match-reports/${data.matchId}/events/goals`;
 
         await Promise.all(data.goals.map(goal => 
           axios.post(goalsEndpoint, {
@@ -283,8 +320,8 @@ export const useSumulaData = (): UseSumulaDataReturn => {
         ));
 
         const cardsEndpoint = isChampionship
-          ? `${API_BASE_URL}/championships/${data.matchId}/events/cards`
-          : `${API_BASE_URL}/friendly-matches/${data.matchId}/events/cards`;
+          ? `${API_BASE_URL}/championship-reports/${data.matchId}/events/cards`
+          : `${API_BASE_URL}/friendly-match-reports/${data.matchId}/events/cards`;
 
         await Promise.all(data.cards.map(card =>
           axios.post(cardsEndpoint, {

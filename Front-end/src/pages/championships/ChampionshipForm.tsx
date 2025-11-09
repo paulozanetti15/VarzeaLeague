@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { createChampionship } from '../../services/championshipsServices';
+import { createChampionship } from '../../services/championships.service';
 import trophy from '../../assets/championship-trophy.svg';
 import './ChampionshipForm.css';
 import { format, parse, isValid } from 'date-fns';
@@ -381,8 +381,8 @@ const ChampionshipForm: React.FC = () => {
                     required
                   >
                     <option value="">Selecione o tipo</option>
-                    <option value="liga">Liga (Pontos Corridos)</option>
-                    <option value="mata-mata">Mata-Mata (Eliminatório)</option>
+                    <option value="Liga">Liga (Pontos Corridos)</option>
+                    <option value="Mata-Mata">Mata-Mata (Eliminatório)</option>
                   </select>
                   {fieldErrors.tipo && <span className="field-error">{fieldErrors.tipo}</span>}
                 </motion.div>

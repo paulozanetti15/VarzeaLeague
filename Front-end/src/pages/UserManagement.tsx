@@ -34,7 +34,7 @@ import {
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon, Add as AddIcon, Visibility as VisibilityIcon, VisibilityOff as VisibilityOffIcon, ErrorOutline as ErrorOutlineIcon } from '@mui/icons-material';
 import { useAuth } from '../hooks/useAuth';
-import { getUsers, createUser, updateUser, deleteUser, User as UserService } from '../services/userServices';
+import { getUsers, createUser, updateUser, deleteUser, User as UserService } from '../services/users.service';
 import { useUserForm } from '../hooks/useUserForm';
 import { useUserSearch } from '../hooks/useUserSearch';
 import { useUserManagement } from '../hooks/useUserManagement';
@@ -112,7 +112,7 @@ const UserManagement: React.FC = () => {
       handleInputChange({ target: { name: 'email', value: user.email } } as any);
       handleInputChange({ target: { name: 'cpf', value: user.cpf } } as any);
       handleInputChange({ target: { name: 'phone', value: user.phone } } as any);
-      handleInputChange({ target: { name: 'sexo', value: sexoValue(user.sexo) } } as any);
+      handleInputChange({ target: { name: 'gender', value: sexoValue(user.gender) } } as any);
       handleInputChange({ target: { name: 'userTypeId', value: user.userTypeId.toString() } } as any);
       handleInputChange({ target: { name: 'password', value: '' } } as any);
       handleInputChange({ target: { name: 'confirmPassword', value: '' } } as any);
@@ -287,7 +287,7 @@ const UserManagement: React.FC = () => {
                     <TableCell className="user-email-cell">{u.email}</TableCell>
                     <TableCell className="user-cpf-cell">{u.cpf}</TableCell>
                     <TableCell className="user-phone-cell">{u.phone}</TableCell>
-                    <TableCell>{u.sexo}</TableCell>
+                    <TableCell>{u.gender}</TableCell>
                     <TableCell>{userTypeLabel(u.userTypeId)}</TableCell>
                     <TableCell className="user-actions-cell" align="right">
                       <Tooltip title="Ver detalhes" arrow>

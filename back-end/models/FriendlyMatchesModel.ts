@@ -10,8 +10,6 @@ class Match extends Model {
   public date!: Date;
   public duration?: string;
   public location!: string;
-  public number!: string;
-  public complement!: string;
   public status!: 'aberta' | 'sem_vagas' | 'em_andamento' | 'confirmada' | 'cancelada' | 'finalizada';
   public description?: string;
   public price?: number;
@@ -66,10 +64,6 @@ Match.init({
       notEmpty: true,
       len: [5, 200]
     }
-  },
-  number: {
-    type: DataTypes.STRING,
-    allowNull: true,
   },
    matchType: {
    type: DataTypes.STRING,
@@ -127,11 +121,9 @@ Match.init({
   freezeTableName: true,
   hooks: {
     beforeValidate: (match: Match) => {
-      // Garantir que strings não sejam apenas espaços em branco
       if (match.title) match.title = match.title.trim();
       if (match.description) match.description = match.description.trim();
       if (match.location) match.location = match.location.trim();
-      if (match.complement) match.complement = match.complement.trim();
     }
   }
 });

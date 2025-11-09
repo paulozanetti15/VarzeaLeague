@@ -6,7 +6,7 @@ interface PlayerAttributes {
   id: number;
   name: string;
   gender: string;
-  year: string;
+  dateOfBirth: string;
   position: string;
   isDeleted: boolean;
   createdAt?: Date;
@@ -19,11 +19,22 @@ class Player extends Model<PlayerAttributes, PlayerCreationAttributes> {
   public id!: number;
   public name!: string;
   public gender!: string;
-  public year!: string;
+  public dateOfBirth!: string;
   public position!: string;
   public isDeleted!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+  
+  public getAge(): number {
+    const today = new Date();
+    const birthDate = new Date(this.dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  }
 }
 
 Player.init(
@@ -44,8 +55,8 @@ Player.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    year: {
-      type: DataTypes.STRING,
+    dateOfBirth: {
+      type: DataTypes.DATEONLY,
       allowNull: false,
     },
     position: {

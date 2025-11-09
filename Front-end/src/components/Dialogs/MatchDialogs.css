@@ -17,18 +17,20 @@
 
 /* Estilo para o diálogo de avaliações */
 .evaluation-dialog .MuiDialog-paper {
-  background: linear-gradient(135deg, rgba(13, 71, 161, 0.95), rgba(21, 101, 192, 0.95));
-  color: #ffffff;
+  background: #ffffff;
+  color: #000000;
 }
 
 .evaluation-dialog .MuiDialogTitle-root {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #e0e0e0;
   font-weight: 700;
   text-align: center;
+  color: #000000;
 }
 
 .evaluation-dialog .MuiDialogContent-root {
   padding: 1.5rem;
+  background: #ffffff;
 }
 
 /* Botões dos diálogos */

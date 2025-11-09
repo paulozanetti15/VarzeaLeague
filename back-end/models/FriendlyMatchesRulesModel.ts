@@ -10,7 +10,6 @@ const FriendlyMatchesRules = sequelize.define('FriendlyMatchesRules', {
     matchId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: 'partidaid',
         references: {
             model: 'FriendlyMatches',
             key: 'id',
@@ -19,12 +18,15 @@ const FriendlyMatchesRules = sequelize.define('FriendlyMatchesRules', {
     registrationDeadline: {
         type: DataTypes.DATE,    
         allowNull: false,
-        field: 'datalimiteinscricao'
+    },
+    registrationDeadlineTime: {
+        type: DataTypes.TIME,
+        allowNull: true,
+        defaultValue: '23:59:59'
     },
     minimumAge: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: 'idade_minima',
         validate: {
             min: 0,
             max: 100
@@ -33,7 +35,6 @@ const FriendlyMatchesRules = sequelize.define('FriendlyMatchesRules', {
     maximumAge: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: 'idade_maxima',
         validate: {
             min: 0,
             max: 100
@@ -42,7 +43,6 @@ const FriendlyMatchesRules = sequelize.define('FriendlyMatchesRules', {
     gender: {
         type: DataTypes.STRING,    
         allowNull: false,
-        field: 'sexo',
         validate: {
             isIn: [['Masculino', 'Feminino', 'Ambos']]
         }

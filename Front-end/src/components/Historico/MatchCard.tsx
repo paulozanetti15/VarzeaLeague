@@ -4,43 +4,62 @@ import Col from 'react-bootstrap/Col';
 import { StatusResultado } from '../../utils/matchResultsUtils';
 import styles from './MatchCard.module.css';
 
+interface MatchLocationInfo {
+  nomequadra?: string;
+  square?: string;
+  quadra?: string;
+  location?: string;
+  date?: Date | string;
+  championship?: {
+    id: number;
+    name: string;
+    end_date: Date | string;
+  };
+  matchChampionship?: {
+    id: number;
+    name: string;
+    end_date: Date | string;
+  };
+}
+
 interface PartidaAmistosa {
   id: number;
-  Match: {
-    nomequadra: string;
-    date: Date;
-    location: string;
-  };
+  Match?: MatchLocationInfo;
+  friendlyMatch?: MatchLocationInfo;
+  reportFriendlyMatch?: MatchLocationInfo;
   team_home: number;
   team_away: number;
-  teamHome: {
+  teamHome?: {
     name: string;
   };
-  teamAway: {
+  teamAway?: {
     name: string;
   };
-  date: Date;
+  reportTeamHome?: {
+    name: string;
+  };
+  reportTeamAway?: {
+    name: string;
+  };
   teamAway_score: number;
   teamHome_score: number;
 }
 interface PartidasCampeonato {
   id: number;
-  match: {
-    nomequadra: string;
-    date: Date;
-    location: string;
-    championship: {
-      id: number;
-      name: string;
-      end_date: Date;
-    };
-  };
+  match?: MatchLocationInfo;
+  championshipMatch?: MatchLocationInfo;
   team_home: number;
   team_away: number;
-  teamHome: {
+  teamHome?: {
     name: string;
   };
-  teamAway: {
+  teamAway?: {
+    name: string;
+  };
+  reportTeamHome?: {
+    name: string;
+  };
+  reportTeamAway?: {
     name: string;
   };
   teamAway_score: number;
@@ -72,7 +91,20 @@ const MatchCard: React.FC<MatchCardProps> = ({ partida, teamId, isChampionship =
   if (resultado === 'Derrota') badgeClass += ' ' + styles.derrota;
   if (resultado === 'Empate') badgeClass += ' ' + styles.empate;
 
-  const matchData: any = isChampionship ? (partida as PartidasCampeonato).match : (partida as PartidaAmistosa).Match;
+  const matchData: MatchLocationInfo | undefined = isChampionship
+    ? (partida as PartidasCampeonato).match ?? (partida as PartidasCampeonato).championshipMatch
+    : (partida as PartidaAmistosa).Match ?? (partida as PartidaAmistosa).friendlyMatch ?? (partida as PartidaAmistosa).reportFriendlyMatch;
+
+  const championshipData = isChampionship
+    ? matchData?.championship ?? matchData?.matchChampionship
+    : undefined;
+
+  const courtName = matchData?.nomequadra ?? matchData?.square ?? matchData?.quadra;
+  const matchLocation = matchData?.location ?? matchData?.quadra;
+  const matchDate = matchData?.date ? new Date(matchData.date) : null;
+
+  const homeTeamName = partida.teamHome?.name ?? partida.reportTeamHome?.name ?? 'Time Casa';
+  const awayTeamName = partida.teamAway?.name ?? partida.reportTeamAway?.name ?? 'Time Fora';
 
   if (!matchData) {
     return (
@@ -92,22 +124,22 @@ const MatchCard: React.FC<MatchCardProps> = ({ partida, teamId, isChampionship =
         <Card.Body>
           <div className={styles.matchCardScoreboard}>
             <div className={styles.scoreboardTeams}>
-              <span className={styles.scoreboardTeamName}>{partida.teamHome?.name || 'Time Casa'}</span>
+              <span className={styles.scoreboardTeamName}>{homeTeamName}</span>
               <span className={styles.scoreboardScore}>{partida.teamHome_score ?? 0}</span>
               <span style={{ fontSize: '1.3rem', color: '#888', fontWeight: 600 }}>x</span>
               <span className={styles.scoreboardScore}>{partida.teamAway_score ?? 0}</span>
-              <span className={styles.scoreboardTeamName}>{partida.teamAway?.name || 'Time Fora'}</span>
+              <span className={styles.scoreboardTeamName}>{awayTeamName}</span>
             </div>
           </div>
 
           <div className={styles.matchCardInfo}>
-            {isChampionship && matchData.championship && (
-              <span className={styles.matchCardIcons}>🏆 {matchData.championship.name}</span>
+            {isChampionship && championshipData && (
+              <span className={styles.matchCardIcons}>🏆 {championshipData.name}</span>
             )}
-            <span className={styles.matchCardIcons}>🏟️ {matchData.nomequadra || 'Quadra não informada'}</span>
-            {!isChampionship && <span className={styles.matchCardIcons}>📍 {matchData.location || 'Local não informado'}</span>}
-            <span className={styles.matchCardIcons}>🗓 {matchData.date ? new Date(matchData.date).toLocaleDateString('pt-BR') : 'Data não informada'}</span>
-            <span className={styles.matchCardIcons}>🕒 {matchData.date ? new Date(matchData.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+            <span className={styles.matchCardIcons}>🏟️ {courtName || 'Quadra não informada'}</span>
+            {!isChampionship && <span className={styles.matchCardIcons}>📍 {matchLocation || 'Local não informado'}</span>}
+            <span className={styles.matchCardIcons}>🗓 {matchDate ? matchDate.toLocaleDateString('pt-BR') : 'Data não informada'}</span>
+            <span className={styles.matchCardIcons}>🕒 {matchDate ? matchDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
           </div>
 
           <hr />

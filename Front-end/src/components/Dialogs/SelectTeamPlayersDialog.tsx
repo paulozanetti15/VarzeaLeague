@@ -24,16 +24,16 @@ interface Team {
 interface Player {
   id: number;
   nome: string;
-  sexo: string;
-  ano: string;
+  gender: string;
+  dateOfBirth: string;
   posicao: string;
 }
 
 interface Rules {
-  dataLimite: string;
-  idadeMinima: number;
-  idadeMaxima: number;
-  genero: string;
+  registrationDeadline: string;
+  minimumAge: number;
+  maximumAge: number;
+  gender: string;
 }
 
 const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, onHide, matchId, onSuccess }) => {
@@ -54,11 +54,21 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
 
   const fetchRules = async () => {
     try {
-      const resp = await axios.get(`${API_BASE_URL}/rules/${matchId}`, {
+      const resp = await axios.get(`${API_BASE_URL}/match-rules/${matchId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setRules(resp.data);
-    } catch {
+      console.log('Regras recebidas RAW:', resp.data);
+      console.log('minimumAge:', resp.data.minimumAge, 'tipo:', typeof resp.data.minimumAge);
+      console.log('maximumAge:', resp.data.maximumAge, 'tipo:', typeof resp.data.maximumAge);
+      
+      setRules({
+        registrationDeadline: resp.data.registrationDeadline,
+        minimumAge: Number(resp.data.minimumAge),
+        maximumAge: Number(resp.data.maximumAge),
+        gender: resp.data.gender
+      });
+    } catch (error) {
+      console.error('Erro ao buscar regras:', error);
       setRules(null);
     }
   };
@@ -66,7 +76,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
   const fetchMatch = async () => {
     try {
       const data = await fetchMatchById(matchId);
-      const mod = data?.modalidade as string | undefined;
+      const mod = (data?.matchType || data?.modalidade) as string | undefined;
       setModalidade(mod || null);
     } catch (e) {
       setModalidade(null);
@@ -83,7 +93,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
       ]);
 
       const myTeams: Team[] = myTeamsResp.data || [];
-      const alreadyRegistered: Team[] = registeredResp.data || [];
+      const alreadyRegistered: Team[] = Array.isArray(registeredResp.data) ? registeredResp.data : [];
       const available: Team[] = availableResp.data || [];
       const registeredIds = new Set(alreadyRegistered.map(t => t.id));
       const availableIds = new Set(available.map(t => t.id));
@@ -110,7 +120,17 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
       const resp = await axios.get(`${API_BASE_URL}/players/team/${teamId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setPlayers(resp.data);
+      
+      const mappedPlayers = resp.data.map((p: any) => ({
+        id: p.id,
+        nome: p.nome,
+        gender: p.sexo || p.gender,
+        dateOfBirth: p.dateOfBirth,
+        posicao: p.posicao
+      }));
+      
+      console.log('Jogadores carregados:', mappedPlayers);
+      setPlayers(mappedPlayers);
     } catch (e: any) {
       setError(e.response?.data?.message || 'Erro ao carregar jogadores');
     } finally {
@@ -161,11 +181,37 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
 
   const playerMatchesRules = (player: Player): boolean => {
     if (!rules) return true;
-    const currentYear = new Date().getFullYear();
-    const age = currentYear - parseInt(player.ano, 10);
+    const birthDate = new Date(player.dateOfBirth);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear() - 
+      (today.getMonth() < birthDate.getMonth() || 
+       (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
+    
+    console.log(`Jogador: ${player.nome}, Data Nascimento: ${player.dateOfBirth}, Idade calculada: ${age}, Min: ${rules.minimumAge}, Max: ${rules.maximumAge}`);
+    
     if (isNaN(age)) return false;
-    if (age < rules.idadeMinima || age > rules.idadeMaxima) return false;
-    if (rules.genero !== 'Ambos' && player.sexo !== rules.genero) return false;
+    if (age < rules.minimumAge || age > rules.maximumAge) {
+      console.log(`❌ ${player.nome} INAPTO - Idade ${age} fora da faixa ${rules.minimumAge}-${rules.maximumAge}`);
+      return false;
+    }
+    
+    if (rules.gender !== 'Ambos') {
+      const normalizeGender = (gender: string | undefined): string => {
+        if (!gender) return '';
+        const g = gender.toUpperCase();
+        if (g === 'M' || g === 'MASCULINO') return 'Masculino';
+        if (g === 'F' || g === 'FEMININO') return 'Feminino';
+        return gender;
+      };
+      
+      const playerGender = normalizeGender(player.gender);
+      if (!playerGender || playerGender !== rules.gender) {
+        console.log(`❌ ${player.nome} INAPTO - Gênero ${playerGender} não corresponde a ${rules.gender}`);
+        return false;
+      }
+    }
+    
+    console.log(`✅ ${player.nome} APTO`);
     return true;
   };
 
@@ -231,7 +277,6 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
         dialogRef.current?.close();
         onHide();
         onSuccess && onSuccess();
-        setTimeout(() => window.location.reload(), 1200);
       }
     } catch (e: any) {
       console.error('[SelectTeamPlayersDialog] Erro ao vincular time:', e);
@@ -321,7 +366,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
 
         <div className="stm-section">
           <h5 className="stm-section-title">
-            Jogadores do Time {rules && <small>(Regras: {rules.genero} {rules.idadeMinima}-{rules.idadeMaxima} anos)</small>}
+            Jogadores do Time {rules && <small>(Regras: {rules.gender} {rules.minimumAge}-{rules.maximumAge} anos)</small>}
           </h5>
           {modalidade && (
             <div className="stm-requirements-info">
@@ -341,7 +386,11 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
               <div className="stm-player-list">
                 {players.map(p => {
                   const eligible = playerMatchesRules(p);
-                  const age = new Date().getFullYear() - parseInt(p.ano, 10);
+                  const birthDate = new Date(p.dateOfBirth);
+                  const today = new Date();
+                  const age = today.getFullYear() - birthDate.getFullYear() - 
+                    (today.getMonth() < birthDate.getMonth() || 
+                     (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
                   return (
                     <label
                       key={p.id}
@@ -358,7 +407,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
                         <div>
                           <span className="stm-player-name">{p.nome}</span>
                           <div className="stm-player-meta">
-                            <span>{p.sexo} • {age} anos</span>
+                            <span>{p.gender} • {age} anos</span>
                             <span className="player-position">{p.posicao}</span>
                             {!eligible && <span className="player-status">Inapto</span>}
                           </div>

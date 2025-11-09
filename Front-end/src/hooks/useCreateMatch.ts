@@ -3,6 +3,14 @@ import { format } from 'date-fns';
 import { createMatch, searchCEP, MatchFormData } from '../services/matchesFriendlyServices';
 import { formatDateISOToBR, formatCEP } from '../utils/formUtils';
 
+const convertHHMMToMinutes = (duration: string): number => {
+  if (!duration || !duration.includes(':')) {
+    return parseInt(duration) || 90;
+  }
+  const [hours, minutes] = duration.split(':').map(Number);
+  return (hours * 60) + minutes;
+};
+
 export interface UseCreateMatchReturn {
   formData: MatchFormData;
   loading: boolean;
@@ -65,6 +73,36 @@ export const useCreateMatch = (usuario: any): UseCreateMatchReturn => {
     }
   };
 
+  const buscarCep = async (cep: string) => {
+    try {
+      const data = await searchCEP(cep);
+      if (data.erro) {
+        setCepErrorMessage('CEP não encontrado');
+        return;
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        location: data.logradouro || '',
+        city: data.localidade || '',
+        UF: data.uf || ''
+      }));
+      
+      const endereco = `${data.logradouro}, ${data.bairro}, ${data.localidade} - ${data.uf}`;
+      setEnderecoCompleto(endereco);
+      setCepErrorMessage(null);
+    } catch (error) {
+      setCepErrorMessage('Erro ao buscar CEP');
+    }
+  };
+
+  const handleOpenDatePicker = () => {
+    const dateInput = document.getElementById('hidden-date-input') as HTMLInputElement;
+    if (dateInput) {
+      dateInput.showPicker?.();
+    }
+  };
+
   const handleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { value } = e.target;
     setFormData(prev => ({
@@ -101,9 +139,34 @@ export const useCreateMatch = (usuario: any): UseCreateMatchReturn => {
     setError('');
 
     try {
+      const [day, month, year] = formData.date.split('/').map(Number);
+      const matchDate = new Date(year, month - 1, day);
+      
+      if (formData.time) {
+        const [hours, minutes] = formData.time.split(':').map(Number);
+        matchDate.setHours(hours, minutes, 0, 0);
+      }
+
+      const durationInMinutes = formData.duration 
+        ? (formData.duration.includes(':') 
+            ? convertHHMMToMinutes(formData.duration) 
+            : parseInt(formData.duration))
+        : 90;
+
       const matchData = {
-        ...formData,
-        date: formatDateISOToBR(formData.date),
+        title: formData.title,
+        description: formData.description,
+        location: formData.location,
+        number: formData.number,
+        complement: formData.complement,
+        date: matchDate.toISOString(),
+        time: formData.time,
+        duration: durationInMinutes,
+        price: parseFloat(formData.price || '0'),
+        matchType: formData.modalidade,
+        square: formData.quadra,
+        Cep: formData.cep.replace(/\D/g, ''),
+        Uf: formData.UF,
         organizerId: usuario?.id
       };
 

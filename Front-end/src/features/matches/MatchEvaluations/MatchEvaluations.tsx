@@ -7,24 +7,35 @@ import './MatchEvaluations.css';
 interface MatchEvaluationsProps {
   matchId: number;
   readOnly?: boolean;
+  onEvaluationSaved?: () => void;
 }
 
 export const MatchEvaluations: React.FC<MatchEvaluationsProps> = ({ 
   matchId, 
-  readOnly = false 
+  readOnly = false,
+  onEvaluationSaved
 }) => {
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [summary, setSummary] = useState<{ average: number; count: number } | null>(null);
   const [myRating, setMyRating] = useState<number>(0);
   const [myComment, setMyComment] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingList, setLoadingList] = useState(false);
   const token = localStorage.getItem('token');
 
   const fetchAll = async () => {
+    setLoadingList(true);
     try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {};
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const [listRes, sumRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/friendly-matches/${matchId}/evaluations`).then(r => r.json()),
-        fetch(`${API_BASE_URL}/friendly-matches/${matchId}/evaluations/summary`).then(r => r.json())
+        fetch(`${API_BASE_URL}/friendly-matches/${matchId}/evaluations`, { headers }).then(r => r.json()),
+        fetch(`${API_BASE_URL}/friendly-matches/${matchId}/evaluations/summary`, { headers }).then(r => r.json())
       ]);
       
       setEvaluations(Array.isArray(listRes) ? listRes : []);
@@ -32,20 +43,10 @@ export const MatchEvaluations: React.FC<MatchEvaluationsProps> = ({
       if (sumRes && typeof sumRes.average !== 'undefined') {
         setSummary(sumRes);
       }
-      
-      // Preencher minha avaliação se existir
-      if (Array.isArray(listRes)) {
-        const uid = localStorage.getItem('userId');
-        if (uid) {
-          const mine = listRes.find((e: any) => String(e.evaluator_id) === uid);
-          if (mine) {
-            setMyRating(mine.rating);
-            setMyComment(mine.comment || '');
-          }
-        }
-      }
     } catch (e) {
       console.error('Erro ao carregar avaliações', e);
+    } finally {
+      setLoadingList(false);
     }
   };
 
@@ -83,8 +84,14 @@ export const MatchEvaluations: React.FC<MatchEvaluationsProps> = ({
         throw new Error(data.message || 'Erro ao salvar avaliação');
       }
       
-      toast.success('Avaliação salva');
+      toast.success('Avaliação salva com sucesso!');
+      setMyRating(0);
+      setMyComment('');
       await fetchAll();
+      
+      if (onEvaluationSaved) {
+        onEvaluationSaved();
+      }
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -99,51 +106,26 @@ export const MatchEvaluations: React.FC<MatchEvaluationsProps> = ({
         {summary && (
           <div 
             className="evaluation-summary-chip" 
-            title={`${summary.count} ${summary.count === 1 ? 'avaliação' : 'avaliações'}`}
+            title={`Média: ${summary.average.toFixed(1)} | ${summary.count} ${summary.count === 1 ? 'avaliação' : 'avaliações'}`}
           >
-            ⭐ {summary.average.toFixed(1)} 
+            <div className="stars-summary">
+              {[1, 2, 3, 4, 5].map(n => (
+                <span key={n} style={{ color: n <= Math.round(summary.average) ? '#ffb400' : '#cccccc' }}>★</span>
+              ))}
+            </div>
+            <span>{summary.average.toFixed(1)}</span>
             <span className="count">({summary.count})</span>
           </div>
         )}
       </div>
 
-      {!readOnly && (
-        <form className="evaluation-form fancy" onSubmit={handleSubmit}>
-          <div className="rating-input block">
-            <label className="field-label">Sua Nota</label>
-            <StarRating value={myRating} onChange={setMyRating} />
-          </div>
-          
-          <div className="comment-input block">
-            <label className="field-label">Comentário</label>
-            <textarea 
-              className="comment-box" 
-              value={myComment} 
-              onChange={e => setMyComment(e.target.value)} 
-              rows={4} 
-              placeholder="Compartilhe pontos positivos, organização, fair play..." 
-            />
-          </div>
-          
-          <div className="actions-row">
-            <button 
-              type="submit" 
-              className="submit-eval-btn" 
-              disabled={loading || myRating === 0}
-            >
-              {loading ? 'Salvando...' : myRating ? 'Salvar Avaliação' : 'Selecione a nota'}
-            </button>
-            {myRating > 0 && <span className="edit-hint">Você pode alterar depois.</span>}
-          </div>
-        </form>
-      )}
-
       <div className="evaluation-list modern">
-        {evaluations.length === 0 && (
+        {loadingList ? (
+          <div className="loading-evaluations">Carregando avaliações...</div>
+        ) : evaluations.length === 0 ? (
           <div className="empty">Nenhuma avaliação ainda. Seja o primeiro a opinar!</div>
-        )}
-        
-        {evaluations.map(ev => {
+        ) : (
+          evaluations.map(ev => {
           const userId = localStorage.getItem('userId');
           const isMine = userId && String(ev.evaluator_id) === userId;
           const evaluatorName = ev.evaluator?.name || 'Usuário';
@@ -184,8 +166,41 @@ export const MatchEvaluations: React.FC<MatchEvaluationsProps> = ({
               {isMine && <div className="badge-mine">Sua avaliação</div>}
             </div>
           );
-        })}
+        })
+        )}
       </div>
+
+      {!readOnly && (
+        <>
+          <div className="rating-input block">
+            <label className="field-label">Sua Nota</label>
+            <StarRating value={myRating} onChange={setMyRating} />
+          </div>
+          
+          <form className="evaluation-form fancy" onSubmit={handleSubmit}>
+            <div className="comment-input block">
+              <label className="field-label">Comentário</label>
+              <textarea 
+                className="comment-box" 
+                value={myComment} 
+                onChange={e => setMyComment(e.target.value)} 
+                rows={3} 
+                placeholder="Compartilhe pontos positivos, organização, fair play..." 
+              />
+            </div>
+            
+            <div className="actions-row">
+              <button 
+                type="submit" 
+                className="submit-eval-btn" 
+                disabled={loading || myRating === 0}
+              >
+                {loading ? 'Salvando...' : (myRating ? 'Salvar Avaliação' : 'Selecione a nota')}
+              </button>
+            </div>
+          </form>
+        </>
+      )}
     </div>
   );
 };

@@ -7,20 +7,19 @@ function getAuthHeaders() {
 }
 
 export async function getTeamFriendlyMatchesHistory(teamId: number) {
-  const response = await axios.get(`${API_BASE_URL}/team-history/${teamId}/friendly-matches`, {
-    headers: getAuthHeaders()
-  });
+  const response = await axios.get(
+    `${API_BASE_URL}/teams/${teamId}/history/friendly-matches`,
+    { headers: getAuthHeaders() }
+  );
   return response.data;
 }
 
 export async function getTeamChampionshipMatchesHistory(teamId: number, championshipId?: number) {
-  const url = championshipId 
-    ? `${API_BASE_URL}/team-history/${teamId}/championships/${championshipId}/matches`
-    : `${API_BASE_URL}/team-history/${teamId}/championship-matches`;
-    
-  const response = await axios.get(url, {
-    headers: getAuthHeaders()
-  });
+  const url = championshipId
+    ? `${API_BASE_URL}/teams/${teamId}/history/championships/${championshipId}/matches`
+    : `${API_BASE_URL}/teams/${teamId}/history/championship-matches`;
+
+  const response = await axios.get(url, { headers: getAuthHeaders() });
   return response.data;
 }
 

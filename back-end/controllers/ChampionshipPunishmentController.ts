@@ -7,6 +7,7 @@ import TeamChampionship from "../models/TeamChampionshipModel";
 import MatchChampionshipTeams from "../models/MatchChampionshipTeamsModel";
 import ChampionshipPenalty from "../models/ChampionshipPenaltyModel";
 import MatchChampionshpReport from "../models/MatchReportChampionshipModel";
+import MatchChampionship from "../models/MatchChampionshipModel";
 
 export const inserirPunicaoCampeonato = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -293,7 +294,16 @@ export const deletarPunicaoCampeonato = async (req: AuthRequest, res: Response):
         console.log('Destroying penalty');
         const penaltyDestroyResult = await ChampionshipPenalty.destroy({ where: whereClause });
         console.log('Penalty destroy result (rows affected):', penaltyDestroyResult);
-        res.status(200).json({ message: 'Punição e súmula deletadas com sucesso' });
+        
+        if ((penalty as any).matchChampionshipId) {
+            const match = await MatchChampionship.findByPk((penalty as any).matchChampionshipId);
+            if (match && (match as any).status === 'finalizada') {
+                await match.update({ status: 'confirmada' });
+                console.log('Match status updated to confirmada');
+            }
+        }
+        
+        res.status(200).json({ message: 'Punição e súmula deletadas com sucesso. Partida voltou ao status confirmada' });
     } catch (error) {
         console.error('Error in deletarPunicaoCampeonato:', error);
         console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');

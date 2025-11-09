@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTeamById, createTeam, updateTeam, uploadTeamLogo } from '../../services/teamsServices';
-import type { Team } from '../../interfaces/team';
+import { getTeamById, createTeam, updateTeam } from '../../services/teams.service';
+import { API_BASE_URL } from '../../config/api';
 
 interface TeamFormData {
   name: string;
@@ -33,7 +33,10 @@ const TeamForm: React.FC = () => {
         name: team.name,
         description: team.description || '',
       });
-      if (team.logo) setPreviewImage(team.logo);
+      if (team.banner) {
+        const baseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
+        setPreviewImage(`${baseUrl}${team.banner}`);
+      }
     } catch (err) {
       setError('Erro ao carregar dados do time');
     }
@@ -64,11 +67,17 @@ const TeamForm: React.FC = () => {
 
     try {
       if (teamId) {
-        await updateTeam(Number(teamId), { name: formData.name, description: formData.description });
-        if (formData.logo) await uploadTeamLogo(Number(teamId), formData.logo);
+        await updateTeam(Number(teamId), {
+          name: formData.name,
+          description: formData.description,
+          logo: formData.logo
+        });
       } else {
-        const created = await createTeam({ name: formData.name, description: formData.description });
-        if (formData.logo) await uploadTeamLogo(created.id, formData.logo);
+        await createTeam({
+          name: formData.name,
+          description: formData.description,
+          logo: formData.logo
+        });
       }
 
       navigate('/teams');

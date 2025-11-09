@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Table, Form, Row, Col, Badge, Card } from 'react-bootstrap';
 import toast from 'react-hot-toast';
-import { getPlayerRanking } from '../../services/rankingServices';
+import { getPlayerRanking } from '../../services/rankingService';
 
 // Simple skeleton loader component
 const SkeletonRow: React.FC<{ cols: number }> = ({ cols }) => (

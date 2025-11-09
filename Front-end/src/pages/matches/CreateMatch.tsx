@@ -167,13 +167,17 @@ const CreateMatch: React.FC = () => {
       const matchDataToCreate = {
         title: formData.title,
         description: formData.description,
-        location: formData.location || formData.location,
+        location: formData.location,
+        number: formData.number,
+        complement: formData.complement,
         date: formatBRToISO(formData.date),
         time: formData.time || '00:00',
         duration: durationInMinutes,
         price: formData.price || '0',
         matchType: formData.matchType,
         square: formData.square,
+        Cep: formData.cep,
+        Uf: formData.UF,
         userId: usuario?.id
       };
 
@@ -186,7 +190,8 @@ const CreateMatch: React.FC = () => {
 
   const formatDateISOToBR = (isoDate: string): string => {
     try {
-      const date = new Date(isoDate);
+      const [year, month, day] = isoDate.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
       return format(date, 'dd/MM/yyyy');
     } catch {
       return isoDate;
@@ -195,8 +200,8 @@ const CreateMatch: React.FC = () => {
 
   const formatBRToISO = (brDate: string): string => {
     try {
-      const parsed = parse(brDate, 'dd/MM/yyyy', new Date());
-      return format(parsed, 'yyyy-MM-dd');
+      const [day, month, year] = brDate.split('/').map(Number);
+      return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     } catch {
       return brDate;
     }

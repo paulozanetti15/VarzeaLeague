@@ -1,0 +1,207 @@
+.evaluation-edit-modal-content, .evaluation-edit-modal .modal-content {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-radius: 16px !important;
+  border: 1px solid #e0e0e0 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+}
+
+.evaluation-edit-modal .modal-header {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-bottom: 1px solid #e5e5e5 !important;
+  padding: 1.25rem 1.5rem !important;
+}
+
+.evaluation-edit-modal .modal-title {
+  font-weight: 700;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  color: #000000 !important;
+  text-shadow: none !important;
+}
+
+.evaluation-edit-modal .modal-title i {
+  color: #000000 !important;
+}
+
+.evaluation-edit-modal .btn-close {
+  filter: none !important;
+}
+
+.evaluation-form-content {
+  padding: 1rem 0;
+}
+
+/* Forçar textos pretos no corpo do modal */
+.evaluation-edit-modal .modal-body,
+.evaluation-edit-modal .modal-body p,
+.evaluation-edit-modal .modal-body label,
+.evaluation-edit-modal .modal-body strong {
+  color: #000000 !important;
+}
+
+.evaluation-edit-modal .form-control {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+}
+
+.form-label-black {
+  color: #000000 !important;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.star-rating-container {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 0;
+  background: #ffffff !important;
+  border-radius: 12px;
+  margin-top: 0.5rem;
+}
+
+.evaluation-textarea {
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  resize: vertical;
+  min-height: 120px;
+}
+
+
+
+.evaluation-textarea::placeholder {
+  color: #999;
+}
+
+.evaluation-modal-footer {
+  padding: 1.5rem;
+  background: #ffffff !important;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  border-top: 1px solid #e0e0e0 !important;
+}
+
+.footer-actions {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.footer-actions .d-flex {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Mesma largura para Cancelar e Atualizar - maior especificidade */
+.evaluation-edit-modal .modal-footer .btn,
+.evaluation-edit-modal .evaluation-modal-footer .btn {
+  min-width: 140px !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  transform: none !important;
+  font-size: 1rem !important;
+}
+
+.evaluation-edit-modal .modal-footer .btn-secondary,
+.evaluation-edit-modal .evaluation-modal-footer .btn-secondary {
+  background: #6c757d !important;
+  border: none !important;
+  color: #ffffff !important;
+}
+
+.evaluation-edit-modal .modal-footer .btn-secondary:hover:not(:disabled),
+.evaluation-edit-modal .evaluation-modal-footer .btn-secondary:hover:not(:disabled) {
+  background: #5c636a !important;
+  transform: translateY(-1px) !important;
+}
+
+.evaluation-edit-modal .modal-footer .btn-primary,
+.evaluation-edit-modal .evaluation-modal-footer .btn-primary,
+.evaluation-edit-modal .modal-footer .btn-save-eval,
+.evaluation-edit-modal .evaluation-modal-footer .btn-save-eval {
+  background: #2196f3 !important;
+  border: none !important;
+  color: #ffffff !important;
+  min-width: 140px !important;
+  padding: 0.75rem 1.5rem !important;
+}
+
+.evaluation-edit-modal .modal-footer .btn-primary:hover:not(:disabled),
+.evaluation-edit-modal .evaluation-modal-footer .btn-primary:hover:not(:disabled),
+.evaluation-edit-modal .modal-footer .btn-save-eval:hover:not(:disabled),
+.evaluation-edit-modal .evaluation-modal-footer .btn-save-eval:hover:not(:disabled) {
+  background: #1976d2 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3) !important;
+}
+
+/* Garantir que classes Bootstrap não sobrescrevam */
+.evaluation-edit-modal .btn.btn-primary,
+.evaluation-edit-modal button.btn-primary {
+  min-width: 140px !important;
+  padding: 0.75rem 1.5rem !important;
+  background: #2196f3 !important;
+  border: none !important;
+  color: #ffffff !important;
+}
+
+.evaluation-edit-modal .btn.btn-secondary,
+.evaluation-edit-modal button.btn-secondary {
+  min-width: 140px !important;
+  padding: 0.75rem 1.5rem !important;
+  background: #6c757d !important;
+  border: none !important;
+  color: #ffffff !important;
+}
+
+.btn-delete-eval {
+  background: #f44336 !important;
+  border: none !important;
+  color: #ffffff !important;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.btn-delete-eval:hover:not(:disabled) {
+  background: #d32f2f !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+.btn-delete-eval:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .footer-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .footer-actions > div {
+    width: 100%;
+  }
+
+  .footer-actions .d-flex {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-delete-eval,
+  .btn-save-eval,
+  .footer-actions button {
+    width: 100%;
+  }
+}

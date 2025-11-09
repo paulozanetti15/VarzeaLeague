@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '../../../config/api';
 import StarRating from './StarRating';
+import '../MatchEvaluations/MatchEvaluations.css';
 
 interface MatchEvaluationsSectionProps {
   matchId: number;
@@ -14,13 +15,21 @@ const MatchEvaluationsSection: React.FC<MatchEvaluationsSectionProps> = ({ match
   const [myRating, setMyRating] = useState<number>(0);
   const [myComment, setMyComment] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hasMyEvaluation, setHasMyEvaluation] = useState(false);
   const token = localStorage.getItem('token');
 
   const fetchAll = async () => {
     try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {};
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const [listRes, sumRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/friendly-matches/${matchId}/evaluations`).then(r => r.json()),
-        fetch(`${API_BASE_URL}/friendly-matches/${matchId}/evaluations/summary`).then(r => r.json())
+        fetch(`${API_BASE_URL}/friendly-matches/${matchId}/evaluations`, { headers }).then(r => r.json()),
+        fetch(`${API_BASE_URL}/friendly-matches/${matchId}/evaluations/summary`, { headers }).then(r => r.json())
       ]);
       setEvaluations(Array.isArray(listRes) ? listRes : []);
       if (sumRes && typeof sumRes.average !== 'undefined') setSummary(sumRes);
@@ -32,6 +41,9 @@ const MatchEvaluationsSection: React.FC<MatchEvaluationsSectionProps> = ({ match
           if (mine) {
             setMyRating(mine.rating);
             setMyComment(mine.comment || '');
+            setHasMyEvaluation(true);
+          } else {
+            setHasMyEvaluation(false);
           }
         }
       }
@@ -56,8 +68,9 @@ const MatchEvaluationsSection: React.FC<MatchEvaluationsSectionProps> = ({ match
     }
     setLoading(true);
     try {
+      const method = hasMyEvaluation ? 'PUT' : 'POST';
       const resp = await fetch(`${API_BASE_URL}/friendly-matches/${matchId}/evaluations`, {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ rating: myRating, comment: myComment })
       });
@@ -65,7 +78,38 @@ const MatchEvaluationsSection: React.FC<MatchEvaluationsSectionProps> = ({ match
         const data = await resp.json().catch(() => ({}));
         throw new Error(data.message || 'Erro ao salvar avaliação');
       }
-      toast.success('Avaliação salva');
+      toast.success(hasMyEvaluation ? 'Avaliação atualizada' : 'Avaliação salva');
+      setHasMyEvaluation(true);
+      await fetchAll();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!token) {
+      toast.error('Não autenticado');
+      return;
+    }
+    if (!confirm('Tem certeza que deseja deletar sua avaliação?')) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const resp = await fetch(`${API_BASE_URL}/friendly-matches/${matchId}/evaluations`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        throw new Error(data.message || 'Erro ao deletar avaliação');
+      }
+      toast.success('Avaliação deletada');
+      setMyRating(0);
+      setMyComment('');
+      setHasMyEvaluation(false);
       await fetchAll();
     } catch (err: any) {
       toast.error(err.message);
@@ -102,9 +146,14 @@ const MatchEvaluationsSection: React.FC<MatchEvaluationsSectionProps> = ({ match
           </div>
           <div className="actions-row">
             <button type="submit" className="submit-eval-btn" disabled={loading || myRating === 0}>
-              {loading ? 'Salvando...' : (myRating ? 'Salvar Avaliação' : 'Selecione a nota')}
+              {loading ? 'Salvando...' : (hasMyEvaluation ? 'Atualizar Avaliação' : (myRating ? 'Salvar Avaliação' : 'Selecione a nota'))}
             </button>
-            {myRating > 0 && <span className="edit-hint">Você pode alterar depois.</span>}
+            {hasMyEvaluation && (
+              <button type="button" className="delete-eval-btn" onClick={handleDelete} disabled={loading}>
+                {loading ? 'Deletando...' : 'Deletar Avaliação'}
+              </button>
+            )}
+            {myRating > 0 && <span className="edit-hint">{hasMyEvaluation ? 'Você pode alterar ou deletar.' : 'Você pode alterar depois.'}</span>}
           </div>
         </form>
       )}

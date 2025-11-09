@@ -184,8 +184,8 @@ const MatchListing: React.FC = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const qs = buildQuery ? `?${buildQuery}` : '';
-        const res = await fetch(`${API_BASE_URL}/matches${qs}`);
+  const qs = buildQuery ? `?${buildQuery}` : '';
+  const res = await fetch(`${API_BASE_URL}/friendly-matches${qs}`);
         let data = [] as any[];
         if (res.ok) {
           data = await res.json();

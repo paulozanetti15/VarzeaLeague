@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { API_BASE_URL } from '../config/api';
 
@@ -85,4 +84,11 @@ export const deleteUser = async (userId: number): Promise<void> => {
     console.error('Erro ao deletar usuário:', error);
     throw new Error(error.response?.data?.message || 'Erro ao deletar usuário');
   }
+};
+
+export default {
+  getUsers,
+  createUser,
+  updateUser,
+  deleteUser
 };

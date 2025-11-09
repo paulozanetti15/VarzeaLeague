@@ -19,19 +19,19 @@ const MatchInfoSection: React.FC<MatchInfoSectionProps> = ({ match }) => {
     }
   };
 
-  const formatTime = (timeString: string | undefined): string => {
-    if (!timeString) {
-      if (match?.date && match.date.includes(' ')) {
-        const timePart = match.date.split(' ')[1];
-        return timePart.slice(0, 5);
-      }
-      return 'Horário não informado';
+  const formatTime = (dateString: string | undefined): string => {
+    if (!dateString) return 'Horário não informado';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Horário inválido';
+      return format(date, 'HH:mm');
+    } catch (error) {
+      return 'Horário inválido';
     }
-    return timeString.slice(0, 5);
   };
 
   const formatPrice = (price: number | string | null | undefined): string => {
-    if (price === null || price === undefined) return 'Gratuito';
+    if (price === null || price === undefined || price === 0) return 'Gratuito';
     return `R$ ${Number(price).toFixed(2).replace('.', ',')}`;
   };
 
@@ -39,15 +39,15 @@ const MatchInfoSection: React.FC<MatchInfoSectionProps> = ({ match }) => {
     <div className="match-info">
       <div className="info-row">
         <div className="info-label">Data:</div>
-        <div className="info-value">{formatDate(match.date)}</div>
+        <div className="info-value">{formatDate(match?.date)}</div>
       </div>
 
       <div className="info-row">
         <div className="info-label">Horário:</div>
-        <div className="info-value">{formatTime(match.time)}</div>
+        <div className="info-value">{formatTime(match?.date)}</div>
       </div>
 
-      {match.duration && (
+      {match?.duration && (
         <div className="info-row">
           <div className="info-label">Duração:</div>
           <div className="info-value">{formatDuration(match.duration)}</div>
@@ -57,28 +57,28 @@ const MatchInfoSection: React.FC<MatchInfoSectionProps> = ({ match }) => {
       <div className="info-row">
         <div className="info-label">Nome Quadra:</div>
         <div className="info-value">
-          {match.nomequadra || 'Nome da quadra não informado'}
+          {match?.square || 'Nome da quadra não informado'}
         </div>
       </div>
 
       <div className="info-row">
         <div className="info-label">Local:</div>
         <div className="info-value">
-          {match.location?.address || (typeof match.location === 'string' ? match.location : 'Endereço não informado')}
+          {match?.location?.address || (typeof match?.location === 'string' ? match.location : 'Endereço não informado')}
         </div>
       </div>
 
       <div className="info-row">
         <div className="info-label">Modalidade:</div>
         <div className="info-value">
-          {match.modalidade || 'Modalidade não informada'}
+          {match?.matchType || match?.modalidade || 'Modalidade não informada'}
         </div>
       </div>
 
       <div className="info-row">
         <div className="info-label">Valor da quadra:</div>
         <div className="info-value">
-          {formatPrice(match.price)}
+          {formatPrice(match?.price)}
         </div>
       </div>
     </div>

@@ -132,18 +132,20 @@ export const SumulaView: React.FC<SumulaViewProps> = ({
     toast.dismiss(loadingToast);
     
     if (success) {
-      // Fechar modal imediatamente após exclusão bem-sucedida
       if (dialogRef.current) {
         dialogRef.current.close();
       }
-      // Notificar componente pai que súmula foi deletada
       if (onSumulaDeleted) {
         onSumulaDeleted();
       }
       onClose();
-      toast.success('🗑️ Súmula deletada com sucesso!', {
+      toast.success('🗑️ Súmula deletada com sucesso! Partida retornou para status confirmada.', {
         duration: 3000,
       });
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } else {
       toast.error('❌ Erro ao deletar súmula. Tente novamente.', {
         duration: 4000,

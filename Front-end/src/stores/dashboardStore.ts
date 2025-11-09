@@ -2,26 +2,30 @@ import { useCallback, useState } from 'react';
 import { API_BASE_URL } from '../config/api';
 
 export type MonthCount = { month: string; count: number };
-export type CardsByMonth = { month: string; yellow: number; red: number };
 export type StatusCount = { status: string; count: number };
 export type MatchListItem = { id: number | string; title?: string; date?: string; location?: string; status?: string };
 
 export interface OverviewData {
   kpis: {
-    totalMatches: number;
-    upcomingMatches: number;
-    pastMatches: number;
+    amistososPeriodo: number;
+    campeonatosPeriodo: number;
+    inscricoesAmistososPeriodo: number;
+    inscricoesCampeonatosPeriodo: number;
+    cancelledMatches: number;
+    completedMatches: number;
+    championshipsInProgress: number;
+    newUsers: number;
+    totalUsers: number;
     totalTeams: number;
     totalPlayers: number;
-    totalGoals: number;
-    totalCards: number;
   };
   matchesByMonth: MonthCount[];
-  goalsByMonth: MonthCount[];
-  cardsByMonth: CardsByMonth[];
+  applicationsByMonth: MonthCount[];
+  teamsByMonth: MonthCount[];
+  championshipsByMonth: MonthCount[];
+  matchRegistrationsByMonth: MonthCount[];
   statusBreakdown: StatusCount[];
-  nextMatches: MatchListItem[];
-  recentMatches: MatchListItem[];
+  championshipStatusBreakdown: StatusCount[];
 }
 
 export const useDashboardStore = () => {
@@ -29,11 +33,15 @@ export const useDashboardStore = () => {
   const [loadingOverview, setLoadingOverview] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchOverview = useCallback(async (signal?: AbortSignal) => {
+  const fetchOverview = useCallback(async (signal?: AbortSignal, queryParams?: string) => {
     setLoadingOverview(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/overview`, { signal });
+  const url = queryParams ? `${API_BASE_URL}/overview?${queryParams}` : `${API_BASE_URL}/overview`;
+  const token = localStorage.getItem('token');
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(url, { signal, headers });
       if (!res.ok) throw new Error(`Erro ${res.status}`);
       const data = await res.json();
       setOverview(data as OverviewData);

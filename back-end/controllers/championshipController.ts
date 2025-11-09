@@ -526,32 +526,52 @@ export const joinTeamInChampionship = async (req: Request, res: Response): Promi
     const { id } = req.params;
     const { teamId } = req.body;
     
+    console.log(`[joinTeamInChampionship] Iniciando - championshipId: ${id}, teamId: ${teamId}`);
+    
     if (!teamId) {
       res.status(400).json({ message: 'teamId é obrigatório' });
       return;
     }
-    
+
     const championship = await Championship.findByPk(id);
     if (!championship) {
       res.status(404).json({ message: 'Campeonato não encontrado' });
       return;
     }
-    
-    const team = await Team.findByPk(teamId);
+
+    const team = await Team.findOne({
+      where: {
+        id: teamId,
+        isDeleted: false
+      }
+    });
+
     if (!team) {
       res.status(404).json({ message: 'Time não encontrado' });
       return;
     }
-    
-    const exists = await TeamChampionship.findOne({ where: { teamId, championshipId: id } });
-    if (exists) {
+
+    const existingRegistration = await TeamChampionship.findOne({
+      where: {
+        teamId,
+        championshipId: parseInt(id)
+      }
+    });
+
+    if (existingRegistration) {
       res.status(409).json({ message: 'O time já está inscrito neste campeonato' });
       return;
     }
-    
-    await TeamChampionship.create({ teamId, championshipId: id });
+
+    const created = await TeamChampionship.create({
+      teamId,
+      championshipId: parseInt(id)
+    });
+
+    console.log('[joinTeamInChampionship] Sucesso:', created.toJSON());
     res.status(201).json({ message: 'Time inscrito no campeonato com sucesso' });
   } catch (error) {
+    console.error('[joinTeamInChampionship] ERRO:', error);
     res.status(500).json({ message: 'Erro ao inscrever time no campeonato' });
   }
 };
@@ -566,17 +586,23 @@ export const getChampionshipTeams = async (req: Request, res: Response): Promise
       return;
     }
 
-    const links = await TeamChampionship.findAll({ where: { championshipId: id } });
-    const teamIds = links.map((l: any) => l.teamId);
-    
-    if (teamIds.length === 0) {
-      res.json([]);
-      return;
-    }
+    const teamChampionships = await TeamChampionship.findAll({
+      where: { championshipId: parseInt(id) },
+      include: [{
+        model: Team,
+        as: 'team',
+        where: { isDeleted: false },
+        required: true
+      }]
+    });
 
-    const teams = await Team.findAll({ where: { id: teamIds } });
+    const teams = teamChampionships
+      .map((tc: any) => tc.team)
+      .filter(Boolean);
+
     res.json(teams);
   } catch (error) {
+    console.error('[getChampionshipTeams] Erro:', error);
     res.status(500).json({ message: 'Erro ao listar times do campeonato' });
   }
 };

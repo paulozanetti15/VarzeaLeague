@@ -17,11 +17,20 @@ export const getAllFriendlyMatchesHistory= async(req:AuthRequest,res:Response)=>
     try {
         const { teamId } = req.params;
         const userId = req.user?.id;
+        
+        console.log('getAllFriendlyMatchesHistory - teamId:', teamId, 'userId:', userId);
+        
         if (!userId) {
             res.status(401).json({ message: 'Usuário não autenticado' });
             return;
         }
+
+        if (!teamId || isNaN(parseInt(teamId))) {
+            res.status(400).json({ message: 'ID do time inválido' });
+            return;
+        }
         
+        console.log('Buscando partidas amistosas para o time:', teamId);
         const buscarPartidasAmistosas=await  FriendlyMatchReport.findAll({
             where: {
               [Op.or] : 
@@ -33,6 +42,7 @@ export const getAllFriendlyMatchesHistory= async(req:AuthRequest,res:Response)=>
             include: [
                 {
                     model: FriendlyMatchesModel,
+                    as: 'reportFriendlyMatch',
                     attributes: ['title', 'location','square','date'],
                     required: true
                 },
@@ -49,9 +59,19 @@ export const getAllFriendlyMatchesHistory= async(req:AuthRequest,res:Response)=>
             ]
         });
 
+        console.log('Partidas amistosas encontradas:', buscarPartidasAmistosas.length);
+        if (buscarPartidasAmistosas.length > 0) {
+            console.log('Primeira partida amistosa:', JSON.stringify(buscarPartidasAmistosas[0], null, 2));
+        }
+
         res.status(200).json(buscarPartidasAmistosas)     
     } catch (error) {
-        res.status(500).json({ message: 'Erro ao buscar partidas amistosas' });
+        console.error('Error in getAllFriendlyMatchesHistory:', error);
+        console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+        res.status(500).json({ 
+            message: 'Erro ao buscar partidas amistosas',
+            error: error instanceof Error ? error.message : String(error)
+        });
     }    
 }
 export const getAllChampionshipMatchesHistory= async(req:AuthRequest,res:Response)=>{
@@ -59,11 +79,20 @@ export const getAllChampionshipMatchesHistory= async(req:AuthRequest,res:Respons
         const { teamId } = req.params;
         const championshipId = req.query.championshipId ? Number(req.query.championshipId) : null;
         const userId = req.user?.id;
+        
+        console.log('getAllChampionshipMatchesHistory - teamId:', teamId, 'userId:', userId, 'championshipId:', championshipId);
+        
         if (!userId) {
             res.status(401).json({ message: 'Usuário não autenticado' });
             return;
         }
+
+        if (!teamId || isNaN(parseInt(teamId))) {
+            res.status(400).json({ message: 'ID do time inválido' });
+            return;
+        }
          
+        console.log('Buscando partidas de campeonato para o time:', teamId);
         const buscarPartidasCampeonato=await  MatchChampionshipReport.findAll({
             where: {
               [Op.or] : 
@@ -100,6 +129,10 @@ export const getAllChampionshipMatchesHistory= async(req:AuthRequest,res:Respons
                 },    
             ]
         });
+        
+        console.log('Partidas encontradas:', buscarPartidasCampeonato.length);
+        console.log('Primeira partida:', JSON.stringify(buscarPartidasCampeonato[0], null, 2));
+        
         res.status(200).json(buscarPartidasCampeonato)     
     } catch (error) {
         console.error('Error in getAllChampionshipMatchesHistory:', error);
@@ -205,10 +238,12 @@ export const adicionarSumulaPartidasAmistosas= async(req:AuthRequest,res:Respons
             match_id  : matchId ,
             team_home : req.body.team_home , 
             team_away : req.body.team_away,
-            teamHome_score : req.body.teamHome_score || req.body.team_home_score,
-            teamAway_score : req.body.teamAway_score || req.body.team_away_score,
+            teamHome_score : req.body.teamHome_score ?? req.body.team_home_score ?? 0,
+            teamAway_score : req.body.teamAway_score ?? req.body.team_away_score ?? 0,
             created_by : userId
         });
+
+        await match.update({ status: 'finalizada' });
         
         res.status(201).json({message : "Súmula adicionada com sucesso"});
     } catch (error) {
@@ -462,7 +497,12 @@ export const deletarSumulaPartidaAmistosa = async(req: AuthRequest, res: Respons
 
         await sumula.destroy();
 
-        res.status(200).json({ message: 'Súmula deletada com sucesso' });
+        const match = await FriendlyMatchesModel.findByPk(parseInt(matchId));
+        if (match && (match as any).status === 'finalizada') {
+            await match.update({ status: 'confirmada' });
+        }
+
+        res.status(200).json({ message: 'Súmula deletada com sucesso e partida retornou para status confirmada' });
     } catch (error) {
         res.status(500).json({ message: 'Erro ao deletar súmula' });
     }
@@ -497,7 +537,12 @@ export const deletarSumulaPartidaCampeonato = async(req: AuthRequest, res: Respo
 
         await sumula.destroy();
 
-        res.status(200).json({ message: 'Súmula deletada com sucesso' });
+        const match = await MatchChampionship.findByPk(parseInt(matchId));
+        if (match && (match as any).status === 'finalizada') {
+            await match.update({ status: 'confirmada' });
+        }
+
+        res.status(200).json({ message: 'Súmula deletada com sucesso e partida retornou para status confirmada' });
     } catch (error) {
         res.status(500).json({ message: 'Erro ao deletar súmula do campeonato' });
     }
@@ -525,8 +570,8 @@ export const atualizarSumulaPartidaAmistosa = async(req: AuthRequest, res: Respo
         await sumula.update({
             team_home: req.body.team_home,
             team_away: req.body.team_away,
-            teamHome_score: req.body.team_home_score,
-            teamAway_score: req.body.team_away_score,
+            teamHome_score: req.body.teamHome_score ?? req.body.team_home_score ?? 0,
+            teamAway_score: req.body.teamAway_score ?? req.body.team_away_score ?? 0,
         });
 
         await FriendlyMatchGoal.destroy({
@@ -565,8 +610,8 @@ export const atualizarSumulaPartidaCampeonato = async(req: AuthRequest, res: Res
         await sumula.update({
             team_home: req.body.team_home,
             team_away: req.body.team_away,
-            teamHome_score: req.body.teamHome_score,
-            teamAway_score: req.body.teamAway_score,
+            teamHome_score: req.body.teamHome_score ?? req.body.team_home_score ?? 0,
+            teamAway_score: req.body.teamAway_score ?? req.body.team_away_score ?? 0,
         });
 
         await ChampionshipMatchGoal.destroy({

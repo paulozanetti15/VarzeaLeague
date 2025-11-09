@@ -25,7 +25,7 @@ const UserDetailDialog: React.FC<UserDetailDialogProps> = ({ open, onClose, user
           <Typography className="user-management-modal-content"><b>Email:</b> {user.email}</Typography>
           <Typography className="user-management-modal-content"><b>CPF:</b> {user.cpf}</Typography>
           <Typography className="user-management-modal-content"><b>Telefone:</b> {user.phone}</Typography>
-          <Typography className="user-management-modal-content"><b>Sexo:</b> {user.sexo}</Typography>
+          <Typography className="user-management-modal-content"><b>Sexo:</b> {user.gender}</Typography>
           <Typography className="user-management-modal-content"><b>Tipo de Usuário:</b> {user.usertype?.name || 'Sem tipo'}</Typography>
         </Stack>
       )}

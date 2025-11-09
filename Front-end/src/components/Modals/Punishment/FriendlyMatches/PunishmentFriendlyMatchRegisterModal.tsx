@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 import { getJoinedTeams, createPunicao, updatePunicao, updateMatch } from '../../../../services/matchesFriendlyServices';
-import '../PunishmentModal.css';
+import './PunishmentFriendlyMatchRegisterModal.css';
 
 interface PunishmentFriendlyMatchModal {
   show: boolean;
@@ -11,8 +11,8 @@ interface PunishmentFriendlyMatchModal {
 }
 
 interface Dados {
-  time: number;
-  motivo: string;
+  idTeam: number;
+  reason: string;
   team_home: number;
   team_away: number;
 }
@@ -28,8 +28,8 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
   const [teams, setTeams] = useState<any>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Dados>({
-    time: 0,
-    motivo: "",
+    idTeam: 0,
+    reason: "",
     team_home: 0,
     team_away: 0
   });
@@ -38,7 +38,7 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: name === "time" ? parseInt(value) : value
+      [name]: (name === "idTeam" || name === "team_home" || name === "team_away") ? parseInt(value) : value
     }));
   };
 
@@ -50,7 +50,7 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
         setLoading(true);
         setError("");
         const resp = await getJoinedTeams(idMatch);
-        setTeams(resp.data || []);
+        setTeams(Array.isArray(resp.data) ? resp.data : []);
       } catch (error) {
         console.error("Erro ao buscar times:", error);
         setError("Erro ao carregar times da partida");
@@ -68,12 +68,12 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
       setError("");
       setSuccess("");
 
-      if (!formData.time || formData.time === 0) {
+      if (!formData.idTeam || formData.idTeam === 0) {
         setError("Por favor, selecione o time punido");
         return;
       }
       
-      if (!formData.motivo) {
+      if (!formData.reason) {
         setError("Por favor, selecione um motivo para a punição");
         return;
       }
@@ -94,8 +94,8 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
       }
 
       const resp = await createPunicao(idMatch, {
-        idtime: formData.time,
-        motivo: formData.motivo,
+        idTeam: formData.idTeam,
+        reason: formData.reason,
         team_home: formData.team_home,
         team_away: formData.team_away
       });
@@ -104,8 +104,8 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
         setSuccess("Punição aplicada com sucesso! Súmula 3x0 criada e partida finalizada.");
         
         setFormData({
-          time: 0,
-          motivo: "",
+          idTeam: 0,
+          reason: "",
           team_home: 0,
           team_away: 0
         });
@@ -144,15 +144,15 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
     setError("");
     setSuccess("");
     setFormData({
-      time: 0,
-      motivo: "",
+      idTeam: 0,
+      reason: "",
       team_home: 0,
       team_away: 0
     });
     onClose();
   };
 
-  const isFormValid = formData.time > 0 && formData.motivo !== "" && formData.team_home > 0 && formData.team_away > 0 && formData.team_home !== formData.team_away;
+  const isFormValid = formData.idTeam > 0 && formData.reason !== "" && formData.team_home > 0 && formData.team_away > 0 && formData.team_home !== formData.team_away;
 
   return (
     <Modal
@@ -200,7 +200,7 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
               <div className="punishment-card punishment-card-danger">
                 <div className="punishment-card-header">
                   <i className="fas fa-exclamation-triangle me-2"></i>
-                  Time Punido
+                  Time Punido <span style={{color: '#fff'}}>*</span>
                 </div>
                 <div className="punishment-card-body">
                   <div className="punishment-card-icon">
@@ -208,11 +208,12 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
                   </div>
                   <select 
                     className="form-select mt-3" 
-                    name="time" 
+                    name="idTeam" 
                     onChange={handleSelectChange}
-                    value={formData.time} 
+                    value={formData.idTeam} 
                     aria-label="Selecione o time punido"
                     disabled={loading}
+                    required
                   >
                     <option value={0}>Selecione o time que receberá a punição</option>
                     {teams.map((team: any) => (
@@ -226,7 +227,7 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
               <div className="punishment-card punishment-card-primary">
                 <div className="punishment-card-header">
                   <i className="fas fa-home me-2"></i>
-                  Time da Casa
+                  Time da Casa <span style={{color: '#fff'}}>*</span>
                 </div>
                 <div className="punishment-card-body">
                   <div className="punishment-card-icon">
@@ -239,6 +240,7 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
                     value={formData.team_home} 
                     aria-label="Selecione o time da casa"
                     disabled={loading}
+                    required
                   >
                     <option value={0}>Selecione o time mandante</option>
                     {teams.map((team: any) => (
@@ -252,7 +254,7 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
               <div className="punishment-card punishment-card-primary">
                 <div className="punishment-card-header">
                   <i className="fas fa-plane-departure me-2"></i>
-                  Time Visitante
+                  Time Visitante <span style={{color: '#fff'}}>*</span>
                 </div>
                 <div className="punishment-card-body">
                   <div className="punishment-card-icon">
@@ -265,6 +267,7 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
                     value={formData.team_away} 
                     aria-label="Selecione o time visitante"
                     disabled={loading}
+                    required
                   >
                     <option value={0}>Selecione o time visitante</option>
                     {teams.map((team: any) => (
@@ -278,7 +281,7 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
               <div className="punishment-card punishment-card-primary">
                 <div className="punishment-card-header">
                   <i className="fas fa-clipboard-list me-2"></i>
-                  Motivo da Punição
+                  Motivo da Punição <span style={{color: '#fff'}}>*</span>
                 </div>
                 <div className="punishment-card-body">
                   <div className="punishment-card-icon">
@@ -286,11 +289,12 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
                   </div>
                   <select 
                     className="form-select mt-3" 
-                    name="motivo" 
+                    name="reason" 
                     onChange={handleSelectChange}
-                    value={formData.motivo}
+                    value={formData.reason}
                     aria-label="Selecione o motivo"
                     disabled={loading}
+                    required
                   >
                     <option value="">Selecione o motivo</option>
                     <option value="Desistencia">Desistência</option>
@@ -304,27 +308,23 @@ const PunishmentRegisterModal: React.FC<PunishmentFriendlyMatchModal> = ({
         )}
       </div>
       <div className="punishment-modal-footer">
-        <div>
-          <Button 
-            variant="secondary" 
-            onClick={handleClose}
-            disabled={loading}
-          >
-            <i className="fas fa-times me-2"></i>
-            Cancelar
-          </Button>
-        </div>
-        <div>
-          <button
-            type="button"
-            className="btn btn-warning"
-            onClick={() => inserirPunicao(team.id)}
-            disabled={!isFormValid || loading}
-          >
-            <i className="fas fa-gavel me-2"></i>
-            {loading ? "Aplicando..." : "Aplicar Punição WO"}
-          </button>
-        </div>
+        <Button 
+          variant="secondary" 
+          onClick={handleClose}
+          disabled={loading}
+        >
+          <i className="fas fa-times me-2"></i>
+          Cancelar
+        </Button>
+        <button
+          type="button"
+          className="btn btn-warning"
+          onClick={() => inserirPunicao(team.id)}
+          disabled={!isFormValid || loading}
+        >
+          <i className="fas fa-gavel me-2"></i>
+          {loading ? "Aplicando..." : "Aplicar Punição WO"}
+        </button>
       </div>
     </Modal>
   );
