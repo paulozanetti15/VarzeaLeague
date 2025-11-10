@@ -6,6 +6,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import GroupsIcon from '@mui/icons-material/Groups';
 import './ManageTeams.css';
+import { API_BASE, API_UPLOADS } from '../../config/api';
 
 interface Team {
   id: number;
@@ -36,8 +37,6 @@ const ManageTeams: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
-
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
   useEffect(() => {
     fetchAllTeams();
@@ -93,7 +92,7 @@ const ManageTeams: React.FC = () => {
   const getTeamBannerUrl = (banner?: string) => {
     if (!banner) return null;
     if (banner.startsWith('http')) return banner;
-    return `http://localhost:3001/uploads/teams/${banner}`;
+    return `${API_UPLOADS}/uploads/teams/${banner}`;
   };
 
   if (loading) {
