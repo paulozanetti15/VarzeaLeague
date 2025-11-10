@@ -1,7 +1,7 @@
 import axios from 'axios';
 // date-fns not required here
 
-const API_BASE = 'http://localhost:3001/api';
+import { API_BASE } from '../config/api';
 
 export interface MatchFormData {
   title: string;

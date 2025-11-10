@@ -15,8 +15,9 @@ import {
 import MatchFilters from '../../features/matches/MatchFilters/MatchFilters';
 import { getStatusLabel } from '../../utils/statusLabels';
 import { format } from 'date-fns';
+import { API_BASE } from '../../config/api';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = API_BASE;
 
 type Match = any;
 type Championship = any;

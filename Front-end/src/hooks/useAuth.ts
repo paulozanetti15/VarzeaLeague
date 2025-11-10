@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE } from '../config/api';
 
 interface User {
   id: number;
@@ -32,7 +33,7 @@ export function useAuth() {
     }
 
     try {
-      const response = await axios.get('http://localhost:3001/api/auth/verify', {
+      const response = await axios.get(`${API_BASE}/auth/verify`, {
         params: { token },
         headers: { 'Authorization': `Bearer ${token}` }
       });

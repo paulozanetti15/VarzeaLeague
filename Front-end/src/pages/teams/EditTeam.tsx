@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE, API_UPLOADS } from '../../config/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import './CreateTeam.css';
 import PaletteIcon from '@mui/icons-material/Palette';
@@ -83,12 +84,12 @@ export default function EditTeam() {
           navigate('/login');
           return;
         }
-        const response = await axios.get(`http://localhost:3001/api/teams/${id}`, {
+        const response = await axios.get(`${API_BASE}/teams/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         
         // Buscar explicitamente os jogadores do time
-        const responsePlayer = await axios.get(`http://localhost:3001/api/teamplayers/${id}`, {
+        const responsePlayer = await axios.get(`${API_BASE}/teamplayers/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         
@@ -135,7 +136,8 @@ export default function EditTeam() {
         }
         
         if (teamData.banner) {
-          setLogoPreview(`http://localhost:3001${teamData.banner}`);
+          setLogoPreview(`${API_UPLOADS}${teamData.banner.startsWith('/uploads') ? '' : '/uploads'}${teamData.banner.startsWith('/uploads') ? '' : ''}`);
+          setLogoPreview(`${API_UPLOADS}${teamData.banner}`);
         }
       } catch (err: any) {
         console.error('Erro ao carregar o time:', err);
@@ -397,7 +399,7 @@ export default function EditTeam() {
       }
       // Primeiro atualiza os dados do time (sem enviar jogadores)
       const responseTeam = await axios.put(
-        `http://localhost:3001/api/teams/${id}`,
+        `${API_BASE}/teams/${id}`,
         submitFormData,
         {
           headers: {
@@ -408,12 +410,12 @@ export default function EditTeam() {
       );
 
       if (responseTeam.data.banner) {
-        setLogoPreview(`http://localhost:3001${responseTeam.data.banner}`);
+        setLogoPreview(`${API_UPLOADS}${responseTeam.data.banner}`);
       }
 
       if (formattedJogadores && formattedJogadores.length > 0) {
         const responsePlayers = await axios.put(
-          `http://localhost:3001/api/players/${id}`,
+          `${API_BASE}/players/${id}`,
           { jogadores: formattedJogadores },
           {
             headers: {
@@ -510,7 +512,7 @@ export default function EditTeam() {
       }
       
       // Chamar o endpoint para remover o jogador do time
-      await axios.delete(`http://localhost:3001/api/teamplayers/${id}/player/${playerId}`, {
+      await axios.delete(`${API_BASE}/teamplayers/${id}/player/${playerId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       // Atualizar também a lista no formData

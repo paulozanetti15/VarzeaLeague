@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
+import { API_BASE } from '../../config/api';
 import { useNavigate } from 'react-router-dom';
 import { getErrorMessage, validateEmail, validatePassword } from '../../utils/errorHandler';
 import './Login.css';
@@ -43,11 +44,9 @@ export function Login({ onRegisterClick, onForgotPasswordClick, onLoginSuccess }
     }
 
     try {
-      const response = await axios.post(
-        'http://localhost:3001/api/auth/login',
+      const response = await axios.post(`${API_BASE}/auth/login`,
         { email: email.trim(), password },
-        { timeout: 10000 } // Timeout de 10 segundos
-      );
+        { timeout: 10000 });
 
       const data = response.data;
 

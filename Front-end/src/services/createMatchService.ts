@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { API_BASE } from '../config/api';
 
 export interface MatchFormData {
   title: string;
@@ -26,7 +27,7 @@ export interface CreateMatchResponse {
 
 class CreateMatchService {
   private api = axios.create({
-    baseURL: 'http://localhost:3001/api',
+    baseURL: API_BASE,
     headers: {
       'Content-Type': 'application/json'
     }

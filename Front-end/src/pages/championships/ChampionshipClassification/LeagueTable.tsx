@@ -4,8 +4,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { getChampionshipTeams } from '../../../services/championshipsServices';
 import './LeagueTable.css';
-
-const API_BASE = 'http://localhost:3001/api';
+import { API_BASE, API_UPLOADS } from '../../../config/api';
 
 interface TeamStanding {
   nomeTime: string;
@@ -141,10 +140,8 @@ const LeagueTable: React.FC<LeagueTableProps> = ({ championshipId, championshipN
 
   const getTeamLogoUrl = (banner?: string | null) => {
     if (!banner) return null;
-    if (banner.startsWith('/uploads')) {
-      return `http://localhost:3001${banner}`;
-    }
-    return `http://localhost:3001/uploads/teams/${banner}`;
+    if (banner.startsWith('/uploads')) return `${API_UPLOADS}${banner}`;
+    return `${API_UPLOADS}/uploads/teams/${banner}`;
   };
 
   const getPositionColor = (position: number) => {

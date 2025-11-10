@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './CreateTeam.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios'; 
+import { API_BASE } from '../../config/api';
 import PaletteIcon from '@mui/icons-material/Palette';
 import ImageIcon from '@mui/icons-material/Image';
 import AddIcon from '@mui/icons-material/Add';
@@ -274,7 +275,7 @@ export default function CreateTeam() {
         submitFormData.append('banner', formData.logo);
       }
 
-      const resposta = await axios.post('http://localhost:3001/api/teams', submitFormData, {
+      const resposta = await axios.post(`${API_BASE}/teams`, submitFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${localStorage.getItem('token')}`,

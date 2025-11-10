@@ -6,6 +6,7 @@ import Col from 'react-bootstrap/Col';
 import "./HistoricoPage.css";
 import axios from "axios";
 import { HistoricoContext } from '../../Context/HistoricoContext';
+import { API_BASE } from '../../config/api';
 
 interface Team {
   id: number,
@@ -56,7 +57,7 @@ const HistoricoPage = () => {
         let idUser = parseInt(user.id);
         let token = localStorage.getItem('token');
         if (!user.id || !token) return;
-        const responseGetTeam = await axios.get(`http://localhost:3001/api/teams/${idUser}/teamCaptain`, {
+        const responseGetTeam = await axios.get(`${API_BASE}/teams/${idUser}/teamCaptain`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setTeam({ id: responseGetTeam.data.id, name: responseGetTeam.data.name });
