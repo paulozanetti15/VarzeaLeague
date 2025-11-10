@@ -2,20 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { API_BASE_URL } from '../../config/api';
-import {
-  Box,
-  Grid,
-  CircularProgress,
-  Avatar,
-  Stack,
-  Chip,
-  
-  Typography,
-  Paper,
-} from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import MatchFilters from '../../features/matches/MatchFilters/MatchFilters';
 import { getStatusLabel } from '../../utils/statusLabels';
 import { format } from 'date-fns';
+import './MatchListing.css';
 
 type Match = any;
 type Championship = any;
@@ -36,39 +27,44 @@ const MatchCard: React.FC<{ match: Match; clickable: boolean }> = ({ match, clic
       navigate(`/matches/${match.id}`);
     }
   };
+  
+  const statusClass = match.status?.toLowerCase().replace(/\s+/g, '_') || 'aberta';
+  
   return (
-    <Paper 
-      sx={{ 
-        p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2, boxShadow: 3,
-        cursor: clickable ? 'pointer' : 'default', transition: 'box-shadow 0.2s ease',
-        '&:hover': clickable ? { boxShadow: 6 } : undefined,
-        opacity: clickable ? 1 : 0.98,
-      }} 
-      elevation={0}
+    <div 
+      className="match-card-modern"
       onClick={clickable ? goToDetail : undefined}
       role={clickable ? 'button' : undefined}
       aria-label={`Abrir partida ${match?.title ?? ''}`}
       tabIndex={clickable ? 0 : -1}
+      style={{ cursor: clickable ? 'pointer' : 'default' }}
     >
-      <Avatar sx={{ bgcolor: 'primary.main', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>{(match.title || 'P').charAt(0)}</Avatar>
-      <Box sx={{ flex: 1 }}>
-        <Typography variant="h6">{match.title || 'Partida sem título'}</Typography>
-        <Typography variant="body2" color="text.secondary">{match.location || 'Local não informado'}</Typography>
-        <Stack direction="row" spacing={1} mt={1}>
-          {match.teamA && <Chip size="small" label={match.teamA} />}
-          {match.teamB && <Chip size="small" label={match.teamB} />}
-        </Stack>
-        <Stack direction="row" spacing={1} mt={1}>
-          <Chip label={`Dia: ${match.date ? format(new Date(match.date), 'dd/MM/yyyy') : '-'}`} size="small" />
-          <Chip label={`Inscrição: ${match.registrationDeadline ? format(new Date(match.registrationDeadline), 'dd/MM/yyyy') : '-'}`} size="small" />
-        </Stack>
-      </Box>
-      <Box textAlign="right">
-        <Box mt={1}>
-          <Chip label={getStatusLabel(match.status)} size="small" />
-        </Box>
-      </Box>
-    </Paper>
+      <div className="card-layout">
+        <div className="card-avatar">
+          {(match.title || 'P').charAt(0).toUpperCase()}
+        </div>
+        
+        <div className="card-content">
+          <h3 className="card-title">{match.title || 'Partida sem título'}</h3>
+          <div className="card-location">{match.location || 'Local não informado'}</div>
+          
+          <div className="card-badges">
+            <span className="card-badge date">
+              📅 {match.date ? format(new Date(match.date), 'dd/MM/yyyy') : 'Data não definida'}
+            </span>
+            <span className="card-badge registration">
+              ⏰ Inscrição até: {match.registrationDeadline ? format(new Date(match.registrationDeadline), 'dd/MM/yyyy') : 'Não definida'}
+            </span>
+          </div>
+        </div>
+        
+        <div className="card-status">
+          <span className={`status-badge ${statusClass}`}>
+            {getStatusLabel(match.status)}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -79,32 +75,42 @@ const ChampionshipCard: React.FC<{ champ: Championship; clickable: boolean }> = 
       navigate(`/championships/${champ.id}`);
     }
   };
+  
   return (
-    <Paper 
-      sx={{ 
-        p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2, boxShadow: 3,
-        cursor: clickable ? 'pointer' : 'default', transition: 'box-shadow 0.2s ease', '&:hover': clickable ? { boxShadow: 6 } : undefined,
-        opacity: clickable ? 1 : 0.98,
-      }} 
-      elevation={0}
+    <div 
+      className="championship-card-modern"
       onClick={clickable ? goToDetail : undefined}
       role={clickable ? 'button' : undefined}
       aria-label={`Abrir campeonato ${champ?.name ?? ''}`}
       tabIndex={clickable ? 0 : -1}
+      style={{ cursor: clickable ? 'pointer' : 'default' }}
     >
-      <Avatar sx={{ bgcolor: 'warning.main', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>{(champ.name || 'C').charAt(0)}</Avatar>
-      <Box sx={{ flex: 1 }}>
-        <Typography variant="h6">{champ.name || 'Campeonato sem nome'}</Typography>
-        <Typography variant="body2" color="text.secondary">{champ.description || ''}</Typography>
-        <Stack direction="row" spacing={1} mt={1}>
-          <Chip label={`Início: ${champ.start_date ? format(new Date(champ.start_date), 'dd/MM/yyyy') : '-'}`} size="small" />
-          <Chip label={`Fim: ${champ.end_date ? format(new Date(champ.end_date), 'dd/MM/yyyy') : '-'}`} size="small" />
-        </Stack>
-      </Box>
-      <Box textAlign="right">
-        <Chip label="Campeonato" color="info" size="small" />
-      </Box>
-    </Paper>
+      <div className="card-layout">
+        <div className="card-avatar">
+          {(champ.name || 'C').charAt(0).toUpperCase()}
+        </div>
+        
+        <div className="card-content">
+          <h3 className="card-title">{champ.name || 'Campeonato sem nome'}</h3>
+          {champ.description && <div className="card-location">{champ.description}</div>}
+          
+          <div className="card-badges">
+            <span className="card-badge date">
+              🏁 Início: {champ.start_date ? format(new Date(champ.start_date), 'dd/MM/yyyy') : 'Não definido'}
+            </span>
+            <span className="card-badge date">
+              🏆 Fim: {champ.end_date ? format(new Date(champ.end_date), 'dd/MM/yyyy') : 'Não definido'}
+            </span>
+          </div>
+        </div>
+        
+        <div className="card-status">
+          <span className="status-badge championship">
+            Campeonato
+          </span>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -243,21 +249,44 @@ const MatchListing: React.FC = () => {
   });
 
   return (
-    <Box component="main" sx={{ flex: 1, p: { xs: 1, sm: 2 }, mt: { md: 3 } }}>
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={3}>
+    <div className="buscar-partidas-container">
+      <div className="buscar-header">
+        <h1 className="buscar-title">
+          {location.pathname === '/buscar-campeonatos' ? '🏆 Buscar Campeonatos' : '⚽ Buscar Partidas'}
+        </h1>
+        <p className="buscar-subtitle">
+          Encontre as melhores partidas e campeonatos perto de você
+        </p>
+      </div>
+
+      <div className="buscar-layout">
+        <aside className="buscar-filters-sidebar">
           <MatchFilters
             filters={filters}
             onChange={(next) => setFilters(next)}
-            onClear={() => setFilters({ searchMatches: '', searchChampionships: '', matchDateFrom: '', registrationDateFrom: '', championshipDateFrom: '', championshipDateTo: '', statuses: [], sort: 'date_desc', type: getInitialType() })}
+            onClear={() => setFilters({ 
+              searchMatches: '', 
+              searchChampionships: '', 
+              matchDateFrom: '', 
+              registrationDateFrom: '', 
+              championshipDateFrom: '', 
+              championshipDateTo: '', 
+              statuses: [], 
+              sort: 'date_desc', 
+              type: getInitialType() 
+            })}
             onApply={() => { /* no-op: filters are applied live */ }}
             defaultStatuses={defaultStatuses}
             showTypeSelector={location.pathname !== '/buscar-partidas' && location.pathname !== '/buscar-campeonatos'}
           />
-        </Grid>
-        <Grid item xs={12} md={9}>
+        </aside>
+        
+        <main className="buscar-results">
           {loading ? (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}><CircularProgress /></Box>
+            <div className="buscar-loading">
+              <CircularProgress size={60} thickness={4} />
+              <p className="buscar-loading-text">Carregando resultados...</p>
+            </div>
           ) : (
             <>
               {(() => {
@@ -278,7 +307,17 @@ const MatchListing: React.FC = () => {
                   return filters.sort === 'date_desc' ? db - da : da - db;
                 });
 
-                if (filteredByType.length === 0) return <Typography variant="body1">Nenhum resultado.</Typography>;
+                if (filteredByType.length === 0) {
+                  return (
+                    <div className="buscar-empty">
+                      <div className="buscar-empty-icon">🔍</div>
+                      <h2 className="buscar-empty-title">Nenhum resultado encontrado</h2>
+                      <p className="buscar-empty-text">
+                        Tente ajustar os filtros ou buscar por outros termos
+                      </p>
+                    </div>
+                  );
+                }
 
                 return filteredByType.slice(0, 20).map((it, idx) => (
                   <React.Fragment key={it.type + '-' + (it.data.id || idx)}>
@@ -292,9 +331,9 @@ const MatchListing: React.FC = () => {
               })()}
             </>
           )}
-        </Grid>
-      </Grid>
-    </Box>
+        </main>
+      </div>
+    </div>
   );
 };
 

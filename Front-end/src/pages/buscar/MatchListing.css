@@ -1,0 +1,523 @@
+/* ==========================================
+   BUSCAR PARTIDAS - DESIGN MODERNO
+   ========================================== */
+
+.buscar-partidas-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+  padding: 2rem 1rem;
+}
+
+/* Header da Página */
+.buscar-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.buscar-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1565C0;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.buscar-subtitle {
+  font-size: 1.1rem;
+  color: #666;
+  font-weight: 400;
+}
+
+/* Layout Principal */
+.buscar-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Sidebar de Filtros */
+.buscar-filters-sidebar {
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(21, 101, 192, 0.3) transparent;
+}
+
+.buscar-filters-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.buscar-filters-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.buscar-filters-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(21, 101, 192, 0.3);
+  border-radius: 3px;
+}
+
+.buscar-filters-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(21, 101, 192, 0.5);
+}
+
+/* Área de Resultados */
+.buscar-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Cards de Partida/Campeonato - Design Moderno */
+.match-card-modern,
+.championship-card-modern {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.match-card-modern::before,
+.championship-card-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #1565C0 0%, #0D47A1 100%);
+  transition: width 0.3s ease;
+}
+
+.championship-card-modern::before {
+  background: linear-gradient(180deg, #FF9800 0%, #F57C00 100%);
+}
+
+.match-card-modern:hover,
+.championship-card-modern:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: rgba(21, 101, 192, 0.2);
+}
+
+.match-card-modern:hover::before,
+.championship-card-modern:hover::before {
+  width: 6px;
+}
+
+/* Layout do Card */
+.card-layout {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+/* Avatar/Ícone */
+.card-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1565C0 0%, #1976D2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+  flex-shrink: 0;
+}
+
+.championship-card-modern .card-avatar {
+  background: linear-gradient(135deg, #FF9800 0%, #FFA726 100%);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+
+/* Conteúdo do Card */
+.card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #212121;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+}
+
+.card-location {
+  font-size: 0.95rem;
+  color: #757575;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-location::before {
+  content: '📍';
+  font-size: 1rem;
+}
+
+/* Badges/Chips */
+.card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: rgba(21, 101, 192, 0.1);
+  color: #1565C0;
+  border: 1px solid rgba(21, 101, 192, 0.2);
+}
+
+.card-badge.team {
+  background: rgba(76, 175, 80, 0.1);
+  color: #388E3C;
+  border-color: rgba(76, 175, 80, 0.2);
+}
+
+.card-badge.date {
+  background: rgba(156, 39, 176, 0.1);
+  color: #7B1FA2;
+  border-color: rgba(156, 39, 176, 0.2);
+}
+
+.card-badge.registration {
+  background: rgba(255, 152, 0, 0.1);
+  color: #E65100;
+  border-color: rgba(255, 152, 0, 0.2);
+}
+
+/* Info adicional */
+.card-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #616161;
+}
+
+.card-info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Status Badge */
+.card-status {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.aberta {
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.status-badge.sem_vagas {
+  background: linear-gradient(135deg, #FF9800 0%, #FFA726 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+}
+
+.status-badge.confirmada {
+  background: linear-gradient(135deg, #2196F3 0%, #42A5F5 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.status-badge.em_andamento {
+  background: linear-gradient(135deg, #9C27B0 0%, #AB47BC 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(156, 39, 176, 0.3);
+}
+
+.status-badge.finalizada {
+  background: linear-gradient(135deg, #607D8B 0%, #78909C 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(96, 125, 139, 0.3);
+}
+
+.status-badge.cancelada {
+  background: linear-gradient(135deg, #F44336 0%, #EF5350 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+.status-badge.championship {
+  background: linear-gradient(135deg, #FF9800 0%, #FFA726 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+}
+
+/* Loading State */
+.buscar-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+}
+
+.buscar-loading-text {
+  font-size: 1.1rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Empty State */
+.buscar-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.buscar-empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.buscar-empty-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #424242;
+  margin-bottom: 0.5rem;
+}
+
+.buscar-empty-text {
+  font-size: 1rem;
+  color: #757575;
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+  .buscar-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .buscar-filters-sidebar {
+    position: static;
+    max-height: none;
+  }
+
+  .buscar-title {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .buscar-partidas-container {
+    padding: 1rem 0.5rem;
+  }
+
+  .buscar-title {
+    font-size: 1.75rem;
+  }
+
+  .buscar-subtitle {
+    font-size: 1rem;
+  }
+
+  .card-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .card-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+    margin: 0 auto;
+  }
+
+  .card-status {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .status-badge {
+    width: 100%;
+    text-align: center;
+  }
+
+  .match-card-modern,
+  .championship-card-modern {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-title {
+    font-size: 1.1rem;
+  }
+
+  .card-badges {
+    flex-direction: column;
+  }
+
+  .card-badge {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .card-info {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .buscar-layout {
+    gap: 1rem;
+  }
+  
+  .match-card-modern::before,
+  .championship-card-modern::before {
+    width: 3px;
+  }
+}
+
+/* Animações */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.match-card-modern,
+.championship-card-modern {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* Efeito de pulse para o loading spinner */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.buscar-loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Transições suaves para hover states */
+.card-avatar,
+.card-badge,
+.status-badge {
+  will-change: transform;
+}
+
+/* Melhorias de performance */
+.match-card-modern,
+.championship-card-modern {
+  contain: layout style paint;
+}
+
+/* Scroll suave */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Estilização da scrollbar customizada */
+.buscar-results::-webkit-scrollbar {
+  width: 8px;
+}
+
+.buscar-results::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.buscar-results::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(21, 101, 192, 0.3) 0%, rgba(21, 101, 192, 0.5) 100%);
+  border-radius: 4px;
+}
+
+.buscar-results::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(21, 101, 192, 0.5) 0%, rgba(21, 101, 192, 0.7) 100%);
+}
+
+/* Acessibilidade - Focus states */
+.match-card-modern:focus-visible,
+.championship-card-modern:focus-visible {
+  outline: 3px solid #1565C0;
+  outline-offset: 2px;
+}
+
+/* Dark mode support (opcional) */
+@media (prefers-color-scheme: dark) {
+  .buscar-partidas-container {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  }
+  
+  .buscar-title {
+    color: #64B5F6;
+  }
+  
+  .buscar-subtitle,
+  .card-location,
+  .card-info {
+    color: #B0BEC5;
+  }
+  
+  .match-card-modern,
+  .championship-card-modern,
+  .buscar-empty {
+    background: #263238;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .card-title {
+    color: #ECEFF1;
+  }
+}
