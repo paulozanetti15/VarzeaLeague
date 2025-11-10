@@ -71,6 +71,11 @@
   overflow: visible;
 }
 
+.matchCard:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(9,30,66,0.08);
+}
+
 
 .matchCardInfo {
   color: #444;
@@ -81,6 +86,10 @@
   align-items: flex-start;
   padding: 0;
   height: auto;
+}
+
+.matchCard .card-body {
+  transition: transform .18s ease, box-shadow .18s ease;
 }
 
 .matchCardInfo span {
