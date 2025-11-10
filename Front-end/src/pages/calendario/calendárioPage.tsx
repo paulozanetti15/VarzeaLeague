@@ -34,6 +34,7 @@ function CalendarioPage() {
   const [jogos,setJogos] = react.useState<Partida[]>([])
   const [team,setTeam] = react.useState<Team>({id:0,name:""})
   const [championships, setChampionships] = react.useState<ChampionshipEvent[]>([])
+  const [selectedChampionshipId, setSelectedChampionshipId] = react.useState<number | null>(null);
   useEffect(()=>{
     try
     {
@@ -156,6 +157,20 @@ function CalendarioPage() {
         textColor: '#d9480f'
       }))
   ]
+
+  const filteredEventos = react.useMemo(() => {
+    if (!selectedChampionshipId) return eventos;
+    return eventos.filter(e => e.extendedProps?.type !== 'championship' || e.extendedProps?.championshipId === selectedChampionshipId);
+  }, [eventos, selectedChampionshipId]);
+
+  const nextEvent = react.useMemo(() => {
+    const now = new Date();
+    const future = eventos
+      .map(ev => ({ ev, start: ev.start ? new Date(ev.start) : null }))
+      .filter(x => x.start && x.start >= now)
+      .sort((a,b) => (a.start as any) - (b.start as any));
+    return future.length > 0 ? future[0].ev : null;
+  }, [eventos]);
   const handleEventClick=(info:any)=>{
     const type = info.event.extendedProps?.type;
     if (type === 'match') {
@@ -168,9 +183,26 @@ function CalendarioPage() {
   }
   return (
     <div className='calendario-container'>
-      <h1 className='text-3xl  text-center pt-4 text-black'>Calendário do {team.name}</h1>
-      <div className="mt-4">
-        <FullCalendar
+      <div className="calendario-header">
+        <h1 className='text-3xl text-center pt-4 text-black'>Calendário do {team.name}</h1>
+        <div className="cal-controls">
+          <div className="control-select">
+            <label>Filtrar por Campeonato</label>
+            <select value={selectedChampionshipId ?? ''} onChange={(e) => setSelectedChampionshipId(e.target.value ? Number(e.target.value) : null)}>
+              <option value="">Todos os eventos</option>
+              {championships.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="control-summary">
+            <div className="summary-item">Próximos: <strong>{jogos.length}</strong></div>
+          </div>
+        </div>
+      </div>
+      <div className="calendario-layout">
+        <div className="calendar-main">
+          <FullCalendar
             plugins={[dayGridPlugin,timeGridPlugin, listPlugin]}
             initialView="dayGridMonth"
             headerToolbar={{
@@ -180,7 +212,7 @@ function CalendarioPage() {
             }}
             showNonCurrentDates={false}
             locale={ptBr}
-            events={eventos}
+            events={filteredEventos}
             eventClick={handleEventClick}
             eventContent={arg => {
               const start = arg.event.start;
@@ -193,6 +225,26 @@ function CalendarioPage() {
               )
             }}
           />
+        </div>
+        <aside className="calendar-sidebar">
+          <div className="next-match-card">
+            <h4>Próxima Partida</h4>
+            {nextEvent ? (
+              <div>
+                <div className="nm-title">{nextEvent.title}</div>
+                <div className="nm-date">{new Date(nextEvent.start).toLocaleString()}</div>
+              </div>
+            ) : (
+              <div className="nm-empty">Nenhuma partida agendada</div>
+            )}
+          </div>
+
+          <div className="legend-card">
+            <h5>Legenda</h5>
+            <div className="legend-item"><span className="legend-dot legend-match"></span> Partida Amistosa</div>
+            <div className="legend-item"><span className="legend-dot legend-champ"></span> Início de Campeonato</div>
+          </div>
+        </aside>
       </div>
     </div>
   )
