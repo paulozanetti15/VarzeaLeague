@@ -232,7 +232,7 @@ async function seedDatabase() {
         fase_grupos: false,
         max_teams: 8,
         genero: 'masculino',
-        status: 'open'
+        status: 'finished'
       },
       {
         name: 'Campeonato Feminino SP',
@@ -248,6 +248,36 @@ async function seedDatabase() {
         num_grupos: 3,
         times_por_grupo: 4,
         genero: 'feminino',
+        status: 'finished'
+      },
+      {
+        name: 'Torneio Verão 2025',
+        description: 'Torneio de futebol amador - Verão 2025',
+        start_date: new Date('2025-09-01'),
+        end_date: new Date('2025-10-30'),
+        created_by: organizerEventos.id,
+        modalidade: 'Society',
+        nomequadra: 'Arena Paulista',
+        tipo: 'mata-mata',
+        fase_grupos: false,
+        max_teams: 16,
+        genero: 'misto',
+        status: 'in_progress'
+      },
+      {
+        name: 'Campeonato Misto Regional',
+        description: 'Campeonato misto regional com inscrições abertas',
+        start_date: new Date('2025-11-15'),
+        end_date: new Date('2025-12-20'),
+        created_by: organizerEventos.id,
+        modalidade: 'Futsal',
+        nomequadra: 'Complexo Poliesportivo',
+        tipo: 'liga',
+        fase_grupos: true,
+        max_teams: 10,
+        num_grupos: 2,
+        times_por_grupo: 5,
+        genero: 'misto',
         status: 'open'
       }
     ]);
@@ -258,7 +288,15 @@ async function seedDatabase() {
       { teamId: teams[0].id, championshipId: championships[0].id },
       { teamId: teams[1].id, championshipId: championships[0].id },
       { teamId: teams[3].id, championshipId: championships[0].id },
-      { teamId: teams[2].id, championshipId: championships[1].id }
+      { teamId: teams[2].id, championshipId: championships[1].id },
+      { teamId: teams[0].id, championshipId: championships[2].id },
+      { teamId: teams[1].id, championshipId: championships[2].id },
+      { teamId: teams[2].id, championshipId: championships[2].id },
+      { teamId: teams[3].id, championshipId: championships[2].id },
+      { teamId: teams[0].id, championshipId: championships[3].id },
+      { teamId: teams[1].id, championshipId: championships[3].id },
+      { teamId: teams[2].id, championshipId: championships[3].id },
+      { teamId: teams[3].id, championshipId: championships[3].id }
     ]);
     console.log(`✅ ${teamChampionships.length} inscrições em campeonatos criadas\n`);
 
@@ -266,24 +304,120 @@ async function seedDatabase() {
     const friendlyMatches = await FriendlyMatches.bulkCreate([
       {
         title: 'Partida Amistosa - Campo da Juventude',
-        date: new Date('2025-11-20'),
+        date: new Date('2025-09-15'),
         duration: '90',
         location: 'Campo da Juventude',
         square: 'Campo da Juventude',
         Uf: 'SP',
         Cep: '03164000',
         matchType: 'amistosa',
-        status: 'aberta',
+        status: 'finalizada',
         organizerId: organizerEventos.id
       },
       {
         title: 'Partida Amistosa - Arena Central',
-        date: new Date('2025-11-25'),
+        date: new Date('2025-09-20'),
         duration: '90',
         location: 'Arena Central',
         square: 'Arena Central',
         Uf: 'SP',
         Cep: '03081000',
+        matchType: 'amistosa',
+        status: 'finalizada',
+        organizerId: organizerEventos.id
+      },
+      {
+        title: 'Amistoso - Estádio do Morumbi',
+        date: new Date('2025-10-05'),
+        duration: '90',
+        location: 'Estádio do Morumbi',
+        square: 'Estádio do Morumbi',
+        Uf: 'SP',
+        Cep: '01310100',
+        matchType: 'amistosa',
+        status: 'confirmada',
+        organizerId: organizerEventos.id
+      },
+      {
+        title: 'Amistoso - Pacaembu',
+        date: new Date('2025-10-12'),
+        duration: '90',
+        location: 'Estádio do Pacaembu',
+        square: 'Estádio do Pacaembu',
+        Uf: 'SP',
+        Cep: '01310100',
+        matchType: 'amistosa',
+        status: 'aberta',
+        organizerId: organizerEventos.id
+      },
+      {
+        title: 'Partida Amistosa - Arena Central 2',
+        date: new Date('2025-10-18'),
+        duration: '90',
+        location: 'Arena Central',
+        square: 'Arena Central',
+        Uf: 'SP',
+        Cep: '03081000',
+        matchType: 'amistosa',
+        status: 'cancelada',
+        organizerId: organizerEventos.id
+      },
+      {
+        title: 'Amistoso - Campo da Juventude 2',
+        date: new Date('2025-10-25'),
+        duration: '90',
+        location: 'Campo da Juventude',
+        square: 'Campo da Juventude',
+        Uf: 'SP',
+        Cep: '03164000',
+        matchType: 'amistosa',
+        status: 'finalizada',
+        organizerId: organizerEventos.id
+      },
+      {
+        title: 'Amistoso - Ginásio Municipal',
+        date: new Date('2025-11-05'),
+        duration: '90',
+        location: 'Ginásio Municipal',
+        square: 'Ginásio Municipal',
+        Uf: 'SP',
+        Cep: '01451000',
+        matchType: 'amistosa',
+        status: 'confirmada',
+        organizerId: organizerEventos.id
+      },
+      {
+        title: 'Partida Amistosa - Arena Central 3',
+        date: new Date('2025-11-15'),
+        duration: '90',
+        location: 'Arena Central',
+        square: 'Arena Central',
+        Uf: 'SP',
+        Cep: '03081000',
+        matchType: 'amistosa',
+        status: 'aberta',
+        organizerId: organizerEventos.id
+      },
+      {
+        title: 'Amistoso - Estádio do Morumbi 2',
+        date: new Date('2025-11-20'),
+        duration: '90',
+        location: 'Estádio do Morumbi',
+        square: 'Estádio do Morumbi',
+        Uf: 'SP',
+        Cep: '01310100',
+        matchType: 'amistosa',
+        status: 'finalizada',
+        organizerId: organizerEventos.id
+      },
+      {
+        title: 'Partida Amistosa - Pacaembu 2',
+        date: new Date('2025-11-25'),
+        duration: '90',
+        location: 'Estádio do Pacaembu',
+        square: 'Estádio do Pacaembu',
+        Uf: 'SP',
+        Cep: '01310100',
         matchType: 'amistosa',
         status: 'confirmada',
         organizerId: organizerEventos.id
@@ -295,7 +429,7 @@ async function seedDatabase() {
     const friendlyRules = await FriendlyMatchesRules.bulkCreate([
       {
         matchId: friendlyMatches[0].id,
-        registrationDeadline: new Date('2025-11-19'),
+        registrationDeadline: new Date('2025-09-14'),
         registrationDeadlineTime: '18:00',
         minimumAge: 18,
         maximumAge: 45,
@@ -303,19 +437,93 @@ async function seedDatabase() {
       },
       {
         matchId: friendlyMatches[1].id,
-        registrationDeadline: new Date('2025-11-24'),
+        registrationDeadline: new Date('2025-09-19'),
         registrationDeadlineTime: '18:00',
         minimumAge: 16,
         maximumAge: 50,
         gender: 'Misto'
+      },
+      {
+        matchId: friendlyMatches[2].id,
+        registrationDeadline: new Date('2025-10-04'),
+        registrationDeadlineTime: '18:00',
+        minimumAge: 18,
+        maximumAge: 50,
+        gender: 'Masculino'
+      },
+      {
+        matchId: friendlyMatches[3].id,
+        registrationDeadline: new Date('2025-10-11'),
+        registrationDeadlineTime: '18:00',
+        minimumAge: 18,
+        maximumAge: 40,
+        gender: 'Masculino'
+      },
+      {
+        matchId: friendlyMatches[4].id,
+        registrationDeadline: new Date('2025-10-17'),
+        registrationDeadlineTime: '18:00',
+        minimumAge: 18,
+        maximumAge: 45,
+        gender: 'Misto'
+      },
+      {
+        matchId: friendlyMatches[5].id,
+        registrationDeadline: new Date('2025-10-24'),
+        registrationDeadlineTime: '18:00',
+        minimumAge: 18,
+        maximumAge: 50,
+        gender: 'Masculino'
+      },
+      {
+        matchId: friendlyMatches[6].id,
+        registrationDeadline: new Date('2025-11-04'),
+        registrationDeadlineTime: '18:00',
+        minimumAge: 18,
+        maximumAge: 45,
+        gender: 'Misto'
+      },
+      {
+        matchId: friendlyMatches[7].id,
+        registrationDeadline: new Date('2025-11-14'),
+        registrationDeadlineTime: '18:00',
+        minimumAge: 18,
+        maximumAge: 40,
+        gender: 'Masculino'
+      },
+      {
+        matchId: friendlyMatches[8].id,
+        registrationDeadline: new Date('2025-11-19'),
+        registrationDeadlineTime: '18:00',
+        minimumAge: 18,
+        maximumAge: 45,
+        gender: 'Misto'
+      },
+      {
+        matchId: friendlyMatches[9].id,
+        registrationDeadline: new Date('2025-11-24'),
+        registrationDeadlineTime: '18:00',
+        minimumAge: 18,
+        maximumAge: 50,
+        gender: 'Masculino'
       }
     ]);
     console.log(`✅ ${friendlyRules.length} regras de partidas criadas\n`);
 
     console.log('🔗 Vinculando times às partidas amistosas...');
     const friendlyMatchTeams = await FriendlyMatchTeams.bulkCreate([
-      { matchId: friendlyMatches[1].id, teamId: teams[0].id },
-      { matchId: friendlyMatches[1].id, teamId: teams[1].id }
+      { matchId: friendlyMatches[0].id, teamId: teams[0].id },
+      { matchId: friendlyMatches[0].id, teamId: teams[1].id },
+      { matchId: friendlyMatches[1].id, teamId: teams[1].id },
+      { matchId: friendlyMatches[1].id, teamId: teams[2].id },
+      { matchId: friendlyMatches[2].id, teamId: teams[0].id },
+      { matchId: friendlyMatches[2].id, teamId: teams[3].id },
+      { matchId: friendlyMatches[5].id, teamId: teams[2].id },
+      { matchId: friendlyMatches[5].id, teamId: teams[3].id },
+      { matchId: friendlyMatches[8].id, teamId: teams[0].id },
+      { matchId: friendlyMatches[8].id, teamId: teams[1].id },
+      { matchId: friendlyMatches[9].id, teamId: teams[2].id },
+      { matchId: friendlyMatches[9].id, teamId: teams[3].id }
     ]);
     console.log(`✅ ${friendlyMatchTeams.length} times vinculados às partidas\n`);
 
@@ -335,6 +543,46 @@ async function seedDatabase() {
         date: new Date('2025-01-22'),
         location: 'Arena Paulista',
         quadra: 'Arena Paulista',
+        Rodada: 1
+      },
+      {
+        id: 3,
+        championship_id: championships[1].id,
+        date: new Date('2025-02-10'),
+        location: 'Ginásio Municipal',
+        quadra: 'Quadra A',
+        Rodada: 1
+      },
+      {
+        id: 4,
+        championship_id: championships[2].id,
+        date: new Date('2025-09-10'),
+        location: 'Arena Paulista',
+        quadra: 'Arena Paulista',
+        Rodada: 1
+      },
+      {
+        id: 5,
+        championship_id: championships[2].id,
+        date: new Date('2025-09-15'),
+        location: 'Arena Paulista',
+        quadra: 'Arena Paulista',
+        Rodada: 2
+      },
+      {
+        id: 6,
+        championship_id: championships[3].id,
+        date: new Date('2025-11-20'),
+        location: 'Complexo Poliesportivo',
+        quadra: 'Quadra 1',
+        Rodada: 1
+      },
+      {
+        id: 7,
+        championship_id: championships[3].id,
+        date: new Date('2025-11-25'),
+        location: 'Complexo Poliesportivo',
+        quadra: 'Quadra 2',
         Rodada: 1
       }
     ]);

@@ -156,71 +156,76 @@ Tipo: Usuário Comum (não cria dados)
 - **Descrição**: Primeiro campeonato oficial da temporada 2025
 - **Período**: 15/01/2025 a 30/03/2025
 - **Criado por**: João Silva (admin_eventos)
+- **Status**: Finalizado
 - **Modalidade**: Society
-- **Local**: Arena Paulista
 - **Tipo**: Eliminatórias
-- **Fase de Grupos**: Não
 - **Máximo de Times**: 8
 - **Gênero**: Masculino
-- **Times Inscritos**: 
-  - Tigres FC
-  - Leões United
-  - Panteras FC
+- **Times Inscritos**: Tigres FC, Leões United, Panteras FC
 
 #### Campeonato Feminino SP
 - **Nome**: Campeonato Feminino SP
 - **Descrição**: Campeonato de futebol feminino de São Paulo
 - **Período**: 01/02/2025 a 15/04/2025
 - **Criado por**: João Silva (admin_eventos)
+- **Status**: Finalizado
 - **Modalidade**: Futsal
-- **Local**: Ginásio Municipal
-- **Tipo**: Grupos
-- **Fase de Grupos**: Sim
-- **Número de Grupos**: 3
-- **Times por Grupo**: 4
+- **Tipo**: Liga com grupos
 - **Máximo de Times**: 12
 - **Gênero**: Feminino
-- **Times Inscritos**: 
-  - Águias FC (Grupo A)
+- **Times Inscritos**: Águias FC
 
-**Total**: 2 campeonatos (4 inscrições de times)
+#### Torneio Verão 2025
+- **Nome**: Torneio Verão 2025
+- **Descrição**: Torneio de futebol amador - Verão 2025
+- **Período**: 01/09/2025 a 30/10/2025
+- **Criado por**: João Silva (admin_eventos)
+- **Status**: Em Andamento
+- **Modalidade**: Society
+- **Tipo**: Eliminatórias
+- **Máximo de Times**: 16
+- **Gênero**: Misto
+- **Times Inscritos**: Tigres FC, Leões United, Águias FC, Panteras FC
+
+#### Campeonato Misto Regional
+- **Nome**: Campeonato Misto Regional
+- **Descrição**: Campeonato misto regional com inscrições abertas
+- **Período**: 15/11/2025 a 20/12/2025
+- **Criado por**: João Silva (admin_eventos)
+- **Status**: Inscrições Abertas
+- **Modalidade**: Futsal
+- **Tipo**: Liga com grupos
+- **Máximo de Times**: 10
+- **Gênero**: Misto
+- **Times Inscritos**: Tigres FC, Leões United, Águias FC, Panteras FC
+
+**Total**: 4 campeonatos com variados status para testar o dashboard
 
 ---
 
 ### 6️⃣ Partidas Amistosas (Friendly Matches)
 
-#### Partida #1
-- **Data**: 20/11/2025
-- **Horário**: 19:00
-- **Duração**: 90 minutos
-- **Local**: Campo da Juventude
-- **Endereço**: Rua da Mooca, 500 - Mooca, São Paulo/SP - CEP: 03164000
-- **Status**: Aberta (aguardando times)
-- **Criada por**: João Silva (admin_eventos)
-- **Regras**:
-  - Data limite para inscrição: 19/11/2025 às 18:00
-  - Idade mínima: 18 anos
-  - Idade máxima: 45 anos
-  - Gênero: Masculino
+**Total**: 10 partidas amistosas com variados status para testes do dashboard
 
-#### Partida #2
-- **Data**: 25/11/2025
-- **Horário**: 20:00
-- **Duração**: 90 minutos
-- **Local**: Arena Central
-- **Endereço**: Rua Tuiuti, 1000 - Tatuapé, São Paulo/SP - CEP: 03081000
-- **Status**: Confirmada
-- **Criada por**: João Silva (admin_eventos)
-- **Times Participantes**:
-  - Tigres FC
-  - Leões United
-- **Regras**:
-  - Data limite para inscrição: 24/11/2025 às 18:00
-  - Idade mínima: 16 anos
-  - Idade máxima: 50 anos
-  - Gênero: Misto
+| # | Título | Data | Status | Criada por |
+|---|--------|------|--------|-----------|
+| 1 | Partida Amistosa - Campo da Juventude | 15/09/2025 | Finalizada | João Silva |
+| 2 | Partida Amistosa - Arena Central | 20/09/2025 | Finalizada | João Silva |
+| 3 | Amistoso - Estádio do Morumbi | 05/10/2025 | Confirmada | João Silva |
+| 4 | Amistoso - Pacaembu | 12/10/2025 | Aberta | João Silva |
+| 5 | Partida Amistosa - Arena Central 2 | 18/10/2025 | Cancelada | João Silva |
+| 6 | Amistoso - Campo da Juventude 2 | 25/10/2025 | Finalizada | João Silva |
+| 7 | Amistoso - Ginásio Municipal | 05/11/2025 | Confirmada | João Silva |
+| 8 | Partida Amistosa - Arena Central 3 | 15/11/2025 | Aberta | João Silva |
+| 9 | Amistoso - Estádio do Morumbi 2 | 20/11/2025 | Finalizada | João Silva |
+| 10 | Partida Amistosa - Pacaembu 2 | 25/11/2025 | Confirmada | João Silva |
 
-**Total**: 2 partidas amistosas (2 regras, 2 vínculos de times)
+**Status Distribuição**:
+- ✅ Finalizadas: 3
+- 🔄 Confirmadas: 3
+- 📋 Abertas: 2
+- ❌ Canceladas: 1
+- **Total**: 10 partidas
 
 ---
 
@@ -253,19 +258,19 @@ Tipo: Usuário Comum (não cria dados)
 | Entidade | Quantidade |
 |----------|------------|
 | Tipos de Usuário | 4 |
-| Usuários | 8 (1 admin master + 1 organizador eventos + 4 gerenciadores times + 2 usuários comuns) |
-| Gerenciadores de Times | 4 (cada um pode criar apenas 1 time) |
+| Usuários | 8 |
+| Gerenciadores de Times | 4 |
 | Times | 4 |
 | Jogadores | 20 |
 | Vínculos Time-Jogador | 20 |
-| Campeonatos | 2 |
-| Inscrições em Campeonatos | 4 |
-| Partidas Amistosas | 2 |
-| Regras de Partidas | 2 |
-| Times em Partidas Amistosas | 2 |
-| Partidas de Campeonato | 2 |
+| Campeonatos | 4 |
+| Inscrições em Campeonatos | 12 |
+| Partidas Amistosas | 10 |
+| Regras de Partidas Amistosas | 10 |
+| Vinculações Time-Partida | 12 |
+| Partidas de Campeonato | 7 |
 
-**Total de Registros**: ~70 registros
+**Total de Registros**: ~150+ registros
 
 ---
 
