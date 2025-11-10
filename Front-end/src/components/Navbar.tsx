@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AppBar, IconButton, Avatar, Tooltip } from '@mui/material';
-import { Menu as MenuIcon, ArrowBack, Search } from '@mui/icons-material';
+import { Menu as MenuIcon, ArrowBack, Search, Dashboard } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import NavbarBrand from './Navbar/NavbarBrand';
@@ -39,6 +39,12 @@ const Navbar: React.FC = () => {
         <NavbarBrand />
         <div className="navbar-desktop-menu">
           <RoleMenu />
+          <button
+            className="navbar-menu-button"
+            onClick={() => navigate('/dashboard')}
+          >
+            <Dashboard /> Dashboard
+          </button>
           <button
             className="navbar-menu-button"
             onClick={() => navigate('/buscar-partidas')}

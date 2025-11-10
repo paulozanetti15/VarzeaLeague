@@ -25,6 +25,17 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({ open, onClose }) => {
       </Typography>
       <Divider className="navbar-divider" />
       <List className="navbar-drawer-list">
+        <ListItem
+          component="div"
+          key="Dashboard"
+          onClick={() => handleNavigation('/dashboard')}
+          className="navbar-drawer-item"
+        >
+          <ListItemIcon className="navbar-drawer-item-icon">
+            <Dashboard />
+          </ListItemIcon>
+          <ListItemText primary="Dashboard" />
+        </ListItem>
         {!user && (
           <>
             <Divider className="navbar-divider" />
