@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../config/api';
-import { Box, Grid, CircularProgress, Avatar, Chip, Typography, Paper, Stack } from '@mui/material';
 import MatchFilters from '../../features/matches/MatchFilters/MatchFilters';
 import { format } from 'date-fns';
+import './CampeonatoListing.css';
 
 type Championship = any;
 
@@ -12,25 +12,57 @@ const ChampionshipCard: React.FC<{ champ: Championship; clickable: boolean }> = 
   const goToDetail = () => {
     if (champ && (champ.id || champ.id === 0)) navigate(`/championships/${champ.id}`);
   };
+  
   return (
-    <Paper
-      sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2, boxShadow: 3, cursor: clickable ? 'pointer' : 'default' }}
-      elevation={0}
+    <div 
+      className="championship-card-modern"
       onClick={clickable ? goToDetail : undefined}
+      style={{ cursor: clickable ? 'pointer' : 'default' }}
     >
-      <Avatar sx={{ bgcolor: 'warning.main', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>{(champ.name || 'C').charAt(0)}</Avatar>
-      <Box sx={{ flex: 1 }}>
-        <Typography variant="h6">{champ.name || 'Campeonato sem nome'}</Typography>
-        <Typography variant="body2" color="text.secondary">{champ.description || ''}</Typography>
-        <Stack direction="row" spacing={1} mt={1}>
-          <Chip label={`Início: ${champ.start_date ? format(new Date(champ.start_date), 'dd/MM/yyyy') : '-'}`} size="small" />
-          <Chip label={`Fim: ${champ.end_date ? format(new Date(champ.end_date), 'dd/MM/yyyy') : '-'}`} size="small" />
-        </Stack>
-      </Box>
-      <Box textAlign="right">
-        <Chip label="Campeonato" color="info" size="small" />
-      </Box>
-    </Paper>
+      <div className="championship-card-avatar">
+        {(champ.name || 'C').charAt(0)}
+      </div>
+      
+      <div className="championship-card-content">
+        <h3 className="championship-card-title">{champ.name || 'Campeonato sem nome'}</h3>
+        {champ.description && (
+          <p className="championship-card-description">{champ.description}</p>
+        )}
+        
+        <div className="championship-card-info">
+          <div className="championship-card-dates">
+            <span className="championship-date-badge">
+              📅 Início: {champ.start_date ? format(new Date(champ.start_date), 'dd/MM/yyyy') : '-'}
+            </span>
+            <span className="championship-date-badge">
+              🏁 Fim: {champ.end_date ? format(new Date(champ.end_date), 'dd/MM/yyyy') : '-'}
+            </span>
+          </div>
+          
+          {champ.modalidade && (
+            <span className="championship-info-badge">
+              ⚽ {champ.modalidade}
+            </span>
+          )}
+          
+          {champ.genero && (
+            <span className="championship-info-badge">
+              👥 {champ.genero}
+            </span>
+          )}
+          
+          {champ.nome_quadra && (
+            <span className="championship-info-badge">
+              📍 {champ.nome_quadra}
+            </span>
+          )}
+        </div>
+      </div>
+      
+      <div className="championship-card-badge">
+        <span className="status-badge status-championship">🏆 Campeonato</span>
+      </div>
+    </div>
   );
 };
 
@@ -93,9 +125,14 @@ const CampeonatoListing: React.FC = () => {
   }, [buildQuery, filters.championshipDateFrom, filters.championshipDateTo]);
 
   return (
-    <Box component="main" sx={{ flex: 1, p: { xs: 1, sm: 2 }, mt: { md: 3 } }}>
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={3}>
+    <main className="buscar-campeonatos-container">
+      <div className="buscar-header">
+        <h1 className="buscar-title">🏆 Buscar Campeonatos</h1>
+        <p className="buscar-subtitle">Encontre e acompanhe campeonatos</p>
+      </div>
+
+      <div className="buscar-layout">
+        <aside className="buscar-sidebar">
           <MatchFilters
             filters={filters as any}
             onChange={(next) => setFilters(next)}
@@ -103,24 +140,34 @@ const CampeonatoListing: React.FC = () => {
             defaultStatuses={[]}
             showTypeSelector={false}
           />
-        </Grid>
-        <Grid item xs={12} md={9}>
+        </aside>
+
+        <section className="buscar-content">
           {loading ? (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}><CircularProgress /></Box>
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Carregando campeonatos...</p>
+            </div>
           ) : (
             <>
               {champs.length === 0 ? (
-                <Typography variant="body1">Nenhum resultado.</Typography>
+                <div className="empty-state">
+                  <div className="empty-icon">🏆</div>
+                  <h3>Nenhum campeonato encontrado</h3>
+                  <p>Tente ajustar os filtros para ver mais resultados</p>
+                </div>
               ) : (
-                champs.slice(0, 50).map((c: any) => (
-                  <ChampionshipCard key={c.id} champ={c} clickable={true} />
-                ))
+                <div className="championships-grid">
+                  {champs.slice(0, 50).map((c: any) => (
+                    <ChampionshipCard key={c.id} champ={c} clickable={true} />
+                  ))}
+                </div>
               )}
             </>
           )}
-        </Grid>
-      </Grid>
-    </Box>
+        </section>
+      </div>
+    </main>
   );
 };
 
