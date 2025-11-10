@@ -30,6 +30,9 @@ import userTypeRoutes from './routes/userTypeRoutes';
 import overviewRoutes from './routes/overviewRoutes';
 import rankingRoutes from './routes/rankingRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import friendlyMatchReportRoutes from './routes/friendlyMatchReportRoutes';
+import championshipReportRoutes from './routes/championshipReportRoutes';
+import punishmentRoutes from './routes/punishmentRoutes';
 import MatchChampionship from './models/MatchChampionshipModel';
 import MatchChampionshpReport from './models/MatchReportChampionshipModel';
 import { ErrorRequestHandler } from 'express-serve-static-core';
@@ -83,6 +86,9 @@ app.use('/api/usertypes', userTypeRoutes);
 app.use('/api/overview', overviewRoutes);
 app.use('/api/ranking', rankingRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/friendly-match-reports', friendlyMatchReportRoutes);
+app.use('/api/championship-reports', championshipReportRoutes);
+app.use('/api/punishments', punishmentRoutes);
 
 // Middleware de tratamento de erros global
 // Deve ser o último middleware, após todas as rotas
@@ -208,8 +214,9 @@ const startServer = async () => {
     await seedUserTypes();
     
     const port = process.env.PORT || 3001;
-    app.listen(port, () => {
-      console.log(`Servidor rodando na porta ${port}`);
+    const host = process.env.HOST || '0.0.0.0'; // Escutar em todas as interfaces para acesso externo
+    app.listen(port, host, () => {
+      console.log(`Servidor rodando em http://${host}:${port}`);
       console.log('Rotas disponíveis:');
       console.log('- POST /api/auth/register');
       console.log('- POST /api/auth/login');
