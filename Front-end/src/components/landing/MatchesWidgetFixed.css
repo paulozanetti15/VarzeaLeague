@@ -2,10 +2,114 @@
   width: 100%;
   max-width: 360px;
   min-width: 240px;
-  min-height: 270px;
-  padding: 1.7rem 1.2rem 1.2rem 1.2rem;
-  font-size: 1.04rem;
+  min-height: 220px;
+  padding: 1.2rem 1rem 1rem 1rem;
+  font-size: 1rem;
   box-sizing: border-box;
+}
+
+/* Estilos específicos para cards de destaque na landing */
+.match-card.match-card-globo.highlight-card.match-card-large {
+  min-height: 280px !important;
+  height: auto !important;
+  max-height: none !important;
+  padding: 1.5rem !important;
+  gap: 0.8rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+
+.match-card.match-card-globo .highlight-title-row {
+  margin-bottom: 0.5rem !important;
+  text-align: center !important;
+  width: 100% !important;
+  overflow: visible !important;
+  display: block !important;
+}
+
+.match-card.match-card-globo .highlight-title-row .highlight-title {
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  width: 100% !important;
+}
+
+.match-card.match-card-globo .highlight-date-row {
+  margin-bottom: 0.7rem !important;
+  text-align: center !important;
+  width: 100% !important;
+  display: block !important;
+}
+
+.match-card.match-card-globo .highlight-date-row .highlight-date {
+  font-size: 0.9rem !important;
+  white-space: nowrap !important;
+  display: block !important;
+}
+
+.match-card.match-card-globo .highlight-vs-row {
+  margin: 0.8rem 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 0.8rem !important;
+  overflow: visible !important;
+}
+
+.match-card.match-card-globo .highlight-location-row {
+  margin: 0.6rem 0 !important;
+  text-align: center !important;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.match-card.match-card-globo .highlight-location-row .footer-location {
+  font-size: 0.9rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  color: #374151 !important;
+  font-weight: 500 !important;
+}
+
+.match-card.match-card-globo .highlight-status-row {
+  margin: 0.7rem 0 !important;
+  text-align: center !important;
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 0.6rem !important;
+  flex-wrap: nowrap !important;
+}
+
+.match-card.match-card-globo .highlight-status-row .highlight-matchname {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+}
+
+.match-card.match-card-globo .highlight-status-row .highlight-status-pill {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+.match-card.match-card-globo .highlight-footer {
+  margin-top: 0.7rem !important;
+  width: 100% !important;
+  overflow: visible !important;
 }
 .match-date-row {
   width: 100%;
@@ -29,9 +133,40 @@
   grid-template-columns: 1fr 2fr 1fr;
   align-items: center;
   width: 100%;
-  margin-top: 0.7rem;
+  margin-top: 0.5rem;
   margin-bottom: 0.1rem;
   gap: 0.5rem;
+}
+
+/* Ajustes específicos para footer dentro dos cards de destaque */
+.match-card-globo .footer-bottom-bar {
+  margin-top: 0.7rem !important;
+  padding-top: 0.5rem !important;
+  gap: 0.5rem !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+  overflow: visible !important;
+}
+
+.match-card-globo .footer-type {
+  font-size: 0.85rem !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  text-align: left !important;
+  color: #374151 !important;
+  font-weight: 500 !important;
+}
+
+.match-card-globo .status-pill {
+  padding: 0.3rem 0.7rem !important;
+  font-size: 0.8rem !important;
+  justify-self: end !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }
 .footer-bottom-bar .footer-type {
   text-align: left;
@@ -79,17 +214,60 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 2.2rem;
-  margin: 1.2rem 0 1.2rem 0;
+  gap: 1.5rem;
+  margin: 0.8rem 0 0.8rem 0;
+}
+
+/* Ajustes específicos para align-vs-horizontal dentro dos cards de destaque */
+.match-card-globo .align-vs-horizontal {
+  gap: 1rem !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.match-card-globo .align-vs-horizontal > div {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  max-width: 45% !important;
+  display: flex !important;
+  overflow: hidden !important;
+}
+
+.match-card-globo .highlight-team {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: block !important;
+}
+
+.match-card-globo .highlight-vs-text {
+  min-width: 60px !important;
+  max-width: 60px !important;
+  height: 36px !important;
+  font-size: 0.9rem !important;
+  padding: 0 !important;
+  margin: 0 0.5rem !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 .footer-location-bottom {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.08rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #374151;
-  margin-top: 0.7rem;
+  margin-top: 0.5rem;
   margin-bottom: 0.2rem;
   .cards-container {
     display: flex;
@@ -144,7 +322,7 @@
   .match-card {
     background: #ffffff;
     border-radius: 18px;
-    padding: 1.8rem 1.6rem;
+    padding: 1.4rem 1.4rem;
     box-shadow: 0 18px 40px rgba(13, 71, 161, 0.06);
     border: 1px solid rgba(13,71,161,0.04);
     cursor: pointer;
@@ -152,11 +330,11 @@
     position: relative;
     overflow: visible;
     width: 320px;
-    min-height: 300px;
+    min-height: 240px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
+    gap: 0.6rem;
     text-align: center;
   }
 
@@ -171,25 +349,25 @@
   .highlight-vs-text {
     position: relative; /* keep in flow */
     z-index: 6;
-    min-width: 72px;
-    height: 40px;
+    min-width: 60px;
+    height: 34px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 999px;
     background: #1976D2;
     color: #fff;
-    font-weight: 900;
-    font-size: 0.98rem;
-    padding: 0 0.75rem;
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 0 0.6rem;
     box-shadow: 0 10px 26px rgba(25,118,210,0.12);
     flex: 0 0 auto;
   }
 
   /* Ajustes de times para ter espaço e quebra de linha como no print */
   .highlight-team {
-    font-size: 1.12rem;
-    font-weight: 900;
+    font-size: 1rem;
+    font-weight: 800;
     color: #1a202c;
     max-width: 140px;
     flex: 1 1 0;
@@ -228,6 +406,63 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.4px;
+  }
+
+  /* Estilos para os cards de destaque */
+  .highlight-card {
+    min-height: 200px !important;
+    padding: 1rem 1.2rem !important;
+  }
+
+  .highlight-title-row {
+    margin-bottom: 0.3rem;
+  }
+
+  .highlight-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #374151;
+  }
+
+  .highlight-date-row {
+    margin-bottom: 0.5rem;
+  }
+
+  .highlight-date {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #6b7280;
+  }
+
+  .highlight-vs-row {
+    margin: 0.6rem 0;
+  }
+
+  .highlight-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .highlight-matchname {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b7280;
+    flex: 1;
+    text-align: left;
+  }
+
+  .highlight-status-pill {
+    padding: 0.25rem 0.65rem;
+    font-size: 0.75rem;
+  }
+
+  .footer-type {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b7280;
   }
 }
 .teams-confrontation {

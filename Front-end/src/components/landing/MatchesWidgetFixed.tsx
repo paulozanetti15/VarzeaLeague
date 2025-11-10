@@ -195,6 +195,12 @@ export function MatchesWidgetFixed() {
                         <span className="highlight-team" style={{ wordBreak: 'break-word', textAlign: 'left', width: '100%' }}>{match.awayTeam?.name || '---'}</span>
                       </div>
                     </div>
+                    <div className="highlight-location-row">
+                      <span className="footer-location">
+                        <i className="fas fa-map-marker-alt"></i>
+                        {match.location}
+                      </span>
+                    </div>
                     <div className="highlight-status-row">
                       <span className="highlight-matchname">{match.title || match.championship}</span>
                       <span className="highlight-status-pill status-pill"
@@ -212,10 +218,6 @@ export function MatchesWidgetFixed() {
                     </div>
                     <div className="highlight-footer footer-bottom-bar">
                       <span className="footer-type">Amistoso</span>
-                      <span className="footer-location footer-location-bottom">
-                        <i className="fas fa-map-marker-alt"></i>
-                        {match.location}
-                      </span>
                       <span className={`status-pill ${match.status}`}
                         style={{ background: match.status === 'cancelada' ? '#fee2e2' : match.status === 'finished' ? '#dcfce7' : '#e0f2fe', color: match.status === 'cancelada' ? '#dc2626' : match.status === 'finished' ? '#16a34a' : '#2563eb' }}>
                         {match.status === 'cancelada' ? 'CANCELADA' : match.status === 'finished' ? 'ENCERRADO' : 'ABERTO'}
