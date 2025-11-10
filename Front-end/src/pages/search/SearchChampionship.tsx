@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import { API_BASE_URL } from '../../config/api';
 import { Box, Grid, CircularProgress, Avatar, Chip, Typography, Paper, Stack } from '@mui/material';
 import MatchFilters from '../../features/matches/MatchFilters/MatchFilters';
@@ -17,6 +18,9 @@ const ChampionshipCard: React.FC<{ champ: Championship; clickable: boolean }> = 
       sx={{ p: 2, mb: 2, display: 'flex', alignItems: 'center', gap: 2, borderRadius: 2, boxShadow: 3, cursor: clickable ? 'pointer' : 'default' }}
       elevation={0}
       onClick={clickable ? goToDetail : undefined}
+      role={clickable ? 'button' : undefined}
+      aria-label={`Abrir campeonato ${champ?.name ?? ''}`}
+      tabIndex={clickable ? 0 : -1}
     >
       <Avatar sx={{ bgcolor: 'warning.main', width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 } }}>{(champ.name || 'C').charAt(0)}</Avatar>
       <Box sx={{ flex: 1 }}>
@@ -35,7 +39,8 @@ const ChampionshipCard: React.FC<{ champ: Championship; clickable: boolean }> = 
 };
 
 const CampeonatoListing: React.FC = () => {
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const canClick = user?.userTypeId === 1 || user?.userTypeId === 2 || user?.userTypeId === 3;
   const [loading, setLoading] = useState(false);
   const [champs, setChamps] = useState<Championship[]>([]);
 
@@ -113,7 +118,7 @@ const CampeonatoListing: React.FC = () => {
                 <Typography variant="body1">Nenhum resultado.</Typography>
               ) : (
                 champs.slice(0, 50).map((c: any) => (
-                  <ChampionshipCard key={c.id} champ={c} clickable={true} />
+                  <ChampionshipCard key={c.id} champ={c} clickable={!!canClick} />
                 ))
               )}
             </>
