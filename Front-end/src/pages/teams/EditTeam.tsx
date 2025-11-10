@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { API_BASE } from '../../config/api';
+import { API_BASE, API_BASE_URL, getTeamBannerUrl } from '../../config/api';
 import './CreateTeam.css';
 import PaletteIcon from '@mui/icons-material/Palette';
 import ImageIcon from '@mui/icons-material/Image';
@@ -15,7 +15,6 @@ import './EditTeam.css';
 import PlayerModal from '../../components/Modals/Players/ManageTeamPlayersModal';
 import ToastComponent from '../../components/Toast/ToastComponent';
 import { getTeamById, getTeamPlayers, deleteTeam } from '../../services/teams.service';
-import { API_BASE, getTeamBannerUrl } from '../../config/api';
 
 interface PlayerData {
   id?: number;
