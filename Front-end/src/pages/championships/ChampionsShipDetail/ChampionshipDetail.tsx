@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import PunicaoCampeonatoRegisterModal from '../../../components/Modals/Punishment/Championships/PunishmentChampionshipRegisterModal';
 import PunicaoCampeonatoModalInfo from '../../../components/Modals/Punishment/Championships/PunishmentChampionshipInfoModal';
 import SelectTeamPlayersChampionshipModal from '../../../components/Modals/Teams/SelectTeamPlayersChampionshipModal';
+import RemoveTeamsFromChampionshipModal from '../../../components/Modals/Teams/RemoveTeamsFromChampionshipModal';
 
 interface Championship {
   id: number;
@@ -220,6 +221,10 @@ const ChampionshipDetail: React.FC = () => {
     setShowLeaveModal(true);
   };
 
+  const [showRemoveTeamsModal, setShowRemoveTeamsModal] = useState(false);
+
+  const isOwner = Boolean(currentUser) && Boolean(championship) && Number(currentUser?.id) === Number(championship?.created_by);
+
   const confirmLeave = async () => {
     if (!leaveModalTeamId) return;
     setShowLeaveModal(false);
@@ -389,6 +394,16 @@ const ChampionshipDetail: React.FC = () => {
                     Agendamento de Partidas
                   </button>
 
+                  {isOwner && (
+                    <button
+                      className="action-btn delete-multiple-btn"
+                      onClick={() => setShowRemoveTeamsModal(true)}
+                    >
+                      <span className="btn-icon">🗑️</span>
+                      Excluir Times
+                    </button>
+                  )}
+
                     <button
                       className="action-btn ranking-btn"
                       onClick={handleOpenRankingClassificacao}
@@ -501,19 +516,7 @@ const ChampionshipDetail: React.FC = () => {
                       )}
                     </div>
                     
-                    {hasEditPermission && (
-                      <button
-                        type="button"
-                        className="remove-team-btn"
-                        data-team-id={team.id}
-                        onClick={() => requestLeave(team.id)}
-                        onMouseDown={() => console.log('remove-button mouseDown', team.id)}
-                        onClickCapture={() => console.log('remove-button clickCapture', team.id)}
-                        disabled={isLeavingTeamId === team.id}
-                      >
-                        {isLeavingTeamId === team.id ? 'Removendo...' : 'Remover'}
-                      </button>
-                    )}
+                    {/* per-card remove button removed; owner can remove multiple via the 'Excluir Times' action */}
                     
                     {/* leave button removed from team card; moved to actions area */}
                   </div>
@@ -768,6 +771,16 @@ const ChampionshipDetail: React.FC = () => {
             const updated = await getChampionshipById(Number(id));
             setChampionship(updated);
           } catch {}
+        }}
+      />
+
+      <RemoveTeamsFromChampionshipModal
+        show={showRemoveTeamsModal}
+        onHide={() => setShowRemoveTeamsModal(false)}
+        championshipId={Number(id)}
+        onSuccess={async () => {
+          await loadChampionshipTeams();
+          await loadUserTeams();
         }}
       />
 
