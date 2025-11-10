@@ -25,7 +25,7 @@ export class PlayerController {
       if (teamId) {
         const existingPlayerInSameTeam = await Player.findOne({
           where: { 
-            name: normalizedName,
+            name: trimmedName,
             isDeleted: false
           },
           include: [
