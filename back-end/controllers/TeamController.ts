@@ -931,7 +931,7 @@ static async getTeamCaptain(req: AuthRequest, res:Response) : Promise<void> {
           // Criar novo jogador e associar
           try {
             const newPlayer = await Player.create({
-              nome: nomePlayer.toLowerCase(),
+              nome: nomePlayer,
               sexo: sexoPlayer,
               ano: anoPlayer,
               posicao: posicaoPlayer,

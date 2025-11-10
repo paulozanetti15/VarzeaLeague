@@ -3,7 +3,7 @@ import Player from '../models/PlayerModel';
 import Team from '../models/TeamModel';
 import TeamPlayer from '../models/TeamPlayerModel';
 import { AuthRequest } from '../middleware/auth';
-import { where, Op } from 'sequelize';
+import { where, Op, fn, col } from 'sequelize';
 
 export class PlayerController {
   static async create(req: AuthRequest, res: Response): Promise<void> {
@@ -21,13 +21,16 @@ export class PlayerController {
         return;
       }
 
-      const normalizedName = nome.trim().toLowerCase();
+      const trimmedName = nome.trim();
+      const normalizedName = trimmedName.toLowerCase();
 
       // Removida validação de nome duplicado - permitir múltiplos jogadores com mesmo nome
       let player = await Player.findOne({
         where: { 
-          nome: normalizedName,
-          isDeleted: false
+          [Op.and]: [
+            where(fn('LOWER', col('nome')), normalizedName),
+            { isDeleted: false }
+          ]
         },
         include: [
           {
@@ -41,7 +44,7 @@ export class PlayerController {
 
       if (!player) {
         player = await Player.create({
-          nome: normalizedName,
+          nome: trimmedName,
           sexo,
           ano,
           posicao,
@@ -247,12 +250,13 @@ export class PlayerController {
             continue;
           }
 
-          const normalizedName = jogador.nome.trim().toLowerCase();
+          const trimmed = jogador.nome.trim();
+          const normalizedName = trimmed.toLowerCase();
           
           if (!jogador.id) {
             // Removida validação de nome duplicado - sempre criar novo jogador
             const player = await Player.create({
-              nome: normalizedName,
+              nome: trimmed,
               sexo: jogador.sexo,
               ano: jogador.ano,
               posicao: jogador.posicao,
@@ -291,7 +295,7 @@ export class PlayerController {
 
             // Removida validação de nome duplicado - permitir alterar nome mesmo se já existir
             await playerToUpdate.update({
-              nome: normalizedName,
+              nome: trimmed,
               sexo: jogador.sexo,
               ano: jogador.ano,
               posicao: jogador.posicao

@@ -37,7 +37,8 @@ Player.init(
       type: DataTypes.STRING,
       allowNull: false,
       set(value: string) {
-        this.setDataValue('nome', value.trim().toLowerCase());
+        // Preservar capitalização informada; apenas remover espaços extras
+        this.setDataValue('nome', value.trim());
       },
     },
     sexo: {
