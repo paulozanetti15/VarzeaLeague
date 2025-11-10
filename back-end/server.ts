@@ -10,14 +10,14 @@ import passwordResetRoutes from './routes/passwordResetRoutes';
 import teamRoutes from './routes/teamRoutes';
 import playerRoutes from './routes/playerRoutes';
 import UserModel from './models/UserModel';
-import MatchModel from './models/MatchModel';
+import FriendlyMatchesModel from './models/FriendlyMatchesModel';
 import TeamModel from './models/TeamModel';
 import PlayerModel from './models/PlayerModel';
 import UserTypeModel from './models/UserTypeModel';
-import MatchTeams from './models/MatchTeamsModel';
+import MatchTeams from './models/FriendlyMatchTeamsModel';
 import TeamPlayer from './models/TeamPlayerModel';
-import RulesModel from './models/RulesModel';
-import AttendanceModel from './models/AttendanceModel'; 
+import RulesModel from './models/FriendlyMatchesRulesModel';
+import AttendanceModel from './models/FriendlyMatchEvaluationModel'; 
 import RulesRoutes from './routes/matchRulesRoutes'; 
 import TeamPlayerRoutes from './routes/teamPlayerRoutes';
 import { seedUserTypes } from './seeds/userTypes';
@@ -156,7 +156,7 @@ const startServer = async () => {
     await PlayerModel.sync();
     console.log('Modelo Player sincronizado.');
     
-    await MatchModel.sync();
+    await FriendlyMatchesModel.sync();
     console.log('Modelo Match sincronizado.');
     
     await MatchTeams.sync(); 
