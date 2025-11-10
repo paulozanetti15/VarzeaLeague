@@ -12,6 +12,7 @@ import FriendlyMatchesRulesModel from '../models/FriendlyMatchesRulesModel';
 import FriendlyMatchTeamsModel from '../models/FriendlyMatchTeamsModel';
 import FriendlyMatchEvaluation from '../models/FriendlyMatchEvaluationModel';
 import { AuthRequest } from '../middleware/auth';
+import sequelize from '../config/database';
 
 const validatePhone = (phone: string): boolean => {
   const phoneDigits = phone.replace(/\D/g, '');
@@ -119,7 +120,10 @@ export const store = async (req: AuthRequest, res: Response): Promise<void> => {
 
     const normalizedName = name.trim().toLowerCase();
     const nameExists = await User.findOne({
-      where: { name: normalizedName }
+      where: sequelize.where(
+        sequelize.fn('LOWER', sequelize.col('name')),
+        normalizedName
+      )
     });
 
     if (nameExists) {
@@ -148,7 +152,7 @@ export const store = async (req: AuthRequest, res: Response): Promise<void> => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name: normalizedName,
+      name: name.trim(),
       email,
       cpf,
       phone,
@@ -201,10 +205,13 @@ export const update = async (req: AuthRequest, res: Response): Promise<void> => 
       return;
     }
 
-    if (updateData.name && updateData.name.trim().toLowerCase() !== user.name) {
+    if (updateData.name && updateData.name.trim().toLowerCase() !== user.name.toLowerCase()) {
       const normalizedName = updateData.name.trim().toLowerCase();
       const nameExists = await User.findOne({
-        where: { name: normalizedName }
+        where: sequelize.where(
+          sequelize.fn('LOWER', sequelize.col('name')),
+          normalizedName
+        )
       });
 
       if (nameExists) {
@@ -212,7 +219,7 @@ export const update = async (req: AuthRequest, res: Response): Promise<void> => 
         return;
       }
       
-      updateData.name = normalizedName;
+      updateData.name = updateData.name.trim();
     }
 
     if (updateData.email && updateData.email !== user.email) {

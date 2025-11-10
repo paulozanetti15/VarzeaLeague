@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import PunicaoCampeonatoRegisterModal from '../../../components/Modals/Punishment/Championships/PunishmentChampionshipRegisterModal';
 import PunicaoCampeonatoModalInfo from '../../../components/Modals/Punishment/Championships/PunishmentChampionshipInfoModal';
 import SelectTeamPlayersChampionshipModal from '../../../components/Modals/Teams/SelectTeamPlayersChampionshipModal';
+import RemoveTeamsFromChampionshipModal from '../../../components/Modals/Teams/RemoveTeamsFromChampionshipModal';
 
 interface Championship {
   id: number;
@@ -220,6 +221,16 @@ const ChampionshipDetail: React.FC = () => {
     setShowLeaveModal(true);
   };
 
+  const [showRemoveTeamsModal, setShowRemoveTeamsModal] = useState(false);
+
+  const isOwner = Boolean(currentUser) && Boolean(championship) && Number(currentUser?.id) === Number(championship?.created_by);
+  const canManageTeams = isOwner || isAdmin;
+
+  const userEnrolledCaptainTeams = useMemo(
+    () => (userEnrolledTeams || []).filter((t) => Number(t.captainId) === Number(currentUser?.id)),
+    [userEnrolledTeams, currentUser]
+  );
+
   const confirmLeave = async () => {
     if (!leaveModalTeamId) return;
     setShowLeaveModal(false);
@@ -389,6 +400,16 @@ const ChampionshipDetail: React.FC = () => {
                     Agendamento de Partidas
                   </button>
 
+                  {canManageTeams && (
+                    <button
+                      className="action-btn delete-multiple-btn"
+                      onClick={() => setShowRemoveTeamsModal(true)}
+                    >
+                      <span className="btn-icon">🗑️</span>
+                      Excluir Times
+                    </button>
+                  )}
+
                     <button
                       className="action-btn ranking-btn"
                       onClick={handleOpenRankingClassificacao}
@@ -407,16 +428,16 @@ const ChampionshipDetail: React.FC = () => {
                     Classificação
                   </button>
 
-                  {userEnrolledTeams.length > 0 && (
+                  {userEnrolledCaptainTeams.length > 0 && (
                     <div className="leave-team-control" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      {userEnrolledTeams.length === 1 ? (
+                      {userEnrolledCaptainTeams.length === 1 ? (
                         <button
                           className="out-btn"
-                          onClick={() => requestLeave(userEnrolledTeams[0].id)}
-                          disabled={isLeavingTeamId === userEnrolledTeams[0].id}
-                          aria-label={`Sair do campeonato - ${userEnrolledTeams[0].name}`}
+                          onClick={() => requestLeave(userEnrolledCaptainTeams[0].id)}
+                          disabled={isLeavingTeamId === userEnrolledCaptainTeams[0].id}
+                          aria-label={`Sair do campeonato - ${userEnrolledCaptainTeams[0].name}`}
                         >
-                          {isLeavingTeamId === userEnrolledTeams[0].id ? 'Saindo...' : 'Sair do Campeonato'}
+                          {isLeavingTeamId === userEnrolledCaptainTeams[0].id ? 'Saindo...' : 'Sair do Campeonato'}
                         </button>
                       ) : (
                         <>
@@ -427,7 +448,7 @@ const ChampionshipDetail: React.FC = () => {
                             aria-label="Selecionar time para sair"
                           >
                             <option value="">Selecione o time</option>
-                            {userEnrolledTeams.map((t) => (
+                            {userEnrolledCaptainTeams.map((t) => (
                               <option key={t.id} value={t.id}>{t.name}</option>
                             ))}
                           </select>
@@ -445,7 +466,7 @@ const ChampionshipDetail: React.FC = () => {
                     </div>
                   )}
 
-                  {isLogged && availableUserTeams.length > 0 && (
+                  {(isLogged && availableUserTeams.length > 0) && Number(currentUser?.userTypeId) === 3 && (
                     <button
                       className="action-btn join-btn"
                       onClick={handleJoinChampionship}
@@ -501,19 +522,7 @@ const ChampionshipDetail: React.FC = () => {
                       )}
                     </div>
                     
-                    {hasEditPermission && (
-                      <button
-                        type="button"
-                        className="remove-team-btn"
-                        data-team-id={team.id}
-                        onClick={() => requestLeave(team.id)}
-                        onMouseDown={() => console.log('remove-button mouseDown', team.id)}
-                        onClickCapture={() => console.log('remove-button clickCapture', team.id)}
-                        disabled={isLeavingTeamId === team.id}
-                      >
-                        {isLeavingTeamId === team.id ? 'Removendo...' : 'Remover'}
-                      </button>
-                    )}
+                    {/* per-card remove button removed; owner can remove multiple via the 'Excluir Times' action */}
                     
                     {/* leave button removed from team card; moved to actions area */}
                   </div>
@@ -768,6 +777,16 @@ const ChampionshipDetail: React.FC = () => {
             const updated = await getChampionshipById(Number(id));
             setChampionship(updated);
           } catch {}
+        }}
+      />
+
+      <RemoveTeamsFromChampionshipModal
+        show={showRemoveTeamsModal}
+        onHide={() => setShowRemoveTeamsModal(false)}
+        championshipId={Number(id)}
+        onSuccess={async () => {
+          await loadChampionshipTeams();
+          await loadUserTeams();
         }}
       />
 

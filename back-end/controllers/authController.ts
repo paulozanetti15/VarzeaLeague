@@ -2,6 +2,7 @@ import { Request, Response, RequestHandler } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import UserModel from '../models/UserModel';
+import sequelize from '../config/database';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'varzealeague_secret';
 
@@ -107,7 +108,12 @@ export const register: RequestHandler = async (req, res) => {
     }
 
     const normalizedName = name.trim().toLowerCase();
-    const nameExists = await UserModel.findOne({ where: { name: normalizedName } });
+    const nameExists = await UserModel.findOne({ 
+      where: sequelize.where(
+        sequelize.fn('LOWER', sequelize.col('name')),
+        normalizedName
+      )
+    });
     if (nameExists) {
       res.status(409).json({ message: 'Este nome de usuário já está em uso. Por favor, escolha outro nome.' });
       return;
@@ -129,7 +135,7 @@ export const register: RequestHandler = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const user = await UserModel.create({
-      name: normalizedName,
+      name: name.trim(),
       cpf,
       phone,
       email,
@@ -262,6 +268,26 @@ export const verify: RequestHandler = async (req, res) => {
   } catch (error) {
     console.error('Erro ao verificar token:', error);
     res.status(500).json({ message: 'Erro ao verificar token' });
+  }
+};
+
+export const checkCpf: RequestHandler = async (req, res) => {
+  try {
+    const cpfParam = req.params.cpf as string;
+    if (!cpfParam) {
+      res.status(400).json({ message: 'CPF não fornecido' });
+      return;
+    }
+    const cpfDigits = cpfParam.replace(/\D/g, '');
+    if (cpfDigits.length !== 11) {
+      res.status(400).json({ message: 'CPF inválido' });
+      return;
+    }
+    const user = await UserModel.findOne({ where: { cpf: cpfDigits } });
+    res.status(200).json({ exists: !!user });
+  } catch (error) {
+    console.error('Erro ao verificar CPF:', error);
+    res.status(500).json({ message: 'Erro ao verificar CPF' });
   }
 };
 
