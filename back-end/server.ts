@@ -2,6 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+
+// Carregar .env ANTES de qualquer import que use process.env
+dotenv.config({ path: path.join(__dirname, '.env') });
+
 import sequelize from './config/database';
 import authRoutes from './routes/authRoutes';
 import friendlyMatchRoutes from './routes/friendlyMatchRoutes';
@@ -36,7 +40,7 @@ import punishmentRoutes from './routes/punishmentRoutes';
 import MatchChampionship from './models/MatchChampionshipModel';
 import MatchChampionshpReport from './models/MatchReportChampionshipModel';
 import { ErrorRequestHandler } from 'express-serve-static-core';
-dotenv.config();
+
 // Import status check helpers to run periodically
 import {
   checkAndSetMatchesInProgress,
@@ -144,6 +148,13 @@ app.use(errorHandler);
 
 const startServer = async () => {
   try {
+    // Debug: Verificar se as variáveis de ambiente estão carregadas
+    console.log('🔍 Verificando variáveis de ambiente...');
+    console.log('DB_HOST:', process.env.DB_HOST || 'NÃO DEFINIDO');
+    console.log('DB_USER:', process.env.DB_USER || 'NÃO DEFINIDO');
+    console.log('DB_NAME:', process.env.DB_NAME || 'NÃO DEFINIDO');
+    console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '***DEFINIDO***' : 'NÃO DEFINIDO');
+    
     await sequelize.authenticate();
     console.log('Conexão com o banco de dados estabelecida com sucesso!');
     associateModels(); // Execute a função de associação aqui
