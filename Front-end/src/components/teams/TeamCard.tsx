@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import GroupIcon from '@mui/icons-material/Group';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import type { Team } from '../../interfaces/team';
+import { getTeamBannerUrl } from '../../config/api';
 
 interface TeamCardProps {
   team: Team;
@@ -22,7 +23,7 @@ const TeamCard: React.FC<TeamCardProps> = ({ team, children }) => {
       >
         {team.banner ? (
           <img
-            src={`http://localhost:3001${team.banner}`}
+            src={getTeamBannerUrl(team.banner) || ''}
             alt={team.name}
             className="team-banner-img"
           />

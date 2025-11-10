@@ -14,6 +14,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EventIcon from '@mui/icons-material/Event';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import './ScheduleMatchPage.css';
+import { getTeamBannerUrl, getChampionshipLogoUrl } from '../../config/api';
 
 interface Championship {
   id: number;
@@ -53,21 +54,6 @@ const ScheduleMatchPage: React.FC = () => {
 
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
 
-  const getTeamLogoUrl = (banner?: string | null) => {
-    if (!banner) return null;
-    if (banner.startsWith('/uploads')) {
-      return `http://localhost:3001${banner}`;
-    }
-    return `http://localhost:3001/uploads/teams/${banner}`;
-  };
-
-  const getChampionshipLogoUrl = (logo?: string | null) => {
-    if (!logo) return null;
-    if (logo.startsWith('/uploads')) {
-      return `http://localhost:3001${logo}`;
-    }
-    return `http://localhost:3001/uploads/championships/${logo}`;
-  };
 
   const selectedHomeTeam = teams.find(t => t.id === Number(formData.teamHomeId));
   const selectedAwayTeam = teams.find(t => t.id === Number(formData.teamAwayId));
@@ -300,7 +286,7 @@ const ScheduleMatchPage: React.FC = () => {
                         }}
                       >
                         {selectedHomeTeam.banner ? (
-                          <img src={getTeamLogoUrl(selectedHomeTeam.banner) || ''} alt={selectedHomeTeam.name} />
+                          <img src={getTeamBannerUrl(selectedHomeTeam.banner) || ''} alt={selectedHomeTeam.name} />
                         ) : (
                           <span>{selectedHomeTeam.name.charAt(0)}</span>
                         )}
@@ -328,7 +314,7 @@ const ScheduleMatchPage: React.FC = () => {
                         }}
                       >
                         {selectedAwayTeam.banner ? (
-                          <img src={getTeamLogoUrl(selectedAwayTeam.banner) || ''} alt={selectedAwayTeam.name} />
+                          <img src={getTeamBannerUrl(selectedAwayTeam.banner) || ''} alt={selectedAwayTeam.name} />
                         ) : (
                           <span>{selectedAwayTeam.name.charAt(0)}</span>
                         )}
@@ -425,7 +411,7 @@ const ScheduleMatchPage: React.FC = () => {
                               >
                                 {team.banner ? (
                                   <img 
-                                    src={getTeamLogoUrl(team.banner) || ''} 
+                                    src={getTeamBannerUrl(team.banner) || ''} 
                                     alt={team.name}
                                   />
                                 ) : (
@@ -504,7 +490,7 @@ const ScheduleMatchPage: React.FC = () => {
                               >
                                 {team.banner ? (
                                   <img 
-                                    src={getTeamLogoUrl(team.banner) || ''} 
+                                    src={getTeamBannerUrl(team.banner) || ''} 
                                     alt={team.name}
                                   />
                                 ) : (

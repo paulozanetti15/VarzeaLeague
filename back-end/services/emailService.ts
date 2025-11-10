@@ -3,14 +3,19 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp.sendgrid.net",
+  port: 587,
+  secure: false,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+    user: "apikey", // No SendGrid, o usuário é sempre "apikey"
+    pass: process.env.SENDGRID_API_KEY, // Sua chave de API do SendGrid
   },
 });
 
 export const sendPasswordResetEmail = async (email: string, resetToken: string) => {
+  console.log('Iniciando envio de email para:', email);
+  console.log('Usando remetente:', process.env.EMAIL_USER);
+
   const resetLink = `http://localhost:3000/reset-password/${resetToken}`;
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -49,9 +54,17 @@ export const sendPasswordResetEmail = async (email: string, resetToken: string) 
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    console.log('Tentando enviar email...');
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Email enviado com sucesso:', result);
     return true;
   } catch (error) {
+    console.error('Erro detalhado ao enviar email:', {
+      error,
+      stack: error.stack,
+      code: error.code,
+      response: error.response
+    });
     return false;
   }
 }; 

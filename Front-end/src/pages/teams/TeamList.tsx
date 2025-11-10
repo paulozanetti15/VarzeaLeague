@@ -24,6 +24,7 @@ import PlayerStatsTable from '../../components/features/Teams/PlayerStatsTable';
 import TeamActionButtons from '../../components/features/Teams/TeamActionButtons';
 
 import './TeamList.css';
+import { API_UPLOADS, getTeamBannerUrl } from '../../config/api';
 
 const TeamList = () => {
   const { teams, loading, error, teamPlayers, loadingPlayers, fetchTeams, fetchTeamPlayers, fetchTeamPlayerStats } = useTeams();
@@ -33,19 +34,6 @@ const TeamList = () => {
   const navigate = useNavigate();
   const historico = useContext(HistoricoContext);
   const { generatePlayerStatsPDF } = usePDFGenerator();
-  const apiBaseUrl = useMemo(() => {
-    const envUrl = import.meta.env.VITE_API_URL as string | undefined;
-    if (!envUrl) return 'http://localhost:3001';
-    // remove trailing /api if provided to keep base host
-    return envUrl.endsWith('/api') ? envUrl.slice(0, -4) : envUrl;
-  }, []);
-
-  const resolveTeamImage = (raw?: string | null) => {
-    if (!raw) return null;
-    if (/^https?:\/\//i.test(raw)) return raw;
-    if (raw.startsWith('/')) return `${apiBaseUrl}${raw}`;
-    return `${apiBaseUrl}/uploads/teams/${raw}`;
-  };
 
   useEffect(() => {
     fetchTeams();
@@ -130,7 +118,7 @@ const TeamList = () => {
           {hasTeam ? (
             <div className="team-container">
               {teams.slice(0, 1).map((team) => {
-                const bannerUrl = resolveTeamImage((team as any).logo || (team as any).logoUrl || team.banner);
+                const bannerUrl = getTeamBannerUrl((team as any).logo || (team as any).logoUrl || team.banner);
                 const playersCount = team.players?.length ?? team.playerCount ?? 0;
                 const matchesCount = team.matchCount ?? (team as any).quantidadePartidas ?? 0;
                 const locationText = [team.estado, team.cidade].filter(Boolean).join(' - ');

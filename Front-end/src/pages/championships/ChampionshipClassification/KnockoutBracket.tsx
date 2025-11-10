@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { getChampionshipMatches, getChampionshipTeams } from '../../../services/championships.service';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import './KnockoutBracket.css';
+import { getTeamBannerUrl } from '../../../config/api';
 
 interface KnockoutBracketProps {
   championshipId: number;
@@ -259,14 +260,6 @@ const KnockoutBracket: React.FC<KnockoutBracketProps> = ({ championshipId, champ
     return () => clearInterval(interval);
   }, [championshipId]);
 
-  const getTeamLogoUrl = (banner?: string | null) => {
-    if (!banner) return null;
-    if (banner.startsWith('/uploads')) {
-      return `http://localhost:3001${banner}`;
-    }
-    return `http://localhost:3001/uploads/teams/${banner}`;
-  };
-
   // Gerar chaveamento completo sempre que houver times
   const bracketRounds = useMemo(() => {
     return generateBracket(teams, matches);
@@ -328,7 +321,7 @@ const KnockoutBracket: React.FC<KnockoutBracketProps> = ({ championshipId, champ
                         <div className="team-info-bracket">
                           {match.teamHome?.banner ? (
                             <img
-                              src={getTeamLogoUrl(match.teamHome.banner) || ''}
+                              src={getTeamBannerUrl(match.teamHome.banner) || ''}
                               alt={match.teamHome.name}
                               className="team-logo-bracket"
                               onError={(e) => {
@@ -355,7 +348,7 @@ const KnockoutBracket: React.FC<KnockoutBracketProps> = ({ championshipId, champ
                         <div className="team-info-bracket">
                           {match.teamAway?.banner ? (
                             <img
-                              src={getTeamLogoUrl(match.teamAway.banner) || ''}
+                              src={getTeamBannerUrl(match.teamAway.banner) || ''}
                               alt={match.teamAway.name}
                               className="team-logo-bracket"
                               onError={(e) => {

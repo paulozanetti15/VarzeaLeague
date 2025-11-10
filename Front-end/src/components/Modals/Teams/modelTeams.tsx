@@ -3,6 +3,7 @@ import { joinTeam, getAvailableForMatch } from '../../../services/matchesFriendl
 import { Card, Button } from "react-bootstrap";
 import toast from 'react-hot-toast';
 import Modal from "react-bootstrap/Modal";
+import { getTeamBannerUrl } from '../../../config/api';
 interface ModelTeamsProps {
     matchid: number;
     onHide: () => void;
@@ -62,7 +63,7 @@ const modelTeams = ({ matchid,onHide,show,onSuccess }: ModelTeamsProps) => {
                             <Card.Body>
                                 {team.banner &&
                                     <Card.Img
-                                        src={`http://localhost:3001/uploads/teams/${team.banner}`} 
+                                        src={getTeamBannerUrl(team.banner) || ''} 
                                         variant='top'
                                     />
                                 }

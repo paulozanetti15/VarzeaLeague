@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ChampionshipList.css';
 import { getAllChampionships } from '../../../services/championships.service';
+import { getChampionshipLogoUrl } from '../../../config/api';
 import trophy from "../../../assets/championship-trophy.svg";
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
@@ -30,14 +31,6 @@ export default function ChampionshipList() {
   const [canCreateChampionship, setCanCreateChampionship] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number>(0);
   const navigate = useNavigate();
-
-  const getChampionshipLogoUrl = (logo?: string | null) => {
-    if (!logo) return null;
-    if (logo.startsWith('/uploads')) {
-      return `http://localhost:3001${logo}`;
-    }
-    return `http://localhost:3001/uploads/championships/${logo}`;
-  };
 
   useEffect(() => {
     // Verificar permissões do usuário

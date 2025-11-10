@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../../hooks/useAuth';
 import { API_BASE_URL } from '../../../config/api';
 import '../../Dialogs/SelectTeamPlayersDialog.css';
+import { getTeamBannerUrl } from '../../../config/api';
 
 interface SelectTeamPlayersChampionshipModalProps {
   show: boolean;
@@ -227,11 +228,7 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
                 const disabled = (team as any).__disabled;
                 console.log(`[Team ${team.name}] disabled:`, disabled);
                 const rawBanner = team.banner || '';
-                const bannerUrl = rawBanner.startsWith('/uploads')
-                  ? `http://localhost:3001${rawBanner}`
-                  : rawBanner
-                    ? `http://localhost:3001/uploads/teams/${rawBanner}`
-                    : null;
+                const bannerUrl = getTeamBannerUrl(rawBanner);
                 return (
                   <div key={team.id} className="stm-team-card-wrapper">
                     <button

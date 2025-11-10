@@ -43,7 +43,7 @@ export function Benefits({ isLoggedIn, id }: BenefitsProps) {
       description: 'Descubra partidas próximas e junte-se a outros jogadores na sua região.',
       onClick: () => {
         if (isLoggedIn) {
-          window.location.href = 'http://localhost:3000/listings';
+          window.location.href = '/listings';
         } else {
           navigate('/login');
         }

@@ -10,6 +10,7 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import EditIcon from '@mui/icons-material/Edit';
 import ToastComponent from '../../components/Toast/ToastComponent';
 import PlayerModal from '../../components/Modals/Players/ManageTeamPlayersModal';
+import { API_BASE } from '../../config/api';
 
 interface PlayerData {
   id?: number;
@@ -272,7 +273,7 @@ export default function CreateTeam() {
         submitFormData.append('banner', formData.logo);
       }
 
-      const resposta = await axios.post('http://localhost:3001/api/teams', submitFormData, {
+      const resposta = await axios.post(`${API_BASE}/teams`, submitFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -321,7 +322,7 @@ export default function CreateTeam() {
       try {
         const token = localStorage.getItem('token');
         await axios.post(
-          'http://localhost:3001/api/players',
+          `${API_BASE}/players`,
           { 
             name: jogador.nome, 
             gender: jogador.gender,

@@ -4,6 +4,7 @@ import { useMatchesWidget } from '../../hooks/useMatchesWidget';
 import { getToday, isToday, formatMatchDate } from '../../utils/matchesUtils';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import './MatchesWidgetFixed.css';
+import { getTeamBannerUrl, getChampionshipLogoUrl } from '../../config/api';
 
 export function MatchesWidgetFixed() {
   const { matches, loading } = useMatchesWidget();
@@ -29,22 +30,6 @@ export function MatchesWidgetFixed() {
       matchDate.setHours(0, 0, 0, 0);
       return matchDate.getTime() === normalizedDate.getTime();
     });
-  };
-
-  const getTeamLogoUrl = (banner?: string | null) => {
-    if (!banner) return null;
-    if (banner.startsWith('/uploads')) {
-      return `http://localhost:3001${banner}`;
-    }
-    return `http://localhost:3001/uploads/teams/${banner}`;
-  };
-
-  const getChampionshipLogoUrl = (logo?: string | null) => {
-    if (!logo) return null;
-    if (logo.startsWith('/uploads')) {
-      return `http://localhost:3001${logo}`;
-    }
-    return `http://localhost:3001/uploads/championships/${logo}`;
   };
 
   const getTodayMatches = () => {
@@ -240,7 +225,7 @@ export function MatchesWidgetFixed() {
                         <div className="team-logo-globo">
                           {match.homeTeam.banner ? (
                             <img
-                              src={getTeamLogoUrl(match.homeTeam.banner) || ''}
+                              src={getTeamBannerUrl(match.homeTeam.banner) || ''}
                               alt={match.homeTeam.name}
                               className="team-logo-img-globo"
                               onError={(e) => {
@@ -270,7 +255,7 @@ export function MatchesWidgetFixed() {
                         <div className="team-logo-globo">
                           {match.awayTeam.banner ? (
                             <img
-                              src={getTeamLogoUrl(match.awayTeam.banner) || ''}
+                              src={getTeamBannerUrl(match.awayTeam.banner) || ''}
                               alt={match.awayTeam.name}
                               className="team-logo-img-globo"
                               onError={(e) => {
@@ -463,7 +448,7 @@ export function MatchesWidgetFixed() {
                           <div className="match-list-team-logo">
                             {match.homeTeam.banner ? (
                               <img
-                                src={getTeamLogoUrl(match.homeTeam.banner) || ''}
+                                src={getTeamBannerUrl(match.homeTeam.banner) || ''}
                                 alt={match.homeTeam.name}
                                 className="team-logo-list"
                                 onError={(e) => {
@@ -489,7 +474,7 @@ export function MatchesWidgetFixed() {
                           <div className="match-list-team-logo">
                             {match.awayTeam.banner ? (
                               <img
-                                src={getTeamLogoUrl(match.awayTeam.banner) || ''}
+                                src={getTeamBannerUrl(match.awayTeam.banner) || ''}
                                 alt={match.awayTeam.name}
                                 className="team-logo-list"
                                 onError={(e) => {

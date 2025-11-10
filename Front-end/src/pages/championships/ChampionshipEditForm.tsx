@@ -7,6 +7,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import ImageIcon from '@mui/icons-material/Image';
 import { format } from 'date-fns';
 import './ChampionshipForm.css';
+import { getChampionshipLogoUrl } from '../../config/api';
 
 interface ChampionshipFormData {
   name: string;
@@ -74,9 +75,7 @@ const ChampionshipEditForm: React.FC = () => {
         
         // Carregar logo atual se existir
         if (data.logo) {
-          const logoUrl = data.logo.startsWith('/uploads') 
-            ? `http://localhost:3001${data.logo}`
-            : `http://localhost:3001/uploads/championships/${data.logo}`;
+          const logoUrl = getChampionshipLogoUrl(data.logo);
           setCurrentLogoUrl(logoUrl);
           setLogoPreview(logoUrl);
         }

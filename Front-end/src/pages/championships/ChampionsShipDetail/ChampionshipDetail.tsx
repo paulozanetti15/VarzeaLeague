@@ -14,6 +14,7 @@ import PunicaoCampeonatoRegisterModal from '../../../components/Modals/Punishmen
 import PunicaoCampeonatoModalInfo from '../../../components/Modals/Punishment/Championships/PunishmentChampionshipInfoModal';
 import SelectTeamPlayersChampionshipModal from '../../../components/Modals/Teams/SelectTeamPlayersChampionshipModal';
 import RemoveTeamsFromChampionshipModal from '../../../components/Modals/Teams/RemoveTeamsFromChampionshipModal';
+import { getChampionshipLogoUrl, getTeamBannerUrl } from '../../../config/api';
 
 interface Championship {
   id: number;
@@ -53,14 +54,6 @@ const ChampionshipDetail: React.FC = () => {
 
   const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
   const isLogged = !!currentUser;
-
-  const getChampionshipLogoUrl = (logo?: string | null) => {
-    if (!logo) return null;
-    if (logo.startsWith('/uploads')) {
-      return `http://localhost:3001${logo}`;
-    }
-    return `http://localhost:3001/uploads/championships/${logo}`;
-  };
 
   // Times do usuário já inscritos e disponíveis para inscrição
   const enrolledTeamIds = useMemo(() => new Set((teams || []).map((t) => t.id)), [teams]);
@@ -496,7 +489,7 @@ const ChampionshipDetail: React.FC = () => {
                     <div className="team-logo">
                       {team.banner ? (
                         <img 
-                          src={`http://localhost:3001/uploads/teams/${team.banner}`} 
+                          src={getTeamBannerUrl(team.banner) || ''} 
                           alt={`Logo do ${team.name}`}
                           className="team-logo-img"
                         />
@@ -561,13 +554,6 @@ const ChampionshipDetail: React.FC = () => {
                     const awayTeam = teams[1]?.team;
                     const round = match.matchChampionship?.Rodada || 'N/A';
 
-                    const getTeamLogoUrl = (banner?: string | null) => {
-                      if (!banner) return null;
-                      if (banner.startsWith('/uploads')) {
-                        return `http://localhost:3001${banner}`;
-                      }
-                      return `http://localhost:3001/uploads/teams/${banner}`;
-                    };
 
                     return (
                       <motion.div
@@ -590,7 +576,7 @@ const ChampionshipDetail: React.FC = () => {
                             <div className="team-logo-match">
                               {homeTeam?.banner ? (
                                 <img
-                                  src={getTeamLogoUrl(homeTeam.banner) || ''}
+                                  src={getTeamBannerUrl(homeTeam.banner) || ''}
                                   alt={homeTeam.name}
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none';
@@ -615,7 +601,7 @@ const ChampionshipDetail: React.FC = () => {
                             <div className="team-logo-match">
                               {awayTeam?.banner ? (
                                 <img
-                                  src={getTeamLogoUrl(awayTeam.banner) || ''}
+                                  src={getTeamBannerUrl(awayTeam.banner) || ''}
                                   alt={awayTeam.name}
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none';

@@ -3,6 +3,7 @@ import { fetchMatches } from '../../services/matchesFriendlyServices';
 import {getAllChampionships} from '../../services/championships.service';
 import { useNavigate } from 'react-router-dom';
 import './MatchesWidget.css';
+import { getTeamBannerUrl } from '../../config/api';
 
 interface Match {
   id: number;
@@ -208,14 +209,6 @@ export function MatchesWidget() {
     }
   };
 
-  const getTeamLogoUrl = (banner?: string) => {
-    if (!banner) return null;
-    if (banner.startsWith('/uploads')) {
-      return `http://localhost:3001${banner}`;
-    }
-    return `http://localhost:3001/uploads/teams/${banner}`;
-  };
-
   const handleMatchClick = (matchId: number) => {
     navigate(`/matches/${matchId}`);
   };
@@ -325,9 +318,9 @@ export function MatchesWidget() {
                   <div className="match-teams-globo">
                     <div className="team-globo">
                       <div className="team-logo-globo">
-                        {getTeamLogoUrl(match.homeTeam.banner) ? (
+                        {getTeamBannerUrl(match.homeTeam.banner) ? (
                           <img 
-                            src={getTeamLogoUrl(match.homeTeam.banner)!} 
+                            src={getTeamBannerUrl(match.homeTeam.banner)!} 
                             alt={match.homeTeam.name}
                             className="team-logo-img-globo"
                             onError={(e) => {
@@ -336,7 +329,7 @@ export function MatchesWidget() {
                             }}
                           />
                         ) : null}
-                        <div className="team-logo-fallback-globo" style={{ display: getTeamLogoUrl(match.homeTeam.banner) ? 'none' : 'flex' }}>
+                        <div className="team-logo-fallback-globo" style={{ display: getTeamBannerUrl(match.homeTeam.banner) ? 'none' : 'flex' }}>
                           <span>{match.homeTeam.name.charAt(0)}</span>
                         </div>
                       </div>
@@ -345,9 +338,9 @@ export function MatchesWidget() {
                     
                     <div className="team-globo">
                       <div className="team-logo-globo">
-                        {getTeamLogoUrl(match.awayTeam.banner) ? (
+                        {getTeamBannerUrl(match.awayTeam.banner) ? (
                           <img 
-                            src={getTeamLogoUrl(match.awayTeam.banner)!} 
+                            src={getTeamBannerUrl(match.awayTeam.banner)!} 
                             alt={match.awayTeam.name}
                             className="team-logo-img-globo"
                             onError={(e) => {
@@ -356,7 +349,7 @@ export function MatchesWidget() {
                             }}
                           />
                         ) : null}
-                        <div className="team-logo-fallback-globo" style={{ display: getTeamLogoUrl(match.awayTeam.banner) ? 'none' : 'flex' }}>
+                        <div className="team-logo-fallback-globo" style={{ display: getTeamBannerUrl(match.awayTeam.banner) ? 'none' : 'flex' }}>
                           <span>{match.awayTeam.name.charAt(0)}</span>
                         </div>
                       </div>

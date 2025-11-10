@@ -4,6 +4,7 @@ import { Modal, Button, Spinner } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '../../../config/api';
 import '../../Dialogs/SelectTeamPlayersDialog.css';
+import { getTeamBannerUrl } from '../../../config/api';
 
 interface Props {
   show: boolean;
@@ -104,7 +105,7 @@ const RemoveTeamsFromChampionshipModal: React.FC<Props> = ({ show, onHide, champ
           <div className="stm-team-list">
             {teams.map(t => {
               const rawBanner = t.banner || '';
-              const bannerUrl = rawBanner.startsWith('/uploads') ? `http://localhost:3001${rawBanner}` : (rawBanner ? `http://localhost:3001/uploads/teams/${rawBanner}` : null);
+              const bannerUrl = getTeamBannerUrl(rawBanner);
               return (
                 <label key={t.id} className={`stm-team-card selectable ${selectedIds.includes(t.id) ? 'checked' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <input type="checkbox" checked={selectedIds.includes(t.id)} onChange={() => toggle(t.id)} disabled={loading} />

@@ -4,8 +4,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { getChampionshipTeams } from '../../../services/championships.service';
 import './LeagueTable.css';
-
-const API_BASE = 'http://localhost:3001/api';
+import { API_BASE, getTeamBannerUrl } from '../../../config/api';
 
 interface TeamStanding {
   nomeTime: string;
@@ -136,13 +135,6 @@ const LeagueTable: React.FC<LeagueTableProps> = ({ championshipId, championshipN
     );
   }, [standings, filterName]);
 
-  const getTeamLogoUrl = (banner?: string | null) => {
-    if (!banner) return null;
-    if (banner.startsWith('/uploads')) {
-      return `http://localhost:3001${banner}`;
-    }
-    return `http://localhost:3001/uploads/teams/${banner}`;
-  };
 
   const getPositionColor = (position: number) => {
     if (position <= 4) return '#16A34A'; // Verde - zona de classificação
@@ -234,7 +226,7 @@ const LeagueTable: React.FC<LeagueTableProps> = ({ championshipId, championshipN
                       <div className="team-cell">
                         {team.banner ? (
                           <img
-                            src={getTeamLogoUrl(team.banner) || ''}
+                            src={getTeamBannerUrl(team.banner) || ''}
                             alt={team.nomeTime}
                             className="team-logo-table"
                             onError={(e) => {

@@ -11,8 +11,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import axios from 'axios';
 import './PublicMatchDetail.css';
-
-const API_BASE = 'http://localhost:3001/api';
+import { API_BASE, getTeamBannerUrl, getChampionshipLogoUrl } from '../../config/api';
 
 interface Match {
   id: number;
@@ -93,21 +92,6 @@ const PublicMatchDetail: React.FC = () => {
     }
   }, [id]);
 
-  const getTeamLogoUrl = (banner?: string | null) => {
-    if (!banner) return null;
-    if (banner.startsWith('/uploads')) {
-      return `http://localhost:3001${banner}`;
-    }
-    return `http://localhost:3001/uploads/teams/${banner}`;
-  };
-
-  const getChampionshipLogoUrl = (logo?: string | null) => {
-    if (!logo) return null;
-    if (logo.startsWith('/uploads')) {
-      return `http://localhost:3001${logo}`;
-    }
-    return `http://localhost:3001/uploads/championships/${logo}`;
-  };
 
   const getStatusLabel = (status?: string) => {
     switch (status) {
@@ -239,7 +223,7 @@ const PublicMatchDetail: React.FC = () => {
               >
                 {homeTeam.banner ? (
                   <img 
-                    src={getTeamLogoUrl(homeTeam.banner) || ''} 
+                    src={getTeamBannerUrl(homeTeam.banner) || ''} 
                     alt={homeTeam.name}
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
@@ -273,7 +257,7 @@ const PublicMatchDetail: React.FC = () => {
               >
                 {awayTeam.banner ? (
                   <img 
-                    src={getTeamLogoUrl(awayTeam.banner) || ''} 
+                    src={getTeamBannerUrl(awayTeam.banner) || ''} 
                     alt={awayTeam.name}
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
