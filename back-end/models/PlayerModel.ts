@@ -48,7 +48,7 @@ Player.init(
       type: DataTypes.STRING,
       allowNull: false,
       set(value: string) {
-        this.setDataValue('name', value.trim().toLowerCase());
+        this.setDataValue('name', value.trim());
       },
     },
     gender: {

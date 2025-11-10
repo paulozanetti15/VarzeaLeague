@@ -979,7 +979,7 @@ export default class TeamController {
           
           try {
             const newPlayer = await Player.create({
-              name: nomePlayer.toLowerCase(),
+              name: nomePlayer,
               gender: sexoPlayer,
               dateOfBirth: anoPlayer,
               position: posicaoPlayer,

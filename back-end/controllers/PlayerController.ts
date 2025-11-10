@@ -19,7 +19,8 @@ export class PlayerController {
       if (!name || !gender || !dateOfBirth || !position) {
         res.status(400).json({ message: 'Todos os campos são obrigatórios' });
         return;
-      }      const normalizedName = name.trim().toLowerCase();
+      }
+      const trimmedName = name.trim();
 
       if (teamId) {
         const existingPlayerInSameTeam = await Player.findOne({
@@ -52,7 +53,7 @@ export class PlayerController {
       // Removida validação de nome duplicado - permitir múltiplos jogadores com mesmo nome
       let player = await Player.findOne({
         where: { 
-          name: normalizedName,
+          name: trimmedName,
           isDeleted: false
         },
         include: [
@@ -67,7 +68,7 @@ export class PlayerController {
 
       if (!player) {
         player = await Player.create({
-          name: normalizedName,
+          name: trimmedName,
           gender: gender,
           dateOfBirth: dateOfBirth,
           position: position,
@@ -181,11 +182,11 @@ export class PlayerController {
       }
 
       if (name) {
-        const normalizedName = name.trim().toLowerCase();
+        const trimmedName = name.trim();
         
         const existingPlayerInSameTeam = await Player.findOne({
           where: { 
-            name: normalizedName,
+            name: trimmedName,
             isDeleted: false
           },
           include: [
@@ -360,13 +361,13 @@ export class PlayerController {
             continue;
           }
 
-          const normalizedName = player.name.trim().toLowerCase();
+          const trimmedName = player.name.trim();
           
           if (!player.id) {
             // Verificar se jogador já existe sem vínculo de time
             const existingPlayer = await Player.findOne({
               where: { 
-                name: normalizedName,
+                name: trimmedName,
                 isDeleted: false
               },
               include: [
@@ -410,7 +411,7 @@ export class PlayerController {
 
             // Criar novo jogador se não existe ou já tem vínculo
             const newPlayer = await Player.create({
-              name: normalizedName,
+              name: trimmedName,
               gender: player.gender,
               dateOfBirth: player.dateOfBirth,
               position: player.position,
@@ -444,11 +445,11 @@ export class PlayerController {
               continue;
             }
 
-            const nomeAtualNormalizado = playerToUpdate.name.trim().toLowerCase();
+            const nomeAtualTrimmed = playerToUpdate.name.trim();
 
             // Permitir múltiplos jogadores com mesmo nome - sem validação
             await playerToUpdate.update({
-              name: normalizedName,
+              name: trimmedName,
               gender: player.gender,
               dateOfBirth: player.dateOfBirth,
               position: player.position
