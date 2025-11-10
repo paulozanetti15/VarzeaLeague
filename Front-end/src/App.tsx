@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from
 import { Toaster } from 'react-hot-toast'
 // import { AnimatePresence } from 'framer-motion'
 import './App.css'
+import './styles/theme.css'
 import { Login } from './pages/login/Login'
 import Register from './pages/register/Register'
 import { ForgotPassword } from './pages/forgot-password/ForgotPassword'
