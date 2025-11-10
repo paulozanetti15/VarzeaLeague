@@ -5,7 +5,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import "./HistoricoPage.css";
 import axios from "axios";
-import { HistoricoContext } from '../../context/HistoricoContext';
+import { HistoricoContext } from '../../Context/HistoricoContext';
 
 interface Team {
   id: number,
