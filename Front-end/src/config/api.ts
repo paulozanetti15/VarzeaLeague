@@ -16,6 +16,9 @@ const getApiUploads = (): string => {
 export const API_BASE = getApiBase();
 export const API_UPLOADS = getApiUploads();
 
+// Alias para compatibilidade com código antigo
+export const API_BASE_URL = API_BASE;
+
 // Helper para construir URLs de imagens
 export const getImageUrl = (path: string | null | undefined): string => {
   if (!path) return '';
