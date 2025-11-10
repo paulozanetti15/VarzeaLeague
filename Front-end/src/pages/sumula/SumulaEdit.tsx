@@ -11,7 +11,7 @@ import { SumulaActions } from '../../features/sumula/SumulaActions/SumulaActions
 import { useSumulaData } from './hooks/useSumulaData';
 import { useSumulaForm } from './hooks/useSumulaForm';
 import { useSumulaPDF } from './hooks/useSumulaPDF';
-import './Sumula.css';
+import './sumula.css';
 
 interface SumulaEditProps {
   matchId: number;

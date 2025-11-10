@@ -7,7 +7,7 @@ import { CardsTable } from '../../features/sumula/SumulaDisplay/CardsTable';
 import { EventsTimeline } from '../../features/sumula/SumulaDisplay/EventsTimeline';
 import { useSumulaData } from './hooks/useSumulaData';
 import { useSumulaPDF } from './hooks/useSumulaPDF';
-import './Sumula.css';
+import './sumula.css';
 
 interface SumulaViewProps {
   matchId: number;
