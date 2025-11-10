@@ -26,7 +26,12 @@ const sequelize = new Sequelize({
     createdAt: 'created_at',
     updatedAt: 'updated_at'
   },
-  logging: false // Desabilitar logs SQL para debug mais limpo
+  logging: (msg) => {
+    // Log apenas queries de CREATE TABLE e ALTER TABLE para ver criação de tabelas
+    if (msg.includes('CREATE TABLE') || msg.includes('CREATE DATABASE') || msg.includes('ALTER TABLE')) {
+      console.log('📊 SQL:', msg);
+    }
+  }
 });
 
 export default sequelize;

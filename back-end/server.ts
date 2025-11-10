@@ -159,45 +159,49 @@ const startServer = async () => {
     console.log('Conexão com o banco de dados estabelecida com sucesso!');
     associateModels(); // Execute a função de associação aqui
     console.log('Associações entre modelos definidas com sucesso.');
-    await sequelize.sync();
-    await UserTypeModel.sync();
+    
+    console.log('🗄️  Sincronizando modelos com o banco de dados...');
+    await sequelize.sync({ alter: false }); // Não força recriação, apenas cria se não existir
+    console.log('✅ Sincronização inicial concluída.');
+    
+    await UserTypeModel.sync({ alter: false });
     console.log('Modelo UserType sincronizado.');
     
-    await UserModel.sync();
+    await UserModel.sync({ alter: false });
     console.log('Modelo User sincronizado.');
     
-    await TeamModel.sync();
+    await TeamModel.sync({ alter: false });
   
     console.log('Modelo Team sincronizado.');
     
-    await PlayerModel.sync();
+    await PlayerModel.sync({ alter: false });
     console.log('Modelo Player sincronizado.');
     
-    await FriendlyMatchesModel.sync();
+    await FriendlyMatchesModel.sync({ alter: false });
     console.log('Modelo Match sincronizado.');
     
-    await MatchTeams.sync(); 
+    await MatchTeams.sync({ alter: false }); 
     console.log('Modelo MatchTeams sincronizado.');
     
-    await TeamPlayer.sync();
+    await TeamPlayer.sync({ alter: false });
     console.log('Modelo TeamPlayer sincronizado.');
     
-    await RulesModel.sync();
+    await RulesModel.sync({ alter: false });
     console.log('Modelo Rules sincronizado.');
     
-    await AttendanceModel.sync();
+    await AttendanceModel.sync({ alter: false });
     console.log('Modelo Attendance sincronizado.');
      
-  await FriendlyMatchPenalty.sync();
+  await FriendlyMatchPenalty.sync({ alter: false });
   console.log('Modelo Punicao Partida Amistosa sincronizado.');
 
     // Modelos adicionados na modelagem v2
     const { default: ChampionshipModel } = await import('./models/ChampionshipModel');
-    await ChampionshipModel.sync();
+    await ChampionshipModel.sync({ alter: false });
     console.log('Modelo Championship sincronizado.');
     
   const { default: FriendlyMatchReportModel } = await import('./models/FriendlyMatchReportModel');
-    await FriendlyMatchReportModel.sync();
+    await FriendlyMatchReportModel.sync({ alter: false });
     console.log('Modelo MatchReport sincronizado.');
     
   const { default: FriendlyMatchGoalModel } = await import('./models/FriendlyMatchGoalModel');
@@ -209,18 +213,20 @@ const startServer = async () => {
     console.log('Modelo MatchCard sincronizado.');
     
   const { default: FriendlyMatchEvaluationModel } = await import('./models/FriendlyMatchEvaluationModel');
-    await FriendlyMatchEvaluationModel.sync();
+    await FriendlyMatchEvaluationModel.sync({ alter: false });
     console.log('Modelo MatchEvaluation sincronizado.');
-    await MatchChampionship.sync();
+    await MatchChampionship.sync({ alter: false });
     console.log('Modelo MatchChampionship sincronizado.');
-    await MatchChampionshpReport.sync();
+    await MatchChampionshpReport.sync({ alter: false });
     console.log('Modelo MatchChampionshpReport sincronizado.');
-  await ChampionshipPenalty.sync();
+  await ChampionshipPenalty.sync({ alter: false });
   console.log('Modelo Punicao Championship sincronizado.');
     
     const { default: NotificationModel } = await import('./models/NotificationModel');
-    await NotificationModel.sync();
+    await NotificationModel.sync({ alter: false });
     console.log('Modelo Notification sincronizado.');
+    
+    console.log('✅ Todos os modelos foram sincronizados com o banco de dados!');
     
     await seedUserTypes();
     
