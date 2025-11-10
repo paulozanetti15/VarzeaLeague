@@ -207,7 +207,7 @@ const ScheduleMatchPage: React.FC = () => {
           
           <div className="championship-hero-section">
             <div className="championship-hero-content">
-              {championship?.logo ? (
+              {championship?.logo && getChampionshipLogoUrl(championship.logo) ? (
                 <motion.div 
                   className="championship-hero-logo"
                   initial={{ scale: 0.8, opacity: 0 }}
@@ -215,8 +215,12 @@ const ScheduleMatchPage: React.FC = () => {
                   transition={{ duration: 0.5, delay: 0.2 }}
                 >
                   <img 
-                    src={getChampionshipLogoUrl(championship.logo) || ''} 
+                    src={getChampionshipLogoUrl(championship.logo)!} 
                     alt={championship.name}
+                    onError={(e) => {
+                      console.error('Erro ao carregar logo:', e);
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                   <div className="logo-glow"></div>
                 </motion.div>

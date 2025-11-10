@@ -270,7 +270,7 @@ const ChampionshipDetail: React.FC = () => {
     <div className="championship-detail-bg">
       <div className="championship-detail-container">
         {/* Hero Section com Logo */}
-        {championship.logo && (
+        {championship.logo && getChampionshipLogoUrl(championship.logo) && (
           <motion.div
             className="championship-hero-banner"
             initial={{ opacity: 0, scale: 0.95 }}
@@ -282,6 +282,10 @@ const ChampionshipDetail: React.FC = () => {
               src={getChampionshipLogoUrl(championship.logo)!} 
               alt={championship.name}
               className="championship-hero-logo-large"
+              onError={(e) => {
+                console.error('Erro ao carregar logo:', e);
+                e.currentTarget.style.display = 'none';
+              }}
             />
             <div className="championship-hero-content-overlay">
               <h1 className="championship-hero-title">{championship.name}</h1>

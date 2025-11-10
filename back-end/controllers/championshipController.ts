@@ -979,6 +979,7 @@ export const createChampionshipMatch = async (req: Request, res: Response): Prom
   teamAwayId = Number(teamAwayId);
   rodada = Number(rodada);
 
+  // Validações mínimas apenas
   if (!teamHomeId || isNaN(teamHomeId)) {
     res.status(400).json({ message: 'É necessário selecionar o time mandante' });
     return;
@@ -994,19 +995,20 @@ export const createChampionshipMatch = async (req: Request, res: Response): Prom
     return;
   }
 
+  // Data opcional - usar data atual se não fornecida
   if (!date) {
-    res.status(400).json({ message: 'Data é obrigatória' });
-    return;
+    date = new Date().toISOString().split('T')[0];
   }
 
+  // Local opcional - usar nome da quadra do campeonato se não fornecido
   if (!location || typeof location !== 'string' || location.trim().length === 0) {
-    res.status(400).json({ message: 'Local é obrigatório' });
-    return;
+    // Será preenchido depois com nome da quadra do campeonato
+    location = '';
   }
 
+  // Rodada opcional - usar 1 se não fornecida
   if (!rodada || isNaN(rodada) || rodada < 1) {
-    res.status(400).json({ message: 'Rodada é obrigatória e deve ser um número maior que zero' });
-    return;
+    rodada = 1;
   }
 
   const token = req.headers.authorization?.replace('Bearer ', '');
@@ -1070,16 +1072,17 @@ export const createChampionshipMatch = async (req: Request, res: Response): Prom
       where: { championshipId: championshipId, teamId: teamAwayId }
     });
 
-    if (!teamHomeInChampionship || !teamAwayInChampionship) {
-      console.log('Times não estão inscritos no campeonato');
-      res.status(400).json({ message: 'Ambos os times devem estar inscritos no campeonato' });
-      return;
-    }
-    console.log('Times confirmados no campeonato');
+    // Remover validação de times inscritos - permitir criar partida mesmo sem inscrição formal
+    // if (!teamHomeInChampionship || !teamAwayInChampionship) {
+    //   console.log('Times não estão inscritos no campeonato');
+    //   res.status(400).json({ message: 'Ambos os times devem estar inscritos no campeonato' });
+    //   return;
+    // }
+    console.log('Times confirmados - validação de inscrição removida');
 
     let matchDateTime: Date;
     try {
-      // Normalizar formato da data
+      // Normalizar formato da data - mais flexível
       let dateStr: string;
       if (date.includes('T')) {
         // Já está no formato ISO completo
@@ -1094,41 +1097,23 @@ export const createChampionshipMatch = async (req: Request, res: Response): Prom
       
       matchDateTime = new Date(dateStr);
       
+      // Se a data for inválida, usar data/hora atual
       if (isNaN(matchDateTime.getTime())) {
-        console.log('Data inválida:', dateStr);
-        res.status(400).json({ message: 'Formato de data/hora inválido' });
-        return;
-      }
-      
-      // Validar se a data é futura (com margem de 1 minuto)
-      const now = new Date();
-      const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
-      
-      // Comparar apenas data e hora (ignorar segundos e milissegundos)
-      const matchDateOnly = new Date(matchDateTime.getFullYear(), matchDateTime.getMonth(), matchDateTime.getDate(), matchDateTime.getHours(), matchDateTime.getMinutes());
-      const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
-      
-      if (matchDateOnly <= nowDateOnly) {
-        console.log('Data no passado ou presente detectada:', matchDateOnly, 'Agora:', nowDateOnly);
-        res.status(400).json({ message: 'A data da partida deve ser futura' });
-        return;
+        console.log('Data inválida, usando data atual:', dateStr);
+        matchDateTime = new Date();
       }
       
       console.log('Data/hora parseada:', matchDateTime);
     } catch (error) {
-      console.error('Erro ao parsear data:', error);
-      res.status(400).json({ message: 'Formato de data/hora inválido' });
-      return;
+      console.error('Erro ao parsear data, usando data atual:', error);
+      matchDateTime = new Date();
     }
 
+    // Usar nome da quadra do campeonato se local não fornecido
     const nomeQuadra = championship.nomequadra?.trim() || location.trim() || 'Quadra não informada';
+    const locationTrimmed = location.trim() || nomeQuadra;
     console.log('Nome da quadra:', nomeQuadra);
-
-    const locationTrimmed = location.trim();
-    if (locationTrimmed.length < 5) {
-      res.status(400).json({ message: 'O local deve ter pelo menos 5 caracteres' });
-      return;
-    }
+    console.log('Local:', locationTrimmed);
 
     const matchTitle = `${teamHome.name} x ${teamAway.name} - Rodada ${rodada}`;
 
