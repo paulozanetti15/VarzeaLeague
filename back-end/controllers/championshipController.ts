@@ -1079,7 +1079,19 @@ export const createChampionshipMatch = async (req: Request, res: Response): Prom
 
     let matchDateTime: Date;
     try {
-      const dateStr = date.includes('T') ? date : `${date}T${time || '00:00'}`;
+      // Normalizar formato da data
+      let dateStr: string;
+      if (date.includes('T')) {
+        // Já está no formato ISO completo
+        dateStr = date;
+      } else if (time) {
+        // Combinar data e hora
+        dateStr = `${date}T${time}`;
+      } else {
+        // Apenas data, usar meia-noite
+        dateStr = `${date}T00:00`;
+      }
+      
       matchDateTime = new Date(dateStr);
       
       if (isNaN(matchDateTime.getTime())) {
@@ -1088,10 +1100,16 @@ export const createChampionshipMatch = async (req: Request, res: Response): Prom
         return;
       }
       
+      // Validar se a data é futura (com margem de 1 minuto)
       const now = new Date();
       const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
-      if (matchDateTime <= oneMinuteAgo) {
-        console.log('Data no passado detectada:', matchDateTime, 'Agora:', now);
+      
+      // Comparar apenas data e hora (ignorar segundos e milissegundos)
+      const matchDateOnly = new Date(matchDateTime.getFullYear(), matchDateTime.getMonth(), matchDateTime.getDate(), matchDateTime.getHours(), matchDateTime.getMinutes());
+      const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
+      
+      if (matchDateOnly <= nowDateOnly) {
+        console.log('Data no passado ou presente detectada:', matchDateOnly, 'Agora:', nowDateOnly);
         res.status(400).json({ message: 'A data da partida deve ser futura' });
         return;
       }
