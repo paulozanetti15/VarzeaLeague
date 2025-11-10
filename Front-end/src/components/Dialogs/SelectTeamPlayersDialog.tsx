@@ -173,15 +173,16 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
     if (!mixedVariants.includes(ruleGenderNorm)) {
       const normalizeGender = (gender: string | undefined): string => {
         if (!gender) return '';
-        const g = gender.toUpperCase();
-        if (g === 'M' || g === 'MASCULINO') return 'Masculino';
-        if (g === 'F' || g === 'FEMININO') return 'Feminino';
-        return gender;
+        const g = (gender || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+        if (g === 'm' || g === 'masculino') return 'masculino';
+        if (g === 'f' || g === 'feminino') return 'feminino';
+        return g;
       };
 
-      const playerGender = normalizeGender(player.gender);
-      if (!playerGender || playerGender !== rules.gender) {
-        console.log(`❌ ${player.nome} INAPTO - Gênero ${playerGender} não corresponde a ${rules.gender}`);
+      const playerGenderNorm = normalizeGender(player.gender);
+      const ruleGenderNormFinal = normalizeText(rules.gender);
+      if (!playerGenderNorm || playerGenderNorm !== ruleGenderNormFinal) {
+        console.log(`❌ ${player.nome} INAPTO - Gênero ${playerGenderNorm} não corresponde a ${ruleGenderNormFinal}`);
         return false;
       }
     }
