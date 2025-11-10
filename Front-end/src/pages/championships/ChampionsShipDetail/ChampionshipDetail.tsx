@@ -562,7 +562,7 @@ const ChampionshipDetail: React.FC = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3 }}
-                        onClick={() => navigate(`/jogo/${match.id}`)}
+                        onClick={() => navigate(`/matches/${match.id}`)}
                       >
                         <div className="match-card-header-championship">
                           <span className="match-round-badge">Rodada {round}</span>

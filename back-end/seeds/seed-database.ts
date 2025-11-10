@@ -34,25 +34,31 @@ async function seedDatabase() {
     console.log('👥 Criando usuários...');
     const hashedPassword = await bcrypt.hash('senha123', 10);
     
-    const users = await User.bulkCreate([
-      {
-        name: 'Admin Master',
-        cpf: '11111111111',
-        phone: '11999999999',
-        email: 'admin@varzealeague.com',
-        password: hashedPassword,
-        gender: 'Masculino',
-        userTypeId: 1
-      },
-      {
-        name: 'João Silva',
-        cpf: '22222222222',
-        phone: '11988888888',
-        email: 'joao@email.com',
-        password: hashedPassword,
-        gender: 'Masculino',
-        userTypeId: 2
-      },
+    const adminMaster = await User.create({
+      name: 'Admin Master',
+      cpf: '11111111111',
+      phone: '11999999999',
+      email: 'admin@varzealeague.com',
+      password: hashedPassword,
+      gender: 'Masculino',
+      userTypeId: 1
+    });
+    console.log('✅ Admin Master criado (não cria nenhum dado)\n');
+
+    console.log('👥 Criando organizador de eventos (admin_eventos)...');
+    const organizerEventos = await User.create({
+      name: 'João Silva',
+      cpf: '22222222222',
+      phone: '11988888888',
+      email: 'joao@email.com',
+      password: hashedPassword,
+      gender: 'Masculino',
+      userTypeId: 2
+    });
+    console.log('✅ Organizador de eventos criado\n');
+
+    console.log('👥 Criando gerenciadores de times (admin_times)...');
+    const organizersTeams = await User.bulkCreate([
       {
         name: 'Maria Santos',
         cpf: '33333333333',
@@ -62,6 +68,38 @@ async function seedDatabase() {
         gender: 'Feminino',
         userTypeId: 3
       },
+      {
+        name: 'Carlos Mendes',
+        cpf: '66666666666',
+        phone: '11944444444',
+        email: 'carlos@email.com',
+        password: hashedPassword,
+        gender: 'Masculino',
+        userTypeId: 3
+      },
+      {
+        name: 'Juliana Costa',
+        cpf: '77777777777',
+        phone: '11933333333',
+        email: 'juliana@email.com',
+        password: hashedPassword,
+        gender: 'Feminino',
+        userTypeId: 3
+      },
+      {
+        name: 'Roberto Silva',
+        cpf: '88888888888',
+        phone: '11922222222',
+        email: 'roberto@email.com',
+        password: hashedPassword,
+        gender: 'Masculino',
+        userTypeId: 3
+      }
+    ]);
+    console.log(`✅ ${organizersTeams.length} gerenciadores de times criados (cada um pode criar 1 time)\n`);
+
+    console.log('👥 Criando usuários comuns (usuario_comum)...');
+    const commonUsers = await User.bulkCreate([
       {
         name: 'Pedro Oliveira',
         cpf: '44444444444',
@@ -81,13 +119,13 @@ async function seedDatabase() {
         userTypeId: 4
       }
     ]);
-    console.log(`✅ ${users.length} usuários criados (senha padrão: senha123)\n`);
+    console.log(`✅ ${commonUsers.length} usuários comuns criados (não criam nenhum dado)\n`);
 
-    console.log('⚽ Criando times...');
+    console.log('⚽ Criando times (um por gerenciador)...');
     const teams = await Team.bulkCreate([
       {
         name: 'Tigres FC',
-        captainId: users[1].id,
+        captainId: organizersTeams[0].id,
         description: 'Time tradicional de São Paulo',
         city: 'São Paulo',
         state: 'SP',
@@ -96,7 +134,7 @@ async function seedDatabase() {
       },
       {
         name: 'Leões United',
-        captainId: users[2].id,
+        captainId: organizersTeams[1].id,
         description: 'Time competitivo da Vila Mariana',
         city: 'São Paulo',
         state: 'SP',
@@ -105,7 +143,7 @@ async function seedDatabase() {
       },
       {
         name: 'Águias FC',
-        captainId: users[3].id,
+        captainId: organizersTeams[2].id,
         description: 'Time feminino de Pinheiros',
         city: 'São Paulo',
         state: 'SP',
@@ -114,7 +152,7 @@ async function seedDatabase() {
       },
       {
         name: 'Panteras FC',
-        captainId: users[4].id,
+        captainId: organizersTeams[3].id,
         description: 'Time dos Jardins',
         city: 'São Paulo',
         state: 'SP',
@@ -122,7 +160,7 @@ async function seedDatabase() {
         isDeleted: false
       }
     ]);
-    console.log(`✅ ${teams.length} times criados\n`);
+    console.log(`✅ ${teams.length} times criados (um por gerenciador)\n`);
 
     console.log('🏃 Criando jogadores...');
     const players = await Player.bulkCreate([
@@ -180,14 +218,14 @@ async function seedDatabase() {
     ]);
     console.log(`✅ ${teamPlayers.length} vínculos time-jogador criados\n`);
 
-    console.log('🏆 Criando campeonatos...');
+    console.log('🏆 Criando campeonatos pelo organizador de eventos...');
     const championships = await Championship.bulkCreate([
       {
         name: 'Copa VarzeaLeague 2025',
         description: 'Primeiro campeonato oficial da temporada 2025',
         start_date: new Date('2025-01-15'),
         end_date: new Date('2025-03-30'),
-        created_by: users[1].id,
+        created_by: organizerEventos.id,
         modalidade: 'Society',
         nomequadra: 'Arena Paulista',
         tipo: 'mata-mata',
@@ -201,7 +239,7 @@ async function seedDatabase() {
         description: 'Campeonato de futebol feminino de São Paulo',
         start_date: new Date('2025-02-01'),
         end_date: new Date('2025-04-15'),
-        created_by: users[2].id,
+        created_by: organizerEventos.id,
         modalidade: 'Futsal',
         nomequadra: 'Ginásio Municipal',
         tipo: 'liga',
@@ -213,7 +251,7 @@ async function seedDatabase() {
         status: 'open'
       }
     ]);
-    console.log(`✅ ${championships.length} campeonatos criados\n`);
+    console.log(`✅ ${championships.length} campeonatos criados pelo organizador de eventos\n`);
 
     console.log('📋 Inscrevendo times nos campeonatos...');
     const teamChampionships = await TeamChampionship.bulkCreate([
@@ -224,7 +262,7 @@ async function seedDatabase() {
     ]);
     console.log(`✅ ${teamChampionships.length} inscrições em campeonatos criadas\n`);
 
-    console.log('⚽ Criando partidas amistosas...');
+    console.log('⚽ Criando partidas amistosas pelo organizador de eventos...');
     const friendlyMatches = await FriendlyMatches.bulkCreate([
       {
         title: 'Partida Amistosa - Campo da Juventude',
@@ -236,7 +274,7 @@ async function seedDatabase() {
         Cep: '03164000',
         matchType: 'amistosa',
         status: 'aberta',
-        organizerId: users[1].id
+        organizerId: organizerEventos.id
       },
       {
         title: 'Partida Amistosa - Arena Central',
@@ -248,10 +286,10 @@ async function seedDatabase() {
         Cep: '03081000',
         matchType: 'amistosa',
         status: 'confirmada',
-        organizerId: users[2].id
+        organizerId: organizerEventos.id
       }
     ]);
-    console.log(`✅ ${friendlyMatches.length} partidas amistosas criadas\n`);
+    console.log(`✅ ${friendlyMatches.length} partidas amistosas criadas pelo organizador de eventos\n`);
 
     console.log('📜 Criando regras para partidas amistosas...');
     const friendlyRules = await FriendlyMatchesRules.bulkCreate([
@@ -305,7 +343,10 @@ async function seedDatabase() {
     console.log('\n🎉 Seed concluído com sucesso!\n');
     console.log('📊 Resumo:');
     console.log(`   - ${userTypes.length} tipos de usuário`);
-    console.log(`   - ${users.length} usuários`);
+    console.log(`   - 1 admin master (não cria nenhum dado)`);
+    console.log(`   - 1 organizador de eventos (cria campeonatos e partidas amistosas)`);
+    console.log(`   - 1 gerenciador de times (cria times e jogadores)`);
+    console.log(`   - ${commonUsers.length} usuários comuns (não criam nenhum dado)`);
     console.log(`   - ${teams.length} times`);
     console.log(`   - ${players.length} jogadores`);
     console.log(`   - ${teamPlayers.length} vínculos time-jogador`);

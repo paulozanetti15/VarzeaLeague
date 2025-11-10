@@ -43,38 +43,53 @@ npx ts-node seeds/seed-database.ts
 
 Todos os usuários têm a senha padrão: **`senha123`**
 
-| Nome | Email | CPF | Telefone | Gênero | Tipo |
-|------|-------|-----|----------|--------|------|
-| Admin Master | admin@varzealeague.com | 11111111111 | 11999999999 | Masculino | admin_master |
-| João Silva | joao@email.com | 22222222222 | 11988888888 | Masculino | admin_eventos |
-| Maria Santos | maria@email.com | 33333333333 | 11977777777 | Feminino | admin_times |
-| Pedro Oliveira | pedro@email.com | 44444444444 | 11966666666 | Masculino | usuario_comum |
-| Ana Costa | ana@email.com | 55555555555 | 11955555555 | Feminino | usuario_comum |
+| Nome | Email | CPF | Telefone | Gênero | Tipo | Responsabilidades |
+|------|-------|-----|----------|--------|------|-------------------|
+| Admin Master | admin@varzealeague.com | 11111111111 | 11999999999 | Masculino | admin_master | ❌ Não cria nenhum dado |
+| João Silva | joao@email.com | 22222222222 | 11988888888 | Masculino | admin_eventos | ✅ Cria campeonatos e partidas amistosas |
+| Maria Santos | maria@email.com | 33333333333 | 11977777777 | Feminino | admin_times | ✅ Cria Tigres FC |
+| Carlos Mendes | carlos@email.com | 66666666666 | 11944444444 | Masculino | admin_times | ✅ Cria Leões United |
+| Juliana Costa | juliana@email.com | 77777777777 | 11933333333 | Feminino | admin_times | ✅ Cria Águias FC |
+| Roberto Silva | roberto@email.com | 88888888888 | 11922222222 | Masculino | admin_times | ✅ Cria Panteras FC |
+| Pedro Oliveira | pedro@email.com | 44444444444 | 11966666666 | Masculino | usuario_comum | ❌ Não cria nenhum dado |
+| Ana Costa | ana@email.com | 55555555555 | 11955555555 | Feminino | usuario_comum | ❌ Não cria nenhum dado |
 
-**Total**: 5 usuários
+**Total**: 8 usuários (1 admin master, 1 organizador de eventos, 4 gerenciadores de times, 2 usuários comuns)
 
 #### 🔑 Credenciais de Login
 
 ```
 Email: admin@varzealeague.com
 Senha: senha123
-Tipo: Administrador Master (acesso total)
+Tipo: Administrador Master (não cria dados)
 
 Email: joao@email.com
 Senha: senha123
-Tipo: Admin de Eventos
+Tipo: Organizador de Eventos (cria campeonatos e partidas)
 
 Email: maria@email.com
 Senha: senha123
-Tipo: Admin de Times
+Tipo: Gerenciador de Times (cria apenas Tigres FC)
+
+Email: carlos@email.com
+Senha: senha123
+Tipo: Gerenciador de Times (cria apenas Leões United)
+
+Email: juliana@email.com
+Senha: senha123
+Tipo: Gerenciador de Times (cria apenas Águias FC)
+
+Email: roberto@email.com
+Senha: senha123
+Tipo: Gerenciador de Times (cria apenas Panteras FC)
 
 Email: pedro@email.com
 Senha: senha123
-Tipo: Usuário Comum
+Tipo: Usuário Comum (não cria dados)
 
 Email: ana@email.com
 Senha: senha123
-Tipo: Usuário Comum
+Tipo: Usuário Comum (não cria dados)
 ```
 
 ---
@@ -83,12 +98,12 @@ Tipo: Usuário Comum
 
 | Nome | Criado Por | Cidade | Estado | CEP | Bairro | Rua | Número |
 |------|------------|--------|--------|-----|--------|-----|--------|
-| Tigres FC | João Silva | São Paulo | SP | 01310100 | Centro | Rua Augusta | 1000 |
-| Leões United | Maria Santos | São Paulo | SP | 04567890 | Vila Mariana | Rua Domingos de Morais | 2000 |
-| Águias FC | Pedro Oliveira | São Paulo | SP | 05402000 | Pinheiros | Rua dos Pinheiros | 3000 |
-| Panteras FC | Ana Costa | São Paulo | SP | 01451000 | Jardins | Alameda Santos | 4000 |
+| Tigres FC | Maria Santos (admin_times) | São Paulo | SP | 01310100 | Centro | Rua Augusta | 1000 |
+| Leões United | Carlos Mendes (admin_times) | São Paulo | SP | 04567890 | Vila Mariana | Rua Domingos de Morais | 2000 |
+| Águias FC | Juliana Costa (admin_times) | São Paulo | SP | 05402000 | Pinheiros | Rua dos Pinheiros | 3000 |
+| Panteras FC | Roberto Silva (admin_times) | São Paulo | SP | 01451000 | Jardins | Alameda Santos | 4000 |
 
-**Total**: 4 times
+**Total**: 4 times (cada gerenciador de times cria apenas 1 time)
 
 ---
 
@@ -140,7 +155,7 @@ Tipo: Usuário Comum
 - **Nome**: Copa VarzeaLeague 2025
 - **Descrição**: Primeiro campeonato oficial da temporada 2025
 - **Período**: 15/01/2025 a 30/03/2025
-- **Criado por**: João Silva
+- **Criado por**: João Silva (admin_eventos)
 - **Modalidade**: Society
 - **Local**: Arena Paulista
 - **Tipo**: Eliminatórias
@@ -156,7 +171,7 @@ Tipo: Usuário Comum
 - **Nome**: Campeonato Feminino SP
 - **Descrição**: Campeonato de futebol feminino de São Paulo
 - **Período**: 01/02/2025 a 15/04/2025
-- **Criado por**: Maria Santos
+- **Criado por**: João Silva (admin_eventos)
 - **Modalidade**: Futsal
 - **Local**: Ginásio Municipal
 - **Tipo**: Grupos
@@ -181,7 +196,7 @@ Tipo: Usuário Comum
 - **Local**: Campo da Juventude
 - **Endereço**: Rua da Mooca, 500 - Mooca, São Paulo/SP - CEP: 03164000
 - **Status**: Aberta (aguardando times)
-- **Criada por**: João Silva
+- **Criada por**: João Silva (admin_eventos)
 - **Regras**:
   - Data limite para inscrição: 19/11/2025 às 18:00
   - Idade mínima: 18 anos
@@ -195,7 +210,7 @@ Tipo: Usuário Comum
 - **Local**: Arena Central
 - **Endereço**: Rua Tuiuti, 1000 - Tatuapé, São Paulo/SP - CEP: 03081000
 - **Status**: Confirmada
-- **Criada por**: Maria Santos
+- **Criada por**: João Silva (admin_eventos)
 - **Times Participantes**:
   - Tigres FC
   - Leões United
@@ -238,7 +253,8 @@ Tipo: Usuário Comum
 | Entidade | Quantidade |
 |----------|------------|
 | Tipos de Usuário | 4 |
-| Usuários | 5 |
+| Usuários | 8 (1 admin master + 1 organizador eventos + 4 gerenciadores times + 2 usuários comuns) |
+| Gerenciadores de Times | 4 (cada um pode criar apenas 1 time) |
 | Times | 4 |
 | Jogadores | 20 |
 | Vínculos Time-Jogador | 20 |
@@ -249,7 +265,7 @@ Tipo: Usuário Comum
 | Times em Partidas Amistosas | 2 |
 | Partidas de Campeonato | 2 |
 
-**Total de Registros**: ~67 registros
+**Total de Registros**: ~70 registros
 
 ---
 
@@ -257,20 +273,26 @@ Tipo: Usuário Comum
 
 ### ✅ Autenticação e Autorização
 - Login com diferentes níveis de permissão
-- Administradores com poderes específicos
-- Usuários comuns
+- Administrador Master (sem permissão de criação)
+- Organizador de Eventos (cria campeonatos e partidas amistosas)
+- Gerenciadores de Times (cada um cria apenas 1 time - limitado por userTypeId 3)
+- Usuários comuns (sem permissão de criação)
 
 ### ✅ Gestão de Times
-- Times criados por diferentes usuários
-- Jogadores vinculados a times
+- Times criados exclusivamente pelos Gerenciadores de Times
+- **Cada gerenciador de times (tipo 3) pode criar apenas 1 time**
+- Sistema valida e retorna erro se tentar criar segundo time
+- Jogadores vinculados a times pelos Gerenciadores
 - Diferentes posições e gêneros
 
 ### ✅ Campeonatos
+- Campeonatos criados exclusivamente pelo Organizador de Eventos
 - Campeonato masculino por eliminatórias
 - Campeonato feminino com fase de grupos
 - Times inscritos em campeonatos
 
 ### ✅ Partidas Amistosas
+- Partidas criadas exclusivamente pelo Organizador de Eventos
 - Partidas abertas aguardando times
 - Partidas confirmadas com times definidos
 - Regras de idade e gênero
@@ -320,6 +342,35 @@ async function seedDatabase() {
 3. **Dados Fictícios**: CPFs, telefones e endereços são exemplos - não usar em produção
 4. **IDs Fixos**: UserTypes têm IDs fixos (1-4) para consistência com o sistema
 5. **Ordem de Execução**: Respeita dependências entre tabelas (FK constraints)
+6. **Limite de Times**: Usuários do tipo `admin_times` (tipo 3) **só podem criar 1 time**
+   - O sistema valida na criação e retorna erro se tentar criar um segundo time
+   - Cada gerenciador de times tem seu próprio time na seed
+
+---
+
+## 🔒 Regras de Negócio Implementadas
+
+### Validação no Backend
+O controller `TeamController.createTeam()` verifica se o usuário é do tipo 3 (`admin_times`):
+- Se sim, conta times ativos do usuário
+- Se já existe 1 time, retorna erro `403 Forbidden`
+- Mensagem: "Gerenciadores de times podem criar apenas um time. Você já possui um time registrado."
+
+**Código de Validação**:
+```typescript
+if (userTypeId === 3) {
+  const existingTeamsForUser = await Team.count({
+    where: { captainId: userId, isDeleted: false }
+  });
+
+  if (existingTeamsForUser > 0) {
+    res.status(403).json({ 
+      error: 'Gerenciadores de times podem criar apenas um time. Você já possui um time registrado.' 
+    });
+    return;
+  }
+}
+```
 
 ---
 
