@@ -5,9 +5,10 @@ import FriendlyMatchesModel from '../models/FriendlyMatchesModel';
 import Team from '../models/TeamModel';
 import FriendlyMatchesRulesModel from '../models/FriendlyMatchesRulesModel';
 import jwt from 'jsonwebtoken';
-import Player from '../models/PlayerModel';
-import TeamPlayer from '../models/TeamPlayerModel';
-import User from '../models/UserModel';
+import Playermodel from "../models/PlayerModel";
+import TeamPlayer from "../models/TeamPlayerModel";
+import User from "../models/UserModel";
+import { createNotification } from "./NotificationController";
 import { Op } from 'sequelize';
 require('dotenv').config(); 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
@@ -193,31 +194,21 @@ export const joinMatchByTeam = async (req: AuthRequest, res: Response): Promise<
       res.status(400).json({ message: 'Partida já está completa' });
       return;
     }
-    
-    if (regras) {
-      const gender = regras.get('gender');
-      
-      console.log('Verificando regras de gênero:', { gender });
-      
-      if (gender && gender !== 'Ambos') {
-        const isGenderValid = await verifyTeamsGenderRules(teamId, gender as string);
-        
-        console.log('Validação de gênero:', { isGenderValid });
-        
-        if (!isGenderValid) {
-          res.status(403).json({ message: 'Time não se qualifica nas regras de gênero da partida' });
-          return;
-        }
+    if(regras && regras.dataValues.sexo!=="Ambos"){
+      if(await verifyTeamsGenderRules(teamId, regras.dataValues.sexo) === false){
+        res.status(403).json({ message: `Time não se qualifica nas regras de gênero da partida` });
+        return;
+      }
+      if (!await isTimePossuiCategoriaValido(teamId, matchId)) {
+        res.status(403).json({ message: `Time não se qualifica nas regras de categoria da partida` });
+        return;
       }
     }
-    
-    console.log('Verificando categoria...');
-    const isCategoryValid = await isTimePossuiCategoriaValido(teamId, matchId);
-    console.log('Validação de categoria:', { isCategoryValid });
-    
-    if (!isCategoryValid) {
-      res.status(403).json({ message: 'Time não se qualifica nas regras de categoria da partida' });
-      return;
+    else{
+      if (await isTimePossuiCategoriaValido(teamId, matchId) === false) {
+        res.status(403).json({ message: `Time não se qualifica nas regras de categoria da partida` });
+        return;
+      }
     }
     
     console.log('Criando vínculo time-partida...');
@@ -227,6 +218,23 @@ export const joinMatchByTeam = async (req: AuthRequest, res: Response): Promise<
     });
     
     console.log('Time inscrito com sucesso na partida');
+    
+    try {
+      const teamData = await Team.findByPk(teamId);
+      if (teamData && (teamData as any).captainId) {
+        const matchData = await FriendlyMatchesModel.findByPk(matchId);
+        await createNotification(
+          (teamData as any).captainId,
+          'team_linked_to_match',
+          'Seu time foi vinculado a uma partida',
+          `O time "${teamData.name}" foi vinculado à partida "${matchData?.title || 'Partida'}" que acontecerá em ${matchData?.date ? new Date(matchData.date).toLocaleDateString('pt-BR') : 'data a definir'}.`,
+          matchId,
+          teamId
+        );
+      }
+    } catch (notifError) {
+      console.error('Erro ao criar notificação:', notifError);
+    }
     
     const newCount = await FriendlyMatchTeamsModel.count({ where: { matchId } });
     if (newCount >= maxTimes) {
@@ -260,7 +268,7 @@ export const verifyTeamsGenderRules = async (teamId: number, requiredGender: str
       return true;
     }
     
-    const playersWithDifferentGender = await Player.findAll({
+    const playersWithDifferentGender = await Playermodel.findAll({
       where: {
         id: {
           [Op.in]: playerIds

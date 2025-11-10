@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -11,6 +11,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import WcIcon from '@mui/icons-material/Wc';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 
 import { HistoricoContext } from '../../Context/HistoricoContext';
 import useTeams from '../../hooks/useTeams';
@@ -32,6 +33,19 @@ const TeamList = () => {
   const navigate = useNavigate();
   const historico = useContext(HistoricoContext);
   const { generatePlayerStatsPDF } = usePDFGenerator();
+  const apiBaseUrl = useMemo(() => {
+    const envUrl = import.meta.env.VITE_API_URL as string | undefined;
+    if (!envUrl) return 'http://localhost:3001';
+    // remove trailing /api if provided to keep base host
+    return envUrl.endsWith('/api') ? envUrl.slice(0, -4) : envUrl;
+  }, []);
+
+  const resolveTeamImage = (raw?: string | null) => {
+    if (!raw) return null;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (raw.startsWith('/')) return `${apiBaseUrl}${raw}`;
+    return `${apiBaseUrl}/uploads/teams/${raw}`;
+  };
 
   useEffect(() => {
     fetchTeams();
@@ -115,187 +129,220 @@ const TeamList = () => {
         <div className="teams-content">
           {hasTeam ? (
             <div className="team-container">
-              {teams.slice(0, 1).map((team) => (
-                <div
-                  key={team.id}
-                  className="team-card team-detail-card"
-                >
-                  <div className={`team-banner ${team.primaryColor && team.secondaryColor ? 'team-banner-gradient' : ''}`}>
-                    {team.banner ? (
-                      <img
-                        src={`http://localhost:3001${team.banner}`}
-                        alt={team.name}
-                        className="team-banner-img"
-                      />
-                    ) : (
-                      <GroupIcon sx={{ fontSize: 40, color: '#fff' }} />
-                    )}
-                  </div>
-                    <div className="team-info">
-                    <h2 className="team-name">{team.name}</h2>
+              {teams.slice(0, 1).map((team) => {
+                const bannerUrl = resolveTeamImage((team as any).logo || (team as any).logoUrl || team.banner);
+                const playersCount = team.players?.length ?? team.playerCount ?? 0;
+                const matchesCount = team.matchCount ?? (team as any).quantidadePartidas ?? 0;
+                const locationText = [team.estado, team.cidade].filter(Boolean).join(' - ');
+                const heroBackground = team.primaryColor || team.secondaryColor
+                  ? `linear-gradient(135deg, ${team.primaryColor || '#1976d2'}, ${team.secondaryColor || team.primaryColor || '#0d47a1'})`
+                  : undefined;
 
-                    <div className="team-location-colors">
-                      {(team.estado || team.cidade) && (
-                        <span className="location-badge">
-                          {team.estado && <>{team.estado}{team.cidade ? ' - ' : ''}</>}{team.cidade}
-                          {(team.primaryColor || team.secondaryColor) && (
-                            <span className="colors-container-inline">
-                              {team.primaryColor && (
-                                <span
-                                  title="Cor Primária"
-                                  className="color-indicator-inline"
-                                  style={{ backgroundColor: team.primaryColor }}
-                                />
-                              )}
-                              {team.secondaryColor && (
-                                <span
-                                  title="Cor Secundária"
-                                  className="color-indicator-inline"
-                                  style={{ backgroundColor: team.secondaryColor }}
-                                />
-                              )}
-                            </span>
-                          )}
-                        </span>
-                      )}
-                      {!(team.estado || team.cidade) && (team.primaryColor || team.secondaryColor) && (
-                        <span className="colors-container">
-                          {team.primaryColor && (
-                            <span
-                              title="Cor Primária"
-                              className="color-indicator"
-                              style={{ backgroundColor: team.primaryColor }}
+                return (
+                  <div
+                    key={team.id}
+                    className="team-view-main-grid"
+                  >
+                    {/* Seção lateral esquerda - Logo e informações principais */}
+                    <div className="team-sidebar-section">
+                      <div 
+                        className="team-sidebar-content"
+                        style={heroBackground ? { background: heroBackground } : undefined}
+                      >
+                        <div className="team-sidebar-overlay" />
+                        <div className="team-logo-container">
+                          {bannerUrl ? (
+                            <img
+                              src={bannerUrl}
+                              alt={`Escudo do ${team.name}`}
+                              className="team-logo-display"
                             />
-                          )}
-                          {team.secondaryColor && (
-                            <span
-                              title="Cor Secundária"
-                              className="color-indicator"
-                              style={{ backgroundColor: team.secondaryColor }}
-                            />
-                          )}
-                        </span>
-                      )}
-                    </div>
-
-                    <p className="team-description-inline">
-                      {team.description || "Sem descrição disponível"}
-                    </p>
-                    <div className="team-stats-inline">
-                      <div className="stat-inline">
-                        <GroupIcon className="stat-icon" sx={{ fontSize: 22 }} />
-                        <span className="stat-text">{team.players?.length || 0} Jogadores</span>
-                      </div>
-                      <div className="stat-inline-alt">
-                        <EmojiEventsIcon className="stat-icon" sx={{ fontSize: 22 }} />
-                        <span className="stat-text">{historico?.totalPartidasDisputadaEmGeral || 0} Partidas</span>
-                      </div>
-                    </div>
-                    <button 
-                      className="players-toggle-btn" 
-                      onClick={(e) => togglePlayersList(e, team.id)}
-                    >
-                      {expandedTeam === team.id ? (
-                        <>
-                          <ExpandLessIcon sx={{ mr: 1 }} />
-                          Ocultar Jogadores
-                        </>
-                      ) : (
-                        <>
-                          <ExpandMoreIcon sx={{ mr: 1 }} />
-                          Ver Jogadores
-                        </>
-                      )}
-                    </button>
-
-                    <AnimatePresence>
-                      {expandedTeam === team.id && (
-                        <motion.div
-                          className="team-players-expanded"
-                          initial={{ opacity: 0, height: 0, overflow: "hidden" }}
-                          animate={{ opacity: 1, height: "auto", transition: { duration: 0.3 } }}
-                          exit={{ opacity: 0, height: 0, transition: { duration: 0.2 } }}
-                        >
-                          <h3 className="team-section-title">
-                            <SportsSoccerIcon className="team-section-title-icon" />
-                            Jogadores do Time
-                          </h3>
-                          {loadingPlayers[team.id] ? (
-                            <div className="team-loading-players">
-                              <div className="loading-spinner-small"></div>
-                              <span>Carregando jogadores...</span>
-                            </div>
-                          ) : teamPlayers[team.id] && teamPlayers[team.id].length > 0 ? (
-                            <div className="team-players-grid">
-                              {teamPlayers[team.id].map((player, playerIndex) => (
-                                <motion.div
-                                  key={player.id || playerIndex}
-                                  className={`team-player-item ${team.primaryColor ? 'team-player-item-border' : ''}`}
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{
-                                    opacity: 1,
-                                    y: 0,
-                                    transition: {
-                                      delay: Math.min(0.03 * playerIndex, 0.2),
-                                      duration: 0.2
-                                    }
-                                  }}
-                                >
-                                  <div className="player-name-position">
-                                    <div className="player-icon-name-row">
-                                      <PersonIcon className="player-icon" />
-                                      <span className="player-name" title={player.nome}>{player.nome}</span>
-                                    </div>
-                                    <div className="player-info-below">
-                                      <span className="player-position player-position-shrink">
-                                        {player.posicao}
-                                      </span>
-                                      <span className="player-year">
-                                        <CalendarTodayIcon className="player-detail-icon" />
-                                        {player.dateOfBirth ? 
-                                          `${new Date().getFullYear() - new Date(player.dateOfBirth).getFullYear()} anos` : 
-                                          player.ano || 'N/A'}
-                                      </span>
-                                      <span className="player-gender">
-                                        <WcIcon className="player-detail-icon" />
-                                        {player.sexo}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              ))}
-                            </div>
                           ) : (
-                            <div className="team-no-players">
-                              <SportsSoccerIcon className="team-no-players-icon" />
-                              <p>Nenhum jogador cadastrado neste time</p>
+                            <div className="team-logo-placeholder-display">
+                              <ShieldOutlinedIcon />
+                              <span>Sem escudo</span>
                             </div>
                           )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                        </div>
+                        
+                        <div className="team-sidebar-info">
+                          <div className="team-role-badges">
+                            <span className={`team-role-badge ${team.isCurrentUserCaptain ? 'team-role-badge--captain' : 'team-role-badge--member'}`}>
+                              {team.isCurrentUserCaptain ? 'Capitão' : 'Membro'}
+                            </span>
+                            {matchesCount > 0 && (
+                              <span className="team-role-badge team-role-badge--matches">
+                                {matchesCount} {matchesCount === 1 ? 'partida' : 'partidas'}
+                              </span>
+                            )}
+                          </div>
+                          
+                          <h2 className="team-sidebar-name">{team.name}</h2>
+                          
+                          <div className="team-sidebar-meta">
+                            {locationText && (
+                              <span className="team-meta-badge">
+                                {locationText}
+                              </span>
+                            )}
+                            {(team.primaryColor || team.secondaryColor) && (
+                              <span className="team-meta-badge team-colors-badge">
+                                {team.primaryColor && (
+                                  <span
+                                    className="color-indicator-sidebar"
+                                    title="Cor primária"
+                                    style={{ backgroundColor: team.primaryColor }}
+                                  />
+                                )}
+                                {team.secondaryColor && (
+                                  <span
+                                    className="color-indicator-sidebar"
+                                    title="Cor secundária"
+                                    style={{ backgroundColor: team.secondaryColor }}
+                                  />
+                                )}
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="team-sidebar-stats">
+                            <div className="team-sidebar-stat">
+                              <GroupIcon />
+                              <div>
+                                <strong>{playersCount}</strong>
+                                <span>{playersCount === 1 ? 'Jogador' : 'Jogadores'}</span>
+                              </div>
+                            </div>
+                            <div className="team-sidebar-stat">
+                              <EmojiEventsIcon />
+                              <div>
+                                <strong>{matchesCount}</strong>
+                                <span>{matchesCount === 1 ? 'Partida' : 'Partidas'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="team-description-container">
+                          <label className="team-description-label">Descrição do Time</label>
+                          <p className="team-description-text">
+                            {team.description || 'Sem descrição cadastrada para este time.'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
 
-                    <TeamStats
-                      historico={historico}
-                      primaryColor={team.primaryColor}
-                    />
-                    <PlayerStatsTable
-                      playerStats={playerStats}
-                      primaryColor={team.primaryColor}
-                      className="team-stats-wrapper-margin"
-                    />
+                    {/* Seção principal direita - Estatísticas, jogadores e ações */}
+                    <div className="team-main-section">
+                      <div className="team-body-section">
+                        <div className="team-section-header">
+                          <div className="team-section-title-group">
+                            <h3>Elenco</h3>
+                          </div>
+                          <button
+                            className="players-toggle-btn modern"
+                            onClick={(e) => togglePlayersList(e, team.id)}
+                          >
+                            {expandedTeam === team.id ? (
+                              <>
+                                <ExpandLessIcon sx={{ mr: 1 }} />
+                                Ocultar jogadores
+                              </>
+                            ) : (
+                              <>
+                                <ExpandMoreIcon sx={{ mr: 1 }} />
+                                Ver jogadores
+                              </>
+                            )}
+                          </button>
+                        </div>
 
-                    <TeamActionButtons
-                      teamId={team.id}
-                      playerStats={playerStats}
-                      loadingReport={loadingReport}
-                      onGenerateReport={handleGenerateReport}
-                      onDownloadPDF={handleDownloadPDF}
-                      className="team-action-buttons-margin"
-                    />
+                        <AnimatePresence initial={false}>
+                          {expandedTeam === team.id && (
+                            <motion.div
+                              className="team-players-expanded modern"
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto', transition: { duration: 0.3 } }}
+                              exit={{ opacity: 0, height: 0, transition: { duration: 0.2 } }}
+                            >
+                              {loadingPlayers[team.id] ? (
+                                <div className="team-loading-players">
+                                  <div className="loading-spinner-small"></div>
+                                  <span>Carregando jogadores...</span>
+                                </div>
+                              ) : teamPlayers[team.id] && teamPlayers[team.id].length > 0 ? (
+                                <div className="team-players-grid modern">
+                                  {teamPlayers[team.id].map((player, playerIndex) => (
+                                    <motion.div
+                                      key={player.id || playerIndex}
+                                      className={`team-player-item modern ${team.primaryColor ? 'team-player-item-border' : ''}`}
+                                      initial={{ opacity: 0, y: 10 }}
+                                      animate={{
+                                        opacity: 1,
+                                        y: 0,
+                                        transition: {
+                                          delay: Math.min(0.03 * playerIndex, 0.2),
+                                          duration: 0.2
+                                        }
+                                      }}
+                                    >
+                                      <div className="player-name-position">
+                                        <div className="player-name-container">
+                                          <PersonIcon className="player-icon" />
+                                          <span className="player-name" title={player.nome}>{player.nome}</span>
+                                        </div>
+                                        <span className="player-position player-position-shrink">
+                                          {player.posicao}
+                                        </span>
+                                      </div>
+                                      <div className="player-details">
+                                        <span className="player-year">
+                                          <CalendarTodayIcon className="player-detail-icon" />
+                                          {player.ano}
+                                        </span>
+                                        <span className="player-gender">
+                                          <WcIcon className="player-detail-icon" />
+                                          {player.sexo}
+                                        </span>
+                                      </div>
+                                    </motion.div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="team-no-players modern">
+                                  <SportsSoccerIcon className="team-no-players-icon" />
+                                  <p>Nenhum jogador cadastrado neste time</p>
+                                </div>
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      <TeamStats
+                        historico={historico}
+                        primaryColor={team.primaryColor}
+                        className="team-stats-wrapper-margin modern"
+                      />
+
+                      <PlayerStatsTable
+                        playerStats={playerStats}
+                        primaryColor={team.primaryColor}
+                        className="team-stats-wrapper-margin modern"
+                      />
+
+                      <TeamActionButtons
+                        teamId={team.id}
+                        playerStats={playerStats}
+                        loadingReport={loadingReport}
+                        onGenerateReport={handleGenerateReport}
+                        onDownloadPDF={handleDownloadPDF}
+                        className="team-action-buttons-margin modern"
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : null}
         </div>

@@ -399,23 +399,71 @@
   position: relative;
 }
 
+/* Estilos elegantes para o botão SplitButton "Gerenciar" */
+.navbar-manage-dropdown .btn {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: #fff !important;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: none !important;
+  letter-spacing: 0.3px !important;
+}
+
+.navbar-manage-dropdown .btn:hover,
+.navbar-manage-dropdown .btn:focus,
+.navbar-manage-dropdown .btn:active,
+.navbar-manage-dropdown .btn.show {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.navbar-manage-dropdown .btn:active {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Remover animações excessivas do SplitButton */
+.navbar-manage-dropdown .dropdown-toggle::after {
+  margin-left: 0.5rem;
+  transition: transform 0.15s ease !important;
+}
+
+.navbar-manage-dropdown .btn.show .dropdown-toggle::after {
+  transform: rotate(180deg);
+}
+
+/* Estilizar o ícone dentro do botão */
+.navbar-manage-icon {
+  vertical-align: middle;
+  margin-right: 6px;
+  color: #fff;
+  font-size: 18px;
+}
+
 .navbar-dropdown-menu {
   position: absolute;
   top: 100%;
   right: 0;
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   min-width: 200px;
   margin-top: 8px;
-  padding: 8px 0;
+  padding: 6px 0;
   z-index: 1200;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .navbar-dropdown-item {
-  padding: 12px 16px;
+  padding: 10px 16px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: background-color 0.15s ease;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -424,7 +472,7 @@
 }
 
 .navbar-dropdown-item:hover {
-  background: rgba(25, 118, 210, 0.04);
+  background: rgba(25, 118, 210, 0.06);
   color: #1976d2;
 }
 
@@ -455,10 +503,4 @@
 /* small top offset to nudge labels for visual alignment with icons */
 .navbar-dropdown-item .navbar-dropdown-text {
   margin-top: -0.6rem;
-}
-
-.navbar-manage-icon {
-  vertical-align: middle;
-  margin-right: 6px;
-  color: #fff;
 }

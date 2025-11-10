@@ -16,8 +16,7 @@ MatchChampionshpReport.init({
     allowNull: false,
     field: 'match_id',
     references: {
-      // Important: reference the actual model/table, not the modelName string
-      model: MatchChampionship,
+      model: 'match_championship',
       key: 'id'
     },
     onDelete: 'CASCADE',
@@ -27,7 +26,7 @@ MatchChampionshpReport.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: Team, // aqui também
+      model: 'teams',
       key: 'id'
     },
     onDelete: 'CASCADE',
@@ -37,7 +36,7 @@ MatchChampionshpReport.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: Team, // idem
+      model: 'teams',
       key: 'id'
     },
     onDelete: 'CASCADE',

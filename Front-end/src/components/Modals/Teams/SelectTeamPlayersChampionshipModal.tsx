@@ -46,18 +46,15 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
     setTeamsLoading(true);
     console.log(`[fetchAvailableTeams] Iniciando busca de times para campeonato ${championshipId}`);
     try {
+      console.log('[SelectTeamPlayersChampionshipModal] Buscando times...');
       const [myTeamsResp, registeredResp] = await Promise.all([
         axios.get(`${API_BASE_URL}/teams`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API_BASE_URL}/championships/${championshipId}/teams`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       const myTeams: Team[] = myTeamsResp.data || [];
       const alreadyRegistered: Team[] = registeredResp.data || [];
-      
-      console.log(`[fetchAvailableTeams] Meus times:`, myTeams);
-      console.log(`[fetchAvailableTeams] Times já registrados:`, alreadyRegistered);
-      console.log(`[fetchAvailableTeams] Meus times IDs:`, myTeams.map(t => t.id));
-      console.log(`[fetchAvailableTeams] Times registrados IDs:`, alreadyRegistered.map(t => t.id));
-      
+      console.log('[SelectTeamPlayersChampionshipModal] Times encontrados:', myTeams.length);
+      console.log('[SelectTeamPlayersChampionshipModal] Times já inscritos:', alreadyRegistered.length);
       const registeredIds = new Set(alreadyRegistered.map(t => t.id));
       console.log(`[fetchAvailableTeams] IDs registrados (Set):`, Array.from(registeredIds));
       
@@ -96,6 +93,7 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
 
   useEffect(() => {
     if (show) {
+      console.log('[SelectTeamPlayersChampionshipModal] Modal aberto, championshipId:', championshipId);
       setError('');
       setSelectedTeamId(null);
       setPlayers([]);

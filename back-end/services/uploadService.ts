@@ -2,8 +2,8 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Configuração do multer para upload de arquivos
-const storage = multer.diskStorage({
+// Configuração do multer para upload de arquivos de times
+const teamStorage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     const uploadDir = path.resolve(__dirname, '../uploads/teams');
     if (!fs.existsSync(uploadDir)) {
@@ -18,9 +18,25 @@ const storage = multer.diskStorage({
   }
 });
 
-// Configuração do multer
+// Configuração do multer para upload de arquivos de campeonatos
+const championshipStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    const uploadDir = path.resolve(__dirname, '../uploads/championships');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
+
+// Configuração do multer para times
 export const upload = multer({
-  storage: storage,
+  storage: teamStorage,
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB
   },
@@ -33,6 +49,26 @@ export const upload = multer({
       return cb(null, true);
     }
     cb(new Error('Apenas imagens são permitidas!'));
+  }
+});
+
+// Configuração do multer para campeonatos
+export const uploadChampionship = multer({
+  storage: championshipStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB
+  },
+  fileFilter: (_req, file, cb) => {
+    const allowedExtensions = /\.(jpeg|jpg|png|webp)$/i;
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    
+    const hasValidExtension = allowedExtensions.test(file.originalname);
+    const hasValidMimeType = allowedMimeTypes.includes(file.mimetype);
+
+    if (hasValidExtension && hasValidMimeType) {
+      return cb(null, true);
+    }
+    cb(new Error('Apenas imagens são permitidas! (JPEG, JPG, PNG, WEBP)'));
   }
 });
 

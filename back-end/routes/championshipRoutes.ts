@@ -1,5 +1,6 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth';
+import multer from 'multer';
 import { 
   createChampionship, 
   listChampionships, 
@@ -12,7 +13,10 @@ import {
   applyToChampionship,
   getChampionshipApplications,
   updateApplicationStatus,
-  publishChampionship
+  publishChampionship,
+  uploadChampionshipLogo,
+  createChampionshipMatch,
+  getChampionshipMatches
 } from '../controllers/championshipController';
 
 const router = express.Router();
@@ -623,6 +627,24 @@ router.put('/:id', authenticateToken, updateChampionship);
  *               message: Erro ao deletar campeonato
  */
 router.delete('/:id', authenticateToken, deleteChampionship);
+router.post('/:id/join-team', authenticateToken, joinTeamInChampionship);
+router.get('/:id/join-team', authenticateToken, getChampionshipTeams);
+router.delete('/:id/join-team/:teamId', authenticateToken, leaveTeamFromChampionship);
+router.post('/:id/logo', authenticateToken, (req, res, next) => {
+  uploadChampionshipLogo.single('logo')(req, res, (err: any) => {
+    if (err) {
+      console.error('Erro no multer:', err);
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(400).json({ message: 'Arquivo muito grande. Tamanho máximo: 5MB' });
+        }
+        return res.status(400).json({ message: `Erro no upload: ${err.message}` });
+      }
+      return res.status(400).json({ message: err.message || 'Erro ao processar arquivo' });
+    }
+    next();
+  });
+}, uploadChampionshipLogo);
 
 /**
  * @swagger
@@ -1168,5 +1190,9 @@ router.get('/:id/applications', authenticateToken, getChampionshipApplications);
  */
 router.put('/:id/applications/:applicationId/status', authenticateToken, updateApplicationStatus);
 
+
+// Agendamento de partidas
+router.post('/:id/matches', authenticateToken, createChampionshipMatch);
+router.get('/:id/matches', getChampionshipMatches);
 
 export default router;

@@ -22,6 +22,7 @@ const UserDrawer: React.FC<UserDrawerProps> = ({ open, onClose }) => {
   };
 
   const handleNavigation = (path: string) => {
+    navigate(path);
     onClose();
     navigate(path);
   };

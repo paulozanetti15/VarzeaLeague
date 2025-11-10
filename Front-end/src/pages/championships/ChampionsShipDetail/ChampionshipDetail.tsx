@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getChampionshipTeams, getChampionshipById, deleteChampionship, leaveChampionshipWithTeam, getChampionshipMatches } from '../../../services/championships.service';
 import { getUserTeams } from '../../../services/teams.service';
-import { getChampionshipTeams, getChampionshipById, deleteChampionship, leaveChampionshipWithTeam } from '../../../services/championships.service';
 import trophy from '../../../assets/championship-trophy.svg';
 import './ChampionshipDetail.css';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import { Button, Modal } from 'react-bootstrap';
-import axios from 'axios';
 import PunicaoCampeonatoRegisterModal from '../../../components/Modals/Punishment/Championships/PunishmentChampionshipRegisterModal';
 import PunicaoCampeonatoModalInfo from '../../../components/Modals/Punishment/Championships/PunishmentChampionshipInfoModal';
 import SelectTeamPlayersChampionshipModal from '../../../components/Modals/Teams/SelectTeamPlayersChampionshipModal';
@@ -21,6 +23,8 @@ interface Championship {
   created_by: number;
   modalidade?: string;
   nomequadra?: string;
+  logo?: string | null;
+  tipo?: 'liga' | 'mata-mata';
 }
 
 const ChampionshipDetail: React.FC = () => {
@@ -38,6 +42,16 @@ const ChampionshipDetail: React.FC = () => {
   const [isLeavingTeamId, setIsLeavingTeamId] = useState<number | null>(null);
   const [showPunicaoRegister, setShowPunicaoRegister] = useState(false);
   const [showPunicaoInfo, setShowPunicaoInfo] = useState(false);
+  const [championshipMatches, setChampionshipMatches] = useState<any[]>([]);
+  const [loadingMatches, setLoadingMatches] = useState(false);
+
+  const getChampionshipLogoUrl = (logo?: string | null) => {
+    if (!logo) return null;
+    if (logo.startsWith('/uploads')) {
+      return `http://localhost:3001${logo}`;
+    }
+    return `http://localhost:3001/uploads/championships/${logo}`;
+  };
 
   // Times do usuário já inscritos e disponíveis para inscrição
   const enrolledTeamIds = useMemo(() => new Set((teams || []).map((t) => t.id)), [teams]);
@@ -63,10 +77,24 @@ const ChampionshipDetail: React.FC = () => {
     }
   }, [id]);
 
+  const loadChampionshipMatches = useCallback(async () => {
+    if (!id) return;
+    try {
+      setLoadingMatches(true);
+      const matchesData = await getChampionshipMatches(Number(id));
+      setChampionshipMatches(matchesData || []);
+    } catch (err) {
+      console.error('Erro ao carregar partidas do campeonato:', err);
+      setChampionshipMatches([]);
+    } finally {
+      setLoadingMatches(false);
+    }
+  }, [id]);
+
   const loadUserTeams = useCallback(async () => {
     try {
       const userTeamsData = await getUserTeams();
-      setUserTeams(userTeamsData || []);
+      setUserTeams(Array.isArray(userTeamsData) ? userTeamsData : []);
     } catch (err) {
       console.error('Erro ao carregar times do usuário:', err);
     }
@@ -100,7 +128,8 @@ const ChampionshipDetail: React.FC = () => {
     fetchChampionship();
     loadChampionshipTeams();
     loadUserTeams();
-  }, [id, loadChampionshipTeams, loadUserTeams]);
+    loadChampionshipMatches();
+  }, [id, loadChampionshipTeams, loadUserTeams, loadChampionshipMatches]);
 
   const handleDeleteChampionship = async () => {
     if (!id) return;
@@ -206,47 +235,71 @@ const ChampionshipDetail: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <div className="championship-info-section">
-            <h3 className="section-title">Informações do Campeonato</h3>
-            
-            <div className="info-grid">
-              {championship.description && (
-                <div className="info-item">
-                  <span className="info-label">Descrição:</span>
-                  <span className="info-value">{championship.description}</span>
+            <div className="championship-info-hero">
+              {getChampionshipLogoUrl(championship.logo) && (
+                <div className="championship-logo-hero">
+                  <img 
+                    src={getChampionshipLogoUrl(championship.logo)!} 
+                    alt={championship.name}
+                    className="championship-hero-image"
+                  />
                 </div>
               )}
               
-              {championship.modalidade && (
-                <div className="info-item">
-                  <span className="info-label">Modalidade:</span>
-                  <span className="info-value">{championship.modalidade}</span>
+              <div className="championship-info-content">
+                <div className="info-grid-modern">
+                  {championship.modalidade && (
+                    <div className="info-card-modern">
+                      <div className="info-icon">⚽</div>
+                      <div className="info-content-modern">
+                        <span className="info-label-modern">Modalidade</span>
+                        <span className="info-value-modern">{championship.modalidade}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {championship.nomequadra && (
+                    <div className="info-card-modern">
+                      <div className="info-icon">🏟️</div>
+                      <div className="info-content-modern">
+                        <span className="info-label-modern">Quadra</span>
+                        <span className="info-value-modern">{championship.nomequadra}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {championship.start_date && (
+                    <div className="info-card-modern">
+                      <div className="info-icon">📅</div>
+                      <div className="info-content-modern">
+                        <span className="info-label-modern">Data de Início</span>
+                        <span className="info-value-modern">
+                          {new Date(championship.start_date).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {championship.end_date && (
+                    <div className="info-card-modern">
+                      <div className="info-icon">🏁</div>
+                      <div className="info-content-modern">
+                        <span className="info-label-modern">Data de Fim</span>
+                        <span className="info-value-modern">
+                          {new Date(championship.end_date).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-              
-              {championship.nomequadra && (
-                <div className="info-item">
-                  <span className="info-label">Quadra:</span>
-                  <span className="info-value">{championship.nomequadra}</span>
-                </div>
-              )}
-              
-              {championship.start_date && (
-                <div className="info-item">
-                  <span className="info-label">Data de Início:</span>
-                  <span className="info-value">
-                    {new Date(championship.start_date).toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-              )}
-              
-              {championship.end_date && (
-                <div className="info-item">
-                  <span className="info-label">Data de Fim:</span>
-                  <span className="info-value">
-                    {new Date(championship.end_date).toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-              )}
+                
+                {championship.description && (
+                  <div className="championship-description-modern">
+                    <h4 className="description-title-modern">Sobre o Campeonato</h4>
+                    <p className="description-text-modern">{championship.description}</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -285,7 +338,15 @@ const ChampionshipDetail: React.FC = () => {
                     onClick={handleOpenRankingClassificacao}
                   >
                     <span className="btn-icon">🏆</span>
-                    Ranking de Classificação
+                    Classificação
+                  </button>
+                  
+                  <button
+                    className="action-btn schedule-btn"
+                    onClick={() => navigate(`/championships/${id}/schedule-match`)}
+                  >
+                    <span className="btn-icon">📅</span>
+                    Agendamento de Partidas
                   </button>
                 </>
               ) : (
@@ -324,8 +385,6 @@ const ChampionshipDetail: React.FC = () => {
             ) : (
               <div className="teams-grid">
                 {teams.map((team) => {
-                  const user = JSON.parse(localStorage.getItem('user') || '{}');
-                  const userId = Number(user.id);
                   const isTeamOwner = userTeams.some(ut => ut.id === team.id);
                   
                   return (
@@ -384,26 +443,185 @@ const ChampionshipDetail: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Seção de Próximos Jogos */}
+          <div className="championship-matches-section">
+            <h3 className="section-title">Próximos Jogos</h3>
+            
+            {loadingMatches ? (
+              <div className="loading-matches">
+                <div className="loading-spinner"></div>
+                <p>Carregando partidas...</p>
+              </div>
+            ) : championshipMatches.length === 0 ? (
+              <div className="no-matches-message">
+                <p>Nenhuma partida agendada ainda.</p>
+              </div>
+            ) : (
+              <div className="matches-grid">
+                {championshipMatches
+                  .filter((match: any) => {
+                    const matchDate = new Date(match.date);
+                    const now = new Date();
+                    return matchDate >= now || match.status === 'em_andamento';
+                  })
+                  .slice(0, 6)
+                  .map((match: any) => {
+                    const matchDate = new Date(match.date);
+                    const teams = match.matchTeams || [];
+                    const homeTeam = teams[0]?.team;
+                    const awayTeam = teams[1]?.team;
+                    const round = match.matchChampionship?.Rodada || 'N/A';
+
+                    const getTeamLogoUrl = (banner?: string | null) => {
+                      if (!banner) return null;
+                      if (banner.startsWith('/uploads')) {
+                        return `http://localhost:3001${banner}`;
+                      }
+                      return `http://localhost:3001/uploads/teams/${banner}`;
+                    };
+
+                    return (
+                      <motion.div
+                        key={match.id}
+                        className="match-card-championship"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        onClick={() => navigate(`/jogo/${match.id}`)}
+                      >
+                        <div className="match-card-header-championship">
+                          <span className="match-round-badge">Rodada {round}</span>
+                          <span className="match-date-championship">
+                            {format(matchDate, "dd/MM/yyyy", { locale: ptBR })}
+                          </span>
+                        </div>
+
+                        <div className="match-teams-championship">
+                          <div className="match-team-championship">
+                            <div className="team-logo-match">
+                              {homeTeam?.banner ? (
+                                <img
+                                  src={getTeamLogoUrl(homeTeam.banner) || ''}
+                                  alt={homeTeam.name}
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (fallback) fallback.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <div
+                                className="team-logo-fallback-match"
+                                style={{ display: homeTeam?.banner ? 'none' : 'flex' }}
+                              >
+                                <span>{homeTeam?.name?.charAt(0) || '?'}</span>
+                              </div>
+                            </div>
+                            <span className="team-name-match">{homeTeam?.name || 'TBD'}</span>
+                          </div>
+
+                          <div className="match-vs-championship">VS</div>
+
+                          <div className="match-team-championship">
+                            <div className="team-logo-match">
+                              {awayTeam?.banner ? (
+                                <img
+                                  src={getTeamLogoUrl(awayTeam.banner) || ''}
+                                  alt={awayTeam.name}
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (fallback) fallback.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <div
+                                className="team-logo-fallback-match"
+                                style={{ display: awayTeam?.banner ? 'none' : 'flex' }}
+                              >
+                                <span>{awayTeam?.name?.charAt(0) || '?'}</span>
+                              </div>
+                            </div>
+                            <span className="team-name-match">{awayTeam?.name || 'TBD'}</span>
+                          </div>
+                        </div>
+
+                        <div className="match-info-championship">
+                          <div className="match-info-item">
+                            <AccessTimeIcon className="info-icon-small" />
+                            <span>{format(matchDate, "HH:mm", { locale: ptBR })}</span>
+                          </div>
+                          {(match.location || match.nomequadra) && (
+                            <div className="match-info-item">
+                              <LocationOnIcon className="info-icon-small" />
+                              <span>{match.nomequadra || match.location}</span>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
         </motion.div>
 
         {/* Modal de Confirmação de Exclusão */}
-        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
-          <Modal.Header closeButton>
-            <Modal.Title>Confirmar Exclusão</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            Tem certeza que deseja excluir o campeonato "{championship.name}"? 
-            Esta ação não pode ser desfeita.
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-              Cancelar
-            </Button>
-            <Button variant="danger" onClick={handleDeleteChampionship}>
-              Excluir
-            </Button>
-          </Modal.Footer>
-        </Modal>
+        <AnimatePresence>
+          {showDeleteModal && (
+            <motion.div
+              className="delete-modal-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDeleteModal(false)}
+            >
+              <motion.div
+                className="delete-modal-container"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="delete-modal-header">
+                  <h3 className="delete-modal-title">Confirmar Exclusão</h3>
+                  <button 
+                    className="delete-modal-close"
+                    onClick={() => setShowDeleteModal(false)}
+                    aria-label="Fechar"
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                <div className="delete-modal-body">
+                  <p className="delete-modal-message">
+                    Tem certeza que deseja excluir o campeonato <strong>"{championship.name}"</strong>?
+                  </p>
+                  <p className="delete-modal-warning">
+                    Esta ação não pode ser desfeita.
+                  </p>
+                </div>
+                
+                <div className="delete-modal-footer">
+                  <button
+                    className="delete-modal-btn delete-modal-btn-cancel"
+                    onClick={() => setShowDeleteModal(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="delete-modal-btn delete-modal-btn-delete"
+                    onClick={handleDeleteChampionship}
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Modal de Seleção de Time */}

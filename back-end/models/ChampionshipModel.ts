@@ -17,6 +17,7 @@ interface ChampionshipModel extends Model<InferAttributes<ChampionshipModel>, In
   num_grupos?: number | null;
   times_por_grupo?: number | null;
   num_equipes_liga?: number | null;
+  logo?: string | null;
 }
 
 class Championship extends Model<InferAttributes<ChampionshipModel>, InferCreationAttributes<ChampionshipModel>> implements ChampionshipModel {
@@ -36,6 +37,7 @@ class Championship extends Model<InferAttributes<ChampionshipModel>, InferCreati
   public num_grupos!: number | null;
   public times_por_grupo!: number | null;
   public num_equipes_liga!: number | null;
+  public logo!: string | null;
 }
 
 Championship.init({
@@ -144,6 +146,10 @@ Championship.init({
       min: 4,
       max: 20
     }
+  },
+  logo: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
 }, {
   sequelize,

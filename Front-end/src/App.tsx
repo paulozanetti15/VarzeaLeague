@@ -10,6 +10,7 @@ import { ResetPassword } from './pages/reset-password/ResetPassword'
 import CreateMatch from './pages/matches/CreateMatch'
 import MatchList from './pages/matches/MatchList'
 import MatchDetail from './pages/matches/MatchDetail'
+import PublicMatchDetail from './pages/matches/PublicMatchDetail'
 import MatchListing from './pages/search/SearchMatches'
 import CampeonatoListing from './pages/search/SearchChampionship'
 import TeamList from './pages/teams/TeamList'
@@ -25,6 +26,7 @@ import ChampionshipList from './pages/championships/ChampionsShipList/Championsh
 import ChampionshipForm from './pages/championships/ChampionshipForm'
 import ChampionshipDetail from './pages/championships/ChampionsShipDetail/ChampionshipDetail'
 import ChampionshipEditForm from './pages/championships/ChampionshipEditForm'
+import ScheduleMatchPage from './pages/championships/ScheduleMatchPage'
 import UserManagement from './pages/UserManagement'
 import Navbar from './components/Navbar'
 import TeamRequiredRoute from './components/TeamRequiredRoute'
@@ -36,6 +38,7 @@ import HistoricoPage from './pages/Historico/HistoricoPage'
 import { HistoricoProvider } from './Context/HistoricoContext';
 import RankingPlayers from './pages/ranking/RankingPlayers'
 import RankingTeams from './pages/ranking/RankingTeams'
+import ChampionshipClassification from './pages/championships/ChampionshipClassification/ChampionshipClassification'
 
 // Componente simples para loading
   const Loading = () => (
@@ -120,6 +123,12 @@ import RankingTeams from './pages/ranking/RankingTeams'
             <Route path="/buscar-campeonatos" element={
               <PageTransition>
                 <CampeonatoListing />
+              </PageTransition>
+            } />
+            
+            <Route path="/jogo/:id" element={
+              <PageTransition>
+                <PublicMatchDetail />
               </PageTransition>
             } />
             
@@ -373,6 +382,21 @@ import RankingTeams from './pages/ranking/RankingTeams'
             </PrivateRoute>
           } />
 
+          <Route path="/championships/:id/schedule-match" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS]}
+                redirectTo="/"
+              >
+                <PageTransition>
+                  <ScheduleMatchPage />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
+
           <Route path="/ranking/jogadores" element={
             <PrivateRoute isLoggedIn={isLoggedIn}>
               <RoleBasedRoute 
@@ -396,7 +420,7 @@ import RankingTeams from './pages/ranking/RankingTeams'
                 redirectTo="/"
               >
                 <PageTransition>
-                  <RankingTeams />
+                  <ChampionshipClassification />
                 </PageTransition>
               </RoleBasedRoute>
             </PrivateRoute>

@@ -21,6 +21,8 @@ import ChampionshipPenalty from './ChampionshipPenaltyModel';
 import TeamChampionship from './TeamChampionshipModel';
 import ChampionshipMatchGoal from './ChampionshipMatchGoalModel';
 import ChampionshipMatchCard from './ChampionshipMatchCardModel';
+import Notification from './NotificationModel';
+import Match from './FriendlyMatchesModel';
 
 
 export function associateModels() {
@@ -423,4 +425,14 @@ export function associateModels() {
     foreignKey: 'match_id', 
     as: 'cards' 
   });
+  // Notifications
+  Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+  Notification.belongsTo(Match, { foreignKey: 'relatedMatchId', as: 'match' });
+  Notification.belongsTo(Team, { foreignKey: 'relatedTeamId', as: 'team' });
+  Notification.belongsTo(Championship, { foreignKey: 'relatedChampionshipId', as: 'championship' });
+  User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
+  Match.hasMany(Notification, { foreignKey: 'relatedMatchId', as: 'notifications' });
+  Team.hasMany(Notification, { foreignKey: 'relatedTeamId', as: 'notifications' });
+  Championship.hasMany(Notification, { foreignKey: 'relatedChampionshipId', as: 'notifications' });
+
 }

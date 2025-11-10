@@ -141,213 +141,12 @@
 /* Grid de campeonatos - Layout otimizado */
 .championships-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.75rem;
   margin-top: 2rem;
   padding: 0;
 }
 
-/* Card do campeonato - Informações completas */
-.championship-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  overflow: hidden;
-  position: relative;
-  min-height: 200px;
-  display: flex;
-  flex-direction: column;
-}
-
-.championship-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
-  border-color: #667eea;
-}
-
-.championship-card-content {
-  padding: 1.25rem;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Header do card */
-.championship-card .championship-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-  border-radius: 8px;
-  margin: -1.25rem -1.25rem 1rem -1.25rem;
-  margin-bottom: 1rem;
-}
-
-.championship-title {
-  color: #1a202c;
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin: 0;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-clamp: 2;
-  flex: 1;
-  margin-right: 0.5rem;
-}
-
-/* Badge do organizador */
-.organizer-badge {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  padding: 0.4rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* Informações do campeonato - Completas e legíveis */
-.championship-info {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  flex: 1;
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 6px;
-  border: 1px solid rgba(226, 232, 240, 0.5);
-}
-
-.info-label {
-  font-weight: 600;
-  color: #64748b;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  line-height: 1;
-}
-
-.info-value {
-  font-weight: 600;
-  color: #1a202c;
-  font-size: 0.8rem;
-  line-height: 1.2;
-}
-
-/* Badge de tipo de campeonato */
-.championship-type {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.3rem 0.6rem;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-top: 0.2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.championship-type.mata-mata {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
-  color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-.championship-type.liga {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
-  color: #2563eb;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-/* Status do campeonato */
-.championship-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.3rem 0.6rem;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-top: 0.2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.championship-status.open {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(22, 163, 74, 0.05) 100%);
-  color: #16a34a;
-  border: 1px solid rgba(34, 197, 94, 0.2);
-}
-
-.championship-status.closed {
-  background: linear-gradient(135deg, rgba(107, 114, 128, 0.1) 0%, rgba(75, 85, 99, 0.05) 100%);
-  color: #6b7280;
-  border: 1px solid rgba(107, 114, 128, 0.2);
-}
-
-.championship-status.in-progress {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%);
-  color: #d97706;
-  border: 1px solid rgba(251, 191, 36, 0.2);
-}
-
-/* Descrição */
-.championship-description {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-  border: 1px solid rgba(102, 126, 234, 0.1);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.description-title {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #1a202c;
-  margin-bottom: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.description-title::before {
-  content: '📝';
-  font-size: 0.9rem;
-}
-
-.description-text {
-  font-size: 0.85rem;
-  color: #374151;
-  line-height: 1.5;
-  margin: 0;
-  font-weight: 500;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-clamp: 3;
-}
 
 /* Estados de carregamento e erro */
 .loading, .error {
@@ -401,62 +200,306 @@
   line-height: 1.5;
 }
 
-/* Alerta de sobra de times nos cards */
-.championship-alert-card {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border: 2px solid #f59e0b;
-  border-radius: 12px;
-  padding: 1rem;
-  margin-top: 1rem;
+/* Card do campeonato - Design Compacto e Moderno */
+.championship-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  position: relative;
   display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.championship-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-color: #d1d5db;
+}
+
+/* Container do logo do campeonato - Compacto */
+.championship-logo-container {
+  width: 100%;
+  height: 100px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.championship-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.championship-card:hover .championship-logo {
+  transform: scale(1.06);
+}
+
+.championship-card-content {
+  padding: 1.125rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+/* Header do card - Compacto */
+.championship-card .championship-header {
+  display: flex;
+  justify-content: space-between;
   align-items: flex-start;
   gap: 0.75rem;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
-  animation: championshipAlertPulse 2s ease-in-out infinite;
-  position: relative;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  margin-bottom: 0.75rem;
+}
+
+.championship-title {
+  color: #111827;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  border-left: 4px solid #f59e0b;
+  line-clamp: 2;
+  flex: 1;
+  letter-spacing: -0.02em;
 }
 
-.championship-alert-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
-  pointer-events: none;
+/* Badge do organizador - Compacto */
+.organizer-badge {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.25);
+  flex-shrink: 0;
 }
 
-@keyframes championshipAlertPulse {
-  0%, 100% { 
-    box-shadow: 0 3px 8px rgba(245, 158, 11, 0.15);
-    transform: scale(1);
-  }
-  50% { 
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
-    transform: scale(1.005);
-  }
+/* Informações do campeonato - Layout Profissional e Elegante */
+.championship-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  flex: 1;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  margin: 0;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  min-width: 110px;
+  flex-shrink: 0;
+}
+
+.info-value-text {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.championship-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Badge de tipo de campeonato - Elegante */
+.championship-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.championship-type:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.championship-type svg {
+  flex-shrink: 0;
+}
+
+.championship-type.mata-mata {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.championship-type.mata-mata svg {
+  color: #991b1b;
+}
+
+.championship-type.liga {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.championship-type.liga svg {
+  color: #1e40af;
+}
+
+/* Status do campeonato - Inline */
+.championship-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+}
+
+.championship-status svg {
+  flex-shrink: 0;
+}
+
+.championship-status.open {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.championship-status.open svg {
+  color: #065f46;
+}
+
+.championship-status.closed {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.championship-status.closed svg {
+  color: #374151;
+}
+
+.championship-status.in-progress {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.championship-status.in-progress svg {
+  color: #92400e;
+}
+
+.championship-status.draft {
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  color: #3730a3;
+  border: 1px solid #a5b4fc;
+}
+
+.championship-status.draft svg {
+  color: #3730a3;
+}
+
+/* Descrição - Elegante */
+.championship-description {
+  margin: 0;
+  padding: 0.875rem;
+  background: linear-gradient(135deg, #fafbfc 0%, #f5f7fa 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.description-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.description-title::before {
+  content: '📝';
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.description-text {
+  font-size: 0.8rem;
+  color: #374151;
+  line-height: 1.5;
+  margin: 0;
+  font-weight: 400;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-clamp: 2;
+}
+
+/* Alerta de sobra de times - Compacto */
+.championship-alert-card {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #fbbf24;
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  box-shadow: 0 1px 3px rgba(251, 191, 36, 0.15);
+  border-left: 3px solid #f59e0b;
 }
 
 .championship-alert-icon {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   line-height: 1;
   flex-shrink: 0;
-  animation: championshipBounce 1.5s ease-in-out infinite;
-}
-
-@keyframes championshipBounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-2px);
-  }
-  60% {
-    transform: translateY(-1px);
-  }
 }
 
 .championship-alert-content {
@@ -468,16 +511,16 @@
 .championship-alert-title {
   color: #92400e;
   font-weight: 700;
-  font-size: 0.85rem;
-  margin-bottom: 0.25rem;
-  text-shadow: 0 1px 2px rgba(146, 64, 14, 0.1);
+  font-size: 0.7rem;
+  margin-bottom: 0.2rem;
+  text-shadow: none;
   letter-spacing: 0.3px;
 }
 
 .championship-alert-description {
   color: #b45309;
-  font-size: 0.75rem;
-  line-height: 1.4;
+  font-size: 0.7rem;
+  line-height: 1.3;
   font-weight: 500;
   margin: 0;
 }
@@ -485,10 +528,10 @@
 .championship-alert-description strong {
   color: #92400e;
   font-weight: 700;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.6);
   padding: 0.1rem 0.3rem;
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
 }
 
 /* Responsividade - Layout otimizado */
@@ -573,18 +616,16 @@
   }
 
   .championship-card .championship-header {
-    margin: -0.75rem -0.75rem 1rem -0.75rem;
-    padding: 0.6rem;
+    margin: 0;
+    padding: 0;
+    margin-bottom: 0.75rem;
   }
 
   .championship-title {
-    font-size: 0.95rem;
-    flex: 1;
-    margin-right: 0.4rem;
+    font-size: 1rem;
   }
 
-  .organizer-badge {
-    font-size: 0.65rem;
-    padding: 0.3rem 0.6rem;
+  .championship-logo-container {
+    height: 120px;
   }
 }

@@ -14,23 +14,67 @@ import MatchChampionshipReport from '../models/MatchReportChampionshipModel';
 export default class TeamController {
   static async createTeam(req: AuthRequest, res: Response): Promise<void> {
     try {
+      console.log('=== INICIANDO CRIAÇÃO DE TIME ===');
+      console.log('Body recebido:', {
+        name: req.body.name,
+        description: req.body.description,
+        primaryColor: req.body.primaryColor,
+        secondaryColor: req.body.secondaryColor,
+        state: req.body.state,
+        city: req.body.city,
+        CEP: req.body.CEP
+      });
+      console.log('Arquivo recebido:', req.file ? {
+        filename: req.file.filename,
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      } : 'Nenhum arquivo');
+      
       const { name, description, primaryColor, secondaryColor, state, city, CEP } = req.body;
       const userId = req.user?.id;
       
       if (!userId) {
-        res.status(401).json({ message: 'Usuário não autenticado' });
+        console.error('Usuário não autenticado');
+        res.status(401).json({ error: 'Usuário não autenticado' });
         return;
       }
-
+      
+      let jogadores = req.body.jogadores;
+      
+      // Processar jogadores se vierem como string (FormData)
+      if (typeof jogadores === 'string') {
+        try {
+          jogadores = JSON.parse(jogadores);
+          console.log('Jogadores parseados:', jogadores);
+        } catch (e) {
+          console.warn('Erro ao parsear jogadores JSON, usando array vazio:', e);
+          jogadores = [];
+        }
+      }
+      
+      // Garantir que jogadores seja um array
+      if (!Array.isArray(jogadores)) {
+        console.warn('Jogadores não é um array, convertendo:', jogadores);
+        jogadores = [];
+      }
+      
       let bannerFilename = null;
       if (req.file) {
         bannerFilename = req.file.filename;
+        console.log('Banner filename definido:', bannerFilename);
       }
-
-      if (!name) {
-        res.status(400).json({ message: 'Nome do time é obrigatório' });
+      
+      // Validações obrigatórias
+      if (!name || !name.trim()) {
+        console.error('Nome do time não fornecido');
+        res.status(400).json({ error: 'Nome do time é obrigatório' });
         return;
       }
+      
+      // Garantir que CEP tenha um valor (mesmo que vazio, mas não null)
+      const CEPValue = (CEP && CEP.trim()) ? CEP.trim() : '00000-000';
+      console.log('CEP processado:', CEPValue);
 
       const existingActiveTeam = await Team.findOne({
         where: { name: name.trim(), isDeleted: false }
@@ -49,19 +93,37 @@ export default class TeamController {
         const agora = new Date();
         agora.setHours(agora.getHours() - 3);
         await existingDeletedTeam.update({
-          description,
+          description: description || null,
           captainId: userId,
           isDeleted: false,
           updatedAt: agora,
-          state: state,
-          city: city,
-          CEP: CEP,
-          primaryColor,
-          secondaryColor,
+          state: state || null,
+          city: city || null,
+          CEP: CEPValue,
+          primaryColor: primaryColor || null,
+          secondaryColor: secondaryColor || null,
           banner: bannerFilename
         });
 
-        await existingDeletedTeam.addUser(userId);
+        // Adicionar o usuário ao time
+        try {
+          await existingDeletedTeam.addUser(userId);
+        } catch (addUserError: any) {
+          console.error('Erro ao adicionar usuário ao time:', addUserError);
+          if (addUserError?.name !== 'SequelizeUniqueConstraintError') {
+            throw addUserError;
+          }
+        }
+        
+        // Processar e criar/associar jogadores se houver
+        if (jogadores && Array.isArray(jogadores) && jogadores.length > 0) {
+          try {
+            console.log('Processando jogadores para time restaurado:', jogadores.length);
+            await TeamController.handlePlayersForTeamCreation(existingDeletedTeam.id, jogadores);
+          } catch (playerError: any) {
+            console.error('Erro ao processar jogadores:', playerError);
+          }
+        }
         
         const teamWithAssociations = await Team.findByPk(existingDeletedTeam.id, {
           include: [
@@ -85,20 +147,54 @@ export default class TeamController {
         return;
       }
 
-      const team = await Team.create({
+      console.log('Criando novo time com dados:', {
         name: name.trim(),
-        description,
+        description: description || null,
         captainId: userId,
-        primaryColor,
-        secondaryColor,
+        primaryColor: primaryColor || null,
+        secondaryColor: secondaryColor || null,
         isDeleted: false,
         banner: bannerFilename,
-        state,
-        city,
-        CEP
+        state: state || null,
+        city: city || null,
+        CEP: CEPValue
       });
       
-      await team.addUser(userId);
+      const team = await Team.create({
+        name: name.trim(),
+        description: description || null,
+        captainId: userId,
+        primaryColor: primaryColor || null,
+        secondaryColor: secondaryColor || null,
+        isDeleted: false,
+        banner: bannerFilename,
+        state: state || null,
+        city: city || null,
+        CEP: CEPValue
+      });
+      console.log('Time criado com sucesso, ID:', team.id);
+      
+      // Adicionar o capitão como usuário do time
+      try {
+        await team.addUser(userId);
+      } catch (addUserError: any) {
+        console.error('Erro ao adicionar usuário ao time:', addUserError);
+        if (addUserError?.name !== 'SequelizeUniqueConstraintError') {
+          throw addUserError;
+        }
+      }
+      
+      // Processar e criar/associar jogadores se houver
+      if (jogadores && Array.isArray(jogadores) && jogadores.length > 0) {
+        try {
+          console.log('Processando jogadores para criação de time:', jogadores.length);
+          await TeamController.handlePlayersForTeamCreation(team.id, jogadores);
+          console.log('Processamento de jogadores concluído');
+        } catch (playerError: any) {
+          console.error('Erro ao processar jogadores:', playerError);
+          console.error('Stack do erro:', playerError?.stack);
+        }
+      }
       
       const teamWithPlayers = await Team.findByPk(team.id, {
         include: [
@@ -119,8 +215,49 @@ export default class TeamController {
       
       const plainTeam = teamWithPlayers.get({ plain: true });
       res.status(201).json(plainTeam);
-    } catch (error) {
-      res.status(500).json({ message: 'Erro ao criar time' });
+    } catch (error: any) {
+      console.error('=== ERRO AO CRIAR TIME ===');
+      console.error('Tipo do erro:', error?.constructor?.name);
+      console.error('Nome do erro:', error?.name);
+      console.error('Mensagem:', error?.message);
+      console.error('Stack:', error?.stack);
+      console.error('Detalhes completos:', JSON.stringify(error, null, 2));
+      
+      // Se for erro de validação do Sequelize, retornar mensagem mais específica
+      if (error?.name === 'SequelizeValidationError') {
+        const validationErrors = error.errors?.map((e: any) => `${e.path}: ${e.message}`).join(', ') || error.message;
+        res.status(400).json({
+          error: 'Erro de validação',
+          message: validationErrors,
+          details: error.errors
+        });
+        return;
+      }
+      
+      // Se for erro de foreign key constraint
+      if (error?.name === 'SequelizeForeignKeyConstraintError') {
+        res.status(400).json({
+          error: 'Erro de referência',
+          message: 'Um ou mais dados referenciados não existem no banco de dados',
+          details: error.message
+        });
+        return;
+      }
+      
+      // Se for erro de database
+      if (error?.name === 'SequelizeDatabaseError') {
+        res.status(500).json({
+          error: 'Erro no banco de dados',
+          message: error.message
+        });
+        return;
+      }
+      
+      res.status(500).json({ 
+        error: 'Erro ao criar time',
+        message: error?.message || 'Erro desconhecido',
+        details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+      });
     }
   }
 
@@ -745,6 +882,63 @@ export default class TeamController {
       res.json({ teamId: Number(teamId), total: stats.length, stats });
     } catch (error) {
       res.status(500).json({ message: 'Erro ao gerar estatísticas' });
+    }
+  }
+
+  private static async handlePlayersForTeamCreation(teamId: number, jogadores: any[]): Promise<void> {
+    for (const jogador of jogadores) {
+      try {
+        if (jogador.id) {
+          const playerExists = await Player.findByPk(jogador.id);
+          if (playerExists && !playerExists.isDeleted) {
+            const existingAssociation = await TeamPlayer.findOne({
+              where: { teamId: teamId, playerId: jogador.id }
+            });
+            if (!existingAssociation) {
+              await TeamPlayer.create({ teamId: teamId, playerId: jogador.id });
+              console.log(`Jogador ${jogador.id} associado ao time`);
+            }
+          }
+        } else {
+          const nomePlayer = (jogador.nome || jogador.name || '').trim();
+          const sexoPlayer = jogador.sexo || jogador.gender || '';
+          const anoPlayer = jogador.ano || jogador.dateOfBirth || '';
+          const posicaoPlayer = jogador.posicao || jogador.position || '';
+          
+          if (!nomePlayer || !sexoPlayer || !anoPlayer || !posicaoPlayer) {
+            console.warn(`Jogador ignorado - campos obrigatórios faltando:`, {
+              nome: nomePlayer || 'VAZIO',
+              sexo: sexoPlayer || 'VAZIO',
+              dateOfBirth: anoPlayer || 'VAZIO',
+              posicao: posicaoPlayer || 'VAZIO'
+            });
+            continue;
+          }
+          
+          try {
+            const newPlayer = await Player.create({
+              name: nomePlayer.toLowerCase(),
+              gender: sexoPlayer,
+              dateOfBirth: anoPlayer,
+              position: posicaoPlayer,
+              isDeleted: false
+            });
+            
+            await TeamPlayer.create({ teamId: teamId, playerId: newPlayer.id });
+            console.log(`Novo jogador criado e associado: ${newPlayer.name} (ID: ${newPlayer.id})`);
+          } catch (createError: any) {
+            console.error(`Erro ao criar jogador "${nomePlayer}":`, createError);
+            console.error('Detalhes do erro:', {
+              name: createError?.name,
+              message: createError?.message,
+              errors: createError?.errors
+            });
+          }
+        }
+      } catch (playerError: any) {
+        console.error(`Erro ao processar jogador individual:`, playerError);
+        console.error('Stack:', playerError?.stack);
+      }
     }
   }
 

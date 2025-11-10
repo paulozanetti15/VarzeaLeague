@@ -39,6 +39,8 @@ import rankingRoutes from './routes/rankingRoutes';
 import MatchChampionship from './models/MatchChampionshipModel';
 import MatchChampionshpReport from './models/MatchReportChampionshipModel';
 import MatchChampionshipTeams from './models/MatchChampionshipTeamsModel';
+import notificationRoutes from './routes/notificationRoutes';
+import { ErrorRequestHandler } from 'express-serve-static-core';
 dotenv.config();
 
 import {
@@ -54,8 +56,19 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
   console.log(`Diretório criado: ${uploadDir}`);
 }
+
+const championshipUploadDir = path.join(__dirname, 'uploads/championships');
+if (!fs.existsSync(championshipUploadDir)) {
+  fs.mkdirSync(championshipUploadDir, { recursive: true });
+  console.log(`Diretório criado: ${championshipUploadDir}`);
+}
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -86,6 +99,59 @@ app.use('/api/ranking', rankingRoutes);
 app.use('/api/friendly-match-reports', friendlyMatchReportRoutes);
 app.use('/api/championship-reports', championshipReportRoutes);
 app.use('/api/punishments', punishmentRoutes);
+app.use('/api/notifications', notificationRoutes);
+
+// Middleware de tratamento de erros global
+// Deve ser o último middleware, após todas as rotas
+const errorHandler: ErrorRequestHandler = (err: any, req: express.Request, res: express.Response, next: express.NextFunction): void => {
+  console.error('=== ERRO GLOBAL CAPTURADO ===');
+  console.error('Erro:', err);
+  console.error('Stack:', err?.stack);
+  
+  // Se a resposta já foi enviada, delegar para o handler padrão do Express
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
+  
+  // Se for erro de validação do Sequelize
+  if (err?.name === 'SequelizeValidationError') {
+    const validationErrors = err.errors?.map((e: any) => `${e.path}: ${e.message}`).join(', ') || err.message;
+    res.status(400).json({
+      error: 'Erro de validação',
+      message: validationErrors,
+      details: err.errors
+    });
+    return;
+  }
+  
+  // Se for erro de foreign key constraint
+  if (err?.name === 'SequelizeForeignKeyConstraintError') {
+    res.status(400).json({
+      error: 'Erro de referência',
+      message: 'Um ou mais dados referenciados não existem no banco de dados',
+      details: err.message
+    });
+    return;
+  }
+  
+  // Se for erro de database
+  if (err?.name === 'SequelizeDatabaseError') {
+    res.status(500).json({
+      error: 'Erro no banco de dados',
+      message: err.message
+    });
+    return;
+  }
+  
+  // Erro genérico
+  res.status(err.status || 500).json({
+    error: err.message || 'Erro interno do servidor',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+};
+
+app.use(errorHandler);
 
 const startServer = async () => {
   try {
@@ -171,6 +237,10 @@ const startServer = async () => {
     
     await ChampionshipMatchCard.sync();
     console.log('Modelo ChampionshipMatchCard sincronizado.');
+    
+    const { default: NotificationModel } = await import('./models/NotificationModel');
+    await NotificationModel.sync();
+    console.log('Modelo Notification sincronizado.');
     
     await seedUserTypes();
     await MatchChampionshipTeams.sync();

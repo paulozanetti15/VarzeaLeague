@@ -1,16 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { createChampionship } from '../../services/championships.service';
-import trophy from '../../assets/championship-trophy.svg';
+import { createChampionship, uploadChampionshipLogo } from '../../services/championships.service';
 import './ChampionshipForm.css';
-import { format, parse, isValid } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import GroupsIcon from '@mui/icons-material/Groups';
-import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
-import { IconButton } from '@mui/material';
+import ImageIcon from '@mui/icons-material/Image';
 
 interface ChampionshipFormData {
   name: string;
@@ -26,13 +22,13 @@ interface ChampionshipFormData {
   num_grupos?: number;
   times_por_grupo?: number;
   num_equipes_liga?: number;
+  logo?: File | null;
 }
 
 const ChampionshipForm: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [fieldErrors, setFieldErrors] = useState<{[k:string]: string}>({});
   const [showStartCalendar, setShowStartCalendar] = useState(false);
   const [showEndCalendar, setShowEndCalendar] = useState(false);
@@ -40,6 +36,8 @@ const ChampionshipForm: React.FC = () => {
   const [currentEndMonth, setCurrentEndMonth] = useState(new Date());
   const startCalendarRef = useRef<HTMLDivElement>(null);
   const endCalendarRef = useRef<HTMLDivElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   // Fechar calendário quando clicar fora
   React.useEffect(() => {
@@ -74,7 +72,8 @@ const ChampionshipForm: React.FC = () => {
     genero: '',
     num_grupos: undefined,
     times_por_grupo: undefined,
-    num_equipes_liga: undefined
+    num_equipes_liga: undefined,
+    logo: null
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -178,7 +177,7 @@ const ChampionshipForm: React.FC = () => {
       const isToday = dayDate.getTime() === today.getTime();
       const isSelected = dateString === selectedDate;
       const isPast = dayDate < today && !isToday;
-      const isMinDate = field === 'end_date' && formData.start_date && dayDate < new Date(formData.start_date + 'T00:00:00');
+      const isMinDate = field === 'end_date' && formData.start_date ? dayDate < new Date(formData.start_date + 'T00:00:00') : false;
 
       days.push(
         <button
@@ -202,6 +201,30 @@ const ChampionshipForm: React.FC = () => {
     }
     
     return days;
+  };
+
+  const handleLogoClick = () => {
+    if (logoInputRef.current) {
+      logoInputRef.current.click();
+    }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setFormData({
+        ...formData,
+        logo: file
+      });
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && event.target.result) {
+          setLogoPreview(event.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const validateForm = () => {
@@ -269,7 +292,6 @@ const ChampionshipForm: React.FC = () => {
 
     setLoading(true);
     setError('');
-    setSuccess('');
 
     try {
       const submitData = {
@@ -277,10 +299,23 @@ const ChampionshipForm: React.FC = () => {
         start_date: formData.start_date,
         end_date: formData.end_date
       };
+      // Remove logo do submitData pois será enviado separadamente
+      delete (submitData as any).logo;
 
-      await createChampionship(submitData);
+      const resposta = await createChampionship(submitData);
+      const championshipId = resposta?.id || resposta?.championship?.id;
+
+      if (!championshipId) throw new Error('ID do campeonato não encontrado na resposta');
+
+      // Upload do logo se fornecido
+      if (formData.logo) {
+        try {
+          await uploadChampionshipLogo(championshipId, formData.logo as File);
+        } catch (logoErr) {
+          console.warn('Erro ao enviar logo, mas campeonato criado:', logoErr);
+        }
+      }
       
-      setSuccess('Campeonato criado com sucesso!');
       setTimeout(() => {
         navigate('/championships');
       }, 2000);
@@ -309,12 +344,39 @@ const ChampionshipForm: React.FC = () => {
         transition={{ duration: 0.3 }}
       >
         <div className="form-main-grid">
-          {/* Seção de Tipo de Campeonato - Lado Esquerdo */}
+          {/* Seção de Upload de Logo - Lado Esquerdo */}
           <div className="logo-section">
-            <div className="logo-preview-container">
-              <EmojiEventsIcon className="trophy-icon" />
-              <span>Tipo de Campeonato</span>
+            <div className="logo-preview-container" onClick={handleLogoClick}>
+              {logoPreview ? (
+                <img src={logoPreview} alt="Logo preview" className="logo-preview" />
+              ) : (
+                <div className="logo-placeholder">
+                  <ImageIcon />
+                  <span>Adicionar Logo</span>
+                </div>
+              )}
+              <input 
+                type="file" 
+                ref={logoInputRef}
+                className="hidden-file-input"
+                name="logo" 
+                accept="image/*"
+                onChange={handleLogoChange}
+              />
             </div>
+            {formData.logo ? (
+              <button 
+                type="button"
+                className="update-image-btn"
+                onClick={handleLogoClick}
+              >
+                Atualizar Imagem
+              </button>
+            ) : (
+              <div className="file-status">
+                Nenhum arquivo selecionado
+              </div>
+            )}
             
             {/* Campo de Descrição movido para baixo da logo */}
             <div className="form-group logo-description">
@@ -558,11 +620,10 @@ const ChampionshipForm: React.FC = () => {
                     value={formData.max_teams}
                     onChange={(e) => {
                       const value = e.target.value;
-                      // Remove zeros à esquerda e converte para número
-                      const numericValue = value === '' ? '' : parseInt(value, 10);
+                      const numericValue = value === '' ? 0 : parseInt(value, 10);
                       setFormData(prev => ({
                         ...prev,
-                        max_teams: numericValue
+                        max_teams: numericValue as number
                       }));
                       
                       // Limpar erro do campo quando o usuário começar a digitar
@@ -622,10 +683,10 @@ const ChampionshipForm: React.FC = () => {
                       value={formData.num_equipes_liga || ''}
                       onChange={(e) => {
                         const value = e.target.value;
-                        const numericValue = value === '' ? '' : parseInt(value, 10);
+                        const numericValue = value === '' ? undefined : parseInt(value, 10);
                         setFormData(prev => ({
                           ...prev,
-                          num_equipes_liga: numericValue
+                          num_equipes_liga: numericValue as number | undefined
                         }));
                         
                         if (fieldErrors.num_equipes_liga) {
@@ -692,10 +753,10 @@ const ChampionshipForm: React.FC = () => {
                             value={formData.num_grupos || ''}
                             onChange={(e) => {
                               const value = e.target.value;
-                              const numericValue = value === '' ? '' : parseInt(value, 10);
+                              const numericValue = value === '' ? undefined : parseInt(value, 10);
                               setFormData(prev => ({
                                 ...prev,
-                                num_grupos: numericValue
+                                num_grupos: numericValue as number | undefined
                               }));
                               
                               if (fieldErrors.num_grupos) {
@@ -727,10 +788,10 @@ const ChampionshipForm: React.FC = () => {
                             value={formData.times_por_grupo || ''}
                             onChange={(e) => {
                               const value = e.target.value;
-                              const numericValue = value === '' ? '' : parseInt(value, 10);
+                              const numericValue = value === '' ? undefined : parseInt(value, 10);
                               setFormData(prev => ({
                                 ...prev,
-                                times_por_grupo: numericValue
+                                times_por_grupo: numericValue as number | undefined
                               }));
                               
                               if (fieldErrors.times_por_grupo) {

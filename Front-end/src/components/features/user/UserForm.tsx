@@ -1,5 +1,6 @@
 import React from 'react';
 import { Grid, TextField, FormControl, InputLabel, Select, MenuItem, Typography, InputAdornment, IconButton } from '@mui/material';
+import { Visibility as VisibilityIcon, VisibilityOff as VisibilityOffIcon } from '@mui/icons-material';
 import PasswordStrengthIndicator from '../../PasswordStrengthIndicator';
 import { SEXO_OPTIONS, USER_TYPE_OPTIONS } from '../../../utils/userUtils';
 
@@ -160,7 +161,7 @@ const UserForm: React.FC<UserFormProps> = ({
                 edge="end"
                 aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
               >
-                {showPassword ? <span className="material-icons">visibility_off</span> : <span className="material-icons">visibility</span>}
+                {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
               </IconButton>
             </InputAdornment>
           ),
@@ -193,7 +194,7 @@ const UserForm: React.FC<UserFormProps> = ({
                 edge="end"
                 aria-label={showConfirmPassword ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}
               >
-                {showConfirmPassword ? <span className="material-icons">visibility_off</span> : <span className="material-icons">visibility</span>}
+                {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
               </IconButton>
             </InputAdornment>
           ),

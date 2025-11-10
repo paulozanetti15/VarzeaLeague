@@ -49,37 +49,7 @@ export class PlayerController {
         }
       }
 
-      const existingLinkedPlayer = await Player.findOne({
-        where: { 
-          name: normalizedName,
-          isDeleted: false
-        },
-        include: [
-          {
-            model: TeamPlayer,
-            as: 'teamPlayers',
-            required: true,
-            attributes: ['id', 'teamId'],
-            include: [
-              {
-                model: Team,
-                as: 'team',
-                attributes: ['name']
-              }
-            ]
-          }
-        ]
-      });
-
-      if (existingLinkedPlayer) {
-        const teamName = (existingLinkedPlayer as any).teamPlayers?.[0]?.team?.name || 'outro time';
-        res.status(409).json({ 
-          message: 'Jogador já vinculado a outro time',
-          detalhes: `O jogador "${name}" já está cadastrado no time "${teamName}"` 
-        });
-        return;
-      }
-
+      // Removida validação de nome duplicado - permitir múltiplos jogadores com mesmo nome
       let player = await Player.findOne({
         where: { 
           name: normalizedName,
@@ -393,70 +363,52 @@ export class PlayerController {
           const normalizedName = player.name.trim().toLowerCase();
           
           if (!player.id) {
+            // Verificar se jogador já existe sem vínculo de time
             const existingPlayer = await Player.findOne({
               where: { 
                 name: normalizedName,
                 isDeleted: false
-              }
-            });
+              },
+              include: [
+                {
+                  model: TeamPlayer,
+                  as: 'teamPlayers',
+                  required: false,
+                  attributes: ['id']
+                }
+              ]
+            }) as any;
 
-            if (existingPlayer) {
-              const existingTeamLink = await TeamPlayer.findOne({
+            // Se existe e não tem vínculo, reutilizar
+            if (existingPlayer && (!existingPlayer.teamPlayers || existingPlayer.teamPlayers.length === 0)) {
+              // Verificar se já está vinculado ao time atual
+              const existingTeamLinkSameTeam = await TeamPlayer.findOne({
                 where: {
+                  teamId: Number(id),
                   playerId: existingPlayer.id
-                },
-                include: [
-                  {
-                    model: Team,
-                    as: 'team',
-                    attributes: ['id', 'name']
-                  }
-                ]
+                }
               });
 
-              if (existingTeamLink) {
-                const teamName = (existingTeamLink as any).team?.name || 'outro time';
-                errors.push({
-                  player: player.name,
-                  motivo: 'Jogador já cadastrado em outro time',
-                  detalhes: `O jogador "${player.name}" já está vinculado ao time "${teamName}"`
-                });
-                continue;
-              } else {
-                const existingTeamLinkSameTeam = await TeamPlayer.findOne({
-                  where: {
-                    teamId: Number(id),
-                    playerId: existingPlayer.id
-                  }
-                });
-
-                if (existingTeamLinkSameTeam) {
-                  errors.push({
-                    player: player.name,
-                    motivo: 'Jogador duplicado',
-                    detalhes: `O jogador "${player.name}" já está cadastrado neste time`
-                  });
-                  continue;
-                }
-
+              if (!existingTeamLinkSameTeam) {
                 await TeamPlayer.create({
                   teamId: Number(id),
                   playerId: existingPlayer.id
                 });
-                
-                updatedPlayers.push({
-                  id: existingPlayer.id,
-                  nome: existingPlayer.name,
-                  sexo: existingPlayer.gender,
-                  dateOfBirth: existingPlayer.dateOfBirth,
-                  age: existingPlayer.getAge(),
-                  posicao: existingPlayer.position,
-                  isDeleted: existingPlayer.isDeleted
-                });
-                continue;
               }
+              
+              updatedPlayers.push({
+                id: existingPlayer.id,
+                nome: existingPlayer.name,
+                sexo: existingPlayer.gender,
+                dateOfBirth: existingPlayer.dateOfBirth,
+                age: existingPlayer.getAge(),
+                posicao: existingPlayer.position,
+                isDeleted: existingPlayer.isDeleted
+              });
+              continue;
             }
 
+            // Criar novo jogador se não existe ou já tem vínculo
             const newPlayer = await Player.create({
               name: normalizedName,
               gender: player.gender,
@@ -494,61 +446,7 @@ export class PlayerController {
 
             const nomeAtualNormalizado = playerToUpdate.name.trim().toLowerCase();
 
-            if (normalizedName !== nomeAtualNormalizado) {
-              const existingPlayerWithSameName = await Player.findOne({
-                where: { 
-                  name: normalizedName,
-                  id: { [Op.ne]: player.id },
-                  isDeleted: false
-                }
-              });
-
-              if (existingPlayerWithSameName) {
-                errors.push({
-                  player: player.name,
-                  motivo: 'Nome já cadastrado',
-                  detalhes: `Já existe outro jogador cadastrado com o nome "${player.name}"`
-                });
-                continue;
-              }
-
-              const existingLinkedPlayer = await Player.findOne({
-                where: { 
-                  name: normalizedName,
-                  id: { [Op.ne]: player.id },
-                  isDeleted: false
-                },
-                include: [
-                  {
-                    model: TeamPlayer,
-                    as: 'teamPlayers',
-                    required: true,
-                    where: {
-                      teamId: { [Op.ne]: Number(id) }
-                    },
-                    attributes: ['id', 'teamId'],
-                    include: [
-                      {
-                        model: Team,
-                        as: 'team',
-                        attributes: ['name']
-                      }
-                    ]
-                  }
-                ]
-              });
-
-              if (existingLinkedPlayer) {
-                const linkedTeamName = (existingLinkedPlayer as any).teamPlayers?.[0]?.team?.name || 'outro time';
-                errors.push({
-                  player: player.name,
-                  motivo: 'Nome já vinculado a outro time',
-                  detalhes: `Já existe um jogador com o nome "${player.name}" vinculado ao time "${linkedTeamName}"`
-                });
-                continue;
-              }
-            }
-
+            // Permitir múltiplos jogadores com mesmo nome - sem validação
             await playerToUpdate.update({
               name: normalizedName,
               gender: player.gender,

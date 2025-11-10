@@ -7,15 +7,15 @@ class MatchChampionship extends Model {
   public championship_id!: number;
   public date!: Date;
   public location!: string;
-  public quadra!: string;
-  public Rodada:number; 
+  public nomequadra!: string;
+  public Rodada!: number; 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 MatchChampionship.init({
   id: {
     type: DataTypes.INTEGER,
-    autoIncrement: true,
+    autoIncrement: false, // Permitir definir manualmente para vincular com Match
     primaryKey: true,
   },
   championship_id: {
@@ -30,12 +30,7 @@ MatchChampionship.init({
     type: DataTypes.DATE,
     allowNull: false,
     validate: {
-      isDate: true,
-      isFuture(value: Date) {
-        if (value <= new Date()) {
-          throw new Error('A data da partida deve ser futura');
-        }
-      }
+      isDate: true
     }
   },
   location: {

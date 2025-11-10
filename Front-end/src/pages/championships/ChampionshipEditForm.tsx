@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getChampionshipById } from '../../services/championships.service';
+import { getChampionshipById, updateChampionship, uploadChampionshipLogo } from '../../services/championships.service';
 import trophy from '../../assets/championship-trophy.svg';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import { format, parse, isValid } from 'date-fns';
+import ImageIcon from '@mui/icons-material/Image';
+import { format } from 'date-fns';
 import './ChampionshipForm.css';
 
 interface ChampionshipFormData {
@@ -43,6 +44,10 @@ const ChampionshipEditForm: React.FC = () => {
   
   const startCalendarRef = useRef<HTMLDivElement>(null);
   const endCalendarRef = useRef<HTMLDivElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [logo, setLogo] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [currentLogoUrl, setCurrentLogoUrl] = useState<string | null>(null);
 
   // Carregar dados do campeonato
   useEffect(() => {
@@ -65,6 +70,15 @@ const ChampionshipEditForm: React.FC = () => {
         }
         if (data.end_date) {
           setCurrentEndMonth(new Date(data.end_date));
+        }
+        
+        // Carregar logo atual se existir
+        if (data.logo) {
+          const logoUrl = data.logo.startsWith('/uploads') 
+            ? `http://localhost:3001${data.logo}`
+            : `http://localhost:3001/uploads/championships/${data.logo}`;
+          setCurrentLogoUrl(logoUrl);
+          setLogoPreview(logoUrl);
         }
         
       } catch (err: any) {
@@ -119,6 +133,33 @@ const ChampionshipEditForm: React.FC = () => {
     }
   };
 
+  const handleLogoClick = () => {
+    if (logoInputRef.current) {
+      logoInputRef.current.click();
+    }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      console.log('Arquivo selecionado:', file.name, file.size, file.type);
+      setLogo(file);
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && event.target.result) {
+          setLogoPreview(event.target.result as string);
+        }
+      };
+      reader.onerror = (error) => {
+        console.error('Erro ao ler arquivo:', error);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      console.log('Nenhum arquivo selecionado');
+    }
+  };
+
   const navigateMonth = (direction: 'prev' | 'next', field: 'start_date' | 'end_date') => {
     const currentDate = field === 'start_date' ? currentStartMonth : currentEndMonth;
     const setCurrentMonth = field === 'start_date' ? setCurrentStartMonth : setCurrentEndMonth;
@@ -160,7 +201,7 @@ const ChampionshipEditForm: React.FC = () => {
       const isToday = localDate.getTime() === today.getTime();
       const isSelected = dateString === selectedDate;
       const isPast = localDate < today && !isToday;
-      const isMinDate = field === 'end_date' && formData.start_date && localDate < new Date(formData.start_date);
+      const isMinDate = field === 'end_date' && formData.start_date ? localDate < new Date(formData.start_date) : false;
 
       days.push(
         <button
@@ -235,6 +276,11 @@ const ChampionshipEditForm: React.FC = () => {
       return;
     }
 
+    console.log('=== INICIANDO SUBMIT ===');
+    console.log('Logo state:', logo);
+    console.log('Logo preview:', logoPreview ? 'existe' : 'não existe');
+    console.log('Current logo URL:', currentLogoUrl);
+
     try {
       setSubmitting(true);
       setError('');
@@ -248,7 +294,24 @@ const ChampionshipEditForm: React.FC = () => {
         end_date: formData.end_date,
       };
 
-      await api.championships.update(Number(id), payload);
+      await updateChampionship(Number(id), payload);
+      
+      // Upload do logo se fornecido
+      if (logo) {
+        console.log('Fazendo upload do logo:', logo.name, logo.size, logo.type);
+        try {
+          const uploadResult = await uploadChampionshipLogo(Number(id), logo);
+          console.log('Upload do logo concluído:', uploadResult);
+        } catch (logoErr: any) {
+          console.error('Erro ao enviar logo:', logoErr);
+          const errorMessage = logoErr?.response?.data?.message || logoErr?.message || 'Erro desconhecido ao fazer upload do logo';
+          setError(`Campeonato atualizado, mas houve um erro ao atualizar a logo: ${errorMessage}`);
+          return;
+        }
+      } else {
+        console.log('Nenhuma logo para fazer upload - logo state é:', logo);
+      }
+      
       setSuccess('Campeonato atualizado com sucesso!');
       
       setTimeout(() => {
@@ -256,6 +319,7 @@ const ChampionshipEditForm: React.FC = () => {
       }, 1500);
       
     } catch (err: any) {
+      console.error('Erro ao atualizar campeonato:', err);
       setError(err.message || 'Erro ao atualizar campeonato');
     } finally {
       setSubmitting(false);
@@ -296,212 +360,257 @@ const ChampionshipEditForm: React.FC = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="championship-form">
-          <motion.div
-            className="form-group"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <label className="form-label" htmlFor="name">Nome do Campeonato</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              className="form-control"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="Digite o nome do campeonato"
-              required
-            />
-            {fieldErrors.name && <span className="field-error">{fieldErrors.name}</span>}
-          </motion.div>
-
-          <motion.div
-            className="form-group"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.12 }}
-          >
-            <label className="form-label" htmlFor="description">Descrição</label>
-            <textarea
-              id="description"
-              name="description"
-              className="form-control"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="Descreva o campeonato, regras, premiação, etc."
-              rows={4}
-            />
-            {fieldErrors.description && <span className="field-error">{fieldErrors.description}</span>}
-          </motion.div>
-
-          <div className="form-row">
-            <motion.div
-              className="form-group"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.14 }}
-            >
-              <label className="form-label" htmlFor="modalidade">Modalidade</label>
-              <select
-                id="modalidade"
-                name="modalidade"
-                className="form-control"
-                value={formData.modalidade}
-                onChange={handleInputChange}
-                required
-              >
-                <option value="">Selecione a modalidade</option>
-                <option value="Fut7">Fut7</option>
-                <option value="Futsal">Futsal</option>
-                <option value="Futebol campo">Futebol campo</option>
-              </select>
-              {fieldErrors.modalidade && <span className="field-error">{fieldErrors.modalidade}</span>}
-            </motion.div>
-
-            <motion.div
-              className="form-group"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.16 }}
-            >
-              <label className="form-label" htmlFor="nomequadra">Nome da Quadra</label>
-              <input
-                type="text"
-                id="nomequadra"
-                name="nomequadra"
-                className="form-control"
-                value={formData.nomequadra}
-                onChange={handleInputChange}
-                placeholder="Ex: Arena Central"
-                required
-              />
-              {fieldErrors.nomequadra && <span className="field-error">{fieldErrors.nomequadra}</span>}
-            </motion.div>
-          </div>
-
-          <div className="form-row">
-            <motion.div
-              className="form-group"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.18 }}
-            >
-              <label className="form-label" htmlFor="start_date">Data de Início</label>
-              <div className="date-input-container" ref={startCalendarRef}>
-                <input
-                  type="text"
-                  id="start_date"
-                  name="start_date"
-                  className="form-control date-input"
-                  value={formData.start_date ? (() => {
-                    const date = new Date(formData.start_date);
-                    console.log('Displaying start_date:', formData.start_date, 'as date:', date);
-                    return format(date, 'dd/MM/yyyy');
-                  })() : ''}
-                  placeholder="Selecione a data de início"
-                  readOnly
-                  onClick={() => setShowStartCalendar(!showStartCalendar)}
-                />
-                <CalendarMonthIcon className="date-icon" onClick={() => setShowStartCalendar(!showStartCalendar)} />
-
-                {showStartCalendar && (
-                  <div className="custom-calendar">
-                    <div className="calendar-header">
-                      <button type="button" className="nav-btn" onClick={() => navigateMonth('prev', 'start_date')}>
-                        ‹
-                      </button>
-                      <div className="calendar-month-year">
-                        {format(currentStartMonth, 'MMMM yyyy')}
-                      </div>
-                      <button type="button" className="nav-btn" onClick={() => navigateMonth('next', 'start_date')}>
-                        ›
-                      </button>
-                      <button type="button" className="close-btn" onClick={() => setShowStartCalendar(false)}>×</button>
-                    </div>
-                    <div className="calendar-body">
-                      <div className="calendar-weekdays">
-                        <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-                      </div>
-                      <div className="calendar-days">
-                        {generateCalendar(currentStartMonth, formData.start_date, 'start_date')}
-                      </div>
-                    </div>
+        <motion.div 
+          className="form-container" 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="form-main-grid">
+            {/* Seção de Upload de Logo - Lado Esquerdo */}
+            <div className="logo-section">
+              <div className="logo-preview-container" onClick={handleLogoClick}>
+                {logoPreview ? (
+                  <img src={logoPreview} alt="Logo preview" className="logo-preview" />
+                ) : (
+                  <div className="logo-placeholder">
+                    <ImageIcon />
+                    <span>Adicionar Logo</span>
                   </div>
                 )}
-              </div>
-              {fieldErrors.start_date && <span className="field-error">{fieldErrors.start_date}</span>}
-            </motion.div>
-
-            <motion.div
-              className="form-group"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <label className="form-label" htmlFor="end_date">Data de Fim</label>
-              <div className="date-input-container" ref={endCalendarRef}>
-                <input
-                  type="text"
-                  id="end_date"
-                  name="end_date"
-                  className="form-control date-input"
-                  value={formData.end_date ? (() => {
-                    const date = new Date(formData.end_date);
-                    console.log('Displaying end_date:', formData.end_date, 'as date:', date);
-                    return format(date, 'dd/MM/yyyy');
-                  })() : ''}
-                  placeholder="Selecione a data de fim"
-                  readOnly
-                  onClick={() => setShowEndCalendar(!showEndCalendar)}
+                <input 
+                  type="file" 
+                  ref={logoInputRef}
+                  className="hidden-file-input"
+                  name="logo" 
+                  accept="image/*"
+                  onChange={handleLogoChange}
                 />
-                <CalendarMonthIcon className="date-icon" onClick={() => setShowEndCalendar(!showEndCalendar)} />
-
-                {showEndCalendar && (
-                  <div className="custom-calendar">
-                    <div className="calendar-header">
-                      <button type="button" className="nav-btn" onClick={() => navigateMonth('prev', 'end_date')}>
-                        ‹
-                      </button>
-                      <div className="calendar-month-year">
-                        {format(currentEndMonth, 'MMMM yyyy')}
-                      </div>
-                      <button type="button" className="nav-btn" onClick={() => navigateMonth('next', 'end_date')}>
-                        ›
-                      </button>
-                      <button type="button" className="close-btn" onClick={() => setShowEndCalendar(false)}>×</button>
-                    </div>
-                    <div className="calendar-body">
-                      <div className="calendar-weekdays">
-                        <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-                      </div>
-                      <div className="calendar-days">
-                        {generateCalendar(currentEndMonth, formData.end_date, 'end_date')}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
-              {fieldErrors.end_date && <span className="field-error">{fieldErrors.end_date}</span>}
-            </motion.div>
-          </div>
-
-          <motion.div
-            className="form-buttons"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.22 }}
-          >
-            <button type="submit" className="submit-btn" disabled={submitting}>
-              {submitting ? (
-                <span className="loading-text">Salvando...</span>
+              {logo ? (
+                <button 
+                  type="button"
+                  className="update-image-btn"
+                  onClick={handleLogoClick}
+                >
+                  Trocar Imagem
+                </button>
+              ) : currentLogoUrl ? (
+                <div className="file-status">
+                  Logo atual será mantida (clique na imagem para trocar)
+                </div>
               ) : (
-                'Atualizar Campeonato'
+                <div className="file-status">
+                  Nenhum arquivo selecionado
+                </div>
               )}
-            </button>
-          </motion.div>
-        </form>
+              
+              {/* Campo de Descrição movido para baixo da logo */}
+              <div className="form-group logo-description">
+                <label className="form-label" htmlFor="description">Descrição do Campeonato</label>
+                <textarea
+                  id="description"
+                  name="description"
+                  className="form-control"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  placeholder="Descreva o campeonato, regras, premiação, etc."
+                  rows={11}
+                />
+                {fieldErrors.description && <span className="field-error">{fieldErrors.description}</span>}
+              </div>
+            </div>
+
+            {/* Seção de Formulário - Lado Direito */}
+            <div className="form-section">
+              <form onSubmit={handleSubmit}>
+                <motion.div
+                  className="form-group"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 }}
+                >
+                  <label className="form-label" htmlFor="name">Nome do Campeonato</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    className="form-control"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Digite o nome do campeonato"
+                    required
+                  />
+                  {fieldErrors.name && <span className="field-error">{fieldErrors.name}</span>}
+                </motion.div>
+
+                <div className="form-row">
+                  <motion.div
+                    className="form-group"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <label className="form-label" htmlFor="modalidade">Modalidade</label>
+                    <select
+                      id="modalidade"
+                      name="modalidade"
+                      className="form-control"
+                      value={formData.modalidade}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="">Selecione a modalidade</option>
+                      <option value="Fut7">Fut7</option>
+                      <option value="Futsal">Futsal</option>
+                      <option value="Futebol campo">Futebol campo</option>
+                    </select>
+                    {fieldErrors.modalidade && <span className="field-error">{fieldErrors.modalidade}</span>}
+                  </motion.div>
+
+                  <motion.div
+                    className="form-group"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.12 }}
+                  >
+                    <label className="form-label" htmlFor="nomequadra">Nome da Quadra</label>
+                    <input
+                      type="text"
+                      id="nomequadra"
+                      name="nomequadra"
+                      className="form-control"
+                      value={formData.nomequadra}
+                      onChange={handleInputChange}
+                      placeholder="Ex: Arena Central"
+                      required
+                    />
+                    {fieldErrors.nomequadra && <span className="field-error">{fieldErrors.nomequadra}</span>}
+                  </motion.div>
+                </div>
+
+                <div className="form-row">
+                  <motion.div
+                    className="form-group"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.14 }}
+                  >
+                    <label className="form-label" htmlFor="start_date">Data de Início</label>
+                    <div className="date-input-container" ref={startCalendarRef}>
+                      <input
+                        type="text"
+                        id="start_date"
+                        name="start_date"
+                        className="form-control date-input"
+                        value={formData.start_date ? (() => {
+                          const date = new Date(formData.start_date);
+                          return format(date, 'dd/MM/yyyy');
+                        })() : ''}
+                        placeholder="Selecione a data de início"
+                        readOnly
+                        onClick={() => setShowStartCalendar(!showStartCalendar)}
+                      />
+                      <CalendarMonthIcon className="date-icon" onClick={() => setShowStartCalendar(!showStartCalendar)} />
+
+                      {showStartCalendar && (
+                        <div className="custom-calendar">
+                          <div className="calendar-header">
+                            <button type="button" className="nav-btn" onClick={() => navigateMonth('prev', 'start_date')}>
+                              ‹
+                            </button>
+                            <div className="calendar-month-year">
+                              {format(currentStartMonth, 'MMMM yyyy')}
+                            </div>
+                            <button type="button" className="nav-btn" onClick={() => navigateMonth('next', 'start_date')}>
+                              ›
+                            </button>
+                            <button type="button" className="close-btn" onClick={() => setShowStartCalendar(false)}>×</button>
+                          </div>
+                          <div className="calendar-body">
+                            <div className="calendar-weekdays">
+                              <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+                            </div>
+                            <div className="calendar-days">
+                              {generateCalendar(currentStartMonth, formData.start_date, 'start_date')}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {fieldErrors.start_date && <span className="field-error">{fieldErrors.start_date}</span>}
+                  </motion.div>
+
+                  <motion.div
+                    className="form-group"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.16 }}
+                  >
+                    <label className="form-label" htmlFor="end_date">Data de Fim</label>
+                    <div className="date-input-container" ref={endCalendarRef}>
+                      <input
+                        type="text"
+                        id="end_date"
+                        name="end_date"
+                        className="form-control date-input"
+                        value={formData.end_date ? (() => {
+                          const date = new Date(formData.end_date);
+                          return format(date, 'dd/MM/yyyy');
+                        })() : ''}
+                        placeholder="Selecione a data de fim"
+                        readOnly
+                        onClick={() => setShowEndCalendar(!showEndCalendar)}
+                      />
+                      <CalendarMonthIcon className="date-icon" onClick={() => setShowEndCalendar(!showEndCalendar)} />
+
+                      {showEndCalendar && (
+                        <div className="custom-calendar">
+                          <div className="calendar-header">
+                            <button type="button" className="nav-btn" onClick={() => navigateMonth('prev', 'end_date')}>
+                              ‹
+                            </button>
+                            <div className="calendar-month-year">
+                              {format(currentEndMonth, 'MMMM yyyy')}
+                            </div>
+                            <button type="button" className="nav-btn" onClick={() => navigateMonth('next', 'end_date')}>
+                              ›
+                            </button>
+                            <button type="button" className="close-btn" onClick={() => setShowEndCalendar(false)}>×</button>
+                          </div>
+                          <div className="calendar-body">
+                            <div className="calendar-weekdays">
+                              <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+                            </div>
+                            <div className="calendar-days">
+                              {generateCalendar(currentEndMonth, formData.end_date, 'end_date')}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {fieldErrors.end_date && <span className="field-error">{fieldErrors.end_date}</span>}
+                  </motion.div>
+                </div>
+
+                <motion.div
+                  className="form-buttons"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.18 }}
+                >
+                  <button type="submit" className="submit-btn" disabled={submitting}>
+                    {submitting ? (
+                      <span className="loading-text">Salvando...</span>
+                    ) : (
+                      'Atualizar Campeonato'
+                    )}
+                  </button>
+                </motion.div>
+              </form>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

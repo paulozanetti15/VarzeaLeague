@@ -108,6 +108,7 @@ Team.init(
     cep:{
       type: DataTypes.STRING,
       allowNull: false,
+      defaultValue: '00000-000'
     },
     state: {
       type: DataTypes.STRING,
