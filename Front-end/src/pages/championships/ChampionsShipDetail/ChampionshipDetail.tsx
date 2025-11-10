@@ -110,6 +110,9 @@ const ChampionshipDetail: React.FC = () => {
       try {
         setLoading(true);
         const data = await getChampionshipById(Number(id));
+        console.log('Championship data loaded:', data);
+        console.log('Championship logo:', data.logo);
+        console.log('Championship logo URL:', data.logo ? getChampionshipLogoUrl(data.logo) : 'N/A');
         setChampionship(data);
 
         // Verificar permissões: admin_master (1) sempre tem permissão; creator com userType 2 (admin_eventos) tem permissão
