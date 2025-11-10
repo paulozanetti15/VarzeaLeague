@@ -10,7 +10,6 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import EditIcon from '@mui/icons-material/Edit';
 import ToastComponent from '../../components/Toast/ToastComponent';
 import PlayerModal from '../../components/Modals/Players/ManageTeamPlayersModal'
-import { createTeam, uploadTeamLogo } from '../../services/teamsServices';
 import { createPlayer, linkPlayerToTeam } from '../../services/playersServices';
 
 interface PlayerData {
@@ -260,29 +259,31 @@ export default function CreateTeam() {
       return;
     }
     try {
-      // Create team (without banner) then upload logo if provided
-      const payload = {
-        name: formData.name,
-        description: formData.description,
-        primaryColor: formData.primaryColor,
-        secondaryColor: formData.secondaryColor,
-        estado: formData.estado,
-        cidade: formData.cidade,
-        cep: formData.cep,
-      };
+      // Create team with banner in FormData (same as EditTeam)
+      const submitFormData = new FormData();
+      submitFormData.append('name', formData.name);
+      submitFormData.append('description', formData.description);
+      submitFormData.append('primaryColor', formData.primaryColor);
+      submitFormData.append('secondaryColor', formData.secondaryColor);
+      submitFormData.append('estado', formData.estado);
+      submitFormData.append('cidade', formData.cidade);
+      submitFormData.append('cep', formData.cep);
+      
+      // Adicionar banner se existir
+      if (formData.logo) {
+        submitFormData.append('banner', formData.logo);
+      }
 
-      const resposta = await createTeam(payload);
-      const teamId = resposta?.id || resposta?.plainTeam?.id || resposta?.team?.id;
+      const resposta = await axios.post('http://localhost:3001/api/teams', submitFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      const teamId = resposta?.data?.id || resposta?.data?.plainTeam?.id || resposta?.data?.team?.id;
 
       if (!teamId) throw new Error('ID do time não encontrado na resposta');
-
-      if (formData.logo) {
-        try {
-          await uploadTeamLogo(teamId, formData.logo as File);
-        } catch (logoErr) {
-          console.warn('Erro ao enviar logo, mas time criado:', logoErr);
-        }
-      }
 
       try {
         await handleSubmitPlayer(teamId);

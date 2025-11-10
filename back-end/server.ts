@@ -31,6 +31,7 @@ import overviewRoutes from './routes/overviewRoutes';
 import historicoRoutes from './routes/historicoRoutes';
 import MatchChampionship from './models/MatchChampionshipModel';
 import MatchChampionshpReport from './models/MatchReportChampionshipModel';
+import { ErrorRequestHandler } from 'express-serve-static-core';
 dotenv.config();
 // Import status check helpers to run periodically
 import {
@@ -75,6 +76,58 @@ app.use('/api/championships', championshipRoutes);
 app.use('/api/usertypes', userTypeRoutes);
 app.use('/api/overview', overviewRoutes);
 app.use('/api/historico',historicoRoutes)
+
+// Middleware de tratamento de erros global
+// Deve ser o último middleware, após todas as rotas
+const errorHandler: ErrorRequestHandler = (err: any, req: express.Request, res: express.Response, next: express.NextFunction): void => {
+  console.error('=== ERRO GLOBAL CAPTURADO ===');
+  console.error('Erro:', err);
+  console.error('Stack:', err?.stack);
+  
+  // Se a resposta já foi enviada, delegar para o handler padrão do Express
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
+  
+  // Se for erro de validação do Sequelize
+  if (err?.name === 'SequelizeValidationError') {
+    const validationErrors = err.errors?.map((e: any) => `${e.path}: ${e.message}`).join(', ') || err.message;
+    res.status(400).json({
+      error: 'Erro de validação',
+      message: validationErrors,
+      details: err.errors
+    });
+    return;
+  }
+  
+  // Se for erro de foreign key constraint
+  if (err?.name === 'SequelizeForeignKeyConstraintError') {
+    res.status(400).json({
+      error: 'Erro de referência',
+      message: 'Um ou mais dados referenciados não existem no banco de dados',
+      details: err.message
+    });
+    return;
+  }
+  
+  // Se for erro de database
+  if (err?.name === 'SequelizeDatabaseError') {
+    res.status(500).json({
+      error: 'Erro no banco de dados',
+      message: err.message
+    });
+    return;
+  }
+  
+  // Erro genérico
+  res.status(err.status || 500).json({
+    error: err.message || 'Erro interno do servidor',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+};
+
+app.use(errorHandler);
 
 const startServer = async () => {
   try {

@@ -7,6 +7,7 @@ import MatchTeamsModel from '../models/MatchTeamsModel';
 import TeamModel from "../models/TeamModel"
 import Rules from '../models/RulesModel';
 import MatchChampionship from '../models/MatchChampionshipModel';
+import Championship from '../models/ChampionshipModel';
 import { Op } from 'sequelize';
 
 // Helper: parse duration string (minutes) into minutes
@@ -371,7 +372,14 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
           model: MatchChampionship,
           as: 'matchChampionship',
           required: false,
-          attributes: []
+          attributes: ['id', 'championship_id', 'Rodada'],
+          include: [
+            {
+              model: Championship,
+              as: 'championship',
+              attributes: ['id', 'name', 'modalidade', 'logo']
+            }
+          ]
         },
         {
           model: MatchTeamsModel,
@@ -380,7 +388,7 @@ export const listMatches = async (req: Request, res: Response): Promise<void> =>
             {
               model: TeamModel,
               as: 'team',
-              attributes: ['id', 'name']
+              attributes: ['id', 'name', 'banner']
             }
           ]
         }
@@ -433,6 +441,30 @@ export const getMatch = async (req: Request, res: Response): Promise<void> => {
           model: User,
           as: 'organizer',
           attributes: ['id', 'name']
+        },
+        {
+          model: MatchChampionship,
+          as: 'matchChampionship',
+          required: false,
+          attributes: ['id', 'championship_id', 'Rodada'],
+          include: [
+            {
+              model: Championship,
+              as: 'championship',
+              attributes: ['id', 'name', 'modalidade', 'logo']
+            }
+          ]
+        },
+        {
+          model: MatchTeamsModel,
+          as: 'matchTeams',
+          include: [
+            {
+              model: TeamModel,
+              as: 'team',
+              attributes: ['id', 'name', 'banner', 'primaryColor', 'secondaryColor']
+            }
+          ]
         }
       ],
       attributes: [
@@ -673,7 +705,7 @@ export const getMatchesByOrganizer = async (req: AuthRequest, res: Response): Pr
             {
               model: TeamModel,
               as: 'team',
-              attributes: ['id', 'name']
+              attributes: ['id', 'name', 'banner']
             }
           ]
         }
@@ -818,7 +850,14 @@ export const getFilteredMatches = async (req: AuthRequest, res: Response): Promi
           model: MatchChampionship,
           as: 'matchChampionship',
           required: false,
-          attributes: []
+          attributes: ['id', 'championship_id', 'Rodada'],
+          include: [
+            {
+              model: Championship,
+              as: 'championship',
+              attributes: ['id', 'name', 'modalidade', 'logo']
+            }
+          ]
         },
         {
           model: MatchTeamsModel,
@@ -827,7 +866,7 @@ export const getFilteredMatches = async (req: AuthRequest, res: Response): Promi
             {
               model: TeamModel,
               as: 'team',
-              attributes: ['id', 'name']
+              attributes: ['id', 'name', 'banner']
             }
           ]
         }

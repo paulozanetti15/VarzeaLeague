@@ -13,7 +13,9 @@ import {
   getChampionshipApplications,
   updateApplicationStatus,
   publishChampionship,
-  uploadChampionshipLogo
+  uploadChampionshipLogo,
+  createChampionshipMatch,
+  getChampionshipMatches
 } from '../controllers/championshipController';
 import { busarPunicaoCampeonato, inserirPunicaoCampeonato, alterarPunicaoCampeonato, deletarPunicaoCampeonato } from '../controllers/PunicaoController';
 import { authenticateToken } from '../middleware/auth';
@@ -57,5 +59,9 @@ router.get('/:idCampeonato/punicao', authenticateToken, busarPunicaoCampeonato);
 router.post('/:idCampeonato/punicao', authenticateToken, inserirPunicaoCampeonato);
 router.put('/:idCampeonato/punicao', authenticateToken, alterarPunicaoCampeonato);
 router.delete('/:idCampeonato/punicao', authenticateToken, deletarPunicaoCampeonato);
+
+// Agendamento de partidas
+router.post('/:id/matches', authenticateToken, createChampionshipMatch);
+router.get('/:id/matches', getChampionshipMatches);
 
 export default router;

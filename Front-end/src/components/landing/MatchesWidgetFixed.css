@@ -104,30 +104,21 @@
   position: relative;
 }
 
-.cards-area::before,
 .cards-area::after {
   content: '';
   position: absolute;
   top: 0;
+  right: 0;
   bottom: 0;
   width: 60px;
   pointer-events: none;
   z-index: 5;
-}
-
-.cards-area::before {
-  left: 0;
-  background: linear-gradient(to right, #F5F7FA, transparent);
-}
-
-.cards-area::after {
-  right: 0;
   background: linear-gradient(to left, #F5F7FA, transparent);
 }
 
 .cards-wrapper {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   transform: translateX(var(--card-transform, 0));
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   width: fit-content;
@@ -248,28 +239,225 @@
   display: none;
 }
 
-.teams-confrontation {
+/* Cards de Partida - Estilo Globo Esporte - Compacto e Horizontal */
+.match-card-globo {
+  background: white;
+  border-radius: 10px;
+  padding: 0.875rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  border: 1px solid #E2E8F0;
+  min-width: 280px;
+  max-width: 280px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-height: auto;
+  height: fit-content;
+}
+
+.match-card-globo:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: #1976D2;
+}
+
+.match-card-header-globo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #E2E8F0;
+  margin-bottom: 0;
+}
+
+.match-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.championship-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.championship-logo-discreet {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.championship-name-globo {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2D3748;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+  flex: 1;
+  min-width: 0;
+}
+
+.match-datetime-globo {
+  font-size: 0.7rem;
+  color: #718096;
+  font-weight: 500;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.status-badge-globo {
+  padding: 0.25rem 0.5rem;
+  border-radius: 14px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-badge-globo.live {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+
+/* Teams Section - Times Verticais Compactos */
+.match-teams-globo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.625rem 0;
+  flex: 0;
+  margin: 0;
+}
+
+.team-globo {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+}
+
+.team-logo-globo {
+  width: 36px;
+  height: 36px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.team-logo-img-globo {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #E2E8F0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.team-logo-fallback-globo {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: 2px solid #E2E8F0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.team-name-score-wrapper {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.5rem;
   flex: 1;
-  padding: 1.5rem 0;
+  gap: 0.625rem;
+  min-width: 0;
 }
 
-.team-info {
+.team-name-globo {
+  font-weight: 700;
+  color: #2D3748;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-score-globo {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1a202c;
+  line-height: 1;
+  flex-shrink: 0;
+  min-width: 18px;
+  text-align: right;
+}
+
+.match-card-footer-globo {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid #E2E8F0;
+  margin-top: 0;
+}
+
+.footer-info-row {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 0;
-  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
 }
 
-.team-logo-placeholder {
-  display: none;
+.match-round {
+  font-size: 0.7rem;
+  color: #718096;
+  font-weight: 500;
+  white-space: nowrap;
 }
+
+.match-location-globo {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  color: #718096;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.match-location-globo .location-icon {
+  font-size: 0.85rem;
+  color: #718096;
+  flex-shrink: 0;
+}
+
+/* Estilos antigos removidos - usando apenas os novos acima */
 
 .team-name-compact {
   font-size: 1rem;
@@ -605,22 +793,208 @@
 }
 
 .match-list-item {
-  display: grid;
-  grid-template-columns: 1fr 140px;
+  display: flex;
   align-items: center;
   gap: 1.5rem;
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid #F1F5F9;
   transition: all 0.2s ease;
   cursor: pointer;
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .match-list-item:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid #F1F5F9;
+  margin-bottom: 0;
 }
 
 .match-list-item:hover {
   background: #F8FAFC;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.match-list-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.match-list-teams {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.match-list-team {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.match-list-team-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #E2E8F0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.team-logo-list {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.team-logo-list-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.team-logo-list-fallback span {
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+}
+
+.team-name-list {
+  font-weight: 700;
+  color: #2D3748;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.match-list-vs {
+  font-weight: 800;
+  color: #718096;
+  font-size: 0.75rem;
+  padding: 0 0.15rem;
+  flex-shrink: 0;
+  margin: 0 0.15rem;
+}
+
+.match-list-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.match-list-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.championship-label-list {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: #4A5568;
+  font-weight: 600;
+}
+
+.championship-logo-list {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.location-label-list {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+.location-icon-list {
+  font-size: 0.9rem;
+  color: #718096;
+  flex-shrink: 0;
+}
+
+.round-label-list {
+  font-size: 0.75rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+.match-list-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.match-time-list {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #1976D2;
+  text-align: right;
+}
+
+.match-status-display-list {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.status-indicator-list {
+  border-radius: 16px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  padding: 0.25rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.status-indicator-list.upcoming {
+  background: #DBEAFE;
+  color: #2563EB;
+}
+
+.status-indicator-list.live {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.status-indicator-list.finished {
+  background: #DCFCE7;
+  color: #16A34A;
 }
 
 .match-time-info {
@@ -870,9 +1244,43 @@
   }
 
   .match-list-item {
-    grid-template-columns: 1fr 140px;
-    padding: 1rem 1.25rem;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 1rem;
+    padding: 1rem;
+  }
+
+  .match-list-teams {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .match-list-team {
+    flex: 0 1 auto;
+  }
+
+  .match-list-vs {
+    order: 2;
+    width: 100%;
+    text-align: center;
+    padding: 0.5rem 0;
+  }
+
+  .match-list-right {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .match-list-info {
+    width: 100%;
+  }
+
+  .match-list-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 
   .match-time {

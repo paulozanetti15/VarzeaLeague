@@ -3,7 +3,12 @@ import Championship from '../models/ChampionshipModel';
 import ChampionshipApplication from '../models/ChampionshipApplicationModel';
 import Team from '../models/TeamModel';
 import TeamPlayer from '../models/TeamPlayerModel';
-import TeamChampionship from '../models/TeamChampionshipModel'; // Added import for TeamChampionshipModel
+import TeamChampionship from '../models/TeamChampionshipModel';
+import MatchChampionship from '../models/MatchChampionshipModel';
+import MatchChampionshpReport from '../models/MatchReportChampionshipModel';
+import MatchModel from '../models/MatchModel';
+import MatchTeams from '../models/MatchTeamsModel';
+import User from '../models/UserModel';
 import jwt from 'jsonwebtoken';
 import { Op } from 'sequelize';
 import path from 'path';
@@ -645,4 +650,347 @@ export const uploadChampionshipLogo = asyncHandler(async (req: Request, res: Res
       error: error?.message || 'Erro desconhecido'
     });
   }
+});
+
+// Criar partida de campeonato
+export const createChampionshipMatch = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  let { teamHomeId, teamAwayId, date, time, location, rodada } = req.body;
+
+  console.log('=== INICIANDO CRIAÇÃO DE PARTIDA DE CAMPEONATO ===');
+  console.log('Championship ID:', id);
+  console.log('Body recebido:', { teamHomeId, teamAwayId, date, time, location, rodada });
+
+  // Converter para números se vierem como string
+  teamHomeId = Number(teamHomeId);
+  teamAwayId = Number(teamAwayId);
+  rodada = Number(rodada);
+
+  if (!teamHomeId || isNaN(teamHomeId)) {
+    return res.status(400).json({ message: 'É necessário selecionar o time mandante' });
+  }
+
+  if (!teamAwayId || isNaN(teamAwayId)) {
+    return res.status(400).json({ message: 'É necessário selecionar o time visitante' });
+  }
+
+  if (teamHomeId === teamAwayId) {
+    return res.status(400).json({ message: 'Os times devem ser diferentes' });
+  }
+
+  if (!date) {
+    return res.status(400).json({ message: 'Data é obrigatória' });
+  }
+
+  if (!location || typeof location !== 'string' || location.trim().length === 0) {
+    return res.status(400).json({ message: 'Local é obrigatório' });
+  }
+
+  if (!rodada || isNaN(rodada) || rodada < 1) {
+    return res.status(400).json({ message: 'Rodada é obrigatória e deve ser um número maior que zero' });
+  }
+
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) {
+    return res.status(401).json({ message: 'Token ausente' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: string | number };
+    const userId = Number(decoded.id);
+    console.log('User ID:', userId);
+
+    if (!userId || isNaN(userId)) {
+      return res.status(401).json({ message: 'ID do usuário inválido no token' });
+    }
+
+    // Verificar se o campeonato existe
+    const championship = await Championship.findByPk(parseInt(id));
+    if (!championship) {
+      console.log('Campeonato não encontrado');
+      return res.status(404).json({ message: 'Campeonato não encontrado' });
+    }
+    console.log('Campeonato encontrado:', championship.name);
+
+    // Verificar se o usuário é o criador do campeonato
+    if (championship.created_by !== userId) {
+      console.log('Usuário não é o criador do campeonato');
+      return res.status(403).json({ message: 'Apenas o criador pode agendar partidas' });
+    }
+
+    // Verificar se os times estão inscritos no campeonato
+    const teamHome = await Team.findByPk(teamHomeId);
+    const teamAway = await Team.findByPk(teamAwayId);
+
+    if (!teamHome) {
+      console.log('Time mandante não encontrado:', teamHomeId);
+      return res.status(404).json({ message: `Time mandante (ID: ${teamHomeId}) não foi encontrado` });
+    }
+
+    if (!teamAway) {
+      console.log('Time visitante não encontrado:', teamAwayId);
+      return res.status(404).json({ message: `Time visitante (ID: ${teamAwayId}) não foi encontrado` });
+    }
+    
+    console.log('Times encontrados:', { home: teamHome.name, away: teamAway.name });
+
+    const championshipId = parseInt(id);
+    if (isNaN(championshipId)) {
+      return res.status(400).json({ message: 'ID do campeonato inválido' });
+    }
+
+    const teamHomeInChampionship = await TeamChampionship.findOne({
+      where: { championshipId: championshipId, teamId: teamHomeId }
+    });
+
+    const teamAwayInChampionship = await TeamChampionship.findOne({
+      where: { championshipId: championshipId, teamId: teamAwayId }
+    });
+
+    if (!teamHomeInChampionship || !teamAwayInChampionship) {
+      console.log('Times não estão inscritos no campeonato');
+      return res.status(400).json({ message: 'Ambos os times devem estar inscritos no campeonato' });
+    }
+    console.log('Times confirmados no campeonato');
+
+    // Parse da data e hora
+    let matchDateTime: Date;
+    try {
+      // Garantir que a data seja futura adicionando um minuto se necessário
+      const dateStr = date.includes('T') ? date : `${date}T${time || '00:00'}`;
+      matchDateTime = new Date(dateStr);
+      
+      // Validar se a data é válida
+      if (isNaN(matchDateTime.getTime())) {
+        console.log('Data inválida:', dateStr);
+        return res.status(400).json({ message: 'Formato de data/hora inválido' });
+      }
+      
+      // Validar se a data é futura (com margem de 1 minuto para evitar problemas de timezone)
+      const now = new Date();
+      const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
+      if (matchDateTime <= oneMinuteAgo) {
+        console.log('Data no passado detectada:', matchDateTime, 'Agora:', now);
+        return res.status(400).json({ message: 'A data da partida deve ser futura' });
+      }
+      
+      console.log('Data/hora parseada:', matchDateTime);
+    } catch (error) {
+      console.error('Erro ao parsear data:', error);
+      return res.status(400).json({ message: 'Formato de data/hora inválido' });
+    }
+
+    // Garantir que nomequadra não seja null
+    const nomeQuadra = championship.nomequadra?.trim() || location.trim() || 'Quadra não informada';
+    console.log('Nome da quadra:', nomeQuadra);
+
+    // Criar a partida do campeonato
+    const locationTrimmed = location.trim();
+    if (locationTrimmed.length < 5) {
+      return res.status(400).json({ message: 'O local deve ter pelo menos 5 caracteres' });
+    }
+
+    // Criar título da partida baseado nos times
+    const matchTitle = `${teamHome.name} x ${teamAway.name} - Rodada ${rodada}`;
+
+    console.log('Criando Match na tabela matches com dados:', {
+      title: matchTitle,
+      date: matchDateTime,
+      location: locationTrimmed,
+      nomequadra: nomeQuadra,
+      modalidade: championship.modalidade || 'Futsal',
+      organizerId: userId,
+      status: 'confirmada'
+    });
+
+    // Criar primeiro a partida na tabela matches para aparecer na landing page
+    const match = await MatchModel.create({
+      title: matchTitle,
+      date: matchDateTime,
+      location: locationTrimmed,
+      nomequadra: nomeQuadra,
+      modalidade: championship.modalidade || 'Futsal',
+      organizerId: userId,
+      status: 'confirmada' as const,
+      description: `Partida da Rodada ${rodada} do campeonato ${championship.name}`
+    });
+    console.log('Match criado com sucesso. ID:', match.id);
+
+    // Criar MatchChampionship vinculado ao Match criado (mesmo ID)
+    console.log('Criando MatchChampionship com dados:', {
+      id: match.id,
+      championship_id: championshipId,
+      date: matchDateTime,
+      location: locationTrimmed,
+      nomequadra: nomeQuadra,
+      Rodada: rodada
+    });
+
+    const matchChampionship = await MatchChampionship.create({
+      id: match.id, // Usar o mesmo ID do Match
+      championship_id: championshipId,
+      date: matchDateTime,
+      location: locationTrimmed,
+      nomequadra: nomeQuadra,
+      Rodada: rodada
+    });
+    console.log('MatchChampionship criado com sucesso. ID:', matchChampionship.id);
+
+    // Vincular os times à partida através de MatchTeams
+    console.log('Vinculando times à partida através de MatchTeams');
+    await MatchTeams.create({
+      matchId: match.id,
+      teamId: teamHomeId
+    });
+    await MatchTeams.create({
+      matchId: match.id,
+      teamId: teamAwayId
+    });
+    console.log('Times vinculados com sucesso');
+
+    // Criar o report inicial com os times (placar inicial 0x0)
+    console.log('Criando MatchChampionshpReport com dados:', {
+      match_id: matchChampionship.id,
+      team_home: teamHomeId,
+      team_away: teamAwayId,
+      teamHome_score: 0,
+      teamAway_score: 0,
+      created_by: userId,
+      is_penalty: false
+    });
+
+    try {
+      await MatchChampionshpReport.create({
+        match_id: matchChampionship.id,
+        team_home: teamHomeId,
+        team_away: teamAwayId,
+        teamHome_score: 0,
+        teamAway_score: 0,
+        created_by: userId,
+        is_penalty: false
+      });
+      console.log('MatchChampionshpReport criado com sucesso');
+    } catch (reportError: any) {
+      console.error('Erro ao criar MatchChampionshpReport:', reportError);
+      console.error('Detalhes do erro:', {
+        name: reportError?.name,
+        message: reportError?.message,
+        errors: reportError?.errors,
+        stack: reportError?.stack
+      });
+      // Se falhar ao criar o report, deletar a partida criada
+      try {
+        await matchChampionship.destroy();
+        await match.destroy(); // Também deletar o Match
+      } catch (destroyError) {
+        console.error('Erro ao deletar partida após falha no report:', destroyError);
+      }
+      throw new Error(`Erro ao criar relatório da partida: ${reportError.message || 'Erro desconhecido'}`);
+    }
+
+    console.log('=== PARTIDA CRIADA COM SUCESSO ===');
+    res.status(201).json({
+      message: 'Partida agendada com sucesso',
+      match: matchChampionship
+    });
+  } catch (error: any) {
+    console.error('=== ERRO AO CRIAR PARTIDA DE CAMPEONATO ===');
+    console.error('Tipo do erro:', error?.constructor?.name);
+    console.error('Nome do erro:', error?.name);
+    console.error('Mensagem:', error?.message);
+    console.error('Stack:', error?.stack);
+    console.error('Erro completo:', JSON.stringify(error, null, 2));
+    
+    // Se for erro de validação do Sequelize, retornar mensagem mais específica
+    if (error?.name === 'SequelizeValidationError') {
+      const validationErrors = error.errors?.map((e: any) => `${e.path}: ${e.message}`).join(', ') || error.message;
+      return res.status(400).json({
+        message: 'Erro de validação',
+        error: validationErrors,
+        details: error.errors
+      });
+    }
+    
+    // Se for erro de foreign key constraint
+    if (error?.name === 'SequelizeForeignKeyConstraintError') {
+      return res.status(400).json({
+        message: 'Erro de referência',
+        error: 'Um ou mais dados referenciados não existem no banco de dados',
+        details: error.message
+      });
+    }
+    
+    // Se for erro de database
+    if (error?.name === 'SequelizeDatabaseError') {
+      return res.status(500).json({
+        message: 'Erro no banco de dados',
+        error: error.message
+      });
+    }
+    
+    res.status(500).json({
+      message: 'Erro ao criar partida de campeonato',
+      error: error?.message || 'Erro desconhecido',
+      type: error?.name || error?.constructor?.name
+    });
+  }
+});
+
+// Buscar partidas de um campeonato
+export const getChampionshipMatches = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  
+  const championship = await Championship.findByPk(id);
+  if (!championship) {
+    return res.status(404).json({ message: 'Campeonato não encontrado' });
+  }
+
+  const matches = await MatchModel.findAll({
+    where: {},
+    include: [
+      {
+        model: MatchChampionship,
+        as: 'matchChampionship',
+        required: true,
+        where: { championship_id: id },
+        attributes: ['id', 'championship_id', 'Rodada'],
+        include: [
+          {
+            model: Championship,
+            as: 'championship',
+            attributes: ['id', 'name', 'modalidade', 'logo', 'tipo']
+          }
+        ]
+      },
+      {
+        model: MatchTeams,
+        as: 'matchTeams',
+        include: [
+          {
+            model: Team,
+            as: 'team',
+            attributes: ['id', 'name', 'banner', 'primaryColor', 'secondaryColor']
+          }
+        ]
+      },
+      {
+        model: User,
+        as: 'organizer',
+        attributes: ['id', 'name']
+      }
+    ],
+    attributes: [
+      'id',
+      'title',
+      'date',
+      'location',
+      'status',
+      'description',
+      'nomequadra',
+      'modalidade',
+    ],
+    order: [['date', 'ASC']]
+  });
+
+  res.json(matches);
 });

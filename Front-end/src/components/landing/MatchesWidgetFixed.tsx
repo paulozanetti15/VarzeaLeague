@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMatchesWidget } from '../../hooks/useMatchesWidget';
 import { getToday, isToday, formatMatchDate } from '../../utils/matchesUtils';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import './MatchesWidgetFixed.css';
 
 export function MatchesWidgetFixed() {
@@ -36,22 +37,40 @@ export function MatchesWidgetFixed() {
     });
   };
 
-  const getTodayMatches = () => {
-    const todayMatches = getMatchesForDate(getToday());
-
-    if (todayMatches.length === 0) {
-      return matches.filter(match => {
-        const matchDate = new Date(match.date);
-        const today = getToday();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(today.getDate() + 1);
-
-        matchDate.setHours(0, 0, 0, 0);
-        return matchDate.getTime() === today.getTime() || matchDate.getTime() === tomorrow.getTime();
-      }).slice(0, 4);
+  const getTeamLogoUrl = (banner?: string | null) => {
+    if (!banner) return null;
+    if (banner.startsWith('/uploads')) {
+      return `http://localhost:3001${banner}`;
     }
+    return `http://localhost:3001/uploads/teams/${banner}`;
+  };
 
-    return todayMatches.slice(0, 4);
+  const getChampionshipLogoUrl = (logo?: string | null) => {
+    if (!logo) return null;
+    if (logo.startsWith('/uploads')) {
+      return `http://localhost:3001${logo}`;
+    }
+    return `http://localhost:3001/uploads/championships/${logo}`;
+  };
+
+  const getTodayMatches = () => {
+    // Sempre mostrar os próximos jogos disponíveis ordenados por data
+    const now = new Date();
+    const availableMatches = matches
+      .filter(match => {
+        if (!match.date) return false;
+        const matchDate = new Date(match.date);
+        // Incluir apenas jogos futuros ou em andamento
+        return matchDate >= now || match.status === 'live';
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateA - dateB;
+      })
+      .slice(0, 4); // Mostrar os 4 próximos jogos
+
+    return availableMatches;
   };
 
   useEffect(() => {
@@ -182,61 +201,117 @@ export function MatchesWidgetFixed() {
               <div
                 className="cards-wrapper"
                 style={{
-                  '--card-transform': `-${cardScrollPosition * (380 + 24)}px`
+                  '--card-transform': `-${cardScrollPosition * (280 + 16)}px`
                 } as React.CSSProperties}
               >
                 {getTodayMatches().map((match) => (
                   <div
                     key={match.id}
-                    className="match-card"
-                    onClick={() => navigate(`/matches/${match.id}`)}
+                    className="match-card-globo"
+                    onClick={() => navigate(`/jogo/${match.id}`)}
                   >
-                    {/* Header Compacto */}
-                    <div className="card-header-compact">
-                      <div className="championship-badge">{match.championship}</div>
-                    </div>
-
-                    {/* Informação de Data e Hora */}
-                    <div className="match-datetime">
-                      <span>{formatMatchDate(match.date)} • {match.time}</span>
-                    </div>
-
-                    {/* Times Confronto */}
-                    <div className="teams-confrontation">
-                      {/* Time Casa */}
-                      <div className="team-info">
-                        <span className="team-name-compact">{match.homeTeam.name}</span>
+                    {/* Top Bar - Campeonato e Hora */}
+                    <div className="match-card-header-globo">
+                      <div className="match-info">
+                        <div className="championship-header-row">
+                          {match.championshipLogo && (
+                            <img 
+                              src={getChampionshipLogoUrl(match.championshipLogo) || ''} 
+                              alt={match.championship}
+                              className="championship-logo-discreet"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          )}
+                          <span className="championship-name-globo">{match.championship}</span>
+                        </div>
+                        <span className="match-datetime-globo">
+                          {isToday(new Date(match.date))
+                            ? `Hoje • ${match.time}` 
+                            : `${formatMatchDate(match.date)} • ${match.time}`}
+                        </span>
                       </div>
+                      {match.status === 'live' && (
+                        <div className={`status-badge-globo ${match.status}`}>
+                          TEMPO REAL
+                        </div>
+                      )}
+                    </div>
 
-                      {/* VS Central */}
-                      <div className="vs-divider">
-                        <span className="vs-text">VS</span>
-                        {match.score && (
-                          <div className="score-compact">
-                            {match.score.home} - {match.score.away}
+                    {/* Teams Section - Times Verticais com Placar */}
+                    <div className="match-teams-globo">
+                      {/* Time Casa */}
+                      <div className="team-globo">
+                        <div className="team-logo-globo">
+                          {match.homeTeam.banner ? (
+                            <img
+                              src={getTeamLogoUrl(match.homeTeam.banner) || ''}
+                              alt={match.homeTeam.name}
+                              className="team-logo-img-globo"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div 
+                            className="team-logo-fallback-globo"
+                            style={{ display: match.homeTeam.banner ? 'none' : 'flex' }}
+                          >
+                            <span>{match.homeTeam.name.charAt(0)}</span>
                           </div>
-                        )}
+                        </div>
+                        <div className="team-name-score-wrapper">
+                          <span className="team-name-globo">{match.homeTeam.name}</span>
+                          {match.score && (
+                            <span className="team-score-globo">{match.score.home}</span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Time Visitante */}
-                      <div className="team-info">
-                        <span className="team-name-compact">{match.awayTeam.name}</span>
+                      <div className="team-globo">
+                        <div className="team-logo-globo">
+                          {match.awayTeam.banner ? (
+                            <img
+                              src={getTeamLogoUrl(match.awayTeam.banner) || ''}
+                              alt={match.awayTeam.name}
+                              className="team-logo-img-globo"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div 
+                            className="team-logo-fallback-globo"
+                            style={{ display: match.awayTeam.banner ? 'none' : 'flex' }}
+                          >
+                            <span>{match.awayTeam.name.charAt(0)}</span>
+                          </div>
+                        </div>
+                        <div className="team-name-score-wrapper">
+                          <span className="team-name-globo">{match.awayTeam.name}</span>
+                          {match.score && (
+                            <span className="team-score-globo">{match.score.away}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Footer com Informações */}
-                    <div className="card-footer-compact">
-                      <span className="round-label">{match.round} • {match.category}</span>
-                      {match.location && (
-                        <span className="location-label">
-                          <i className="fas fa-map-marker-alt"></i>
-                          <span className="location-text">{match.location}</span>
-                        </span>
-                      )}
-                      <div className={`status-pill ${match.status}`} role="status" aria-label={`status ${match.status}`}>
-                        {match.status === 'live' && <span className="live-dot"></span>}
-                        {match.status === 'live' ? 'AO VIVO' :
-                         match.status === 'finished' ? 'ENCERRADO' : 'PRÓXIMO'}
+                    {/* Bottom Bar - Rodada, Categoria e Localização */}
+                    <div className="match-card-footer-globo">
+                      <div className="footer-info-row">
+                        <span className="match-round">{match.round} • {match.category}</span>
+                        {match.location && (
+                          <span className="match-location-globo">
+                            <LocationOnIcon className="location-icon" />
+                            {match.location}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -383,28 +458,98 @@ export function MatchesWidgetFixed() {
                   <div
                     key={match.id}
                     className="match-list-item"
-                    onClick={() => navigate(`/matches/${match.id}`)}
+                    onClick={() => navigate(`/jogo/${match.id}`)}
                   >
-                    <div className="match-details">
-                      <div className="match-teams">
-                        <span className="team-home">{match.homeTeam.name}</span>
-                        <span className="vs-indicator">x</span>
-                        <span className="team-away">{match.awayTeam.name}</span>
+                    <div className="match-list-content">
+                      {/* Teams Section */}
+                      <div className="match-list-teams">
+                        <div className="match-list-team">
+                          <div className="match-list-team-logo">
+                            {match.homeTeam.banner ? (
+                              <img
+                                src={getTeamLogoUrl(match.homeTeam.banner) || ''}
+                                alt={match.homeTeam.name}
+                                className="team-logo-list"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div 
+                              className="team-logo-list-fallback"
+                              style={{ display: match.homeTeam.banner ? 'none' : 'flex' }}
+                            >
+                              <span>{match.homeTeam.name.charAt(0)}</span>
+                            </div>
+                          </div>
+                          <span className="team-name-list">{match.homeTeam.name}</span>
+                        </div>
+
+                        <div className="match-list-vs">VS</div>
+
+                        <div className="match-list-team">
+                          <div className="match-list-team-logo">
+                            {match.awayTeam.banner ? (
+                              <img
+                                src={getTeamLogoUrl(match.awayTeam.banner) || ''}
+                                alt={match.awayTeam.name}
+                                className="team-logo-list"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                              />
+                            ) : null}
+                            <div 
+                              className="team-logo-list-fallback"
+                              style={{ display: match.awayTeam.banner ? 'none' : 'flex' }}
+                            >
+                              <span>{match.awayTeam.name.charAt(0)}</span>
+                            </div>
+                          </div>
+                          <span className="team-name-list">{match.awayTeam.name}</span>
+                        </div>
                       </div>
-                      <div className="match-meta">
-                        <span className="championship-label">{match.championship}</span>
-                        {match.location && (
-                          <span className="location-label">{match.location}</span>
-                        )}
+
+                      {/* Match Info */}
+                      <div className="match-list-info">
+                        <div className="match-list-meta">
+                          <span className="championship-label-list">
+                            {match.championshipLogo && (
+                              <img
+                                src={getChampionshipLogoUrl(match.championshipLogo) || ''}
+                                alt={match.championship}
+                                className="championship-logo-list"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            )}
+                            {match.championship}
+                          </span>
+                          {match.location && (
+                            <span className="location-label-list">
+                              <LocationOnIcon className="location-icon-list" />
+                              {match.location}
+                            </span>
+                          )}
+                          {match.round && (
+                            <span className="round-label-list">{match.round}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="match-time-info">
-                      <div className="match-time">
+                    {/* Time and Status */}
+                    <div className="match-list-right">
+                      <div className="match-time-list">
                         <span>{match.time}</span>
                       </div>
-                      <div className="match-status-display">
-                        <span className={`status-indicator ${match.status}`}>
+                      <div className="match-status-display-list">
+                        <span className={`status-indicator-list ${match.status}`}>
                           {match.status === 'live' ? 'AO VIVO' :
                            match.status === 'finished' ? 'ENCERRADO' : 'PRÓXIMO'}
                         </span>

@@ -21,6 +21,7 @@ interface Match {
   };
   status: 'upcoming' | 'live' | 'finished';
   championship?: string;
+  championshipLogo?: string;
   location?: string;
   round?: string;
   category?: string;
@@ -37,7 +38,8 @@ export const useMatchesWidget = () => {
       console.log('Dados recebidos:', matchesData);
       console.debug('raw matchesData:', matchesData);
       if (matchesData && matchesData.length > 0) {
-        const processedMatches = matchesData.map((match: any) => {
+        const processedMatches = matchesData
+          .map((match: any) => {
           let status: 'upcoming' | 'live' | 'finished' = 'upcoming';
           switch (match.status) {
             case 'em_andamento':
@@ -57,12 +59,12 @@ export const useMatchesWidget = () => {
             homeTeam = {
               id: teams[0].team?.id || 0,
               name: teams[0].team?.name || 'Time Casa',
-              banner: undefined
+              banner: teams[0].team?.banner || undefined
             };
             awayTeam = {
               id: teams[1].team?.id || 0,
               name: teams[1].team?.name || 'Time Visitante',
-              banner: undefined
+              banner: teams[1].team?.banner || undefined
             };
 
             // Ordenar alfabeticamente se ambos os times existem
@@ -79,7 +81,7 @@ export const useMatchesWidget = () => {
             homeTeam = {
               id: teams[0].team?.id || 0,
               name: teams[0].team?.name || match.title || 'Time Casa',
-              banner: undefined
+              banner: teams[0].team?.banner || undefined
             };
             awayTeam = {
               id: 0,
@@ -110,10 +112,17 @@ export const useMatchesWidget = () => {
             score: undefined,
             status: status,
             championship: (!match.matchChampionship) ? (match.title || 'Partida Amistosa') : (match.matchChampionship?.championship?.name || match.title || 'Partida'),
+            championshipLogo: match.matchChampionship?.championship?.logo || undefined,
             location: match.location,
-            round: 'amistosa',
-            category: match.modalidade || 'Futebol'
+            round: match.matchChampionship ? `Rodada ${match.matchChampionship.Rodada}` : 'amistosa',
+            category: match.modalidade || match.matchChampionship?.championship?.modalidade || 'Futebol'
           };
+        })
+        .sort((a: Match, b: Match) => {
+          // Ordenar por data (mais próximas primeiro)
+          const dateA = new Date(a.date).getTime();
+          const dateB = new Date(b.date).getTime();
+          return dateA - dateB;
         });
         setMatches(processedMatches);
       } else {

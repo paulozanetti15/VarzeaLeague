@@ -106,6 +106,27 @@ export async function uploadChampionshipLogo(championshipId: number, file: File)
   return response.data;
 }
 
+export async function createChampionshipMatch(championshipId: number, matchData: {
+  teamHomeId: number;
+  teamAwayId: number;
+  date: string;
+  time: string;
+  location: string;
+  rodada: number;
+}) {
+  const response = await axios.post(`${API_BASE}/championships/${championshipId}/matches`, matchData, {
+    headers: getAuthHeaders()
+  });
+  return response.data;
+}
+
+export async function getChampionshipMatches(championshipId: number) {
+  const response = await axios.get(`${API_BASE}/championships/${championshipId}/matches`, {
+    headers: getAuthHeaders()
+  });
+  return response.data;
+}
+
 export default {
   getAllChampionships,
   createChampionship,
@@ -117,5 +138,7 @@ export default {
   leaveChampionshipWithTeam,
   leaveChampionship,
   getChampionshipTeams,
-  uploadChampionshipLogo
+  uploadChampionshipLogo,
+  createChampionshipMatch,
+  getChampionshipMatches
 };
