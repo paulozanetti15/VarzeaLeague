@@ -17,6 +17,7 @@ interface Match {
   scoreAway?: number;
   round: number;
   status?: string;
+  matchIndex?: number; // Índice do confronto na rodada
 }
 
 interface BracketRound {
@@ -29,6 +30,7 @@ const KnockoutBracket: React.FC<KnockoutBracketProps> = ({ championshipId, champ
   const [matches, setMatches] = useState<Match[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
 
   // Função para determinar o nome da rodada baseado no número de times
   const getRoundName = (numTeams: number, roundNumber: number): string => {
@@ -45,6 +47,8 @@ const KnockoutBracket: React.FC<KnockoutBracketProps> = ({ championshipId, champ
         rounds.push({ round, name: 'Quartas de Final' });
       } else if (currentTeams === 16) {
         rounds.push({ round, name: 'Oitavas de Final' });
+      } else if (currentTeams === 32) {
+        rounds.push({ round, name: '32ª de Final' });
       } else {
         rounds.push({ round, name: `Rodada ${round}` });
       }
@@ -56,101 +60,155 @@ const KnockoutBracket: React.FC<KnockoutBracketProps> = ({ championshipId, champ
     return roundInfo?.name || `Rodada ${roundNumber}`;
   };
 
-  // Função para gerar chaveamento automático
+  // Função para gerar chaveamento completo seguindo regras de torneios mata-mata
   const generateBracket = (teamsList: any[], existingMatches: Match[]): BracketRound[] => {
     const numTeams = teamsList.length;
     
     if (numTeams === 0) return [];
     
-    // Determinar número de rodadas necessárias
-    let rounds: BracketRound[] = [];
-    let currentRound = 1;
-    let teamsInRound = numTeams;
-    
+    if (numTeams === 1) {
+      return [{
+        roundNumber: 1,
+        roundName: 'Final',
+        matches: [{
+          id: -1,
+          teamHome: {
+            id: teamsList[0].id,
+            name: teamsList[0].name,
+            banner: teamsList[0].banner
+          },
+          teamAway: undefined,
+          round: 1,
+          status: 'bye',
+          matchIndex: 0
+        }]
+      }];
+    }
+
     // Criar mapa de partidas existentes por rodada
-    const matchesByRound = new Map<number, Match[]>();
+    const matchesByRound = new Map<number, Map<number, Match>>();
     existingMatches.forEach(match => {
       if (!matchesByRound.has(match.round)) {
-        matchesByRound.set(match.round, []);
+        matchesByRound.set(match.round, new Map());
       }
-      matchesByRound.get(match.round)!.push(match);
+      const matchIndex = match.matchIndex ?? 0;
+      matchesByRound.get(match.round)!.set(matchIndex, match);
     });
-    
-    // Gerar rodadas da primeira até a final
-    const roundsList: BracketRound[] = [];
-    let roundNum = 1;
+
+    // Calcular número de rodadas necessárias baseado no número real de times
+    // Para n times, precisamos de ceil(log2(n)) rodadas
     let teamsCount = numTeams;
-    
+    let numRounds = 0;
     while (teamsCount > 1) {
+      teamsCount = Math.ceil(teamsCount / 2);
+      numRounds++;
+    }
+    
+    const roundsList: BracketRound[] = [];
+    
+    // Embaralhar times para sorteio (simulando sorteio de copa do mundo)
+    const shuffledTeams = [...teamsList].sort(() => Math.random() - 0.5);
+    
+    // Gerar todas as rodadas do chaveamento
+    for (let roundNum = 1; roundNum <= numRounds; roundNum++) {
       const roundName = getRoundName(numTeams, roundNum);
-      const existingRoundMatches = matchesByRound.get(roundNum) || [];
+      const matchesInRound: Match[] = [];
       
-      // Se já existem partidas para esta rodada, usar elas
-      if (existingRoundMatches.length > 0) {
-        roundsList.push({
-          roundNumber: roundNum,
-          roundName,
-          matches: existingRoundMatches
-        });
-      } else if (roundNum === 1 && teamsList.length > 0) {
-        // Gerar partidas automaticamente apenas para a primeira rodada se não houver partidas agendadas
-        const matchesInRound: Match[] = [];
-        const teamsForRound = [...teamsList];
+      if (roundNum === 1) {
+        // Primeira rodada: distribuir todos os times
+        const existingRoundMatches = matchesByRound.get(roundNum);
         
-        // Embaralhar times para sorteio
-        const shuffled = teamsForRound.sort(() => Math.random() - 0.5);
+        if (existingRoundMatches && existingRoundMatches.size > 0) {
+          // Usar partidas existentes
+          existingRoundMatches.forEach((match, index) => {
+            matchesInRound.push({ ...match, matchIndex: index });
+          });
+        } else {
+          // Gerar chaveamento automático para primeira rodada
+          const teamsForRound = [...shuffledTeams];
+          const numMatches = Math.ceil(teamsForRound.length / 2);
+          
+          for (let i = 0; i < numMatches; i++) {
+            const team1Index = i * 2;
+            const team2Index = i * 2 + 1;
+            
+            if (team2Index < teamsForRound.length) {
+              // Confronto normal
+              matchesInRound.push({
+                id: -roundNum * 10000 - i,
+                teamHome: {
+                  id: teamsForRound[team1Index].id,
+                  name: teamsForRound[team1Index].name,
+                  banner: teamsForRound[team1Index].banner
+                },
+                teamAway: {
+                  id: teamsForRound[team2Index].id,
+                  name: teamsForRound[team2Index].name,
+                  banner: teamsForRound[team2Index].banner
+                },
+                scoreHome: undefined,
+                scoreAway: undefined,
+                round: roundNum,
+                status: 'agendada',
+                matchIndex: i
+              });
+            } else {
+              // Time sem par (bye) - avança direto
+              matchesInRound.push({
+                id: -roundNum * 10000 - i,
+                teamHome: {
+                  id: teamsForRound[team1Index].id,
+                  name: teamsForRound[team1Index].name,
+                  banner: teamsForRound[team1Index].banner
+                },
+                teamAway: undefined,
+                scoreHome: undefined,
+                scoreAway: undefined,
+                round: roundNum,
+                status: 'bye',
+                matchIndex: i
+              });
+            }
+          }
+        }
+      } else {
+        // Rodadas seguintes: gerar baseado na rodada anterior
+        const prevRound = roundsList[roundNum - 2];
+        const numMatches = Math.ceil(prevRound.matches.length / 2);
+        const existingRoundMatches = matchesByRound.get(roundNum);
         
-        // Criar confrontos
-        for (let i = 0; i < shuffled.length; i += 2) {
-          if (i + 1 < shuffled.length) {
+        if (existingRoundMatches && existingRoundMatches.size > 0) {
+          // Usar partidas existentes
+          existingRoundMatches.forEach((match, index) => {
+            matchesInRound.push({ ...match, matchIndex: index });
+          });
+        } else {
+          // Gerar partidas para próxima rodada (vencedores da rodada anterior)
+          for (let i = 0; i < numMatches; i++) {
             matchesInRound.push({
-              id: -roundNum * 1000 - i, // ID temporário negativo
-              teamHome: {
-                id: shuffled[i].id,
-                name: shuffled[i].name,
-                banner: shuffled[i].banner
-              },
-              teamAway: {
-                id: shuffled[i + 1].id,
-                name: shuffled[i + 1].name,
-                banner: shuffled[i + 1].banner
-              },
-              scoreHome: undefined,
-              scoreAway: undefined,
-              round: roundNum,
-              status: 'agendada'
-            });
-          } else {
-            // Time sem par (bye) - avança direto
-            matchesInRound.push({
-              id: -roundNum * 1000 - i,
-              teamHome: {
-                id: shuffled[i].id,
-                name: shuffled[i].name,
-                banner: shuffled[i].banner
-              },
+              id: -roundNum * 10000 - i,
+              teamHome: undefined,
               teamAway: undefined,
               scoreHome: undefined,
               scoreAway: undefined,
               round: roundNum,
-              status: 'bye'
+              status: 'agendada',
+              matchIndex: i
             });
           }
         }
-        
+      }
+      
+      if (matchesInRound.length > 0) {
         roundsList.push({
           roundNumber: roundNum,
           roundName,
           matches: matchesInRound
         });
       }
-      // Para rodadas seguintes sem partidas, não adicionar (serão geradas quando houver partidas da rodada anterior)
-      
-      teamsCount = Math.ceil(teamsCount / 2);
-      roundNum++;
     }
     
-    return roundsList; // Retornar da primeira rodada até a final
+    return roundsList;
   };
 
   const fetchData = async () => {
@@ -164,7 +222,7 @@ const KnockoutBracket: React.FC<KnockoutBracketProps> = ({ championshipId, champ
       setTeams(teamsData || []);
 
       // Processar partidas existentes
-      const processedMatches: Match[] = (matchesData || []).map((match: any) => {
+      const processedMatches: Match[] = (matchesData || []).map((match: any, index: number) => {
         const teamsData = match.matchTeams || [];
         const homeTeam = teamsData[0]?.team;
         const awayTeam = teamsData[1]?.team;
@@ -174,10 +232,11 @@ const KnockoutBracket: React.FC<KnockoutBracketProps> = ({ championshipId, champ
           id: match.id,
           teamHome: homeTeam ? { id: homeTeam.id, name: homeTeam.name, banner: homeTeam.banner } : undefined,
           teamAway: awayTeam ? { id: awayTeam.id, name: awayTeam.name, banner: awayTeam.banner } : undefined,
-          scoreHome: 0, // Seria necessário buscar do MatchReportChampionship
-          scoreAway: 0,
+          scoreHome: match.matchReportChampionship?.scoreHome ?? undefined,
+          scoreAway: match.matchReportChampionship?.scoreAway ?? undefined,
           round,
-          status: match.status
+          status: match.status,
+          matchIndex: index
         };
       });
 
@@ -208,7 +267,7 @@ const KnockoutBracket: React.FC<KnockoutBracketProps> = ({ championshipId, champ
     return `http://localhost:3001/uploads/teams/${banner}`;
   };
 
-  // Gerar chaveamento
+  // Gerar chaveamento completo sempre que houver times
   const bracketRounds = useMemo(() => {
     return generateBracket(teams, matches);
   }, [teams, matches]);
@@ -246,117 +305,102 @@ const KnockoutBracket: React.FC<KnockoutBracketProps> = ({ championshipId, champ
         </div>
       ) : (
         <div className="bracket-wrapper">
-          {bracketRounds
-            .filter(round => round.matches.length > 0) // Filtrar rodadas vazias
-            .map((round, roundIndex) => (
-            <div key={round.roundNumber} className="bracket-round">
-              <div className="round-header">
-                <h3 className="round-title">{round.roundName}</h3>
-              </div>
-              <div className="round-matches">
-                {round.matches.map((match, matchIndex) => (
-                  <motion.div
-                    key={match.id}
-                    className="bracket-match"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, delay: matchIndex * 0.1 }}
-                  >
-                    <div className="match-team">
-                      <div className="team-info-bracket">
-                        {match.teamHome?.banner ? (
-                          <img
-                            src={getTeamLogoUrl(match.teamHome.banner) || ''}
-                            alt={match.teamHome.name}
-                            className="team-logo-bracket"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        <div 
-                          className="team-logo-placeholder-bracket"
-                          style={{ display: match.teamHome?.banner ? 'none' : 'flex' }}
-                        >
-                          <span>{match.teamHome?.name?.charAt(0) || '?'}</span>
-                        </div>
-                        <span className="team-name-bracket">{match.teamHome?.name || 'TBD'}</span>
-                      </div>
-                      {match.scoreHome !== undefined && match.scoreHome !== null && (
-                        <span className="team-score">{match.scoreHome}</span>
+          <div className="bracket-tree">
+            {bracketRounds.map((round, roundIndex) => (
+              <div key={round.roundNumber} className="bracket-round">
+                <div className="round-header">
+                  <h3 className="round-title">{round.roundName}</h3>
+                  <span className="round-matches-count">{round.matches.length} {round.matches.length === 1 ? 'confronto' : 'confrontos'}</span>
+                </div>
+                <div className="round-matches">
+                  {round.matches.map((match, matchIndex) => (
+                    <motion.div
+                      key={`${round.roundNumber}-${match.matchIndex ?? matchIndex}`}
+                      className={`bracket-match ${match.status === 'bye' ? 'match-bye' : ''} ${match.scoreHome !== undefined && match.scoreAway !== undefined ? 'match-completed' : ''}`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: matchIndex * 0.05 }}
+                    >
+                      {match.status === 'bye' && (
+                        <div className="bye-badge">BYE</div>
                       )}
-                    </div>
-                    <div className="match-divider">VS</div>
-                    <div className="match-team">
-                      <div className="team-info-bracket">
-                        {match.teamAway?.banner ? (
-                          <img
-                            src={getTeamLogoUrl(match.teamAway.banner) || ''}
-                            alt={match.teamAway.name}
-                            className="team-logo-bracket"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-                        {match.teamAway ? (
+                      <div className="match-team">
+                        <div className="team-info-bracket">
+                          {match.teamHome?.banner ? (
+                            <img
+                              src={getTeamLogoUrl(match.teamHome.banner) || ''}
+                              alt={match.teamHome.name}
+                              className="team-logo-bracket"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
                           <div 
                             className="team-logo-placeholder-bracket"
-                            style={{ display: match.teamAway?.banner ? 'none' : 'flex' }}
+                            style={{ display: match.teamHome?.banner ? 'none' : 'flex' }}
                           >
-                            <span>{match.teamAway.name.charAt(0)}</span>
+                            <span>{match.teamHome?.name?.charAt(0)?.toUpperCase() || '?'}</span>
                           </div>
-                        ) : (
-                          <div className="team-logo-placeholder-bracket" style={{ display: 'flex' }}>
-                            <span>?</span>
-                          </div>
+                          <span className="team-name-bracket">{match.teamHome?.name || 'Aguardando'}</span>
+                        </div>
+                        {match.scoreHome !== undefined && match.scoreHome !== null && (
+                          <span className="team-score">{match.scoreHome}</span>
                         )}
-                        <span className="team-name-bracket">{match.teamAway?.name || 'Aguardando'}</span>
                       </div>
-                      {match.scoreAway !== undefined && match.scoreAway !== null && (
-                        <span className="team-score">{match.scoreAway}</span>
-                      )}
-                    </div>
-                    {match.status === 'bye' && (
-                      <div className="bye-badge">BYE</div>
-                    )}
-                  </motion.div>
-                ))}
+                      <div className="match-divider">VS</div>
+                      <div className="match-team">
+                        <div className="team-info-bracket">
+                          {match.teamAway?.banner ? (
+                            <img
+                              src={getTeamLogoUrl(match.teamAway.banner) || ''}
+                              alt={match.teamAway.name}
+                              className="team-logo-bracket"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          {match.teamAway ? (
+                            <div 
+                              className="team-logo-placeholder-bracket"
+                              style={{ display: match.teamAway?.banner ? 'none' : 'flex' }}
+                            >
+                              <span>{match.teamAway.name.charAt(0).toUpperCase()}</span>
+                            </div>
+                          ) : (
+                            <div className="team-logo-placeholder-bracket" style={{ display: 'flex' }}>
+                              <span>?</span>
+                            </div>
+                          )}
+                          <span className="team-name-bracket">{match.teamAway?.name || 'Aguardando'}</span>
+                        </div>
+                        {match.scoreAway !== undefined && match.scoreAway !== null && (
+                          <span className="team-score">{match.scoreAway}</span>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-          {bracketRounds.filter(round => round.matches.length > 0).length === 0 && (
-            <div className="no-bracket-message">
-              <p>Chaveamento será gerado automaticamente quando houver partidas agendadas.</p>
-              <p className="message-subtitle">
-                {teams.length === 2 
-                  ? 'Com 2 times, será uma Final'
-                  : teams.length === 4
-                  ? 'Com 4 times, será uma Semifinal'
-                  : teams.length === 8
-                  ? 'Com 8 times, serão Quartas de Final'
-                  : teams.length === 16
-                  ? 'Com 16 times, serão Oitavas de Final'
-                  : `Com ${teams.length} times, serão ${Math.ceil(Math.log2(teams.length))} rodadas`}
-              </p>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
       )}
 
-      {teams.length > 0 && bracketRounds.filter(round => round.matches.length > 0).length > 0 && (
+      {teams.length > 0 && bracketRounds.length > 0 && (
         <div className="bracket-footer">
           <div className="trophy-icon">
             <EmojiEventsIcon />
           </div>
           <p className="footer-text">
-            {teams.length === 2 
+            {bracketRounds.length === 1 && bracketRounds[0].roundName === 'Final'
               ? 'Final - Campeão será decidido nesta partida'
-              : `Campeão será decidido na Final após ${bracketRounds.filter(r => r.matches.length > 0).length} ${bracketRounds.filter(r => r.matches.length > 0).length === 1 ? 'rodada' : 'rodadas'}`}
+              : `Chaveamento completo com ${bracketRounds.length} ${bracketRounds.length === 1 ? 'rodada' : 'rodadas'}. O campeão será decidido na Final.`}
           </p>
         </div>
       )}
