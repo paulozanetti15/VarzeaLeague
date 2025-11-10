@@ -51,7 +51,7 @@ const TeamCard: React.FC<TeamCardProps> = ({
               Sair da partida
             </Button>
           )}
-          {( (isOrganizer || Number(userTypeId) === 1 || Number(userTypeId) === 2) && team.captainId !== userId && canLeaveMatch) && (
+          {( (isOrganizer || Number(userTypeId) === 1) && team.captainId !== userId && canLeaveMatch) && (
             <Button size="sm" variant="outline-danger" onClick={() => onRequestLeave ? onRequestLeave(team.id, team.name) : onLeaveMatch(matchId, team.id, team.name)} className="ms-2">
               Remover time
             </Button>
