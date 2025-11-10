@@ -11,12 +11,10 @@ interface StatCardProps {
 const StatCard: React.FC<StatCardProps> = ({ title, value, textColor = 'text-dark' }) => {
   return (
     <Col xs={12} sm={6} md={4} lg={3}>
-      <Card className="shadow-sm border-0 h-100">
-        <Card.Body className="text-center">
-          <Card.Title className="text-muted fw-bold">{title}</Card.Title>
-          <Card.Text className={`display-4 fw-bold ${textColor}`}>
-            {value}
-          </Card.Text>
+      <Card className="h-100 border-0 stat-card">
+        <Card.Body className="d-flex flex-column justify-content-center align-items-center text-center">
+          <div className="stat-card-title text-muted fw-semibold">{title}</div>
+          <div className={`stat-card-value fw-bold ${textColor}`}>{value}</div>
         </Card.Body>
       </Card>
     </Col>

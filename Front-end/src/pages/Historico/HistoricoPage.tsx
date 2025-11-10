@@ -5,7 +5,6 @@ import Form from 'react-bootstrap/Form';
 import './HistoricoPage.css';
 import { HistoricoContext } from '../../Context/HistoricoContext';
 import { useTeamCaptain } from '../../hooks/useTeamCaptain';
-import StatCard from '../../components/Historico/StatCard';
 import MatchCard from '../../components/Historico/MatchCard';
 
 const HistoricoPage = () => {
@@ -48,43 +47,87 @@ const HistoricoPage = () => {
   return (
     <div className="min-h-screen bg-light">
       <div className="container py-5">
-        <h1 className="text-center text-dark mb-5">
+        <h1 className="text-center text-dark mb-5 historico-header">
           Histórico do {team.name}
         </h1>
 
-        <Row className="g-4 mb-5">
+        {/* Estatísticas - barra compacta */}
+        <div className="stats-bar mb-4">
           {activeTab === 'amistosos' && (
-            <>
-              <StatCard title="Partidas amistosas disputadas" value={historico?.amistosos || 0} />
-              <StatCard title="Vitórias" value={historico?.vitoriasAmistosos || 0} textColor="text-success" />
-              <StatCard title="Derrotas" value={historico?.derrotasAmistosas || 0} textColor="text-danger" />
-              <StatCard title="Empates" value={historico?.empatesAmistosos || 0} textColor="text-secondary" />
-              <StatCard title="Desempenho em Amistosos" value={`${historico?.aproveitamentoAmistosos || 0} %`} textColor="text-info" />
-
+            <> 
+              <div className="stats-item">
+                <div className="stat-label">Partidas amistosas disputadas</div>
+                <div className="stat-value">{historico?.amistosos || 0}</div>
+              </div>
+              <div className="stats-item">
+                <div className="stat-label">Vitórias</div>
+                <div className="stat-value text-success">{historico?.vitoriasAmistosos || 0}</div>
+              </div>
+              <div className="stats-item">
+                <div className="stat-label">Derrotas</div>
+                <div className="stat-value text-danger">{historico?.derrotasAmistosos || 0}</div>
+              </div>
+              <div className="stats-item">
+                <div className="stat-label">Empates</div>
+                <div className="stat-value text-secondary">{historico?.empatesAmistosos || 0}</div>
+              </div>
+              <div className="stats-item highlight">
+                <div className="stat-label">Desempenho em Amistosos</div>
+                <div className="stat-value text-info">{`${historico?.aproveitamentoAmistosos || 0} %`}</div>
+              </div>
             </>
           )}
-          {activeTab === 'campeonatos'  && selectedChampionship === '' ? (
+
+          {activeTab === 'campeonatos' && selectedChampionship === '' && (
             <>
-              <StatCard title="Campeonatos Participados" value={historico?.campeonatosParticipados || 0} />
-              <StatCard title="Campeonatos Em Disputa" value={historico?.campeonatosEmDisputa || 0} />
-              <StatCard title="Vitórias acumuladas" value={historico?.vitoriasCampeonato || 0} textColor="text-success" />
-              <StatCard title="Derrotas acumuladas" value={historico?.derrotasCampeonato || 0} textColor="text-danger" />
-              <StatCard title="Empates acumulados" value={historico?.empatesCampeonato || 0} textColor="text-secondary" />
+              <div className="stats-item">
+                <div className="stat-label">Campeonatos Participados</div>
+                <div className="stat-value">{historico?.campeonatosParticipados || 0}</div>
+              </div>
+              <div className="stats-item">
+                <div className="stat-label">Campeonatos Em Disputa</div>
+                <div className="stat-value">{historico?.campeonatosEmDisputa || 0}</div>
+              </div>
+              <div className="stats-item">
+                <div className="stat-label">Vitórias acumuladas</div>
+                <div className="stat-value text-success">{historico?.vitoriasCampeonato || 0}</div>
+              </div>
+              <div className="stats-item">
+                <div className="stat-label">Derrotas acumuladas</div>
+                <div className="stat-value text-danger">{historico?.derrotasCampeonato || 0}</div>
+              </div>
+              <div className="stats-item">
+                <div className="stat-label">Empates acumulados</div>
+                <div className="stat-value text-secondary">{historico?.empatesCampeonato || 0}</div>
+              </div>
             </>
-            ) 
-            :
-            ( activeTab === 'campeonatos'  && selectedChampionship !== '' && (
+          )}
+
+          {activeTab === 'campeonatos' && selectedChampionship !== '' && (
             <>
-              <StatCard title="Quantidade de Partidas disputadas" value={historico?.partidasFiltradasCampeonatoDisputadas || 0} />
-              <StatCard title="Vitórias em partidas" value={historico?.vitoriasCampeonato || 0} textColor="text-success" />
-              <StatCard title="Derrotas em partidas" value={historico?.derrotasCampeonato || 0} textColor="text-danger" />
-              <StatCard title="Empates em partidas" value={historico?.empatesCampeonato || 0} textColor="text-secondary" />
-              <StatCard title="Desempenho no Campeonato" value={`${historico?.aproveitamentoCampeonatos || 0} %`} textColor="text-info" />
+              <div className="stats-item">
+                <div className="stat-label">Quantidade de Partidas disputadas</div>
+                <div className="stat-value">{historico?.partidasFiltradasCampeonatoDisputadas || 0}</div>
+              </div>
+              <div className="stats-item">
+                <div className="stat-label">Vitórias em partidas</div>
+                <div className="stat-value text-success">{historico?.vitoriasCampeonato || 0}</div>
+              </div>
+              <div className="stats-item">
+                <div className="stat-label">Derrotas em partidas</div>
+                <div className="stat-value text-danger">{historico?.derrotasCampeonato || 0}</div>
+              </div>
+              <div className="stats-item">
+                <div className="stat-label">Empates em partidas</div>
+                <div className="stat-value text-secondary">{historico?.empatesCampeonato || 0}</div>
+              </div>
+              <div className="stats-item highlight">
+                <div className="stat-label">Desempenho no Campeonato</div>
+                <div className="stat-value text-info">{`${historico?.aproveitamentoCampeonatos || 0} %`}</div>
+              </div>
             </>
-          )
-          ) 
-         }  
-        </Row>
+          )}
+        </div>
 
         <Nav variant="tabs" defaultActiveKey="amistosos" className="mb-4">
           <Nav.Item>
@@ -97,7 +140,7 @@ const HistoricoPage = () => {
 
         {activeTab === 'campeonatos' && (
           <div className="d-flex justify-content-end mb-4">
-            <Form.Group style={{ maxWidth: '350px', width: '100%' }}>
+            <Form.Group className="select-championship" style={{ maxWidth: '350px', width: '100%' }}>
               <Form.Label style={{ marginBottom: '14px', fontSize: '1.08rem', fontWeight: 500, letterSpacing: '0.5px', fontFamily: 'Inter, Arial, sans-serif', textTransform: 'uppercase' }}>
                 Selecione um Campeonato
               </Form.Label>
@@ -117,23 +160,23 @@ const HistoricoPage = () => {
 
         <div>
           {activeTab === 'amistosos' && (
-            <div className="mt-4">
-              <h2 className="text-center text-dark mb-4">Partidas Amistosas</h2>
-              <Row xs={1} md={2} lg={3} className="g-4">
-                {historico?.PartidasAmistosas && historico.PartidasAmistosas.length > 0 ? (
-                  historico.PartidasAmistosas.map((partida) => (
+            <div className="match-section">
+              <h2 className="match-section-heading text-center">Partidas Amistosas</h2>
+              {historico?.PartidasAmistosas && historico.PartidasAmistosas.length > 0 ? (
+                <div className="matches-grid">
+                  {historico.PartidasAmistosas.map((partida) => (
                     <MatchCard key={partida.id} partida={partida} teamId={team.id} isChampionship={false} />
-                  ))
-                ) : (
-                  <p className="text-center text-muted">Nenhuma partida amistosa disponível.</p>
-                )}
-              </Row>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state-card">Nenhuma partida amistosa disponível.</div>
+              )}
             </div>
           )}
 
           {activeTab === 'campeonatos' && (
-            <div className="mt-4">
-              <h2 className="text-center text-dark mb-4">
+            <div className="match-section">
+              <h2 className="match-section-heading text-center">
                 {selectedChampionship && historico?.nomesCampeonatos
                   ? (() => {
                       const champ = historico.nomesCampeonatos.find(c => String(c.id) === String(selectedChampionship));
@@ -141,20 +184,26 @@ const HistoricoPage = () => {
                     })()
                   : 'Partidas de Campeonato'}
               </h2>
-              <Row xs={1} md={2} lg={3} className="g-4">
-                {selectedChampionship !== ''
-                  ? historico?.partidasFiltradasCampeonato && historico.partidasFiltradasCampeonato.length > 0
-                    ? historico.partidasFiltradasCampeonato.map((partida) => (
+              {selectedChampionship !== ''
+                ? historico?.partidasFiltradasCampeonato && historico.partidasFiltradasCampeonato.length > 0
+                  ? (
+                    <div className="matches-grid">
+                      {historico.partidasFiltradasCampeonato.map((partida) => (
                         <MatchCard key={partida.id} partida={partida} teamId={team.id} isChampionship />
-                      ))
-                    : <p className="text-center text-muted">Nenhuma partida encontrada para o campeonato selecionado.</p>
-                  : historico?.todasPartidasCampeonatos && historico.todasPartidasCampeonatos.length > 0
-                  ? historico.todasPartidasCampeonatos.map((partida) => (
-                      <MatchCard key={partida.id} partida={partida} teamId={team.id} isChampionship />
-                    ))
-                  : <p className="text-center text-muted">Nenhuma partida de campeonato disponível.</p>
+                      ))}
+                    </div>
+                    )
+                  : (<div className="empty-state-card">Nenhuma partida encontrada para o campeonato selecionado.</div>)
+                : historico?.todasPartidasCampeonatos && historico.todasPartidasCampeonatos.length > 0
+                  ? (
+                    <div className="matches-grid">
+                      {historico.todasPartidasCampeonatos.map((partida) => (
+                        <MatchCard key={partida.id} partida={partida} teamId={team.id} isChampionship />
+                      ))}
+                    </div>
+                    )
+                  : (<div className="empty-state-card">Nenhuma partida de campeonato disponível.</div>)
                 }
-              </Row>
             </div>
           )}
         </div>

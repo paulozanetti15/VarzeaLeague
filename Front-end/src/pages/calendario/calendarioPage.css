@@ -13,14 +13,83 @@
   font-size: 1rem;            
 }
 
+/* Limitar altura das células do calendário */
+.fc .fc-daygrid-day-frame {
+  min-height: 100px;
+  max-height: 120px;
+  overflow: hidden;
+}
+
+.fc .fc-daygrid-day-events {
+  overflow: hidden;
+  max-height: 70px;
+}
+
 /* Garantir que eventos em dayGrid tenham fundo preenchido e bordas arredondadas */
 .fc .fc-daygrid-event {
   border-radius: 6px;
   padding: 2px 4px;
+  overflow: hidden;
+  max-height: 60px;
 }
 
 /* Ajuste de contraste do texto dentro do evento */
 .fc .fc-daygrid-event .fc-event-title {
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Limitar conteúdo do evento customizado */
+.fc .fc-daygrid-event .fc-event-main {
+  overflow: hidden;
+}
+
+.fc .fc-daygrid-event .d-flex {
+  overflow: hidden;
+}
+
+.fc .fc-daygrid-event .d-flex b,
+.fc .fc-daygrid-event .d-flex div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Layout */
+.calendario-header{
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-top: 12px;
+}
+.cal-controls{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  margin-top:12px;
+}
+.control-select label{ display:block; font-size:0.85rem; color:#374151; margin-bottom:6px }
+.control-select select{ padding:8px 10px; border-radius:8px; border:1px solid rgba(15,23,42,0.06); box-shadow:0 6px 18px rgba(9,30,66,0.03)}
+.control-summary .summary-item{ font-size:0.95rem; color:#111827 }
+
+.calendario-layout{ max-width:1180px; margin:18px auto; display:grid; grid-template-columns: 2fr 1fr; gap:20px; align-items:start}
+.calendar-main{ background: #fff; padding: 12px; border-radius: 12px; box-shadow: 0 10px 30px rgba(9,30,66,0.04); overflow: hidden}
+.calendar-sidebar{ display:flex; flex-direction:column; gap:12px }
+.next-match-card{ background:var(--card-bg, #fff); padding:14px; border-radius:10px; box-shadow:0 8px 24px rgba(9,30,66,0.04); overflow: hidden; word-wrap: break-word}
+.next-match-card h4{ margin:0 0 8px 0 }
+.nm-title{ font-weight:700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.nm-date{ color:#6b7280; font-size:0.95rem; overflow: hidden; text-overflow: ellipsis }
+.nm-empty{ color:#9ca3af }
+.legend-card{ background:var(--card-bg,#fff); padding:12px; border-radius:10px; box-shadow:0 8px 24px rgba(9,30,66,0.04) }
+.legend-item{ display:flex; gap:8px; align-items:center; margin-bottom:8px }
+.legend-dot{ width:12px; height:12px; border-radius:50%; display:inline-block }
+.legend-match{ background:#155724 }
+.legend-champ{ background:#d9480f }
+
+@media(max-width:900px){
+  .calendario-layout{ grid-template-columns: 1fr; }
 }
 
