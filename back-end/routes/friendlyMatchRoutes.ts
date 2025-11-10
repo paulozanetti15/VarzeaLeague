@@ -284,7 +284,7 @@ router.post('/', authenticateToken, createMatch);
  *               message: Não foi possível carregar as partidas. Tente novamente mais tarde.
  */
 router.get('/search', getFilteredMatches);
-router.get('/', authenticateToken, listMatches);
+router.get('/', listMatches);
 
 /**
  * @swagger
@@ -359,7 +359,7 @@ router.get('/organizer', authenticateToken, getMatchesByOrganizer);
  *             example:
  *               message: Não foi possível carregar os detalhes da partida. Tente novamente mais tarde.
  */
-router.get('/:id',authenticateToken, getMatch);
+router.get('/:id', getMatch);
 
 /**
  * @swagger

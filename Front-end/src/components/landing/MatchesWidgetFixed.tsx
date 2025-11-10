@@ -17,6 +17,7 @@ export function MatchesWidgetFixed() {
   const [dragStart, setDragStart] = useState<{ x: number; position: number } | null>(null);
   const [showAllGames, setShowAllGames] = useState(false);
   const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem('token');
 
   const getMatchesForDate = (date: Date) => {
     const normalizedDate = new Date(date);
@@ -198,8 +199,10 @@ export function MatchesWidgetFixed() {
                 {getTodayMatches().map((match: any) => (
                   <div
                     key={match.id}
-                    className="match-card-globo"
-                    onClick={() => navigate(`/jogo/${match.id}`)}
+                    className={`match-card-globo ${!isLoggedIn ? 'disabled' : ''}`}
+                    onClick={isLoggedIn ? () => navigate(`/jogo/${match.id}`) : undefined}
+                    role={isLoggedIn ? 'button' : undefined}
+                    aria-disabled={!isLoggedIn}
                   >
                     {/* Top Bar - Campeonato e Hora */}
                     <div className="match-card-header-globo">
@@ -448,8 +451,10 @@ export function MatchesWidgetFixed() {
                 {(showAllGames ? getMatchesForDate(selectedDate) : getMatchesForDate(selectedDate).slice(0, 3)).map((match: any) => (
                   <div
                     key={match.id}
-                    className="match-list-item"
-                    onClick={() => navigate(`/jogo/${match.id}`)}
+                    className={`match-list-item ${!isLoggedIn ? 'disabled' : ''}`}
+                    onClick={isLoggedIn ? () => navigate(`/jogo/${match.id}`) : undefined}
+                    role={isLoggedIn ? 'button' : undefined}
+                    aria-disabled={!isLoggedIn}
                   >
                     <div className="match-list-content">
                       {/* Teams Section */}

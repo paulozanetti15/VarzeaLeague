@@ -301,6 +301,18 @@
   font-family: 'Inter', system-ui, sans-serif;
 }
 
+/* Disabled state for anonymous users: no clicks on cards */
+.match-card-globo.disabled,
+.match-list-item.disabled {
+  pointer-events: none;
+  opacity: 0.95;
+  cursor: default;
+}
+.match-card-globo.disabled .match-card-header-globo,
+.match-list-item.disabled .match-list-content {
+  filter: none;
+}
+
 .hero-banner {
   background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 50%, #f0f4f8 100%);
   padding: 2rem 1.5rem;
