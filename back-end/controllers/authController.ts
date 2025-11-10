@@ -2,6 +2,7 @@ import { Request, Response, RequestHandler } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import UserModel from '../models/UserModel';
+import sequelize from '../config/database';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'varzealeague_secret';
 
@@ -107,7 +108,12 @@ export const register: RequestHandler = async (req, res) => {
     }
 
     const normalizedName = name.trim().toLowerCase();
-    const nameExists = await UserModel.findOne({ where: { name: normalizedName } });
+    const nameExists = await UserModel.findOne({ 
+      where: sequelize.where(
+        sequelize.fn('LOWER', sequelize.col('name')),
+        normalizedName
+      )
+    });
     if (nameExists) {
       res.status(409).json({ message: 'Este nome de usuário já está em uso. Por favor, escolha outro nome.' });
       return;
@@ -129,7 +135,7 @@ export const register: RequestHandler = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const user = await UserModel.create({
-      name: normalizedName,
+      name: name.trim(),
       cpf,
       phone,
       email,

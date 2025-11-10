@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Register.css';
 import { register, checkCPF } from '../../services/authServices';
+import { USER_TYPE_OPTIONS } from '../../utils/userUtils';
 
 interface RegisterProps {
   onLoginClick: () => void;
@@ -293,8 +294,11 @@ const Register: React.FC<RegisterProps> = () => {
                   disabled={isLoading}
                 >
                   <option value={0}>Selecione</option>
-                  <option value={2}>Organizador de Campeonatos e Partidas</option>
-                  <option value={3}>Técnico/Organizador de Times</option>
+                  {USER_TYPE_OPTIONS.filter(type => type.id !== 4).map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))}
                 </select>
                 {errors.userTypeId && <span className="register-error-message">{errors.userTypeId}</span>}
               </div>
