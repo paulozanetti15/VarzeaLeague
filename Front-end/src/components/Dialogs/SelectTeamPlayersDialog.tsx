@@ -75,7 +75,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
   const fetchMatch = async () => {
     try {
       const data = await fetchMatchById(matchId);
-      const mod = (data?.matchType || data?.modalidade) as string | undefined;
+      const mod = (data?.matchType || (data as any)?.modalidade) as string | undefined;
       setModalidade(mod || null);
     } catch (e) {
       setModalidade(null);
