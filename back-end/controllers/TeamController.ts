@@ -33,11 +33,23 @@ export default class TeamController {
       
       const { name, description, primaryColor, secondaryColor, state, city, CEP } = req.body;
       const userId = req.user?.id;
+      const userTypeId = req.user?.userTypeId;
       
       if (!userId) {
         console.error('Usuário não autenticado');
         res.status(401).json({ error: 'Usuário não autenticado' });
         return;
+      }
+
+      if (userTypeId === 3) {
+        const existingTeamsForUser = await Team.count({
+          where: { captainId: userId, isDeleted: false }
+        });
+
+        if (existingTeamsForUser > 0) {
+          res.status(403).json({ error: 'Gerenciadores de times podem criar apenas um time. Você já possui um time registrado.' });
+          return;
+        }
       }
       
       let jogadores = req.body.jogadores;

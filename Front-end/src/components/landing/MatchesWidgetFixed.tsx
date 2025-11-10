@@ -200,7 +200,7 @@ export function MatchesWidgetFixed() {
                   <div
                     key={match.id}
                     className={`match-card-globo ${!isLoggedIn ? 'disabled' : ''}`}
-                    onClick={isLoggedIn ? () => navigate(`/jogo/${match.id}`) : undefined}
+                    onClick={isLoggedIn ? () => navigate(`/matches/${match.id}`) : undefined}
                     role={isLoggedIn ? 'button' : undefined}
                     aria-disabled={!isLoggedIn}
                   >
@@ -452,7 +452,7 @@ export function MatchesWidgetFixed() {
                   <div
                     key={match.id}
                     className={`match-list-item ${!isLoggedIn ? 'disabled' : ''}`}
-                    onClick={isLoggedIn ? () => navigate(`/jogo/${match.id}`) : undefined}
+                    onClick={isLoggedIn ? () => navigate(`/matches/${match.id}`) : undefined}
                     role={isLoggedIn ? 'button' : undefined}
                     aria-disabled={!isLoggedIn}
                   >
