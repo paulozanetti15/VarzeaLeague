@@ -27,10 +27,8 @@ const RoleMenu: React.FC = () => {
     switch (user.userTypeId) {
       case 1:
         return [
-          { name: 'Times', path: '/teams', icon: <People /> },
+          { name: 'Gerenciar Times', path: '/admin/manage-teams', icon: <People /> },
           { name: 'Usuários', path: '/admin/users', icon: <People /> },
-          { name: 'Partidas', path: '/matches', icon: <SportsSoccer /> },
-          { name: 'Campeonatos', path: '/championships', icon: <EmojiEvents /> },
           { name: 'Dashboard', path: '/dashboard', icon: <Dashboard /> },
         ];
       case 2:

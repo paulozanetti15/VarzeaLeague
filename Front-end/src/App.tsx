@@ -28,6 +28,7 @@ import ChampionshipDetail from './pages/championships/ChampionsShipDetail/Champi
 import ChampionshipEditForm from './pages/championships/ChampionshipEditForm'
 import ScheduleMatchPage from './pages/championships/ScheduleMatchPage'
 import UserManagement from './pages/UserManagement'
+import ManageTeams from './pages/admin/ManageTeams'
 import Navbar from './components/Navbar'
 import TeamRequiredRoute from './components/TeamRequiredRoute'
 import EditMatch from './pages/matches/EditMatch'
@@ -435,6 +436,21 @@ import ChampionshipClassification from './pages/championships/ChampionshipClassi
               >
                 <PageTransition>
                   <UserManagement />
+                </PageTransition>
+              </RoleBasedRoute>
+            </PrivateRoute>
+          } />
+
+          {/* Rota para Gerenciamento de Times (Apenas Admin do Sistema) */}
+          <Route path="/admin/manage-teams" element={
+            <PrivateRoute isLoggedIn={isLoggedIn}>
+              <RoleBasedRoute 
+                isLoggedIn={isLoggedIn} 
+                userRole={user?.userTypeId} 
+                allowedRoles={[USER_ROLES.ADMIN_SISTEMA]}
+              >
+                <PageTransition>
+                  <ManageTeams />
                 </PageTransition>
               </RoleBasedRoute>
             </PrivateRoute>

@@ -1,0 +1,375 @@
+.admin-manage-teams-container {
+  max-width: 90%;
+  margin: 0 auto;
+  padding: 120px 24px 40px;
+  min-height: 100vh;
+  width: 90%;
+  align-self: center;
+}
+
+.admin-manage-teams-header {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.admin-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.admin-header-icon {
+  font-size: 48px !important;
+  color: #667eea;
+}
+
+.admin-manage-teams-header h1 {
+  margin: 0;
+  font-size: 32px;
+  color: #2d3748;
+  font-weight: 700;
+  text-align: center;
+}
+
+.admin-manage-teams-header p {
+  margin: 8px 0 0;
+  color: #718096;
+  font-size: 16px;
+  text-align: center;
+}
+
+.admin-teams-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.admin-stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-stat-number {
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.admin-stat-label {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.admin-search-section {
+  margin-bottom: 32px;
+}
+
+.admin-search-box {
+  background: white;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-search-icon {
+  color: #718096;
+  font-size: 24px !important;
+}
+
+.admin-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  color: #2d3748;
+}
+
+.admin-search-input::placeholder {
+  color: #a0aec0;
+}
+
+.admin-teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
+.admin-team-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.admin-team-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.admin-team-card-header {
+  height: 160px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.admin-team-banner {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-team-banner-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: white;
+}
+
+.admin-team-banner-placeholder svg {
+  font-size: 80px !important;
+}
+
+.admin-team-card-body {
+  padding: 24px;
+}
+
+.admin-team-name {
+  margin: 0 0 12px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.admin-team-description {
+  margin: 0 0 16px;
+  color: #718096;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.admin-team-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.admin-info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.admin-info-label {
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.admin-info-value {
+  color: #718096;
+}
+
+.admin-team-colors {
+  display: flex;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.admin-color-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #718096;
+}
+
+.admin-color-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #e2e8f0;
+}
+
+.admin-team-card-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e2e8f0;
+  background: #f7fafc;
+}
+
+.admin-delete-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: #f56565;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.3s ease;
+}
+
+.admin-delete-btn:hover {
+  background: #e53e3e;
+}
+
+.admin-delete-btn svg {
+  font-size: 20px !important;
+}
+
+.admin-no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 16px;
+  color: #718096;
+  font-size: 18px;
+}
+
+.admin-loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #4a5568;
+}
+
+.admin-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(102, 126, 234, 0.3);
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.admin-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.admin-modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.admin-modal-content h2 {
+  margin: 0 0 16px;
+  font-size: 24px;
+  color: #2d3748;
+}
+
+.admin-modal-content p {
+  margin: 0 0 12px;
+  color: #4a5568;
+  line-height: 1.6;
+}
+
+.admin-warning-text {
+  background: #fef5e7;
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 4px solid #f59e0b;
+  color: #92400e !important;
+  font-size: 14px;
+}
+
+.admin-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.admin-btn-cancel,
+.admin-btn-confirm {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.admin-btn-cancel {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.admin-btn-cancel:hover {
+  background: #cbd5e0;
+}
+
+.admin-btn-confirm {
+  background: #f56565;
+  color: white;
+}
+
+.admin-btn-confirm:hover {
+  background: #e53e3e;
+}
+
+@media (max-width: 768px) {
+  .admin-manage-teams-container {
+    padding: 80px 16px 24px;
+  }
+
+  .admin-teams-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-manage-teams-header h1 {
+    font-size: 24px;
+  }
+
+  .admin-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

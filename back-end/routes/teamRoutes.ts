@@ -112,6 +112,56 @@ router.get('/', authenticateToken, TeamController.listTeams);
 
 /**
  * @swagger
+ * /api/teams/all:
+ *   get:
+ *     summary: Listar todos os times do sistema (apenas admin)
+ *     description: |
+ *       Retorna todos os times cadastrados no sistema. Acesso restrito a administradores (userTypeId = 1).
+ *       
+ *       **Inclui:** captain (id/name/email), players (isDeleted=false), contador de jogadores
+ *       
+ *       **Ordenação:** Criação mais recente primeiro
+ *     tags: [Times]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista completa de times do sistema
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 allOf:
+ *                   - $ref: '#/components/schemas/Team'
+ *                   - type: object
+ *                     properties:
+ *                       captain:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           name:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                       _count:
+ *                         type: object
+ *                         properties:
+ *                           players:
+ *                             type: integer
+ *                             description: Número de jogadores no time
+ *       401:
+ *         description: Não autenticado
+ *       403:
+ *         description: Acesso negado - Apenas administradores
+ *       500:
+ *         description: Erro ao buscar times
+ */
+router.get('/all', authenticateToken, TeamController.getAllTeamsAdmin);
+
+/**
+ * @swagger
  * /api/teams/{teamId}:
  *   get:
  *     summary: Buscar detalhes de um time

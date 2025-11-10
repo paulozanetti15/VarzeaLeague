@@ -261,6 +261,56 @@ export default class TeamController {
     }
   }
 
+  static async getAllTeamsAdmin(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        res.status(401).json({ message: 'Usuário não autenticado' });
+        return;
+      }
+
+      const user = await User.findByPk(userId);
+      if (!user || (user as any).userTypeId !== 1) {
+        res.status(403).json({ message: 'Acesso negado. Apenas administradores podem acessar.' });
+        return;
+      }
+
+      const teams = await Team.findAll({
+        where: { isDeleted: false },
+        include: [
+          {
+            model: User,
+            as: 'captain',
+            attributes: ['id', 'name', 'email']
+          },
+          {
+            model: Player,
+            as: 'players',
+            through: { attributes: [] },
+            where: { isDeleted: false },
+            required: false
+          }
+        ],
+        order: [[col('Team.created_at'), 'DESC']]
+      });
+
+      const teamsWithCount = teams.map(team => ({
+        ...team.get({ plain: true }),
+        _count: {
+          players: (team as any).players?.length || 0
+        }
+      }));
+
+      res.status(200).json(teamsWithCount);
+    } catch (error: any) {
+      console.error('Erro ao buscar todos os times:', error);
+      res.status(500).json({ 
+        message: 'Erro ao buscar times',
+        error: error?.message 
+      });
+    }
+  }
+
   static async listTeams(req: AuthRequest, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
