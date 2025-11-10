@@ -1,6 +1,8 @@
 import React from 'react';
 import { Button } from 'react-bootstrap';
 import TeamCard from './TeamCard';
+import LeaveMatchConfirmDialog from '../../../components/Dialogs/LeaveMatchConfirmDialog';
+import { useState } from 'react';
 
 interface TeamsListProps {
   teams: any[];
@@ -22,13 +24,14 @@ const TeamsList: React.FC<TeamsListProps> = ({
   userId,
   userTypeId,
   isOrganizer,
-  isAdmin,
   isCompleted,
   matchId,
   effectiveMaxTeams,
   onLeaveMatch,
   onOpenSelectTeamPlayers
 }) => {
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [selectedLeaveTeam, setSelectedLeaveTeam] = useState<{ id: number; name: string } | null>(null);
   const currentTeamsCount = teams.length;
   
   const userHasTeamInMatch = teams.some(team => team.captainId === userId);
@@ -111,10 +114,14 @@ const TeamsList: React.FC<TeamsListProps> = ({
                 team={team}
                 userId={userId}
                 isOrganizer={isOrganizer}
-                isAdmin={isAdmin}
+                userTypeId={userTypeId}
                 matchId={matchId}
-                canLeaveMatch={canLeaveMatch}
+                canLeaveMatch={canLeaveMatch  }
                 onLeaveMatch={onLeaveMatch}
+                onRequestLeave={(teamId: number, teamName: string) => {
+                  setSelectedLeaveTeam({ id: teamId, name: teamName });
+                  setShowLeaveConfirm(true);
+                }}
               />
             ))}
             {teams.length === 1 && <div className="versus-text">X</div>}
@@ -151,6 +158,20 @@ const TeamsList: React.FC<TeamsListProps> = ({
           </div>
         )}
       </div>
+      <LeaveMatchConfirmDialog
+        show={showLeaveConfirm}
+        onClose={() => {
+          setShowLeaveConfirm(false);
+          setSelectedLeaveTeam(null);
+        }}
+        teamName={selectedLeaveTeam?.name}
+        onConfirm={async () => {
+          if (!selectedLeaveTeam) return;
+          await onLeaveMatch(matchId, selectedLeaveTeam.id, selectedLeaveTeam.name);
+          setShowLeaveConfirm(false);
+          setSelectedLeaveTeam(null);
+        }}
+      />
     </div>
   );
 };

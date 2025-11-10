@@ -73,7 +73,7 @@ export const MatchActions: React.FC<MatchActionsProps> = ({
     <div className="match-actions d-flex flex-wrap justify-content-center gap-2 my-3">
       {(canDelete || canEdit) && (
         <div className="action-group d-flex flex-wrap gap-2">
-          {canDelete && (
+          {(canEdit && canEditMatchAndRules) && (
             <Button className="btn-delete" onClick={onDelete}>
               <DeleteIcon /> Excluir Partida
             </Button>

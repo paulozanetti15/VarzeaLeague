@@ -7,20 +7,22 @@ interface TeamCardProps {
   team: any;
   userId?: number;
   isOrganizer: boolean;
-  isAdmin: boolean;
+  userTypeId?: number | string | undefined;
   matchId: string | undefined;
   canLeaveMatch: boolean;
   onLeaveMatch: (matchId: string | undefined, teamId: number, teamName: string) => void;
+  onRequestLeave?: (teamId: number, teamName: string) => void;
 }
 
 const TeamCard: React.FC<TeamCardProps> = ({
   team,
   userId,
   isOrganizer,
-  isAdmin,
+  userTypeId,
   matchId,
   canLeaveMatch,
   onLeaveMatch
+  , onRequestLeave
 }) => {
   const isUserCaptain = team.captainId === userId;
 
@@ -45,13 +47,12 @@ const TeamCard: React.FC<TeamCardProps> = ({
 
         <div className="mt-3 action-buttons">
           {(team.captainId === userId && canLeaveMatch) && (
-            <Button size="sm" variant="danger" onClick={() => onLeaveMatch(matchId, team.id, team.name)}>
+            <Button size="sm" variant="danger" onClick={() => onRequestLeave ? onRequestLeave(team.id, team.name) : onLeaveMatch(matchId, team.id, team.name)}>
               Sair da partida
             </Button>
           )}
-
-          {((isOrganizer || isAdmin) && team.captainId !== userId && canLeaveMatch) && (
-            <Button size="sm" variant="outline-danger" onClick={() => onLeaveMatch(matchId, team.id, team.name)} className="ms-2">
+          {( (isOrganizer || Number(userTypeId) === 1 || Number(userTypeId) === 2) && team.captainId !== userId && canLeaveMatch) && (
+            <Button size="sm" variant="outline-danger" onClick={() => onRequestLeave ? onRequestLeave(team.id, team.name) : onLeaveMatch(matchId, team.id, team.name)} className="ms-2">
               Remover time
             </Button>
           )}

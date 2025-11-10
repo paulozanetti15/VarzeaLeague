@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { fetchMatchById, getJoinedTeams, getAvailableForMatch, joinTeam } from '../../services/matchesFriendlyServices';
-import { Button, Spinner } from 'react-bootstrap';
+import { Modal, Button, Spinner } from 'react-bootstrap';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { API_BASE_URL } from '../../config/api';
@@ -49,7 +49,6 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
   const [error, setError] = useState<string>('');
   const [modalidade, setModalidade] = useState<string | null>(null);
 
-  const dialogRef = useRef<HTMLDialogElement | null>(null);
   const token = useMemo(() => localStorage.getItem('token'), []);
 
   const fetchRules = async () => {
@@ -150,34 +149,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
     }
   }, [show, user]);
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (show) {
-      // showModal centers automatically in browsers that support it; CSS fallback provided
-      try { dialog.showModal(); } catch { /* ignore if already open or not supported */ }
-    } else {
-      try { dialog.close(); } catch { /* ignore */ }
-    }
-  }, [show]);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    const handleCancel = (e: Event) => {
-      // prevent closing via ESC or backdrop when loading
-      if (loading) e.preventDefault();
-    };
-    const handleClose = () => {
-      if (!loading) onHide();
-    };
-    dialog.addEventListener('cancel', handleCancel as EventListener);
-    dialog.addEventListener('close', handleClose as EventListener);
-    return () => {
-      dialog.removeEventListener('cancel', handleCancel as EventListener);
-      dialog.removeEventListener('close', handleClose as EventListener);
-    };
-  }, [loading, onHide]);
+  // Modal is controlled by parent via `show` prop; react-bootstrap Modal will handle focus/backdrop
 
   const playerMatchesRules = (player: Player): boolean => {
     if (!rules) return true;
@@ -194,8 +166,11 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
       console.log(`❌ ${player.nome} INAPTO - Idade ${age} fora da faixa ${rules.minimumAge}-${rules.maximumAge}`);
       return false;
     }
-    
-    if (rules.gender !== 'Ambos') {
+      const normalizeText = (s?: string) => (s || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+    const ruleGenderNorm = normalizeText(rules.gender);
+    const mixedVariants = ['ambos', 'sexo misto', 'misto', 'mixed'];
+    if (!mixedVariants.includes(ruleGenderNorm)) {
       const normalizeGender = (gender: string | undefined): string => {
         if (!gender) return '';
         const g = gender.toUpperCase();
@@ -203,7 +178,7 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
         if (g === 'F' || g === 'FEMININO') return 'Feminino';
         return gender;
       };
-      
+
       const playerGender = normalizeGender(player.gender);
       if (!playerGender || playerGender !== rules.gender) {
         console.log(`❌ ${player.nome} INAPTO - Gênero ${playerGender} não corresponde a ${rules.gender}`);
@@ -270,11 +245,10 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
     try {
       setLoading(true);
       setError('');
-      
+
       const resp = await joinTeam(matchId, { teamId: selectedTeamId, matchId });
       if (resp.status === 201 || resp.status === 200) {
         toast.success('Time vinculado à partida!');
-        dialogRef.current?.close();
         onHide();
         onSuccess && onSuccess();
       }
@@ -304,13 +278,33 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
   const selectedTeam = teams.find(t => t.id === selectedTeamId);
 
   return (
-    <dialog ref={dialogRef} className="select-team-players-modal dialog-centered">
-      <div className="modal-header">
-        <h5 className="modal-title">Vincular meu time à partida</h5>
-        {!loading && <button type="button" className="btn-close" aria-label="Fechar" onClick={() => dialogRef.current?.close()} />}
-      </div>
-
-      <div className="modal-body">
+    <Modal
+      show={show}
+      onHide={() => !loading && onHide()}
+      centered
+      backdrop="static"
+      keyboard={!loading}
+      className="select-team-players-modal"
+      size="xl"
+    >
+      <Modal.Header closeButton={!loading}>
+        <Modal.Title>Vincular meu time à partida</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {error && (
+          <div className="stm-alert-error" style={{
+            background: 'linear-gradient(135deg, #fee 0%, #fdd 100%)',
+            border: '1px solid #fcc',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            color: '#c00',
+            fontSize: '14px',
+            lineHeight: '1.5'
+          }}>
+            <strong>⚠️ Atenção:</strong> {error}
+          </div>
+        )}
         {error && (
           <div className="stm-alert-error" style={{
             background: 'linear-gradient(135deg, #fee 0%, #fdd 100%)',
@@ -423,27 +417,26 @@ const SelectTeamPlayersModal: React.FC<SelectTeamPlayersModalProps> = ({ show, o
           )}
           {!selectedTeam && <div className="stm-hint">Selecione um time para listar jogadores.</div>}
         </div>
-      </div>
-
-      <div className="modal-footer">
-        <Button 
-          variant="secondary" 
-          className='btn-cancelar' 
-          onClick={() => dialogRef.current?.close()} 
+      </Modal.Body>
+      <Modal.Footer>
+        <Button
+          variant="secondary"
+          className="btn-cancelar"
+          onClick={() => !loading && onHide()}
           disabled={loading}
         >
           Cancelar
         </Button>
         <Button
           variant="primary"
-          className='btn-vincular'
+          className="btn-vincular"
           onClick={handleConfirm}
           disabled={loading || !selectedTeamId || selectedPlayers.length === 0 || !compositionMet}
         >
           {loading ? 'Vinculando...' : 'Vincular Time'}
         </Button>
-      </div>
-    </dialog>
+      </Modal.Footer>
+    </Modal>
   );
 };
 
