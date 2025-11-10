@@ -7,6 +7,7 @@ import trophy from '../../../assets/championship-trophy.svg';
 import './ChampionshipDetail.css';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
@@ -272,15 +273,15 @@ const ChampionshipDetail: React.FC = () => {
   return (
     <div className="championship-detail-bg">
       <div className="championship-detail-container">
-        {/* Hero Section com Logo */}
-        {championship.logo && getChampionshipLogoUrl(championship.logo) && (
-          <motion.div
-            className="championship-hero-banner"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="championship-hero-overlay"></div>
+        {/* Hero Section com Logo - Sempre exibir */}
+        <motion.div
+          className="championship-hero-banner"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="championship-hero-overlay"></div>
+          {championship.logo && getChampionshipLogoUrl(championship.logo) ? (
             <img 
               src={getChampionshipLogoUrl(championship.logo)!} 
               alt={championship.name}
@@ -288,27 +289,19 @@ const ChampionshipDetail: React.FC = () => {
               onError={(e) => {
                 console.error('Erro ao carregar logo:', e);
                 e.currentTarget.style.display = 'none';
+                const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
+                if (placeholder) placeholder.style.display = 'flex';
               }}
             />
-            <div className="championship-hero-content-overlay">
-              <h1 className="championship-hero-title">{championship.name}</h1>
+          ) : (
+            <div className="championship-hero-logo-placeholder-large">
+              <EmojiEventsIcon style={{ fontSize: '120px', color: '#ffffff' }} />
             </div>
-          </motion.div>
-        )}
-        
-        <motion.div
-          className="championship-detail-header"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {!championship.logo && (
-            <>
-              <img src={trophy} alt="Troféu" className="championship-detail-trophy" />
-              <h1 className="championship-detail-title">{championship.name}</h1>
-              <p className="championship-detail-subtitle">Detalhes do campeonato</p>
-            </>
           )}
+          <div className="championship-hero-content-overlay">
+            <h1 className="championship-hero-title">{championship.name}</h1>
+            <p className="championship-hero-subtitle">Detalhes do campeonato</p>
+          </div>
         </motion.div>
 
         <motion.div

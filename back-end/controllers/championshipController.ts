@@ -1156,7 +1156,8 @@ export const createChampionshipMatch = async (req: Request, res: Response): Prom
       championship_id: championshipId,
       date: matchDateTime,
       location: locationTrimmed,
-      nomequadra: nomeQuadra,
+      quadra: nomeQuadra, // Campo obrigatório no modelo
+      nomequadra: nomeQuadra, // Campo adicional
       Rodada: rodada
     });
     console.log('MatchChampionship criado com sucesso. ID:', matchChampionship.id);
@@ -1296,32 +1297,50 @@ export const createChampionshipMatch = async (req: Request, res: Response): Prom
 };
 
 export const getChampionshipMatches = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
-  
-  const championship = await Championship.findByPk(id);
-  if (!championship) {
-    res.status(404).json({ message: 'Campeonato não encontrado' });
-    return;
+  try {
+    const { id } = req.params;
+    
+    if (!id || isNaN(Number(id))) {
+      res.status(400).json({ message: 'ID do campeonato inválido' });
+      return;
+    }
+    
+    const championship = await Championship.findByPk(id);
+    if (!championship) {
+      res.status(404).json({ message: 'Campeonato não encontrado' });
+      return;
+    }
+
+    const matches = await MatchChampionship.findAll({
+      where: { championship_id: Number(id) },
+      attributes: ['id', 'championship_id', 'Rodada', 'date', 'location', 'quadra', 'nomequadra'],
+      include: [
+        {
+          model: Championship,
+          as: 'championship',
+          required: false,
+          attributes: ['id', 'name', 'modalidade', 'logo', 'tipo']
+        },
+        {
+          model: MatchChampionshpReport,
+          as: 'report',
+          required: false,
+          attributes: ['id', 'teamHome_score', 'teamAway_score', 'team_home', 'team_away', 'is_penalty']
+        }
+      ],
+      order: [['date', 'ASC']]
+    }).catch((err) => {
+      console.error('Erro ao buscar matches:', err);
+      // Retornar array vazio se houver erro na query
+      return [];
+    });
+
+    res.json(matches);
+  } catch (error: any) {
+    console.error('Erro ao buscar partidas do campeonato:', error);
+    res.status(500).json({ 
+      message: 'Erro ao buscar partidas do campeonato',
+      error: error?.message || 'Erro desconhecido'
+    });
   }
-
-  const matches = await MatchChampionship.findAll({
-    where: { championship_id: id },
-    attributes: ['id', 'championship_id', 'Rodada', 'date', 'location', 'quadra'],
-    include: [
-      {
-        model: Championship,
-        as: 'matchChampionship',
-        attributes: ['id', 'name', 'modalidade', 'logo', 'tipo']
-      },
-      {
-        model: MatchChampionshpReport,
-        as: 'report',
-        required: false,
-        attributes: ['id', 'teamHome_score', 'teamAway_score', 'team_home', 'team_away', 'is_penalty']
-      }
-    ],
-    order: [['date', 'ASC']]
-  });
-
-  res.json(matches);
 };
