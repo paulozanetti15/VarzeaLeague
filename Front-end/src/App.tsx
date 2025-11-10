@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from
 import { Toaster } from 'react-hot-toast'
 // import { AnimatePresence } from 'framer-motion'
 import './App.css'
+import './styles/theme.css'
 import { Login } from './pages/login/Login'
 import Register from './pages/register/Register'
 import { ForgotPassword } from './pages/forgot-password/ForgotPassword'
@@ -34,6 +35,7 @@ import SystemOverview from './components/dashboard/SystemOverview'
 import CalendarioPage from './pages/calendario/calendárioPage'
 import HistoricoPage from './pages/Historico/HistoricoPage'
 import { HistoricoProvider } from './Context/HistoricoContext';
+import { ThemeProvider } from './Context/ThemeContext';
 import RankingPlayers from './pages/ranking/RankingPlayers'
 import RankingTeams from './pages/ranking/RankingTeams'
 
@@ -457,12 +459,13 @@ import RankingTeams from './pages/ranking/RankingTeams'
 
 function App() {
   return (
-    <BrowserRouter>
-     <HistoricoProvider>
-      <AppContent />
-     </HistoricoProvider>
-      
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <HistoricoProvider>
+          <AppContent />
+        </HistoricoProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { AppBar, IconButton, Avatar, Tooltip, Badge } from '@mui/material';
-import { Menu as MenuIcon, Notifications, ArrowBack, Search } from '@mui/icons-material';
+import { Menu as MenuIcon, Notifications, ArrowBack, Search, Brightness4, Brightness7 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../Context/ThemeContext';
 import NavbarBrand from './Navbar/NavbarBrand';
 import RoleMenu from './Navbar/RoleMenu';
 import UserDrawer from './Navbar/UserDrawer';
@@ -15,6 +16,7 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const showBackButton = location.pathname !== '/' && location.pathname !== '/dashboard';
 
@@ -60,6 +62,11 @@ const Navbar: React.FC = () => {
 
         {user ? (
           <div className="navbar-user-actions">
+            <Tooltip title={theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}>
+              <IconButton onClick={toggleTheme} className="navbar-theme-button">
+                {theme === 'dark' ? <Brightness7 /> : <Brightness4 />}
+              </IconButton>
+            </Tooltip>
             <Tooltip title="Notificações">
               <IconButton className="navbar-notification-button">
                 <Badge badgeContent={3} color="error">
@@ -82,6 +89,11 @@ const Navbar: React.FC = () => {
           </div>
         ) : (
           <div className="navbar-auth-buttons">
+            <Tooltip title={theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}>
+              <IconButton onClick={toggleTheme} className="navbar-theme-button">
+                {theme === 'dark' ? <Brightness7 /> : <Brightness4 />}
+              </IconButton>
+            </Tooltip>
             <button
               className="navbar-login-button"
               onClick={() => navigate('/login')}

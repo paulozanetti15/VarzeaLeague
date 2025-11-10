@@ -17,7 +17,8 @@ interface SumulaViewProps {
   show: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
-  onSumulaDeleted?: () => void; // Callback para quando súmula for deletada
+  onSumulaDeleted?: () => void;
+  showDeleteConfirm?: () => void;
 }
 
 export const SumulaView: React.FC<SumulaViewProps> = ({ 

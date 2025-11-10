@@ -31,6 +31,7 @@ interface MatchActionsProps {
   onViewComments: () => void;
   onViewEvents?: () => void;
   onCreateSumula?: () => void;
+  onFinalize?: () => Promise<void>;
 }
 
 export const MatchActions: React.FC<MatchActionsProps> = ({
