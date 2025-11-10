@@ -288,6 +288,36 @@ router.post('/login', authController.login);
 
 /**
  * @swagger
+ * /api/auth/check-cpf/{cpf}:
+ *   get:
+ *     summary: Verificar se um CPF já está cadastrado
+ *     tags: [Autenticação]
+ *     parameters:
+ *       - in: path
+ *         name: cpf
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: CPF (com ou sem formatação)
+ *     responses:
+ *       200:
+ *         description: Retorna objeto com campo exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 exists:
+ *                   type: boolean
+ *       400:
+ *         description: CPF inválido ou não fornecido
+ *       500:
+ *         description: Erro ao verificar CPF
+ */
+router.get('/check-cpf/:cpf', authController.checkCpf);
+
+/**
+ * @swagger
  * /api/auth/verify:
  *   get:
  *     summary: Verificar token de autenticação

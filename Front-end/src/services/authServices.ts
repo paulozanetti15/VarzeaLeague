@@ -15,10 +15,8 @@ export async function register(userData: any) {
 
     return response.data;
   } catch (error: any) {
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
-    }
-    throw new Error('Erro ao registrar usuário');
+    // Preserve axios error so caller can inspect status and response body
+    throw error;
   }
 }
 

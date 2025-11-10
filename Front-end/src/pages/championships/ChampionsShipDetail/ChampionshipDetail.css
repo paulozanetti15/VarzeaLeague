@@ -394,6 +394,24 @@ body {
   box-shadow: 0 8px 20px rgba(56, 161, 105, 0.4);
 }
 
+/* Botão para remover múltiplos times (Excluir Times) */
+.delete-multiple-btn {
+  background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.28);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.delete-multiple-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 26px rgba(183, 28, 28, 0.36);
+}
+
+
 .out-btn {
   display: inline-flex;
   align-items: center;

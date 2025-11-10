@@ -265,4 +265,24 @@ export const verify: RequestHandler = async (req, res) => {
   }
 };
 
+export const checkCpf: RequestHandler = async (req, res) => {
+  try {
+    const cpfParam = req.params.cpf as string;
+    if (!cpfParam) {
+      res.status(400).json({ message: 'CPF não fornecido' });
+      return;
+    }
+    const cpfDigits = cpfParam.replace(/\D/g, '');
+    if (cpfDigits.length !== 11) {
+      res.status(400).json({ message: 'CPF inválido' });
+      return;
+    }
+    const user = await UserModel.findOne({ where: { cpf: cpfDigits } });
+    res.status(200).json({ exists: !!user });
+  } catch (error) {
+    console.error('Erro ao verificar CPF:', error);
+    res.status(500).json({ message: 'Erro ao verificar CPF' });
+  }
+};
+
 export default { register, login, verify }; 
