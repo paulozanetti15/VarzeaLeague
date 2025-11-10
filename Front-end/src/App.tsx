@@ -34,6 +34,7 @@ import SystemOverview from './components/dashboard/SystemOverview'
 import CalendarioPage from './pages/calendario/calendárioPage'
 import HistoricoPage from './pages/Historico/HistoricoPage'
 import { HistoricoProvider } from './Context/HistoricoContext';
+import { ThemeProvider } from './Context/ThemeContext';
 import RankingPlayers from './pages/ranking/RankingPlayers'
 import RankingTeams from './pages/ranking/RankingTeams'
 
@@ -457,12 +458,13 @@ import RankingTeams from './pages/ranking/RankingTeams'
 
 function App() {
   return (
-    <BrowserRouter>
-     <HistoricoProvider>
-      <AppContent />
-     </HistoricoProvider>
-      
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <HistoricoProvider>
+          <AppContent />
+        </HistoricoProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

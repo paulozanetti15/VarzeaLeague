@@ -11,6 +11,7 @@ interface PunicaoViewModalProps {
   onHide: () => void;
   onClose: () => void;
   idMatch: number;
+  team?: { id: number };
 }
 
 interface TeamInfo {

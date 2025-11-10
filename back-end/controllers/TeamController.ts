@@ -55,7 +55,7 @@ export default class TeamController {
           updatedAt: agora,
           state: state,
           city: city,
-          CEP: CEP,
+          cep: CEP,
           primaryColor,
           secondaryColor,
           banner: bannerFilename
@@ -95,7 +95,7 @@ export default class TeamController {
         banner: bannerFilename,
         state,
         city,
-        CEP
+        cep: CEP
       });
       
       await team.addUser(userId);
