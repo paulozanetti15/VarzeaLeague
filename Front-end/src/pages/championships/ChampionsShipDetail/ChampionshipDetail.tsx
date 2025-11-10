@@ -445,7 +445,7 @@ const ChampionshipDetail: React.FC = () => {
                     </div>
                   )}
 
-                  {isLogged && availableUserTeams.length > 0 && (
+                  {(isLogged && availableUserTeams.length > 0) && Number(currentUser?.userTypeId) === 3 && (
                     <button
                       className="action-btn join-btn"
                       onClick={handleJoinChampionship}
