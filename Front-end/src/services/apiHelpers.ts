@@ -7,39 +7,6 @@ export const matchErrors: Record<number, { count: number; lastError: string; tim
 
 const INVALID_ENDPOINT_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
-export const markEndpointAsInvalid = (endpoint: string): void => {
-  invalidEndpoints.add(endpoint);
-  setTimeout(() => {
-    invalidEndpoints.delete(endpoint);
-  }, INVALID_ENDPOINT_TIMEOUT);
-};
-
-export const clearMatchErrors = (matchId: number): void => {
-  if (matchErrors[matchId]) delete matchErrors[matchId];
-};
-
-export const addTimestamp = (url: string): string => {
-  const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}_t=${Date.now()}`;
-};
-
-export default {
-  invalidEndpoints,
-  markEndpointAsInvalid,
-  clearMatchErrors,
-  addTimestamp
-};
-// apiHelpers.ts - Funções auxiliares para gerenciamento de API
-
-// Registro de endpoints que retornaram 404 para evitar tentativas repetidas
-export const invalidEndpoints: Set<string> = new Set();
-
-// Registro de erros por partida para análise
-export const matchErrors: Record<number, {count: number, lastError: string, timestamp: number}> = {};
-
-// Tempo em milissegundos para manter um endpoint na lista de inválidos (30 minutos)
-const INVALID_ENDPOINT_TIMEOUT = 30 * 60 * 1000;
-
 /**
  * Marca um endpoint como inválido para evitar chamadas repetidas
  * @param endpoint URL do endpoint que retornou erro
@@ -131,4 +98,14 @@ export const clearMatchErrors = (matchId: number): void => {
 export const addTimestamp = (url: string): string => {
   const separator = url.includes('?') ? '&' : '?';
   return `${url}${separator}_t=${Date.now()}`;
+};
+
+export default {
+  invalidEndpoints,
+  markEndpointAsInvalid,
+  clearMatchErrors,
+  addTimestamp,
+  isEndpointInvalid,
+  registerMatchError,
+  getMatchErrorStatus
 }; 
