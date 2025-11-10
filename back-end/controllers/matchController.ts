@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
-import MatchModel from '../models/MatchModel';
+import MatchModel from '../models/FriendlyMatchesModel';
 import User from '../models/UserModel';
 import jwt from 'jsonwebtoken';
-import MatchTeamsModel from '../models/MatchTeamsModel';
+import MatchTeamsModel from '../models/FriendlyMatchTeamsModel';
 import TeamModel from "../models/TeamModel"
-import Rules from '../models/RulesModel';
+import Rules from '../models/FriendlyMatchesRulesModel';
 import MatchChampionship from '../models/MatchChampionshipModel';
 import Championship from '../models/ChampionshipModel';
 import { Op } from 'sequelize';

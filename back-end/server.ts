@@ -179,20 +179,20 @@ const startServer = async () => {
     await ChampionshipModel.sync();
     console.log('Modelo Championship sincronizado.');
     
-  const { default: MatchReportModel } = await import('./models/MatchReportModel');
-    await MatchReportModel.sync();
+  const { default: FriendlyMatchReportModel } = await import('./models/FriendlyMatchReportModel');
+    await FriendlyMatchReportModel.sync();
     console.log('Modelo MatchReport sincronizado.');
     
-  const { default: MatchGoalModel } = await import('./models/MatchGoalModel');
-  await MatchGoalModel.sync({ alter: true }); // garantir colunas novas (player_id)
+  const { default: FriendlyMatchGoalModel } = await import('./models/FriendlyMatchGoalModel');
+  await FriendlyMatchGoalModel.sync({ alter: true }); // garantir colunas novas (player_id)
     console.log('Modelo MatchGoal sincronizado.');
     
-  const { default: MatchCardModel } = await import('./models/MatchCardModel');
-  await MatchCardModel.sync({ alter: true }); // garantir colunas novas (player_id)
+  const { default: FriendlyMatchCardModel } = await import('./models/FriendlyMatchCardModel');
+  await FriendlyMatchCardModel.sync({ alter: true }); // garantir colunas novas (player_id)
     console.log('Modelo MatchCard sincronizado.');
     
-  const { default: MatchEvaluationModel } = await import('./models/MatchEvaluationModel');
-    await MatchEvaluationModel.sync();
+  const { default: FriendlyMatchEvaluationModel } = await import('./models/FriendlyMatchEvaluationModel');
+    await FriendlyMatchEvaluationModel.sync();
     console.log('Modelo MatchEvaluation sincronizado.');
     await MatchChampionship.sync();
     console.log('Modelo MatchChampionship sincronizado.');

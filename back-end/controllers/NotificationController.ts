@@ -3,7 +3,7 @@ import { AuthRequest } from '../middleware/auth';
 import Notification from '../models/NotificationModel';
 import User from '../models/UserModel';
 import Team from '../models/TeamModel';
-import Match from '../models/MatchModel';
+import Match from '../models/FriendlyMatchesModel';
 
 // Buscar notificações do usuário
 export const getUserNotifications = async (req: AuthRequest, res: Response): Promise<void> => {
