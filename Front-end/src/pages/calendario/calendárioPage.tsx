@@ -55,30 +55,49 @@ function CalendarioPage() {
     
   },[])
   useEffect(()=>{
+    if (!team.id) return;
+
     const fetchJogos = async()=>{
-      let token = localStorage.getItem('token')
-      const responseGetJogos=await axios.get(`${API_BASE_URL}/friendly-matches/teams/${team.id}`,{ 
-        headers:{ 
-          Authorization : `Bearer ${token}`
-        }
-      }) 
-      const rows = Array.isArray(responseGetJogos.data) ? responseGetJogos.data : [];
-      const novosJogos:Partida[] = rows.map((dados:any)=>{
-        const match = dados.match || {};
-        const d = match.date ? new Date(match.date) : null;
-        return {
-          id: match.id,
-          title: match.title,
-          date: d ? d.toISOString().split('T')[0] : '',
-          local: match.location || '',
-          timeAdversario: dados.team?.name || '',
-          isPartidaAmistosa: true,
-          horario: d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-          datetime: match.date || ''
-        }
-      });
-    setJogos(novosJogos)
-  }
+      try {
+        const token = localStorage.getItem('token')
+        if (!token) return;
+        // Fetch all friendly matches and filter those where this team is registered (FriendlyMatchTeams)
+        const responseGetJogos = await axios.get(`${API_BASE_URL}/friendly-matches`,{ 
+          headers:{ Authorization : `Bearer ${token}` }
+        })
+        const rows = Array.isArray(responseGetJogos.data) ? responseGetJogos.data : [];
+        const filtered = rows.filter((m:any) => Array.isArray(m.matchTeams) && m.matchTeams.some((mt:any) => {
+          const teamObj = mt.matchTeam || mt.team || mt;
+          return teamObj && Number(teamObj.id) === Number(team.id);
+        }));
+
+        const novosJogos:Partida[] = filtered.map((match:any)=>{
+          const d = match.date ? new Date(match.date) : null;
+          const teams = Array.isArray(match.matchTeams) ? match.matchTeams : [];
+          const other = teams.find((mt:any) => {
+            const t = mt.matchTeam || mt.team || mt;
+            return t && Number(t.id) !== Number(team.id);
+          });
+          const opponentName = other ? (other.matchTeam?.name || other.team?.name || other.name || '') : '';
+          return {
+            id: match.id,
+            title: match.title || 'Partida',
+            date: d ? d.toISOString().split('T')[0] : '',
+            local: match.location || match.square || '',
+            timeAdversario: opponentName,
+            isPartidaAmistosa: true,
+            horario: d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+            datetime: match.date || ''
+          }
+        });
+        console.debug('[Calendário] fetched jogos:', novosJogos.length, 'for team', team.id)
+        setJogos(novosJogos)
+      } catch (err) {
+        console.error('[Calendário] erro ao buscar jogos para time', team.id, err)
+        setJogos([])
+      }
+    }
+
     const fetchChampionshipsForTeam = async()=>{
       try {
         const token = localStorage.getItem('token');
@@ -113,11 +132,11 @@ function CalendarioPage() {
     fetchJogos();
     fetchChampionshipsForTeam();
   },[team])
-  const eventos=[
+    const eventos=[
     // Eventos de partidas (amistosos ou partidas)
     ...jogos.map((jogo: Partida & { title?: string }) => ({
       title: jogo.title || 'Partida',
-      start: new Date(jogo.datetime),
+      start: jogo.datetime ? new Date(jogo.datetime) : (jogo.date ? new Date(jogo.date) : undefined),
       extendedProps: { type: 'match', date: jogo.date, matchId: (jogo as any).id },
       backgroundColor: '#d4edda',
       borderColor: '#155724',

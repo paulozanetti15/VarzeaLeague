@@ -3,6 +3,7 @@ import { API_BASE_URL } from '../config/api';
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
+  if (!token) return {};
   return { Authorization: `Bearer ${token}` };
 }
 

@@ -343,19 +343,9 @@ import ChampionshipClassification from './pages/championships/ChampionshipClassi
           } />
           
           <Route path="/championships/:id" element={
-            <PrivateRoute isLoggedIn={isLoggedIn}>
-              <RoleBasedRoute 
-                isLoggedIn={isLoggedIn} 
-                userRole={user?.userTypeId} 
-                // Detalhes de campeonatos: roles 1,2,3
-                allowedRoles={[USER_ROLES.ADMIN_SISTEMA, USER_ROLES.ADMIN_EVENTOS, USER_ROLES.ADMIN_TIMES]}
-                redirectTo="/"
-              >
-                <PageTransition>
-                  <ChampionshipDetail />
-                </PageTransition>
-              </RoleBasedRoute>
-            </PrivateRoute>
+            <PageTransition>
+              <ChampionshipDetail />
+            </PageTransition>
           } />
           <Route path="/historico" element={
             <PrivateRoute isLoggedIn={isLoggedIn}>

@@ -40,10 +40,18 @@ const ChampionshipDetail: React.FC = () => {
   const [showTeamSelectModal, setShowTeamSelectModal] = useState(false);
   const [userTeams, setUserTeams] = useState<any[]>([]);
   const [isLeavingTeamId, setIsLeavingTeamId] = useState<number | null>(null);
+  const [selectedEnrolledTeamId, setSelectedEnrolledTeamId] = useState<number | null>(null);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [leaveModalTeamId, setLeaveModalTeamId] = useState<number | null>(null);
   const [showPunicaoRegister, setShowPunicaoRegister] = useState(false);
   const [showPunicaoInfo, setShowPunicaoInfo] = useState(false);
   const [championshipMatches, setChampionshipMatches] = useState<any[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(false);
+
+  const pendingLeaveRef = React.useRef<Set<number>>(new Set());
+
+  const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+  const isLogged = !!currentUser;
 
   const getChampionshipLogoUrl = (logo?: string | null) => {
     if (!logo) return null;
@@ -58,6 +66,11 @@ const ChampionshipDetail: React.FC = () => {
   const availableUserTeams = useMemo(
     () => (userTeams || []).filter((ut) => !enrolledTeamIds.has(ut.id)),
     [userTeams, enrolledTeamIds]
+  );
+
+  const userEnrolledTeams = useMemo(
+    () => (teams || []).filter((t) => (userTeams || []).some((ut) => ut.id === t.id)),
+    [teams, userTeams]
   );
 
   const loadChampionshipTeams = useCallback(async () => {
@@ -105,12 +118,15 @@ const ChampionshipDetail: React.FC = () => {
         const data = await getChampionshipById(Number(id));
         setChampionship(data);
 
-        // Verificar permissões
+        // Verificar permissões: admin_master (1) sempre tem permissão; creator com userType 2 (admin_eventos) tem permissão
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const userId = Number(user.id);
         const userType = Number(user.userTypeId);
-        
-        setHasEditPermission(data.created_by === userId || userType === 1);
+
+        const isCreator = data.created_by === userId;
+        const fullPermission = userType === 1 || (userType === 2 && isCreator);
+
+        setHasEditPermission(!!fullPermission);
         setIsAdmin(userType === 1);
 
       } catch (err: any) {
@@ -126,6 +142,13 @@ const ChampionshipDetail: React.FC = () => {
     loadUserTeams();
     loadChampionshipMatches();
   }, [id, loadChampionshipTeams, loadUserTeams, loadChampionshipMatches]);
+
+  React.useEffect(() => {
+    if (userEnrolledTeams.length === 1 && !selectedEnrolledTeamId) {
+      setSelectedEnrolledTeamId(userEnrolledTeams[0].id);
+    }
+    if (userEnrolledTeams.length === 0) setSelectedEnrolledTeamId(null);
+  }, [userEnrolledTeams, selectedEnrolledTeamId]);
 
   const handleDeleteChampionship = async () => {
     if (!id) return;
@@ -156,27 +179,56 @@ const ChampionshipDetail: React.FC = () => {
   };
 
   const handleLeaveChampionship = async (teamId: number) => {
-    if (!window.confirm('Tem certeza que deseja remover este time do campeonato?')) {
+    console.log('handleLeaveChampionship called for teamId=', teamId);
+
+    if (pendingLeaveRef.current.has(teamId) || isLeavingTeamId === teamId) {
+      console.log('leave already in progress for teamId=', teamId);
       return;
     }
 
+    pendingLeaveRef.current.add(teamId);
+
     try {
       setIsLeavingTeamId(teamId);
-      
-      await leaveChampionshipWithTeam(Number(id), teamId);
-      
+      const toastId = toast.loading('Removendo time...');
+
+      const resp = await leaveChampionshipWithTeam(Number(id), teamId);
+      console.log('leaveChampionshipWithTeam response:', resp);
+
+      toast.dismiss(toastId);
       toast.success('Time removido do campeonato com sucesso!');
-      
+
       await loadChampionshipTeams();
       await loadUserTeams();
-      
-      window.location.reload();
+
+      // avoid full reload when possible; but keep compatibility with previous behavior
+      try {
+        // small delay to let UI update
+        setTimeout(() => window.location.reload(), 200);
+      } catch {}
     } catch (err: any) {
+      console.error('Erro ao remover time do campeonato:', err);
       toast.error(err.response?.data?.message || err.message || 'Erro ao remover time do campeonato');
     } finally {
       setIsLeavingTeamId(null);
+      pendingLeaveRef.current.delete(teamId);
     }
   };
+
+  const requestLeave = (teamId: number) => {
+    setLeaveModalTeamId(teamId);
+    setShowLeaveModal(true);
+  };
+
+  const confirmLeave = async () => {
+    if (!leaveModalTeamId) return;
+    setShowLeaveModal(false);
+    const tid = leaveModalTeamId;
+    setLeaveModalTeamId(null);
+    await handleLeaveChampionship(tid);
+  };
+
+  // Note: removed low-level DOM fallback listeners to avoid interfering with React event flow.
 
   if (loading) {
     return (
@@ -303,7 +355,7 @@ const ChampionshipDetail: React.FC = () => {
             <h3 className="section-title">Ações</h3>
             
             <div className="actions-grid">
-              {hasEditPermission && (
+              {hasEditPermission ? (
                 <>
                   <button
                     className="action-btn edit-btn"
@@ -312,7 +364,7 @@ const ChampionshipDetail: React.FC = () => {
                     <span className="btn-icon">✏️</span>
                     Editar Campeonato
                   </button>
-                  
+
                   <button
                     className="action-btn delete-btn"
                     onClick={() => setShowDeleteModal(true)}
@@ -320,7 +372,7 @@ const ChampionshipDetail: React.FC = () => {
                     <span className="btn-icon">🗑️</span>
                     Excluir Campeonato
                   </button>
-                  
+
                   <button
                     className="action-btn warning-btn"
                     onClick={handleOpenPunicao}
@@ -328,7 +380,7 @@ const ChampionshipDetail: React.FC = () => {
                     <span className="btn-icon">⚠️</span>
                     Aplicar/Ver Punição
                   </button>
-                  
+
                   <button
                     className="action-btn schedule-btn"
                     onClick={() => navigate(`/championships/${id}/schedule-match`)}
@@ -336,25 +388,73 @@ const ChampionshipDetail: React.FC = () => {
                     <span className="btn-icon">📅</span>
                     Agendamento de Partidas
                   </button>
+
+                    <button
+                      className="action-btn ranking-btn"
+                      onClick={handleOpenRankingClassificacao}
+                    >
+                      <span className="btn-icon">🏆</span>
+                      Classificação
+                    </button>
                 </>
-              )}
-              
-              <button
-                className="action-btn ranking-btn"
-                onClick={handleOpenRankingClassificacao}
-              >
-                <span className="btn-icon">🏆</span>
-                Classificação
-              </button>
-              
-              {!hasEditPermission && availableUserTeams.length > 0 && (
-                <button
-                  className="action-btn join-btn"
-                  onClick={handleJoinChampionship}
-                >
-                  <span className="btn-icon">➕</span>
-                  Inscrever Time
-                </button>
+              ) : (
+                <>
+                  <button
+                    className="action-btn ranking-btn"
+                    onClick={handleOpenRankingClassificacao}
+                  >
+                    <span className="btn-icon">🏆</span>
+                    Classificação
+                  </button>
+
+                  {userEnrolledTeams.length > 0 && (
+                    <div className="leave-team-control" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      {userEnrolledTeams.length === 1 ? (
+                        <button
+                          className="out-btn"
+                          onClick={() => requestLeave(userEnrolledTeams[0].id)}
+                          disabled={isLeavingTeamId === userEnrolledTeams[0].id}
+                          aria-label={`Sair do campeonato - ${userEnrolledTeams[0].name}`}
+                        >
+                          {isLeavingTeamId === userEnrolledTeams[0].id ? 'Saindo...' : 'Sair do Campeonato'}
+                        </button>
+                      ) : (
+                        <>
+                          <select
+                            className="leave-team-select"
+                            value={selectedEnrolledTeamId ?? ''}
+                            onChange={(e) => setSelectedEnrolledTeamId(Number(e.target.value))}
+                            aria-label="Selecionar time para sair"
+                          >
+                            <option value="">Selecione o time</option>
+                            {userEnrolledTeams.map((t) => (
+                              <option key={t.id} value={t.id}>{t.name}</option>
+                            ))}
+                          </select>
+                          <button
+                            className="action-btn delete-btn btn-leave-championship"
+                            onClick={() => selectedEnrolledTeamId && requestLeave(selectedEnrolledTeamId)}
+                            disabled={!selectedEnrolledTeamId || isLeavingTeamId === selectedEnrolledTeamId}
+                            aria-label="Sair do campeonato"
+                          >
+                            <span className="btn-icon">🗑️</span>
+                            {isLeavingTeamId ? 'Saindo...' : 'Sair do Campeonato'}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {isLogged && availableUserTeams.length > 0 && (
+                    <button
+                      className="action-btn join-btn"
+                      onClick={handleJoinChampionship}
+                    >
+                      <span className="btn-icon">➕</span>
+                      Inscrever Time
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -369,7 +469,6 @@ const ChampionshipDetail: React.FC = () => {
             ) : (
               <div className="teams-grid">
                 {teams.map((team) => {
-                  const isTeamOwner = userTeams.some(ut => ut.id === team.id);
                   
                   return (
                   <div key={team.id} className="team-card">
@@ -404,23 +503,19 @@ const ChampionshipDetail: React.FC = () => {
                     
                     {hasEditPermission && (
                       <button
+                        type="button"
                         className="remove-team-btn"
-                        onClick={() => handleLeaveChampionship(team.id)}
+                        data-team-id={team.id}
+                        onClick={() => requestLeave(team.id)}
+                        onMouseDown={() => console.log('remove-button mouseDown', team.id)}
+                        onClickCapture={() => console.log('remove-button clickCapture', team.id)}
                         disabled={isLeavingTeamId === team.id}
                       >
                         {isLeavingTeamId === team.id ? 'Removendo...' : 'Remover'}
                       </button>
                     )}
                     
-                    {!hasEditPermission && isTeamOwner && (
-                      <button
-                        className="leave-championship-btn"
-                        onClick={() => handleLeaveChampionship(team.id)}
-                        disabled={isLeavingTeamId === team.id}
-                      >
-                        {isLeavingTeamId === team.id ? 'Saindo...' : 'Sair do Campeonato'}
-                      </button>
-                    )}
+                    {/* leave button removed from team card; moved to actions area */}
                   </div>
                   );
                 })}
@@ -600,6 +695,59 @@ const ChampionshipDetail: React.FC = () => {
                     onClick={handleDeleteChampionship}
                   >
                     Excluir
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Modal de Confirmação de Saída de Time */}
+        <AnimatePresence>
+          {showLeaveModal && (
+            <motion.div
+              className="delete-modal-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLeaveModal(false)}
+            >
+              <motion.div
+                className="delete-modal-container"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="delete-modal-header">
+                  <h3 className="delete-modal-title">Confirmar Saída</h3>
+                  <button
+                    className="delete-modal-close"
+                    onClick={() => setShowLeaveModal(false)}
+                    aria-label="Fechar"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="delete-modal-body">
+                  <p className="delete-modal-message">
+                    Tem certeza que deseja remover este time do campeonato?
+                  </p>
+                </div>
+
+                <div className="delete-modal-footer">
+                  <button
+                    className="delete-modal-btn delete-modal-btn-cancel"
+                    onClick={() => setShowLeaveModal(false)}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    className="delete-modal-btn delete-modal-btn-delete"
+                    onClick={confirmLeave}
+                  >
+                    Confirmar Saída
                   </button>
                 </div>
               </motion.div>
