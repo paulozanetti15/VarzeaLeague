@@ -168,20 +168,28 @@ const Register: React.FC<RegisterProps> = () => {
     setErrors({});
     
     try {
-  await register(formData);
-      // Em vez de logar direto, forçamos o usuário a autenticar manualmente
-      // Garantir que nada residual fique salvo
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      // Opcional: armazenar flag para mostrar mensagem pós-registro na tela de login
-      sessionStorage.setItem('justRegisteredEmail', formData.email);
-      sessionStorage.setItem('registerSuccess', 'true');
-      navigate('/login');
+        await register(formData);
+        // Em vez de logar direto, forçamos o usuário a autenticar manualmente
+        // Garantir que nada residual fique salvo
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        // Opcional: armazenar flag para mostrar mensagem pós-registro na tela de login
+        sessionStorage.setItem('justRegisteredEmail', formData.email);
+        sessionStorage.setItem('registerSuccess', 'true');
+        navigate('/login');
     } catch (error) {
-      setErrors(prev => ({ 
-        ...prev, 
-        general: error instanceof Error ? error.message : 'Erro ao registrar usuário' 
-      }));
+        const e: any = error;
+        const serverMessage = e?.response?.data?.message;
+        if (serverMessage) {
+          setErrors(prev => ({ ...prev, general: serverMessage }));
+          console.error('Register error response:', e.response);
+        } else if (error instanceof Error) {
+          setErrors(prev => ({ ...prev, general: error.message }));
+          console.error('Register error:', error.message);
+        } else {
+          setErrors(prev => ({ ...prev, general: 'Erro ao registrar usuário' }));
+          console.error('Register unknown error:', error);
+        }
     } finally {
       setIsLoading(false);
     }
