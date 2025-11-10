@@ -55,10 +55,6 @@ const ChampionshipDetail: React.FC = () => {
 
   // Times do usuário já inscritos e disponíveis para inscrição
   const enrolledTeamIds = useMemo(() => new Set((teams || []).map((t) => t.id)), [teams]);
-  const hasUserTeamInChampionship = useMemo(
-    () => (userTeams || []).some((ut) => enrolledTeamIds.has(ut.id)),
-    [userTeams, enrolledTeamIds]
-  );
   const availableUserTeams = useMemo(
     () => (userTeams || []).filter((ut) => !enrolledTeamIds.has(ut.id)),
     [userTeams, enrolledTeamIds]
@@ -307,7 +303,7 @@ const ChampionshipDetail: React.FC = () => {
             <h3 className="section-title">Ações</h3>
             
             <div className="actions-grid">
-              {hasEditPermission ? (
+              {hasEditPermission && (
                 <>
                   <button
                     className="action-btn edit-btn"
@@ -334,14 +330,6 @@ const ChampionshipDetail: React.FC = () => {
                   </button>
                   
                   <button
-                    className="action-btn ranking-btn"
-                    onClick={handleOpenRankingClassificacao}
-                  >
-                    <span className="btn-icon">🏆</span>
-                    Classificação
-                  </button>
-                  
-                  <button
                     className="action-btn schedule-btn"
                     onClick={() => navigate(`/championships/${id}/schedule-match`)}
                   >
@@ -349,28 +337,24 @@ const ChampionshipDetail: React.FC = () => {
                     Agendamento de Partidas
                   </button>
                 </>
-              ) : (
-                <>
-                  {availableUserTeams.length > 0 && (
-                    <button
-                      className="action-btn join-btn"
-                      onClick={handleJoinChampionship}
-                    >
-                      <span className="btn-icon">➕</span>
-                      Inscrever Time
-                    </button>
-                  )}
-                  
-                  {hasUserTeamInChampionship && (
-                    <button
-                      className="action-btn ranking-btn"
-                      onClick={handleOpenRankingClassificacao}
-                    >
-                      <span className="btn-icon">🏆</span>
-                      Ver Ranking
-                    </button>
-                  )}
-                </>
+              )}
+              
+              <button
+                className="action-btn ranking-btn"
+                onClick={handleOpenRankingClassificacao}
+              >
+                <span className="btn-icon">🏆</span>
+                Classificação
+              </button>
+              
+              {!hasEditPermission && availableUserTeams.length > 0 && (
+                <button
+                  className="action-btn join-btn"
+                  onClick={handleJoinChampionship}
+                >
+                  <span className="btn-icon">➕</span>
+                  Inscrever Time
+                </button>
               )}
             </div>
           </div>
