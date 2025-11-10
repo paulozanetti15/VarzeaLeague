@@ -1,0 +1,174 @@
+<mxfile host="65bd71144e">
+    <diagram name="Sequência - Inscrição em Campeonato" id="sequence-inscricao">
+        <mxGraphModel dx="567" dy="488" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="actor1" value="Admin Time" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="40" width="40" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="frontend" value="Frontend&lt;div&gt;&lt;br/&gt;&lt;/div&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="200" y="40" width="150" height="900" as="geometry"/>
+                </mxCell>
+                <mxCell id="api" value="API Backend" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="420" y="40" width="140" height="900" as="geometry"/>
+                </mxCell>
+                <mxCell id="validator" value="BackEnd" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="630" y="40" width="120" height="900" as="geometry"/>
+                </mxCell>
+                <mxCell id="db" value=":Database" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="40" width="100" height="900" as="geometry"/>
+                </mxCell>
+                <mxCell id="msg1" value="1: Acessar tela de campeonato" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="100" y="160" as="sourcePoint"/>
+                        <mxPoint x="270" y="160" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="activation1" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="270" y="160" width="10" height="730" as="geometry"/>
+                </mxCell>
+                <mxCell id="msg2" value="2: GET /api/championships/:id" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="280" y="190" as="sourcePoint"/>
+                        <mxPoint x="485" y="190" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="activation2" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="485" y="190" width="10" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="msg3" value="3: SELECT championship" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="495" y="210" as="sourcePoint"/>
+                        <mxPoint x="865" y="210" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="activation3" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="865" y="210" width="10" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="msg4" value="4: championship data" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="865" y="250" as="sourcePoint"/>
+                        <mxPoint x="495" y="250" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="msg5" value="5: championship data" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="485" y="280" as="sourcePoint"/>
+                        <mxPoint x="280" y="280" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="msg6" value="6: Exibir dados" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="270" y="310" as="sourcePoint"/>
+                        <mxPoint x="100" y="310" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="msg7" value="7: Selecionar time para inscrever" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="100" y="360" as="sourcePoint"/>
+                        <mxPoint x="270" y="360" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="msg8" value="8: Clicar &#39;Inscrever Time&#39;" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="100" y="400" as="sourcePoint"/>
+                        <mxPoint x="270" y="400" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="msg9" value="9: POST /api/championships/:id/apply" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="280" y="430" as="sourcePoint"/>
+                        <mxPoint x="485" y="430" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="activation4" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="485" y="430" width="10" height="290" as="geometry"/>
+                </mxCell>
+                <mxCell id="msg10" value="10: validateRules(teamId, championshipId)" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="495" y="460" as="sourcePoint"/>
+                        <mxPoint x="685" y="460" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="activation5" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="685" y="460" width="10" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="msg11" value="11: SELECT team, players" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="695" y="490" as="sourcePoint"/>
+                        <mxPoint x="865" y="490" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="activation6" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="865" y="490" width="10" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="msg12" value="12: team data" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="865" y="520" as="sourcePoint"/>
+                        <mxPoint x="695" y="520" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="note1" value="Validar:&#xa;- Gênero dos jogadores&#xa;- Quantidade de jogadores&#xa;- Idade dos jogadores&#xa;- Time já inscrito?" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#ffe6cc;strokeColor=#d79b00;size=14;align=left;" parent="1" vertex="1">
+                    <mxGeometry x="730" y="540" width="180" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="msg13" value="13: validation result" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="685" y="635" as="sourcePoint"/>
+                        <mxPoint x="495" y="635" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="alt1_label1" value="[validação falhou]" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="250" y="660" width="120" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="msg14_1_error" value="14.1: Retornar erro (400)&#xa;{Time já inscrito | Jogadores abaixo da idade mínima}" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;strokeColor=#d63031;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="485" y="690" as="sourcePoint"/>
+                        <mxPoint x="280" y="690" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="msg14_2_error_display" value="14.2: Exibir mensagem de erro" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;strokeColor=#d63031;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="270" y="715" as="sourcePoint"/>
+                        <mxPoint x="100" y="715" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="alt1_label2" value="[validação ok]" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="290" y="765" width="100" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="msg15_1" value="15.1: INSERT team_championship" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="495" y="765" as="sourcePoint"/>
+                        <mxPoint x="865" y="765" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="activation7" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="865" y="765" width="10" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="msg15_2" value="15.2: Sucesso" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="865" y="785" as="sourcePoint"/>
+                        <mxPoint x="280" y="785" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="msg16" value="16: Mostrar mensagem de sucesso" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;endSize=8;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="270" y="820" as="sourcePoint"/>
+                        <mxPoint x="100" y="820" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="msg17" value="17: Atualizar tela com time inscrito" style="html=1;verticalAlign=bottom;endArrow=block;" parent="1" edge="1">
+                    <mxGeometry width="80" relative="1" as="geometry">
+                        <mxPoint x="270" y="850" as="sourcePoint"/>
+                        <mxPoint x="270" y="850" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="330" y="850"/>
+                            <mxPoint x="330" y="870"/>
+                            <mxPoint x="270" y="870"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

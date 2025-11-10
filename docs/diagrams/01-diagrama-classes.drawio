@@ -1,0 +1,400 @@
+<mxfile host="65bd71144e">
+    <diagram name="Diagrama de Classes - VarzeaLeague" id="class-diagram">
+        <mxGraphModel dx="491" dy="688" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1400" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="layer1" value="Autenticação e Permissões" style="swimlane;html=1;startSize=40;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=16;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="50" width="600" height="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="user-class" value="&lt;b&gt;User&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#dae8fc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#6c8ebf;fontSize=13;" parent="layer1" vertex="1">
+                    <mxGeometry x="30" y="35" width="240" height="285" as="geometry"/>
+                </mxCell>
+                <mxCell id="user-attrs" value="- id: number&#xa;- name: string&#xa;- cpf: string&#xa;- phone: string&#xa;- email: string&#xa;- password: string&#xa;- gender: string&#xa;- userTypeId: number&#xa;- resetPasswordToken?: string&#xa;- resetPasswordExpires?: Date&#xa;- createdAt: Date&#xa;- updatedAt: Date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" parent="user-class" vertex="1">
+                    <mxGeometry y="30" width="240" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="user-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="user-class" vertex="1">
+                    <mxGeometry y="230" width="240" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="user-methods" value="+ login(): Token&#xa;+ logout(): void&#xa;+ updateProfile(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" parent="user-class" vertex="1">
+                    <mxGeometry y="238" width="240" height="47" as="geometry"/>
+                </mxCell>
+                <mxCell id="usertype-class" value="&lt;b&gt;UserType&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#dae8fc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#6c8ebf;fontSize=13;" parent="layer1" vertex="1">
+                    <mxGeometry x="320" y="60" width="240" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="usertype-attrs" value="- id: number&#xa;- name: string&#xa;- description: string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" parent="usertype-class" vertex="1">
+                    <mxGeometry y="30" width="240" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="usertype-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="usertype-class" vertex="1">
+                    <mxGeometry y="95" width="240" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="usertype-methods" value="+ getPermissions(): string[]&#xa;+ canManageTeams(): boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" parent="usertype-class" vertex="1">
+                    <mxGeometry y="103" width="240" height="57" as="geometry"/>
+                </mxCell>
+                <mxCell id="layer2" value="Times e Jogadores" style="swimlane;html=1;startSize=40;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=16;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="420" width="600" height="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="team-class" value="&lt;b&gt;Team&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#fff2cc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#d6b656;fontSize=13;" parent="layer2" vertex="1">
+                    <mxGeometry x="30" y="60" width="240" height="295" as="geometry"/>
+                </mxCell>
+                <mxCell id="team-attrs" value="- id: number&#xa;- name: string&#xa;- description: text|null&#xa;- banner: string|null&#xa;- primaryColor?: string&#xa;- secondaryColor?: string&#xa;- captainId: number&#xa;- isDeleted: boolean&#xa;- cep: string&#xa;- state?: string&#xa;- city?: string&#xa;- createdAt: Date&#xa;- updatedAt: Date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" parent="team-class" vertex="1">
+                    <mxGeometry y="30" width="240" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="team-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="team-class" vertex="1">
+                    <mxGeometry y="240" width="240" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="team-methods" value="+ addPlayer(player): void&#xa;+ removePlayer(id): void&#xa;+ updateInfo(data): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" parent="team-class" vertex="1">
+                    <mxGeometry y="248" width="240" height="47" as="geometry"/>
+                </mxCell>
+                <mxCell id="player-class" value="&lt;b&gt;Player&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#fff2cc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#d6b656;fontSize=13;" parent="layer2" vertex="1">
+                    <mxGeometry x="320" y="60" width="240" height="218" as="geometry"/>
+                </mxCell>
+                <mxCell id="player-attrs" value="- id: number&#xa;- name: string&#xa;- gender: string&#xa;- dateOfBirth: Date&#xa;- position: string&#xa;- isDeleted: boolean&#xa;- createdAt: Date&#xa;- updatedAt: Date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" parent="player-class" vertex="1">
+                    <mxGeometry y="30" width="240" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="player-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="player-class" vertex="1">
+                    <mxGeometry y="170" width="240" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="player-methods" value="+ getAge(): number" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" parent="player-class" vertex="1">
+                    <mxGeometry y="178" width="240" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="layer3" value="Partidas e Campeonatos" style="swimlane;html=1;startSize=40;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=16;" vertex="1" parent="1">
+                    <mxGeometry x="680" y="10" width="1200" height="690" as="geometry"/>
+                </mxCell>
+                <mxCell id="friendly-domain" value="Amistosas" style="swimlane;html=1;startSize=30;fillColor=#eaf7ea;strokeColor=#82b366;fontStyle=1;fontSize=14;" vertex="1" parent="layer3">
+                    <mxGeometry x="10" y="50" width="560" height="620" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-domain" value="Campeonatos" style="swimlane;html=1;startSize=30;fillColor=#eaf2ff;strokeColor=#6c8ebf;fontStyle=1;fontSize=14;" vertex="1" parent="layer3">
+                    <mxGeometry x="630" y="50" width="560" height="620" as="geometry"/>
+                </mxCell>
+                <mxCell id="match-class" value="&lt;b&gt;FriendlyMatch&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;fontSize=13;" vertex="1" parent="friendly-domain">
+                    <mxGeometry x="20" y="40" width="250" height="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="match-attrs" value="- id: number&#xa;- title: string&#xa;- date: Date&#xa;- location: string&#xa;- status: string&#xa;- organizerId: number&#xa;- price: number&#xa;- duration: string&#xa;- square: string&#xa;- matchType: string&#xa;- Cep: string&#xa;- Uf: string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="match-class">
+                    <mxGeometry y="30" width="250" height="195" as="geometry"/>
+                </mxCell>
+                <mxCell id="match-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="match-class">
+                    <mxGeometry y="225" width="250" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="match-methods" value="+ confirmMatch(): void&#xa;+ cancelMatch(): void&#xa;+ updateStatus(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="match-class">
+                    <mxGeometry y="233" width="250" height="47" as="geometry"/>
+                </mxCell>
+                <mxCell id="championship-class" value="&lt;b&gt;Championship&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;fontSize=13;" vertex="1" parent="champ-domain">
+                    <mxGeometry x="20" y="40" width="250" height="295" as="geometry"/>
+                </mxCell>
+                <mxCell id="championship-attrs" value="- id: number&#xa;- name: string&#xa;- description: text|null&#xa;- start_date: Date&#xa;- end_date: Date&#xa;- created_by: number&#xa;- modalidade: string&#xa;- nomequadra: string&#xa;- tipo: &#39;liga&#39;|&#39;mata-mata&#39;&#xa;- fase_grupos: boolean&#xa;- max_teams: number&#xa;- genero: &#39;masculino&#39;|&#39;feminino&#39;|&#39;misto&#39;&#xa;- status: &#39;draft&#39;|&#39;open&#39;|&#39;closed&#39;|&#39;in_progress&#39;|&#39;finished&#39;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="championship-class">
+                    <mxGeometry y="30" width="250" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="championship-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="championship-class">
+                    <mxGeometry y="240" width="250" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="championship-methods" value="+ openRegistration(): void&#xa;+ closeRegistration(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="championship-class">
+                    <mxGeometry y="248" width="250" height="47" as="geometry"/>
+                </mxCell>
+                <mxCell id="report-class" value="&lt;b&gt;MatchReport&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;fontSize=13;" vertex="1" parent="friendly-domain">
+                    <mxGeometry x="20" y="340" width="250" height="215" as="geometry"/>
+                </mxCell>
+                <mxCell id="report-attrs" value="- id: number&#xa;- match_id: number&#xa;- team_home: number&#xa;- team_away: number&#xa;- teamHome_score: number&#xa;- teamAway_score: number&#xa;- created_by: number&#xa;- is_penalty: boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="report-class">
+                    <mxGeometry y="30" width="250" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="report-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="report-class">
+                    <mxGeometry y="160" width="250" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="report-methods" value="+ addGoal(data): void&#xa;+ addCard(data): void&#xa;+ exportPDF(): File" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="report-class">
+                    <mxGeometry y="168" width="250" height="47" as="geometry"/>
+                </mxCell>
+                <mxCell id="rules-class" value="&lt;b&gt;FriendlyMatchRules&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;fontSize=13;" vertex="1" parent="friendly-domain">
+                    <mxGeometry x="300" y="280" width="250" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="rules-attrs" value="- id: number&#xa;- matchId: number&#xa;- registrationDeadline: Date&#xa;- registrationDeadlineTime?: Time&#xa;- minimumAge: number&#xa;- maximumAge: number&#xa;- gender: &#39;Masculino&#39;|&#39;Feminino&#39;|&#39;Ambos&#39;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="rules-class">
+                    <mxGeometry y="30" width="250" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="rules-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="rules-class">
+                    <mxGeometry y="190" width="250" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="rules-methods" value="+ isRegistrationOpen(): boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="rules-class">
+                    <mxGeometry y="198" width="250" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="goal-class" value="&lt;b&gt;Goal&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=20;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;fontSize=13;" vertex="1" parent="friendly-domain">
+                    <mxGeometry x="300" y="40" width="160" height="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="goal-attrs" value="- id: number&#xa;- match_id: number&#xa;- user_id?: number&#xa;- player_id?: number&#xa;- team_id?: number&#xa;- minute?: number" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="goal-class">
+                    <mxGeometry y="20" width="160" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="goal-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="goal-class">
+                    <mxGeometry y="130" width="160" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="goal-methods" value="+ save(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="goal-class">
+                    <mxGeometry y="138" width="160" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="card-class" value="&lt;b&gt;Card&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;fontSize=13;" vertex="1" parent="friendly-domain">
+                    <mxGeometry x="380" y="40" width="160" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="card-attrs" value="- id: number&#xa;- match_id: number&#xa;- user_id?: number&#xa;- player_id?: number&#xa;- team_id?: number&#xa;- card_type: &#39;yellow&#39;|&#39;red&#39;&#xa;- minute?: number" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="card-class">
+                    <mxGeometry y="30" width="160" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="card-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="card-class">
+                    <mxGeometry y="160" width="160" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="card-methods" value="+ save(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="card-class">
+                    <mxGeometry y="168" width="160" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-match-class" value="&lt;b&gt;MatchChampionship&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;fontSize=13;" vertex="1" parent="champ-domain">
+                    <mxGeometry x="300" y="40" width="260" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-match-attrs" value="- id: number&#xa;- championship_id: number&#xa;- date: Date&#xa;- location: string&#xa;- quadra: string&#xa;- Rodada: number&#xa;- createdAt: Date&#xa;- updatedAt: Date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="champ-match-class">
+                    <mxGeometry y="30" width="260" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-match-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="champ-match-class">
+                    <mxGeometry y="190" width="260" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-match-methods" value="+ schedule(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="champ-match-class">
+                    <mxGeometry y="198" width="260" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-report-class" value="&lt;b&gt;MatchChampionshipReport&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;fontSize=13;" vertex="1" parent="champ-domain">
+                    <mxGeometry x="20" y="360" width="270" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-report-attrs" value="- id: number&#xa;- match_id: number&#xa;- team_home: number&#xa;- team_away: number&#xa;- teamHome_score: number&#xa;- teamAway_score: number&#xa;- created_by: number&#xa;- is_penalty: boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="champ-report-class">
+                    <mxGeometry y="30" width="270" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-report-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="champ-report-class">
+                    <mxGeometry y="190" width="270" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-report-methods" value="+ finalizeWO(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="champ-report-class">
+                    <mxGeometry y="198" width="270" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-goal-class" value="&lt;b&gt;ChampionshipMatchGoal&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;fontSize=13;" vertex="1" parent="champ-domain">
+                    <mxGeometry x="300" y="280" width="220" height="158" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-goal-attrs" value="- id: number&#xa;- match_id: number&#xa;- user_id?: number&#xa;- player_id?: number&#xa;- team_id?: number&#xa;- minute?: number" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="champ-goal-class">
+                    <mxGeometry y="30" width="220" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-goal-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="champ-goal-class">
+                    <mxGeometry y="150" width="220" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-card-class" value="&lt;b&gt;ChampionshipMatchCard&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;fontSize=13;" vertex="1" parent="champ-domain">
+                    <mxGeometry x="300" y="430" width="240" height="178" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-card-attrs" value="- id: number&#xa;- match_id: number&#xa;- user_id?: number&#xa;- player_id?: number&#xa;- team_id?: number&#xa;- card_type: &#39;yellow&#39;|&#39;red&#39;&#xa;- minute?: number" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="champ-card-class">
+                    <mxGeometry y="30" width="240" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="champ-card-sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="champ-card-class">
+                    <mxGeometry y="170" width="240" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="match-rules-assoc" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="match-class" target="rules-class">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="match-rules-label1" value="1" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;" connectable="0" vertex="1" parent="match-rules-assoc">
+                    <mxGeometry x="-1" relative="1" as="geometry">
+                        <mxPoint x="10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="match-rules-label2" value="0..1" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="match-rules-assoc">
+                    <mxGeometry x="1" relative="1" as="geometry">
+                        <mxPoint x="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="layer4" value="Controllers" style="swimlane;html=1;startSize=40;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=16;" vertex="1" parent="1">
+                    <mxGeometry x="700" y="760" width="1200" height="900" as="geometry"/>
+                </mxCell>
+                <mxCell id="player-controller" value="&lt;b&gt;PlayerController&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#f8cecc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#b85450;fontSize=13;" vertex="1" parent="layer4">
+                    <mxGeometry x="30" y="60" width="300" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="player-controller-methods" value="+ create(req,res): Promise&lt;void&gt;&#xa;+ addToTeam(req,res): Promise&lt;void&gt;&#xa;+ getPlayersFromTeam(req,res): Promise&lt;void&gt;&#xa;+ removeFromTeam(req,res): Promise&lt;void&gt;&#xa;+ update(req,res): Promise&lt;void&gt;&#xa;+ delete(req,res): Promise&lt;void&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="player-controller">
+                    <mxGeometry y="30" width="300" height="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="team-controller" value="&lt;b&gt;TeamController&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#f8cecc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#b85450;fontSize=13;" vertex="1" parent="layer4">
+                    <mxGeometry x="360" y="60" width="360" height="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="team-controller-methods" value="+ createTeam(req,res): Promise&lt;void&gt;&#xa;+ listTeams(req,res): Promise&lt;void&gt;&#xa;+ getTeam(req,res): Promise&lt;void&gt;&#xa;+ updateTeam(req,res): Promise&lt;void&gt;&#xa;+ deleteTeam(req,res): Promise&lt;void&gt;&#xa;+ removePlayerFromTeam(req,res): Promise&lt;void&gt;&#xa;+ getTeamCaptain(req,res): Promise&lt;void&gt;&#xa;+ getTeamRanking(req,res): Promise&lt;void&gt;&#xa;+ getPlayerStats(req,res): Promise&lt;void&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="team-controller">
+                    <mxGeometry y="30" width="360" height="290" as="geometry"/>
+                </mxCell>
+                <mxCell id="friendly-controller" value="&lt;b&gt;FriendlyMatchesController&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#f8cecc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#b85450;fontSize=13;" vertex="1" parent="layer4">
+                    <mxGeometry x="30" y="320" width="360" height="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="friendly-controller-methods" value="+ createMatch(req,res)&#xa;+ listMatches(req,res)&#xa;+ getMatch(req,res)&#xa;+ updateMatch(req,res)&#xa;+ cancelMatch(req,res)&#xa;+ deleteMatch(req,res)&#xa;+ getMatchesByOrganizer(req,res)&#xa;+ getFilteredMatches(req,res)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="friendly-controller">
+                    <mxGeometry y="30" width="360" height="270" as="geometry"/>
+                </mxCell>
+                <mxCell id="matchteams-controller" value="&lt;b&gt;MatchTeamsController&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#f8cecc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#b85450;fontSize=13;" vertex="1" parent="layer4">
+                    <mxGeometry x="420" y="320" width="360" height="260" as="geometry"/>
+                </mxCell>
+                <mxCell id="matchteams-controller-methods" value="+ joinMatchByTeam(req,res)&#xa;+ getMatchTeams(req,res)&#xa;+ getTeamsAvailable(req,res)&#xa;+ deleteTeamMatch(req,res)&#xa;+ checkTeamsRuleCompliance(req,res)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="matchteams-controller">
+                    <mxGeometry y="30" width="360" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="championship-controller" value="&lt;b&gt;ChampionshipController&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#f8cecc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#b85450;fontSize=13;" vertex="1" parent="layer4">
+                    <mxGeometry x="30" y="600" width="300" height="360" as="geometry"/>
+                </mxCell>
+                <mxCell id="championship-controller-methods" value="+ createChampionship(req,res)&#xa;+ listChampionships(req,res)&#xa;+ getChampionship(req,res)&#xa;+ updateChampionship(req,res)&#xa;+ deleteChampionship(req,res)&#xa;+ publishChampionship(req,res)&#xa;+ joinTeamInChampionship(req,res)&#xa;+ leaveTeamFromChampionship(req,res)&#xa;+ applyToChampionship(req,res)&#xa;+ getChampionshipApplications(req,res)&#xa;+ updateApplicationStatus(req,res)&#xa;+ createChampionshipMatch(req,res)&#xa;+ getChampionshipMatches(req,res)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="championship-controller">
+                    <mxGeometry y="30" width="300" height="330" as="geometry"/>
+                </mxCell>
+                <mxCell id="friendly-events-controller" value="&lt;b&gt;FriendlyMatchesEventsController&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#f8cecc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#b85450;fontSize=13;" vertex="1" parent="layer4">
+                    <mxGeometry x="350" y="600" width="280" height="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="friendly-events-controller-methods" value="+ addGoal(req,res)&#xa;+ addCard(req,res)&#xa;+ listEvents(req,res)&#xa;+ deleteGoalEvent(req,res)&#xa;+ deleteCardEvent(req,res)&#xa;+ clearGoals(req,res)&#xa;+ clearCards(req,res)&#xa;+ finalizeMatch(req,res)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="friendly-events-controller">
+                    <mxGeometry y="30" width="280" height="310" as="geometry"/>
+                </mxCell>
+                <mxCell id="championship-events-controller" value="&lt;b&gt;ChampionshipMatchEventsController&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#f8cecc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#b85450;fontSize=13;" vertex="1" parent="layer4">
+                    <mxGeometry x="650" y="600" width="300" height="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="championship-events-controller-methods" value="+ addGoal(req,res)&#xa;+ addCard(req,res)&#xa;+ listEvents(req,res)&#xa;+ deleteGoalEvent(req,res)&#xa;+ deleteCardEvent(req,res)&#xa;+ clearGoals(req,res)&#xa;+ clearCards(req,res)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="championship-events-controller">
+                    <mxGeometry y="30" width="300" height="290" as="geometry"/>
+                </mxCell>
+                <mxCell id="friendly-punishment-controller" value="&lt;b&gt;FriendlyMatchesPunishmentController&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#f8cecc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#b85450;fontSize=13;" vertex="1" parent="layer4">
+                    <mxGeometry x="970" y="600" width="260" height="260" as="geometry"/>
+                </mxCell>
+                <mxCell id="friendly-punishment-controller-methods" value="+ inserirPunicaoPartidaAmistosa(req,res)&#xa;+ buscarPunicaoPartidaAmistosa(req,res)&#xa;+ alterarPunicaoPartidaAmistosa(req,res)&#xa;+ deletarPunicaoPartidaAmistosa(req,res)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="friendly-punishment-controller">
+                    <mxGeometry y="30" width="260" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="championship-punishment-controller" value="&lt;b&gt;ChampionshipPunishmentController&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#f8cecc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#b85450;fontSize=13;" vertex="1" parent="layer4">
+                    <mxGeometry x="970" y="870" width="260" height="260" as="geometry"/>
+                </mxCell>
+                <mxCell id="championship-punishment-controller-methods" value="+ inserirPunicaoCampeonato(req,res)&#xa;+ buscarPunicaoCampeonato(req,res)&#xa;+ alterarPunicaoCampeonato(req,res)&#xa;+ deletarPunicaoCampeonato(req,res)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=12;" vertex="1" parent="championship-punishment-controller">
+                    <mxGeometry y="30" width="260" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="assoc1" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="user-class" target="usertype-class">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="assoc1-label1" value="1" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;" connectable="0" vertex="1" parent="assoc1">
+                    <mxGeometry x="-1" relative="1" as="geometry">
+                        <mxPoint x="10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc1-label2" value="1" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="assoc1">
+                    <mxGeometry x="1" relative="1" as="geometry">
+                        <mxPoint x="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc2" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="user-class" target="team-class">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="assoc2-label1" value="1" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" connectable="0" vertex="1" parent="assoc2">
+                    <mxGeometry x="-1" relative="1" as="geometry">
+                        <mxPoint y="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc2-label2" value="*" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="assoc2">
+                    <mxGeometry x="1" relative="1" as="geometry">
+                        <mxPoint y="10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc3" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="team-class" target="player-class">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="assoc3-label1" value="*" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;" connectable="0" vertex="1" parent="assoc3">
+                    <mxGeometry x="-1" relative="1" as="geometry">
+                        <mxPoint x="10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc3-label2" value="*" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="assoc3">
+                    <mxGeometry x="1" relative="1" as="geometry">
+                        <mxPoint x="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc3-label3" value="has" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" connectable="0" vertex="1" parent="assoc3">
+                    <mxGeometry x="-0.1" relative="1" as="geometry">
+                        <mxPoint y="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc4" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="match-class" target="report-class">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="assoc4-label1" value="1" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;" connectable="0" vertex="1" parent="assoc4">
+                    <mxGeometry x="-1" relative="1" as="geometry">
+                        <mxPoint x="10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc4-label2" value="0..1" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="assoc4">
+                    <mxGeometry x="1" relative="1" as="geometry">
+                        <mxPoint x="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc5" value="" style="endArrow=diamond;html=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endFill=1;" edge="1" parent="1" source="goal-class" target="report-class">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="assoc5-label1" value="1" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" connectable="0" vertex="1" parent="assoc5">
+                    <mxGeometry x="-1" relative="1" as="geometry">
+                        <mxPoint y="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc5-label2" value="*" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="assoc5">
+                    <mxGeometry x="1" relative="1" as="geometry">
+                        <mxPoint y="10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc6" value="" style="endArrow=diamond;html=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;endFill=1;" edge="1" parent="1" source="card-class" target="report-class">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1710" y="330"/>
+                            <mxPoint x="1540" y="330"/>
+                            <mxPoint x="1540" y="665"/>
+                            <mxPoint x="917" y="665"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc6-label1" value="1" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" connectable="0" vertex="1" parent="assoc6">
+                    <mxGeometry x="-1" relative="1" as="geometry">
+                        <mxPoint y="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc6-label2" value="*" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="assoc6">
+                    <mxGeometry x="1" relative="1" as="geometry">
+                        <mxPoint y="10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc7" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="championship-class" target="champ-match-class">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="assoc7-label1" value="1" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" connectable="0" vertex="1" parent="assoc7">
+                    <mxGeometry x="-1" relative="1" as="geometry">
+                        <mxPoint y="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc7-label2" value="*" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="assoc7">
+                    <mxGeometry x="1" relative="1" as="geometry">
+                        <mxPoint y="10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc8" value="" style="endArrow=none;html=1;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="champ-match-class" target="champ-report-class">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="assoc8-label1" value="1" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;" connectable="0" vertex="1" parent="assoc8">
+                    <mxGeometry x="-1" relative="1" as="geometry">
+                        <mxPoint x="10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc8-label2" value="0..1" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="assoc8">
+                    <mxGeometry x="1" relative="1" as="geometry">
+                        <mxPoint x="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc9" value="" style="endArrow=diamond;html=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endFill=1;" edge="1" parent="1" source="champ-goal-class" target="champ-report-class">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="assoc9-label1" value="1" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" connectable="0" vertex="1" parent="assoc9">
+                    <mxGeometry x="-1" relative="1" as="geometry">
+                        <mxPoint y="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc9-label2" value="*" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="assoc9">
+                    <mxGeometry x="1" relative="1" as="geometry">
+                        <mxPoint y="10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc10" value="" style="endArrow=diamond;html=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;endFill=1;" edge="1" parent="1" source="champ-card-class" target="champ-report-class">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="assoc10-label1" value="1" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" connectable="0" vertex="1" parent="assoc10">
+                    <mxGeometry x="-1" relative="1" as="geometry">
+                        <mxPoint y="-10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="assoc10-label2" value="*" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;" connectable="0" vertex="1" parent="assoc10">
+                    <mxGeometry x="1" relative="1" as="geometry">
+                        <mxPoint y="10" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

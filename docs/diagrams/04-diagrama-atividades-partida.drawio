@@ -1,0 +1,228 @@
+<mxfile host="65bd71144e">
+    <diagram name="Atividades - Gerenciamento de Partida" id="activity-match">
+        <mxGraphModel dx="2804" dy="542" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="1700" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="swimlane1" value="Admin Eventos" style="swimlane;html=1;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="-150" y="40" width="360" height="1650" as="geometry"/>
+                </mxCell>
+                <mxCell id="start" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;" parent="swimlane1" vertex="1">
+                    <mxGeometry x="110" y="50" width="30" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="act1" value="Criar nova partida" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="swimlane1" vertex="1">
+                    <mxGeometry x="50" y="110" width="150" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="act2" value="Definir regras da partida" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="swimlane1" vertex="1">
+                    <mxGeometry x="50" y="190" width="150" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="act12" value="Acessar tela de súmula" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="swimlane1" vertex="1">
+                    <mxGeometry x="50" y="1140" width="150" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="act13" value="Preencher súmula&#xa;(gols, cartões, placar)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="swimlane1" vertex="1">
+                    <mxGeometry x="50" y="1240" width="150" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="act14" value="Salvar súmula" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="swimlane1" vertex="1">
+                    <mxGeometry x="50" y="1320" width="150" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="swimlane2" value="Sistema" style="swimlane;html=1;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="220" y="40" width="500" height="1650" as="geometry"/>
+                </mxCell>
+                <mxCell id="act3" value="Salvar partida no banco&#xa;Status: &#39;aberta&#39;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="150" y="50" width="170" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="act4" value="Habilitar inscrições de times" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="190" y="190" width="170" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="decision1" value="Tem 2 times&#xa;inscritos?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="165" y="320" width="170" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="act_sem_vagas" value="Atualizar status para&#xa;&#39;sem_vagas&#39;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="100" y="460" width="170" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="decision_prazo" value="Prazo de inscrição&#xa;passou?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="150" y="560" width="170" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="decision_times_prazo" value="Tem 2 times&#xa;inscritos?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="50" y="660" width="170" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="act9" value="Atualizar status para&#xa;&#39;confirmada&#39;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="40" y="870" width="170" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" style="edgeStyle=none;html=1;entryX=0.315;entryY=-0.05;entryDx=0;entryDy=0;entryPerimeter=0;" parent="swimlane2" source="act_cancelada" target="8" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="365" y="840" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="act_cancelada" value="Atualizar status para&#xa;&#39;cancelada&#39;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="280" y="730" width="170" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="decision_wo" value="Time não compareceu,&#xa;atrasou ou desistiu?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="150" y="950" width="170" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="act_wo" value="Gerar punição WO&#xa;e súmula 3x0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="170" y="1100" width="170" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="act_finalizada_wo" value="Atualizar status para&#xa;&#39;finalizada&#39;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="205" y="1310" width="170" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="swimlane2" source="act_em_andamento" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="act_em_andamento" value="Atualizar status para&#xa;&#39;em_andamento&#39;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="10" y="1170" width="170" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="act_finalizada_normal" value="Atualizar status para&#xa;&#39;finalizada&#39;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="10" y="1250" width="170" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="act15" value="Processar súmula&#xa;e salvar eventos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="120" y="1390" width="170" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="end" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="380" y="1385" width="30" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="end_outer" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeWidth=2;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="375" y="1380" width="40" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow18" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;endArrow=block;endFill=1;exitDx=0;exitDy=0;" parent="swimlane2" source="act_finalizada_wo" target="end" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="100" y="1260" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="4" style="edgeStyle=none;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="swimlane2" source="act16" target="end_outer" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="390" y="1590"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="act16" value="Atualizar estatísticas&#xa;de jogadores" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="180" y="1580" width="150" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow16" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;" parent="swimlane2" source="act15" target="act16" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow_times_nao" value="Não" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;endArrow=block;endFill=1;fontStyle=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" parent="swimlane2" source="decision_times_prazo" target="act_cancelada" edge="1">
+                    <mxGeometry x="-0.1" y="10" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="150" y="740"/>
+                            <mxPoint x="150" y="760"/>
+                            <mxPoint x="270" y="760"/>
+                            <mxPoint x="270" y="755"/>
+                        </Array>
+                        <mxPoint x="125" y="730" as="sourcePoint"/>
+                        <mxPoint x="270" y="757.5" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow_wo_nao" value="Não" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.5;endArrow=block;endFill=1;fontStyle=1;" parent="swimlane2" source="decision_wo" target="act_em_andamento" edge="1">
+                    <mxGeometry x="-0.1" y="10" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                        <mxPoint x="100" y="1270" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="110" y="995"/>
+                            <mxPoint x="110" y="1040"/>
+                            <mxPoint x="100" y="1040"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow_andamento_finalizada" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;" parent="swimlane2" source="act_em_andamento" target="act_finalizada_normal" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#000000;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="355" y="845" width="30" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;strokeWidth=2;" parent="swimlane2" vertex="1">
+                    <mxGeometry x="350" y="840" width="40" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="swimlane3" value="Admin Times" style="swimlane;html=1;startSize=30;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="730" y="40" width="400" height="1650" as="geometry"/>
+                </mxCell>
+                <mxCell id="act5" value="Visualizar partidas disponíveis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="swimlane3" vertex="1">
+                    <mxGeometry x="70" y="190" width="150" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="act6" value="Inscrever time na partida" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="swimlane3" vertex="1">
+                    <mxGeometry x="80" y="310" width="150" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow1" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;" parent="1" source="start" target="act1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow2" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;" parent="1" source="act1" target="act2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow3" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;endArrow=block;endFill=1;" parent="1" source="act2" target="act3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow4" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;" parent="1" source="act3" target="act4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow5" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;endArrow=block;endFill=1;" parent="1" source="act4" target="act5" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow6" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;" parent="1" source="act5" target="act6" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow7" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.5;entryX=1;entryY=0.5;endArrow=block;endFill=1;" parent="1" source="act6" target="decision1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow8_yes" value="Sim" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;fontStyle=1" parent="1" source="decision1" target="act_sem_vagas" edge="1">
+                    <mxGeometry x="-0.1" y="10" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow8_no" value="Não" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;endArrow=block;endFill=1;fontStyle=1" parent="1" source="decision1" target="act4" edge="1">
+                    <mxGeometry x="-0.2" y="10" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow_sem_vagas_prazo" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;" parent="1" source="act_sem_vagas" target="decision_prazo" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow_prazo_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;fontStyle=1" parent="1" source="decision_prazo" target="decision_times_prazo" edge="1">
+                    <mxGeometry x="-0.1" y="10" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow_times_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;fontStyle=1" parent="1" source="decision_times_prazo" target="act9" edge="1">
+                    <mxGeometry x="-0.1" y="10" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="355" y="810"/>
+                            <mxPoint x="350" y="810"/>
+                            <mxPoint x="350" y="910"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow_confirmada_wo" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;" parent="1" source="act9" target="decision_wo" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow_wo_sim" value="Sim" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;fontStyle=1" parent="1" source="decision_wo" target="act_wo" edge="1">
+                    <mxGeometry x="-0.1" y="10" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="flow_wo_finalizar" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;" parent="1" source="act_wo" target="act_finalizada_wo" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow13" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;" parent="1" source="act12" target="act13" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow14" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;endArrow=block;endFill=1;" parent="1" source="act13" target="act14" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow15" value="" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;endArrow=block;endFill=1;" parent="1" source="act14" target="act15" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" style="edgeStyle=none;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="act_finalizada_normal" target="act12">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="250" y="1289.9999999999998" as="sourcePoint"/>
+                        <mxPoint x="70" y="1179.9999999999998" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="180" y="1218"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

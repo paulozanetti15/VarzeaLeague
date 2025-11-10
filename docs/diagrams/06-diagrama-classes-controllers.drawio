@@ -1,0 +1,68 @@
+<mxfile host="app.diagrams.net" modified="2025-11-10T18:20:00.000Z" agent="GitHub Copilot" version="22.0.0" type="device">
+  <diagram id="controllers-class-diagram" name="Classes - Controllers (com métodos)">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- PlayerController -->
+        <mxCell id="player-controller" value="PlayerController" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#e1f5fe;strokeColor=#0288d1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="60" y="60" width="320" height="320" as="geometry"/>
+        </mxCell>
+        <mxCell id="player-controller-methods" value="+ create(req,res): Promise<void>\n+ addToTeam(req,res): Promise<void>\n+ getPlayersFromTeam(req,res): Promise<void>\n+ removeFromTeam(req,res): Promise<void>\n+ update(req,res): Promise<void>\n+ delete(req,res): Promise<void>" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingRight=6;fontSize=12;" vertex="1" parent="player-controller">
+          <mxGeometry y="30" width="320" height="290" as="geometry"/>
+        </mxCell>
+
+        <!-- TeamController -->
+        <mxCell id="team-controller" value="TeamController" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#f3e5f5;strokeColor=#7b1fa2;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="440" y="60" width="360" height="420" as="geometry"/>
+        </mxCell>
+        <mxCell id="team-controller-methods" value="+ createTeam(req,res): Promise<void>\n+ listTeams(req,res): Promise<void>\n+ getTeam(req,res): Promise<void>\n+ updateTeam(req,res): Promise<void>\n+ deleteTeam(req,res): Promise<void>\n+ removePlayerFromTeam(req,res): Promise<void>\n+ getTeamCaptain(req,res): Promise<void>\n+ getTeamRanking(req,res): Promise<void>\n+ getPlayerStats(req,res): Promise<void>" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingRight=6;fontSize=12;" vertex="1" parent="team-controller">
+          <mxGeometry y="30" width="360" height="390" as="geometry"/>
+        </mxCell>
+
+        <!-- Match/Championship Controllers placeholders (for future extension) -->
+        <mxCell id="friendly-controller" value="FriendlyMatchesController" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#fff3e0;strokeColor=#ef6c00;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="840" y="60" width="360" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="friendly-controller-methods" value="+ create(req,res)\n+ update(req,res)\n+ delete(req,res)\n+ getById(req,res)\n+ list(req,res)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingRight=6;fontSize=12;" vertex="1" parent="friendly-controller">
+          <mxGeometry y="30" width="360" height="190" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="rules-controller" value="FriendlyMatchesRulesController" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#fff3e0;strokeColor=#ef6c00;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="840" y="320" width="360" height="240" as="geometry"/>
+        </mxCell>
+        <mxCell id="rules-controller-methods" value="+ insertRules(req,res)\n+ getRuleById(req,res)\n+ updateRules(req,res)\n+ deleteRules(req,res)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingRight=6;fontSize=12;" vertex="1" parent="rules-controller">
+          <mxGeometry y="30" width="360" height="210" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="matchteams-controller" value="MatchTeamsController" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#dcedc8;strokeColor=#558b2f;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="60" y="420" width="360" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="matchteams-controller-methods" value="+ addTeamToMatch(req,res)\n+ removeTeamFromMatch(req,res)\n+ checkTeamsRuleCompliance(req,res)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingRight=6;fontSize=12;" vertex="1" parent="matchteams-controller">
+          <mxGeometry y="30" width="360" height="170" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="championship-controller" value="ChampionshipController" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#dcedc8;strokeColor=#558b2f;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="460" y="520" width="360" height="260" as="geometry"/>
+        </mxCell>
+        <mxCell id="championship-controller-methods" value="+ createChampionship(req,res)\n+ updateChampionship(req,res)\n+ deleteChampionship(req,res)\n+ joinTeamInChampionship(req,res)\n+ removeTeamFromChampionship(req,res)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingRight=6;fontSize=12;" vertex="1" parent="championship-controller">
+          <mxGeometry y="30" width="360" height="230" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="penalty-controllers" value="Punishment Controllers" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=#ffebee;strokeColor=#c62828;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="860" y="600" width="340" height="220" as="geometry"/>
+        </mxCell>
+        <mxCell id="penalty-controllers-methods" value="FriendlyMatchesPunishmentController\n- applyWOPunishment(req,res)\n\nChampionshipPunishmentController\n- applyWOPunishment(req,res)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;spacingRight=6;fontSize=12;" vertex="1" parent="penalty-controllers">
+          <mxGeometry y="30" width="340" height="190" as="geometry"/>
+        </mxCell>
+
+        <!-- Notes -->
+        <mxCell id="legend" value="Observações:\n- Todos os métodos são static async (padrão do projeto).\n- Assinatura: (req: AuthRequest, res: Response): Promise<void>\n- Este diagrama foca nos Controllers; os Models estão no diagrama de classes principal." style="shape=note;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#fbc02d;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="700" width="680" height="140" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

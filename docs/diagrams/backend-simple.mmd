@@ -1,0 +1,27 @@
+classDiagram
+    class User {
+        -id: int
+        -name: String
+        -email: String
+        +login() String
+        +logout() void
+    }
+    
+    class Team {
+        -id: int
+        -name: String
+        -userId: int
+        +addPlayer() void
+        +getStats() Object
+    }
+    
+    class Player {
+        -id: int
+        -name: String
+        -position: String
+        +getAge() int
+        +isAvailable() boolean
+    }
+    
+    User ||--o{ Team : owns
+    Team }o--o{ Player : has
