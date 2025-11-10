@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import sequelize from './config/database';
 import authRoutes from './routes/authRoutes';
-import matchRoutes from './routes/matchRoutes';
+import friendlyMatchRoutes from './routes/friendlyMatchRoutes';
 import userRoutes from './routes/userRoutes';
 import passwordResetRoutes from './routes/passwordResetRoutes';
 import teamRoutes from './routes/teamRoutes';
@@ -18,7 +18,7 @@ import MatchTeams from './models/MatchTeamsModel';
 import TeamPlayer from './models/TeamPlayerModel';
 import RulesModel from './models/RulesModel';
 import AttendanceModel from './models/AttendanceModel'; 
-import RulesRoutes from './routes/RulesRoutes'; 
+import RulesRoutes from './routes/matchRulesRoutes'; 
 import TeamPlayerRoutes from './routes/teamPlayerRoutes';
 import { seedUserTypes } from './seeds/userTypes';
 import { associateModels } from './models/associations'; 
@@ -28,7 +28,7 @@ import fs from 'fs';
 import championshipRoutes from './routes/championshipRoutes';
 import userTypeRoutes from './routes/userTypeRoutes';
 import overviewRoutes from './routes/overviewRoutes';
-import historicoRoutes from './routes/historicoRoutes';
+import rankingRoutes from './routes/rankingRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import MatchChampionship from './models/MatchChampionshipModel';
 import MatchChampionshpReport from './models/MatchReportChampionshipModel';
@@ -71,7 +71,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/matches', matchRoutes);
+app.use('/api/matches', friendlyMatchRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/teamplayers', TeamPlayerRoutes);
 app.use('/api/teams',teamRoutes);
@@ -81,7 +81,7 @@ app.use('/api/rules', RulesRoutes);
 app.use('/api/championships', championshipRoutes);
 app.use('/api/usertypes', userTypeRoutes);
 app.use('/api/overview', overviewRoutes);
-app.use('/api/historico',historicoRoutes);
+app.use('/api/ranking', rankingRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Middleware de tratamento de erros global
