@@ -224,6 +224,12 @@ const ChampionshipDetail: React.FC = () => {
   const [showRemoveTeamsModal, setShowRemoveTeamsModal] = useState(false);
 
   const isOwner = Boolean(currentUser) && Boolean(championship) && Number(currentUser?.id) === Number(championship?.created_by);
+  const canManageTeams = isOwner || isAdmin;
+
+  const userEnrolledCaptainTeams = useMemo(
+    () => (userEnrolledTeams || []).filter((t) => Number(t.captainId) === Number(currentUser?.id)),
+    [userEnrolledTeams, currentUser]
+  );
 
   const confirmLeave = async () => {
     if (!leaveModalTeamId) return;
@@ -394,7 +400,7 @@ const ChampionshipDetail: React.FC = () => {
                     Agendamento de Partidas
                   </button>
 
-                  {isOwner && (
+                  {canManageTeams && (
                     <button
                       className="action-btn delete-multiple-btn"
                       onClick={() => setShowRemoveTeamsModal(true)}
@@ -422,16 +428,16 @@ const ChampionshipDetail: React.FC = () => {
                     Classificação
                   </button>
 
-                  {userEnrolledTeams.length > 0 && (
+                  {userEnrolledCaptainTeams.length > 0 && (
                     <div className="leave-team-control" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      {userEnrolledTeams.length === 1 ? (
+                      {userEnrolledCaptainTeams.length === 1 ? (
                         <button
                           className="out-btn"
-                          onClick={() => requestLeave(userEnrolledTeams[0].id)}
-                          disabled={isLeavingTeamId === userEnrolledTeams[0].id}
-                          aria-label={`Sair do campeonato - ${userEnrolledTeams[0].name}`}
+                          onClick={() => requestLeave(userEnrolledCaptainTeams[0].id)}
+                          disabled={isLeavingTeamId === userEnrolledCaptainTeams[0].id}
+                          aria-label={`Sair do campeonato - ${userEnrolledCaptainTeams[0].name}`}
                         >
-                          {isLeavingTeamId === userEnrolledTeams[0].id ? 'Saindo...' : 'Sair do Campeonato'}
+                          {isLeavingTeamId === userEnrolledCaptainTeams[0].id ? 'Saindo...' : 'Sair do Campeonato'}
                         </button>
                       ) : (
                         <>
@@ -442,7 +448,7 @@ const ChampionshipDetail: React.FC = () => {
                             aria-label="Selecionar time para sair"
                           >
                             <option value="">Selecione o time</option>
-                            {userEnrolledTeams.map((t) => (
+                            {userEnrolledCaptainTeams.map((t) => (
                               <option key={t.id} value={t.id}>{t.name}</option>
                             ))}
                           </select>

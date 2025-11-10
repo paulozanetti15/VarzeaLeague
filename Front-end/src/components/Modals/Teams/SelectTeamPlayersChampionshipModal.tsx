@@ -248,7 +248,7 @@ const SelectTeamPlayersChampionshipModal: React.FC<SelectTeamPlayersChampionship
                       {bannerUrl && <img src={bannerUrl} alt={team.name} className="stm-team-banner" />}
                       <span>{team.name}</span>
                     </button>
-                    {disabled && (
+                    {disabled && ((team.captainId === user?.id) || Number(user?.userTypeId) === 1) && (
                       <button
                         type="button"
                         className="stm-leave-btn"
