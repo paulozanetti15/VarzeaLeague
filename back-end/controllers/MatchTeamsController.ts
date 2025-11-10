@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 import Playermodel from "../models/PlayerModel";
 import TeamPlayer from "../models/TeamPlayerModel";
 import User from "../models/UserModel";
+import { createNotification } from "./NotificationController";
 import { Op } from 'sequelize';
 require('dotenv').config(); 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua_chave_secreta';
@@ -175,6 +176,26 @@ export const joinMatchByTeam = async (req: any, res: any) => {
           matchId: matchId,
           teamId: teamId
         });
+        
+        // Criar notificação para o admin do time
+        try {
+          const teamData = await Team.findByPk(teamId);
+          if (teamData && (teamData as any).captainId) {
+            const matchData = await Match.findByPk(matchId);
+            await createNotification(
+              (teamData as any).captainId,
+              'team_linked_to_match',
+              'Seu time foi vinculado a uma partida',
+              `O time "${teamData.name}" foi vinculado à partida "${matchData?.title || 'Partida'}" que acontecerá em ${matchData?.date ? new Date(matchData.date).toLocaleDateString('pt-BR') : 'data a definir'}.`,
+              matchId,
+              teamId
+            );
+          }
+        } catch (notifError) {
+          console.error('Erro ao criar notificação:', notifError);
+          // Não falhar a operação se a notificação falhar
+        }
+        
         // After creating, check if match is full and update status
         const newCount = await MatchTeams.count({ where: { matchId } });
         if (newCount >= maxTimes) {
@@ -192,6 +213,26 @@ export const joinMatchByTeam = async (req: any, res: any) => {
           matchId: matchId,
           teamId: teamId
         });
+        
+        // Criar notificação para o admin do time
+        try {
+          const teamData = await Team.findByPk(teamId);
+          if (teamData && (teamData as any).captainId) {
+            const matchData = await Match.findByPk(matchId);
+            await createNotification(
+              (teamData as any).captainId,
+              'team_linked_to_match',
+              'Seu time foi vinculado a uma partida',
+              `O time "${teamData.name}" foi vinculado à partida "${matchData?.title || 'Partida'}" que acontecerá em ${matchData?.date ? new Date(matchData.date).toLocaleDateString('pt-BR') : 'data a definir'}.`,
+              matchId,
+              teamId
+            );
+          }
+        } catch (notifError) {
+          console.error('Erro ao criar notificação:', notifError);
+          // Não falhar a operação se a notificação falhar
+        }
+        
         const newCount = await MatchTeams.count({ where: { matchId } });
         if (newCount >= maxTimes) {
           await Match.update({ status: 'sem_vagas' }, { where: { id: matchId } as any });

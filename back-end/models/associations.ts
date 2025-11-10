@@ -19,6 +19,7 @@ import MatchChampionshpReport from './MatchReportChampionshipModel';
 import Rules from './RulesModel';
 import FriendlyMatchPenalty from './FriendlyMatchPenaltyModel';
 import ChampionshipPenalty from './ChampionshipPenaltyModel';
+import Notification from './NotificationModel';
 
 
 // User <-> Match associations
@@ -162,5 +163,15 @@ export function associateModels() {
 
   Match.hasOne(Rules, { foreignKey: 'partidaId', as: 'rules' });
   Rules.belongsTo(Match, { foreignKey: 'partidaId', as: 'match' });
+
+  // Notifications
+  Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+  Notification.belongsTo(Match, { foreignKey: 'relatedMatchId', as: 'match' });
+  Notification.belongsTo(Team, { foreignKey: 'relatedTeamId', as: 'team' });
+  Notification.belongsTo(Championship, { foreignKey: 'relatedChampionshipId', as: 'championship' });
+  User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
+  Match.hasMany(Notification, { foreignKey: 'relatedMatchId', as: 'notifications' });
+  Team.hasMany(Notification, { foreignKey: 'relatedTeamId', as: 'notifications' });
+  Championship.hasMany(Notification, { foreignKey: 'relatedChampionshipId', as: 'notifications' });
 
 }

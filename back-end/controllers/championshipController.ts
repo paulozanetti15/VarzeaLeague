@@ -847,6 +847,41 @@ export const createChampionshipMatch = asyncHandler(async (req: Request, res: Re
       teamId: teamAwayId
     });
     console.log('Times vinculados com sucesso');
+    
+    // Criar notificações para os admins dos times
+    try {
+      const { createNotification } = await import('./NotificationController');
+      const teamHome = await Team.findByPk(teamHomeId);
+      const teamAway = await Team.findByPk(teamAwayId);
+      const championship = await Championship.findByPk(championshipId);
+      
+      if (teamHome && (teamHome as any).captainId) {
+        await createNotification(
+          (teamHome as any).captainId,
+          'championship_match_scheduled',
+          'Partida de campeonato agendada',
+          `Seu time "${teamHome.name}" foi vinculado a uma partida do campeonato "${championship?.name || 'Campeonato'}" que acontecerá em ${matchDateTime ? new Date(matchDateTime).toLocaleDateString('pt-BR') : 'data a definir'}.`,
+          match.id,
+          teamHomeId,
+          championshipId
+        );
+      }
+      
+      if (teamAway && (teamAway as any).captainId) {
+        await createNotification(
+          (teamAway as any).captainId,
+          'championship_match_scheduled',
+          'Partida de campeonato agendada',
+          `Seu time "${teamAway.name}" foi vinculado a uma partida do campeonato "${championship?.name || 'Campeonato'}" que acontecerá em ${matchDateTime ? new Date(matchDateTime).toLocaleDateString('pt-BR') : 'data a definir'}.`,
+          match.id,
+          teamAwayId,
+          championshipId
+        );
+      }
+    } catch (notifError) {
+      console.error('Erro ao criar notificações:', notifError);
+      // Não falhar a operação se a notificação falhar
+    }
 
     // Criar o report inicial com os times (placar inicial 0x0)
     console.log('Criando MatchChampionshpReport com dados:', {

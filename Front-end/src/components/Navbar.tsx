@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { AppBar, IconButton, Avatar, Tooltip, Badge } from '@mui/material';
-import { Menu as MenuIcon, Notifications, ArrowBack, Search } from '@mui/icons-material';
+import { AppBar, IconButton, Avatar, Tooltip } from '@mui/material';
+import { Menu as MenuIcon, ArrowBack, Search } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import NavbarBrand from './Navbar/NavbarBrand';
 import RoleMenu from './Navbar/RoleMenu';
 import UserDrawer from './Navbar/UserDrawer';
 import MobileDrawer from './Navbar/MobileDrawer';
+import NotificationDropdown from './NotificationDropdown';
 import './Navbar.css';
 
 const Navbar: React.FC = () => {
@@ -60,13 +61,7 @@ const Navbar: React.FC = () => {
 
         {user ? (
           <div className="navbar-user-actions">
-            <Tooltip title="Notificações">
-              <IconButton className="navbar-notification-button">
-                <Badge badgeContent={3} color="error">
-                  <Notifications />
-                </Badge>
-              </IconButton>
-            </Tooltip>
+            <NotificationDropdown />
             <Tooltip title="Abrir menu do usuário">
               <IconButton onClick={() => setDrawerUserOpen(true)} className="navbar-avatar-button">
                 <Avatar

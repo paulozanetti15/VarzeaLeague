@@ -29,6 +29,7 @@ import championshipRoutes from './routes/championshipRoutes';
 import userTypeRoutes from './routes/userTypeRoutes';
 import overviewRoutes from './routes/overviewRoutes';
 import historicoRoutes from './routes/historicoRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 import MatchChampionship from './models/MatchChampionshipModel';
 import MatchChampionshpReport from './models/MatchReportChampionshipModel';
 import { ErrorRequestHandler } from 'express-serve-static-core';
@@ -54,7 +55,12 @@ if (!fs.existsSync(championshipUploadDir)) {
   console.log(`Diretório criado: ${championshipUploadDir}`);
 }
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -75,7 +81,8 @@ app.use('/api/rules', RulesRoutes);
 app.use('/api/championships', championshipRoutes);
 app.use('/api/usertypes', userTypeRoutes);
 app.use('/api/overview', overviewRoutes);
-app.use('/api/historico',historicoRoutes)
+app.use('/api/historico',historicoRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Middleware de tratamento de erros global
 // Deve ser o último middleware, após todas as rotas
@@ -193,6 +200,10 @@ const startServer = async () => {
     console.log('Modelo MatchChampionshpReport sincronizado.');
   await ChampionshipPenalty.sync();
   console.log('Modelo Punicao Championship sincronizado.');
+    
+    const { default: NotificationModel } = await import('./models/NotificationModel');
+    await NotificationModel.sync();
+    console.log('Modelo Notification sincronizado.');
     
     await seedUserTypes();
 
