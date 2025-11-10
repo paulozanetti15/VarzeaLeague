@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
-import { index, store, update, remove, getById } from '../controllers/UserController';
+import { index, store, update, remove, getById } from '../controllers/userController';
 
 const router = express.Router();
 
