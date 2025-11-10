@@ -22,6 +22,7 @@ import type { PlayerStats } from '../../interfaces/team';
 import TeamStats from '../../components/features/Teams/TeamStats';
 import PlayerStatsTable from '../../components/features/Teams/PlayerStatsTable';
 import TeamActionButtons from '../../components/features/Teams/TeamActionButtons';
+import DownloadReportModal from '../../components/Modals/DownloadReportModal';
 
 import './TeamList.css';
 
@@ -30,6 +31,8 @@ const TeamList = () => {
   const [expandedTeam, setExpandedTeam] = useState<number | null>(null);
   const [playerStats, setPlayerStats] = useState<PlayerStats[] | null>(null);
   const [loadingReport, setLoadingReport] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const navigate = useNavigate();
   const historico = useContext(HistoricoContext);
   const { generatePlayerStatsPDF } = usePDFGenerator();
@@ -77,7 +80,6 @@ const TeamList = () => {
       const teamId = teams[0].id;
       const data = await fetchTeamPlayerStats(teamId);
       setPlayerStats(data?.stats || []);
-      alert('Relatório de jogadores gerado com sucesso!');
     } catch (e) {
       console.error('Erro ao gerar relatório de jogadores:', e);
     } finally {
@@ -87,9 +89,27 @@ const TeamList = () => {
 
   const handleDownloadPDF = () => {
     if (!playerStats || !hasTeam) return;
+    setShowDownloadModal(true);
+  };
 
-    const teamName = teams[0].name;
-    generatePlayerStatsPDF(playerStats, teamName);
+  const handleConfirmDownload = async () => {
+    try {
+      setIsDownloading(true);
+      if (!playerStats || !hasTeam) return;
+
+      const teamName = teams[0].name;
+      generatePlayerStatsPDF(playerStats, teamName);
+      
+      setShowDownloadModal(false);
+    } catch (e) {
+      console.error('Erro ao baixar PDF:', e);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleCancelDownload = () => {
+    setShowDownloadModal(false);
   };
 
   return (
@@ -347,6 +367,15 @@ const TeamList = () => {
           ) : null}
         </div>
       )}
+
+      <DownloadReportModal
+        isOpen={showDownloadModal}
+        teamName={teams.length > 0 ? teams[0].name : ''}
+        onConfirm={handleConfirmDownload}
+        onCancel={handleCancelDownload}
+        loading={isDownloading}
+        playerCount={playerStats?.length || 0}
+      />
     </div>
   );
 };
